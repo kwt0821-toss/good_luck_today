@@ -31,7 +31,7 @@ export function HomeScreen({
 }: HomeScreenProps) {
   return (
     <div className="screen">
-      <ScreenHeader title="럭키캣" accessoryName="icon-apps-mono" accessoryLabel="고양이 도감" onAccessoryClick={onOpenCollection} />
+      <ScreenHeader title="럭키캣" />
 
       <Top
         title={<Top.TitleParagraph size={22}>오늘의 행운 고양이</Top.TitleParagraph>}
