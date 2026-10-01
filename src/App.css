@@ -15,6 +15,15 @@
     border-radius: 32px;
     overflow: hidden;
     box-shadow: 0 16px 60px rgba(25, 31, 40, 0.16);
+    /* position:fixed CTA가 뷰포트가 아니라 폰 프레임 안에 붙도록 */
+    transform: translateZ(0);
+  }
+
+  /* TDS FixedBottomCTA는 body로 포탈되며 width:100vw 이라 미리보기에서 커져요 */
+  body > div:has(.tds-mobile-bottom-cta--a__content),
+  body > div:has(.tds-mobile-bottom-cta--b__content) {
+    max-width: 390px !important;
+    width: 390px !important;
   }
 }
 
