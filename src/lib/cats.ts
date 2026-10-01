@@ -1,8 +1,5 @@
 import type { Cat, Grade } from "../types";
-
-function imageUrl(id: string): string {
-  return `https://picsum.photos/seed/${id}/640/640`;
-}
+import { catImageUrl } from "./catArt";
 
 function cat(
   index: number,
@@ -15,7 +12,7 @@ function cat(
     id,
     name,
     grade,
-    imageUrl: imageUrl(id),
+    imageUrl: catImageUrl(id, grade),
     description,
   };
 }

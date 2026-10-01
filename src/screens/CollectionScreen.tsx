@@ -1,12 +1,5 @@
 import { adaptive } from "@toss/tds-colors";
-import {
-  BottomSheet,
-  ListHeader,
-  SegmentedControl,
-  Tab,
-  Text,
-  Top,
-} from "@toss/tds-mobile";
+import { BottomSheet, ListHeader, SegmentedControl, Text, Top } from "@toss/tds-mobile";
 import { useMemo, useState } from "react";
 
 import { CatPortrait } from "../components/CatPortrait";
@@ -26,7 +19,7 @@ type CollectionScreenProps = {
 
 export function CollectionScreen({ user, onBack }: CollectionScreenProps) {
   const [filter, setFilter] = useState<GradeFilter>("ALL");
-  const [sort, setSort] = useState<CollectionSort>("grade");
+  const [sort, setSort] = useState<CollectionSort>("acquired");
   const [selected, setSelected] = useState<Cat | null>(null);
 
   const cats = useMemo(() => {
@@ -69,17 +62,20 @@ export function CollectionScreen({ user, onBack }: CollectionScreenProps) {
       />
 
       <div className="collection-toolbar">
-        <Tab
-          size="small"
-          fluid
-          onChange={(index) => setFilter(GRADE_TABS[index] ?? "ALL")}
-        >
-          {GRADE_TABS.map((item, index) => (
-            <Tab.Item key={item} selected={GRADE_TABS.indexOf(filter) === index}>
+        <div className="grade-filters" role="tablist" aria-label="등급 필터">
+          {GRADE_TABS.map((item) => (
+            <button
+              key={item}
+              type="button"
+              role="tab"
+              aria-selected={filter === item}
+              className={`grade-filter ${filter === item ? "is-active" : ""}`}
+              onClick={() => setFilter(item)}
+            >
               {item === "ALL" ? "전체" : item}
-            </Tab.Item>
+            </button>
           ))}
-        </Tab>
+        </div>
         <SegmentedControl
           size="small"
           value={sort}
