@@ -1,13 +1,10 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
-import type { AppSettings } from "../types";
+import type { CollectionRecord, DrawResult, UserState } from "../types";
+import { applyDailyReset, createDefaultUser } from "./user";
+import { toKstDateKey } from "./date";
 
-const SETTINGS_KEY = "good-luck-today.settings";
-const REVEALED_KEY = "good-luck-today.revealed";
-
-const DEFAULT_SETTINGS: AppSettings = {
-  nickname: "",
-};
+const USER_KEY = "lucky-cat.user-state";
 
 async function read(key: string): Promise<string | null> {
   try {
@@ -25,34 +22,75 @@ async function write(key: string, value: string): Promise<void> {
   }
 }
 
-export async function loadSettings(): Promise<AppSettings> {
-  const raw = await read(SETTINGS_KEY);
-  if (!raw) return DEFAULT_SETTINGS;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
 
-  try {
-    return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as AppSettings) };
-  } catch {
-    return DEFAULT_SETTINGS;
+function parseCollection(value: unknown): Record<string, CollectionRecord> {
+  if (!isRecord(value)) return {};
+
+  const next: Record<string, CollectionRecord> = {};
+  for (const [id, entry] of Object.entries(value)) {
+    if (!isRecord(entry)) continue;
+    if (typeof entry.unlockedAt !== "string" || typeof entry.count !== "number") continue;
+    next[id] = { unlockedAt: entry.unlockedAt, count: entry.count };
   }
+  return next;
 }
 
-export async function saveSettings(settings: AppSettings): Promise<void> {
-  await write(SETTINGS_KEY, JSON.stringify(settings));
+function parseLastResult(value: unknown): DrawResult | null {
+  if (!isRecord(value)) return null;
+  if (typeof value.catId !== "string") return null;
+  if (typeof value.isNew !== "boolean") return null;
+  if (typeof value.boosted !== "boolean") return null;
+  if (typeof value.dateKey !== "string") return null;
+  return {
+    catId: value.catId,
+    isNew: value.isNew,
+    boosted: value.boosted,
+    dateKey: value.dateKey,
+  };
 }
 
-export async function loadRevealedDates(): Promise<string[]> {
-  const raw = await read(REVEALED_KEY);
-  if (!raw) return [];
+function parseUser(raw: string | null): UserState {
+  if (!raw) return createDefaultUser();
 
   try {
     const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string") : [];
+    if (!isRecord(parsed)) return createDefaultUser();
+
+    const base = createDefaultUser();
+    return {
+      ...base,
+      userId: typeof parsed.userId === "string" ? parsed.userId : base.userId,
+      pinkJellyBalance:
+        typeof parsed.pinkJellyBalance === "number" ? parsed.pinkJellyBalance : 0,
+      lastDrawDate: typeof parsed.lastDrawDate === "string" ? parsed.lastDrawDate : "",
+      dailyRerollCount:
+        typeof parsed.dailyRerollCount === "number" ? parsed.dailyRerollCount : 0,
+      unlockedCatIds: Array.isArray(parsed.unlockedCatIds)
+        ? parsed.unlockedCatIds.filter((id): id is string => typeof id === "string")
+        : [],
+      collection: parseCollection(parsed.collection),
+      lastResult: parseLastResult(parsed.lastResult),
+    };
   } catch {
-    return [];
+    return createDefaultUser();
   }
 }
 
-export async function saveRevealedDates(dates: string[]): Promise<void> {
-  const unique = Array.from(new Set(dates)).sort();
-  await write(REVEALED_KEY, JSON.stringify(unique.slice(-30)));
+export async function loadUserState(): Promise<UserState> {
+  const parsed = parseUser(await read(USER_KEY));
+  const next = applyDailyReset(parsed, toKstDateKey());
+  if (
+    next.dailyRerollCount !== parsed.dailyRerollCount ||
+    next.lastResult !== parsed.lastResult
+  ) {
+    await saveUserState(next);
+  }
+  return next;
+}
+
+export async function saveUserState(user: UserState): Promise<void> {
+  await write(USER_KEY, JSON.stringify(user));
 }

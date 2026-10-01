@@ -3,8 +3,8 @@ import { defineConfig } from "@apps-in-toss/web-framework/config";
 export default defineConfig({
   appName: "good-luck-today",
   brand: {
-    displayName: "오늘의 행운",
-    primaryColor: "#12B886",
+    displayName: "럭키캣",
+    primaryColor: "#FF5C8A",
     icon: "",
   },
   web: {

@@ -45,7 +45,7 @@ export async function shareText(message: string): Promise<"shared" | "copied"> {
   } catch {
     if (navigator.share) {
       try {
-        await navigator.share({ text: message, title: "오늘의 행운" });
+        await navigator.share({ text: message, title: "럭키캣" });
         return "shared";
       } catch {
         // 사용자가 공유를 취소한 경우에는 복사로 이어가지 않아요.

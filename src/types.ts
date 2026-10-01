@@ -1,45 +1,46 @@
-export type CategoryId = "love" | "money" | "work" | "health";
+export type Grade = "SSS" | "S" | "A" | "B" | "C";
 
-export type ScreenName =
-  | "home"
-  | "reading"
-  | "result"
-  | "category"
-  | "history"
-  | "settings";
+export type ScreenName = "home" | "result" | "collection";
 
 export type Screen =
   | { name: "home" }
-  | { name: "reading" }
   | { name: "result" }
-  | { name: "category"; category: CategoryId }
-  | { name: "history" }
-  | { name: "settings" };
+  | { name: "collection" };
 
-export type CategoryFortune = {
-  id: CategoryId;
-  label: string;
-  emoji: string;
-  score: number;
-  title: string;
-  summary: string;
-  advice: string;
-};
+export interface Cat {
+  id: string;
+  name: string;
+  grade: Grade;
+  imageUrl: string;
+  description: string;
+}
 
-export type DailyFortune = {
+export interface CollectionRecord {
+  unlockedAt: string;
+  count: number;
+}
+
+export interface DrawResult {
+  catId: string;
+  isNew: boolean;
+  boosted: boolean;
   dateKey: string;
-  score: number;
-  grade: "최고" | "좋음" | "무난" | "차분";
-  headline: string;
-  summary: string;
-  luckyColor: string;
-  luckyNumber: number;
-  luckyTime: string;
-  luckyFood: string;
-  luckyItem: string;
-  categories: CategoryFortune[];
-};
+}
 
-export type AppSettings = {
-  nickname: string;
-};
+export interface UserState {
+  userId: string;
+  pinkJellyBalance: number;
+  lastDrawDate: string;
+  dailyRerollCount: number;
+  unlockedCatIds: string[];
+  collection: Record<string, CollectionRecord>;
+  lastResult: DrawResult | null;
+}
+
+export type AdKind = "interstitial" | "rewarded";
+
+export type DrawPurpose = "daily" | "reroll-standard" | "reroll-boosted";
+
+export type GradeFilter = "ALL" | Grade;
+
+export type CollectionSort = "acquired" | "grade";

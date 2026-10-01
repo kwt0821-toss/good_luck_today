@@ -1,157 +1,127 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { AdModal } from "./components/AdModal";
+import { getCatById } from "./lib/cats";
+import { toKstDateKey } from "./lib/date";
+import { getRandomCat } from "./lib/gacha";
 import { configureNavigationBar, haptic } from "./lib/native";
-import { toDateKey } from "./lib/date";
-import { getCategory, getDailyFortune, getHistoryFortunes } from "./lib/fortune";
-import { loadRevealedDates, loadSettings, saveRevealedDates, saveSettings } from "./lib/storage";
-import { CategoryScreen } from "./screens/CategoryScreen";
-import { HistoryScreen } from "./screens/HistoryScreen";
+import { loadUserState, saveUserState } from "./lib/storage";
+import { applyDraw, createDefaultUser, hasDrawnToday, remainingRerolls } from "./lib/user";
+import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
-import { ReadingScreen } from "./screens/ReadingScreen";
 import { ResultScreen } from "./screens/ResultScreen";
-import { SettingsScreen } from "./screens/SettingsScreen";
-import type { AppSettings, CategoryId, Screen } from "./types";
+import type { AdKind, DrawPurpose, Screen, UserState } from "./types";
 import "./App.css";
-
-const todayKey = toDateKey();
 
 function App() {
   const [ready, setReady] = useState(false);
+  const [user, setUser] = useState<UserState>(createDefaultUser);
   const [screen, setScreen] = useState<Screen>({ name: "home" });
-  const [settings, setSettings] = useState<AppSettings>({ nickname: "" });
-  const [revealedDates, setRevealedDates] = useState<string[]>([]);
-  const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
+  const [rerollOpen, setRerollOpen] = useState(false);
+  const [ad, setAd] = useState<{ kind: AdKind; purpose: DrawPurpose } | null>(null);
 
-  const fortune = useMemo(() => getDailyFortune(selectedDateKey), [selectedDateKey]);
-  const todayFortune = useMemo(() => getDailyFortune(todayKey), []);
-  const revealedToday = revealedDates.includes(todayKey);
-  const historyFortunes = useMemo(() => getHistoryFortunes(revealedDates), [revealedDates]);
+  const today = toKstDateKey();
+  const drawnToday = hasDrawnToday(user, today);
+  const rerollsLeft = remainingRerolls(user, today);
+  const todayCat = useMemo(
+    () => (user.lastResult ? (getCatById(user.lastResult.catId) ?? null) : null),
+    [user.lastResult],
+  );
 
   useEffect(() => {
     let cancelled = false;
-
-    Promise.all([loadSettings(), loadRevealedDates()]).then(([nextSettings, dates]) => {
+    loadUserState().then((next) => {
       if (cancelled) return;
-      setSettings(nextSettings);
-      setRevealedDates(dates);
+      setUser(next);
       setReady(true);
     });
-
     return () => {
       cancelled = true;
     };
   }, []);
 
   useEffect(() => {
-    const withBackButton = screen.name !== "home";
-    void configureNavigationBar({ withBackButton });
+    void configureNavigationBar({ withBackButton: screen.name !== "home" });
   }, [screen]);
 
-  const goHome = useCallback(() => {
-    setSelectedDateKey(todayKey);
-    setScreen({ name: "home" });
+  const persist = useCallback(async (next: UserState) => {
+    setUser(next);
+    await saveUserState(next);
   }, []);
 
-  const revealToday = useCallback(async () => {
-    const nextDates = Array.from(new Set([...revealedDates, todayKey]));
-    setRevealedDates(nextDates);
-    await saveRevealedDates(nextDates);
-    await haptic("success");
-    setSelectedDateKey(todayKey);
-    setScreen({ name: "result" });
-  }, [revealedDates]);
-
-  const updateNickname = useCallback(
-    async (nickname: string) => {
-      const next = { ...settings, nickname };
-      setSettings(next);
-      await saveSettings(next);
+  const startDraw = useCallback(
+    (purpose: DrawPurpose) => {
+      if (purpose !== "daily" && rerollsLeft <= 0) return;
+      if (purpose === "daily" && drawnToday) return;
+      setRerollOpen(false);
+      setAd({
+        kind: purpose === "reroll-boosted" ? "rewarded" : "interstitial",
+        purpose,
+      });
     },
-    [settings],
+    [drawnToday, rerollsLeft],
   );
 
-  const resetToday = useCallback(async () => {
-    const nextDates = revealedDates.filter((date) => date !== todayKey);
-    setRevealedDates(nextDates);
-    await saveRevealedDates(nextDates);
-    setSelectedDateKey(todayKey);
-    setScreen({ name: "home" });
-  }, [revealedDates]);
-
-  const openCategory = useCallback((category: CategoryId) => {
-    setScreen({ name: "category", category });
-  }, []);
+  const completeAd = useCallback(async () => {
+    if (!ad) return;
+    const boosted = ad.purpose === "reroll-boosted";
+    const isReroll = ad.purpose !== "daily";
+    const cat = getRandomCat(boosted);
+    const { next } = applyDraw(user, cat, { isReroll, boosted, today });
+    await persist(next);
+    await haptic("success");
+    setAd(null);
+    setScreen({ name: "result" });
+  }, [ad, persist, today, user]);
 
   if (!ready) {
     return <div className="boot" />;
   }
 
-  if (screen.name === "reading") {
-    return <ReadingScreen onCancel={goHome} onComplete={() => void revealToday()} />;
-  }
-
-  if (screen.name === "result") {
-    return (
-      <ResultScreen
-        fortune={fortune}
-        nickname={settings.nickname}
-        onBack={goHome}
-        onOpenCategory={openCategory}
-      />
-    );
-  }
-
-  if (screen.name === "category") {
-    return (
-      <CategoryScreen
-        category={getCategory(fortune, screen.category)}
-        onBack={() => setScreen({ name: "result" })}
-      />
-    );
-  }
-
-  if (screen.name === "history") {
-    return (
-      <HistoryScreen
-        fortunes={historyFortunes}
-        todayKey={todayKey}
-        onBack={goHome}
-        onSelect={(dateKey) => {
-          setSelectedDateKey(dateKey);
-          setScreen({ name: "result" });
-        }}
-      />
-    );
-  }
-
-  if (screen.name === "settings") {
-    return (
-      <SettingsScreen
-        settings={settings}
-        onChangeNickname={(nickname) => void updateNickname(nickname)}
-        onResetToday={() => void resetToday()}
-        onBack={goHome}
-      />
-    );
-  }
+  const resultCat = user.lastResult ? getCatById(user.lastResult.catId) : undefined;
 
   return (
-    <HomeScreen
-      fortune={todayFortune}
-      revealed={revealedToday}
-      nickname={settings.nickname}
-      onRead={() => {
-        setSelectedDateKey(todayKey);
-        setScreen({ name: "reading" });
-      }}
-      onOpenResult={() => {
-        setSelectedDateKey(todayKey);
-        setScreen({ name: "result" });
-      }}
-      onOpenCategory={openCategory}
-      onOpenHistory={() => setScreen({ name: "history" })}
-      onOpenSettings={() => setScreen({ name: "settings" })}
-    />
+    <>
+      {screen.name === "collection" ? (
+        <CollectionScreen user={user} onBack={() => setScreen({ name: "home" })} />
+      ) : null}
+
+      {screen.name === "result" && resultCat && user.lastResult ? (
+        <ResultScreen
+          cat={resultCat}
+          result={user.lastResult}
+          remainingRerolls={rerollsLeft}
+          rerollOpen={rerollOpen}
+          onOpenReroll={() => setRerollOpen(true)}
+          onCloseReroll={() => setRerollOpen(false)}
+          onConfirm={() => setScreen({ name: "home" })}
+          onStandardReroll={() => startDraw("reroll-standard")}
+          onBoostedReroll={() => startDraw("reroll-boosted")}
+        />
+      ) : null}
+
+      {screen.name === "home" ? (
+        <HomeScreen
+          pinkJellyBalance={user.pinkJellyBalance}
+          hasDrawnToday={drawnToday}
+          remainingRerolls={rerollsLeft}
+          todayCat={todayCat}
+          lastResult={user.lastResult}
+          onDraw={() => startDraw("daily")}
+          onOpenResult={() => {
+            if (user.lastResult) setScreen({ name: "result" });
+          }}
+          onOpenCollection={() => setScreen({ name: "collection" })}
+        />
+      ) : null}
+
+      <AdModal
+        open={ad !== null}
+        kind={ad?.kind ?? "interstitial"}
+        onComplete={() => void completeAd()}
+        onCancel={() => setAd(null)}
+      />
+    </>
   );
 }
 

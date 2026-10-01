@@ -1,131 +1,108 @@
 import { adaptive } from "@toss/tds-colors";
-import {
-  Badge,
-  Button,
-  FixedBottomCTA,
-  List,
-  ListHeader,
-  ListRow,
-  Text,
-  Top,
-} from "@toss/tds-mobile";
+import { BottomSheet, Button, FixedBottomCTA, Text, Top } from "@toss/tds-mobile";
 
-import { EmojiAsset } from "../components/EmojiAsset";
+import { CatPortrait } from "../components/CatPortrait";
 import { ScreenHeader } from "../components/ScreenHeader";
-import { formatKoreanDate } from "../lib/date";
-import { getShareMessage } from "../lib/fortune";
-import { haptic, shareText } from "../lib/native";
-import type { DailyFortune } from "../types";
+import { GradeBadge } from "../components/GradeBadge";
+import { MAX_DAILY_REROLLS } from "../lib/user";
+import type { Cat, DrawResult } from "../types";
 
 type ResultScreenProps = {
-  fortune: DailyFortune;
-  nickname: string;
-  onBack: () => void;
-  onOpenCategory: (id: DailyFortune["categories"][number]["id"]) => void;
+  cat: Cat;
+  result: DrawResult;
+  remainingRerolls: number;
+  rerollOpen: boolean;
+  onOpenReroll: () => void;
+  onCloseReroll: () => void;
+  onConfirm: () => void;
+  onStandardReroll: () => void;
+  onBoostedReroll: () => void;
 };
 
-function gradeColor(grade: DailyFortune["grade"]): "green" | "blue" | "teal" | "yellow" {
-  if (grade === "최고") return "green";
-  if (grade === "좋음") return "blue";
-  if (grade === "무난") return "teal";
-  return "yellow";
-}
-
-export function ResultScreen({ fortune, nickname, onBack, onOpenCategory }: ResultScreenProps) {
-  const handleShare = async () => {
-    await haptic("success");
-    await shareText(getShareMessage(fortune, nickname));
-  };
+export function ResultScreen({
+  cat,
+  result,
+  remainingRerolls,
+  rerollOpen,
+  onOpenReroll,
+  onCloseReroll,
+  onConfirm,
+  onStandardReroll,
+  onBoostedReroll,
+}: ResultScreenProps) {
+  const remainingLabel = `다시 뽑기 (남은 횟수: ${remainingRerolls}/${MAX_DAILY_REROLLS})`;
 
   return (
-    <div className="screen">
-      <ScreenHeader title="오늘 운세" showBack onBack={onBack} />
+    <div className="screen result-screen">
+      <ScreenHeader title="소환 결과" showBack onBack={onConfirm} />
       <Top
-        title={<Top.TitleParagraph size={22}>{fortune.headline}</Top.TitleParagraph>}
-        subtitleTop={<Top.SubtitleParagraph size={13}>{formatKoreanDate()}</Top.SubtitleParagraph>}
-        subtitleBottom={<Top.SubtitleParagraph size={17}>{fortune.summary}</Top.SubtitleParagraph>}
-      />
-
-      <section className="score-panel">
-        <div>
-          <Text typography="t7" color={adaptive.grey500} display="block">
-            행운 지수
-          </Text>
-          <strong className="score-panel-value">{fortune.score}점</strong>
-        </div>
-        <Badge size="large" color={gradeColor(fortune.grade)} variant="weak">
-          {fortune.grade}
-        </Badge>
-      </section>
-
-      <ListHeader
-        title={
-          <ListHeader.TitleParagraph typography="t5" color={adaptive.grey800} fontWeight="bold">
-            분야별 운세
-          </ListHeader.TitleParagraph>
+        title={<Top.TitleParagraph size={22}>{cat.name}</Top.TitleParagraph>}
+        subtitleBottom={
+          <Top.SubtitleParagraph size={15}>{cat.description}</Top.SubtitleParagraph>
         }
       />
-      <List>
-        {fortune.categories.map((category) => (
-          <ListRow
-            key={category.id}
-            left={<EmojiAsset>{category.emoji}</EmojiAsset>}
-            contents={
-              <ListRow.Texts type="2RowTypeA" top={`${category.label} ${category.score}점`} bottom={category.title} />
-            }
-            withArrow
-            onClick={() => onOpenCategory(category.id)}
-          />
-        ))}
-      </List>
 
-      <ListHeader
-        title={
-          <ListHeader.TitleParagraph typography="t5" color={adaptive.grey800} fontWeight="bold">
-            오늘의 행운 아이템
-          </ListHeader.TitleParagraph>
-        }
-      />
-      <List>
-        <ListRow
-          left={<EmojiAsset backgroundColor={adaptive.yellow50}>🎨</EmojiAsset>}
-          contents={<ListRow.Texts type="2RowTypeA" top="행운의 색" bottom={fortune.luckyColor} />}
-        />
-        <ListRow
-          left={<EmojiAsset backgroundColor={adaptive.blue50}>🔢</EmojiAsset>}
-          contents={<ListRow.Texts type="2RowTypeA" top="행운의 숫자" bottom={`${fortune.luckyNumber}`} />}
-        />
-        <ListRow
-          left={<EmojiAsset backgroundColor={adaptive.purple50}>⏰</EmojiAsset>}
-          contents={<ListRow.Texts type="2RowTypeA" top="행운의 시간" bottom={fortune.luckyTime} />}
-        />
-        <ListRow
-          left={<EmojiAsset backgroundColor={adaptive.orange50}>🍽️</EmojiAsset>}
-          contents={<ListRow.Texts type="2RowTypeA" top="행운의 음식" bottom={fortune.luckyFood} />}
-        />
-        <ListRow
-          left={<EmojiAsset backgroundColor={adaptive.teal50}>✨</EmojiAsset>}
-          contents={<ListRow.Texts type="2RowTypeA" top="행운의 아이템" bottom={fortune.luckyItem} />}
-        />
-      </List>
-
-      <div className="disclaimer">
-        <Text typography="t7" color={adaptive.grey500} display="block">
-          오늘의 행운은 재미로 보는 콘텐츠예요. 중요한 선택은 꼭 스스로 판단해 주세요.
-        </Text>
+      <div className="result-hero">
+        <div className={`result-burst grade-${cat.grade.toLowerCase()}`} />
+        <CatPortrait cat={cat} size="hero" />
+        <GradeBadge grade={cat.grade} size="large" />
       </div>
+
+      {result.isNew ? (
+        <div className="new-banner" role="status">
+          NEW! 최초 해금 보상 핑크젤리 +1 획득!
+        </div>
+      ) : (
+        <Text typography="t6" color={adaptive.grey600} textAlign="center" display="block">
+          이미 도감에 있는 고양이예요. 중복 카운터가 올라갔어요.
+        </Text>
+      )}
+
+      {result.boosted ? (
+        <Text typography="t7" color={adaptive.grey500} textAlign="center" display="block">
+          확률업 재소환 결과
+        </Text>
+      ) : null}
 
       <div className="cta-spacer" aria-hidden="true" />
 
-      <FixedBottomCTA.Double
-        takeSpace
-        leftButton={
-          <Button color="dark" variant="weak" onClick={handleShare}>
-            공유하기
-          </Button>
+      {remainingRerolls > 0 ? (
+        <FixedBottomCTA.Double
+          takeSpace
+          leftButton={
+            <Button color="dark" variant="weak" onClick={onOpenReroll}>
+              {remainingLabel}
+            </Button>
+          }
+          rightButton={<Button onClick={onConfirm}>수령하기</Button>}
+        />
+      ) : (
+        <FixedBottomCTA takeSpace onClick={onConfirm}>
+          수령하기
+        </FixedBottomCTA>
+      )}
+
+      <BottomSheet
+        open={rerollOpen}
+        onClose={onCloseReroll}
+        header={<BottomSheet.Header>어떻게 다시 뽑을까요?</BottomSheet.Header>}
+        headerDescription={
+          <BottomSheet.HeaderDescription>
+            남은 재도전 {remainingRerolls}/{MAX_DAILY_REROLLS}. 광고를 보면 바로 다시 소환해요.
+          </BottomSheet.HeaderDescription>
         }
-        rightButton={<Button onClick={onBack}>홈으로</Button>}
-      />
+      >
+        <div className="reroll-options">
+          <button type="button" className="reroll-option" onClick={onStandardReroll}>
+            <strong>일반 재소환</strong>
+            <span>전면형 짧은 광고 · 일반 확률</span>
+          </button>
+          <button type="button" className="reroll-option is-boost" onClick={onBoostedReroll}>
+            <strong>확률업 재소환 ⚡</strong>
+            <span>30초 리워드 광고 · 고급 등급 확률 상승</span>
+          </button>
+        </div>
+      </BottomSheet>
     </div>
   );
 }
