@@ -1,0 +1,157 @@
+#root {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  background: #ffffff;
+  position: relative;
+}
+
+@media (min-width: 481px) {
+  #root {
+    max-width: 390px;
+    min-height: 844px;
+    margin: 24px auto;
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow: 0 16px 60px rgba(25, 31, 40, 0.16);
+  }
+}
+
+.boot {
+  min-height: 100vh;
+}
+
+.screen {
+  min-height: 100%;
+  padding-bottom: 120px;
+}
+
+.screen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 4px 8px;
+}
+
+.screen-header-side {
+  width: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.screen-header-right {
+  justify-content: flex-end;
+}
+
+.screen-header-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #191f28;
+}
+
+.luck-card,
+.intro-card,
+.advice-card,
+.score-panel,
+.sheet-preview {
+  margin: 8px 24px 16px;
+  padding: 20px;
+  border-radius: 24px;
+  background: #f2f4f6;
+}
+
+.luck-card,
+.intro-card {
+  cursor: pointer;
+}
+
+.luck-card-top,
+.advice-card-top,
+.score-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.luck-card-label {
+  font-size: 13px;
+  color: #6b7684;
+  font-weight: 600;
+}
+
+.luck-card-score,
+.score-panel-value {
+  display: block;
+  margin-top: 8px;
+  font-size: 48px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  color: #191f28;
+}
+
+.luck-card-headline {
+  margin: 12px 0 0;
+  font-size: 16px;
+  line-height: 1.45;
+  color: #333d4b;
+}
+
+.intro-emoji,
+.reading-emoji {
+  font-size: 56px;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.intro-card {
+  cursor: default;
+}
+
+.reading-screen {
+  min-height: 100vh;
+}
+
+.reading-body {
+  padding: 48px 24px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.score-panel {
+  background: #f9f0fc;
+}
+
+.disclaimer {
+  padding: 8px 24px 24px;
+}
+
+.field-wrap {
+  padding: 8px 24px 24px;
+}
+
+.local-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 108px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 48px);
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(25, 31, 40, 0.92);
+  color: #fff;
+  font-size: 14px;
+  z-index: 30;
+}
+
+@media (min-width: 481px) {
+  .local-toast {
+    left: 50%;
+  }
+}
