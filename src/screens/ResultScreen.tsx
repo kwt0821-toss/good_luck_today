@@ -115,7 +115,10 @@ export function ResultScreen({ fortune, nickname, onBack, onOpenCategory }: Resu
         </Text>
       </div>
 
+      <div className="cta-spacer" aria-hidden="true" />
+
       <FixedBottomCTA.Double
+        takeSpace
         leftButton={
           <Button color="dark" variant="weak" onClick={handleShare}>
             공유하기

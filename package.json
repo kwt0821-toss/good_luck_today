@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "granite dev",
-    "build": "ait build",
+    "dev": "vite --host --port 5173",
+    "build": "vite build && ait build",
     "deploy": "ait deploy",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",

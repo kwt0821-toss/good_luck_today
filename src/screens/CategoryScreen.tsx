@@ -40,7 +40,9 @@ export function CategoryScreen({ category, onBack }: CategoryScreenProps) {
         </Text>
       </section>
 
-      <FixedBottomCTA onClick={onBack}>운세 전체 보기</FixedBottomCTA>
+      <div className="cta-spacer" aria-hidden="true" />
+
+      <FixedBottomCTA takeSpace onClick={onBack}>운세 전체 보기</FixedBottomCTA>
     </div>
   );
 }

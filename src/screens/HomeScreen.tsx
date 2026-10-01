@@ -157,8 +157,11 @@ export function HomeScreen({
         />
       </List>
 
+      <div className="cta-spacer" aria-hidden="true" />
+
       {revealed ? (
         <FixedBottomCTA.Double
+          takeSpace
           leftButton={
             <Button color="dark" variant="weak" onClick={() => setShareOpen(true)}>
               공유하기
@@ -168,6 +171,7 @@ export function HomeScreen({
         />
       ) : (
         <FixedBottomCTA
+          takeSpace
           onClick={async () => {
             await haptic("tap");
             onRead();

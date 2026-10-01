@@ -40,7 +40,9 @@ export function ReadingScreen({ onCancel, onComplete }: ReadingScreenProps) {
         <div className="reading-emoji" aria-hidden="true">
           🍀
         </div>
-        <ProgressBar size="bold" progress={(step + 1) / STEPS.length} color="#12B886" animate />
+        <div className="reading-progress">
+          <ProgressBar size="bold" progress={(step + 1) / STEPS.length} color="#12B886" animate />
+        </div>
         <Text typography="t6" color={adaptive.grey500} display="block">
           {step + 1} / {STEPS.length}
         </Text>
