@@ -190,6 +190,16 @@ export const ITEMS: ShopItem[] = [
 
 const ITEM_MAP = new Map(ITEMS.map((item) => [item.id, item]));
 
+/** Catalog prices stay as-is; the Vite dev server treats every shop item as free. */
+export function shopPrice(item: Pick<ShopItem, "price">): number {
+  if (import.meta.env.DEV) return 0;
+  return item.price;
+}
+
+export function isCatalogFree(item: Pick<ShopItem, "price">): boolean {
+  return item.price <= 0;
+}
+
 export function getItemById(id: string): ShopItem | undefined {
   return ITEM_MAP.get(id);
 }

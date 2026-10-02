@@ -10,6 +10,8 @@ import {
   categoryLabel,
   getItemById,
   getItemsByCategory,
+  isCatalogFree,
+  shopPrice,
 } from "../lib/items";
 import { ART_PROMPTS, ROOM_ART } from "../lib/roomArt";
 import {
@@ -262,7 +264,9 @@ function ShopCard({
   const owned = ownedCount(user, item.id);
   const equipped = isEquipped(user, item);
   const uniqueOwned = item.unique && owned > 0;
-  const canBuy = !uniqueOwned && user.pinkJellyBalance >= item.price && item.price > 0;
+  const price = shopPrice(item);
+  const canBuy = !uniqueOwned && !isCatalogFree(item) && user.pinkJellyBalance >= price;
+  const priceLabel = isCatalogFree(item) ? "기본 아이템" : price === 0 ? "무료" : `🍬 ${price}`;
 
   return (
     <article className="shop-card">
@@ -271,14 +275,14 @@ function ShopCard({
       </div>
       <strong>{item.name}</strong>
       <span>
-        {item.price > 0 ? `🍬 ${item.price}` : "기본 아이템"}
+        {priceLabel}
         {owned > 0 ? ` · 보유 ${owned}` : ""}
       </span>
       {item.unique && uniqueOwned ? (
         <button type="button" className="shop-buy" disabled={equipped} onClick={onEquip}>
           {equipped ? "적용 중" : "적용하기"}
         </button>
-      ) : item.price <= 0 ? (
+      ) : isCatalogFree(item) ? (
         <button type="button" className="shop-buy is-owned" disabled>
           가지고 있어요
         </button>

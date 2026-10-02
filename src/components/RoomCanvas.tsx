@@ -2,18 +2,24 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   CAT_TILE,
+  FLOOR_PATTERN_TRANSFORM,
   ISO_ORIGIN_X,
   ISO_ORIGIN_Y,
   ISO_VIEW_H,
   ISO_VIEW_W,
+  LEFT_WALL_PATTERN_TRANSFORM,
+  RIGHT_WALL_PATTERN_TRANSFORM,
   ROOM_SIZE,
+  SURFACE_PATTERN_SIZE,
   TILE_W,
   WALL_H,
   canOccupy,
+  floorBackCorner,
+  floorLeftCorner,
+  floorRightCorner,
   floorTheme,
   footprintAnchor,
   footprintCells,
-  isoProject,
   isoUnproject,
   sortDrawOrder,
   tileDiamond,
@@ -120,9 +126,9 @@ export function RoomCanvas({
 
   const catAnchor = footprintAnchor({ tilesW: 1, tilesH: 1 }, CAT_TILE.col, CAT_TILE.row);
 
-  const back = isoProject(0, 0);
-  const leftFront = isoProject(0, ROOM_SIZE - 1);
-  const rightFront = isoProject(ROOM_SIZE - 1, 0);
+  const back = floorBackCorner();
+  const leftFront = floorLeftCorner();
+  const rightFront = floorRightCorner();
 
   return (
     <div
@@ -157,36 +163,64 @@ export function RoomCanvas({
         >
           <defs>
             {hasWallTexture ? (
-              <pattern
-                id="room-wall-tex"
-                width="48"
-                height="48"
-                patternUnits="userSpaceOnUse"
-              >
-                <image href={wallTexture} width="48" height="48" preserveAspectRatio="none" />
-              </pattern>
+              <>
+                <pattern
+                  id="room-wall-left-tex"
+                  width={SURFACE_PATTERN_SIZE}
+                  height={SURFACE_PATTERN_SIZE}
+                  patternUnits="userSpaceOnUse"
+                  patternTransform={LEFT_WALL_PATTERN_TRANSFORM}
+                >
+                  <image
+                    href={wallTexture}
+                    width={SURFACE_PATTERN_SIZE}
+                    height={SURFACE_PATTERN_SIZE}
+                    preserveAspectRatio="none"
+                  />
+                </pattern>
+                <pattern
+                  id="room-wall-right-tex"
+                  width={SURFACE_PATTERN_SIZE}
+                  height={SURFACE_PATTERN_SIZE}
+                  patternUnits="userSpaceOnUse"
+                  patternTransform={RIGHT_WALL_PATTERN_TRANSFORM}
+                >
+                  <image
+                    href={wallTexture}
+                    width={SURFACE_PATTERN_SIZE}
+                    height={SURFACE_PATTERN_SIZE}
+                    preserveAspectRatio="none"
+                  />
+                </pattern>
+              </>
             ) : null}
             {hasFloorTexture ? (
               <pattern
                 id="room-floor-tex"
-                width="64"
-                height="32"
+                width={SURFACE_PATTERN_SIZE}
+                height={SURFACE_PATTERN_SIZE}
                 patternUnits="userSpaceOnUse"
+                patternTransform={FLOOR_PATTERN_TRANSFORM}
               >
-                <image href={floorTexture} width="64" height="32" preserveAspectRatio="none" />
+                <image
+                  href={floorTexture}
+                  width={SURFACE_PATTERN_SIZE}
+                  height={SURFACE_PATTERN_SIZE}
+                  preserveAspectRatio="none"
+                />
               </pattern>
             ) : null}
           </defs>
           <g transform={`translate(${ISO_ORIGIN_X} ${ISO_ORIGIN_Y})`}>
             <polygon
               points={`${back.x},${back.y - WALL_H} ${leftFront.x},${leftFront.y - WALL_H} ${leftFront.x},${leftFront.y} ${back.x},${back.y}`}
-              fill={hasWallTexture ? "url(#room-wall-tex)" : walls.light}
+              fill={hasWallTexture ? "url(#room-wall-left-tex)" : walls.light}
               stroke={walls.line}
               strokeWidth="1.5"
             />
             <polygon
               points={`${back.x},${back.y - WALL_H} ${rightFront.x},${rightFront.y - WALL_H} ${rightFront.x},${rightFront.y} ${back.x},${back.y}`}
-              fill={hasWallTexture ? "url(#room-wall-tex)" : walls.dark}
+              fill={hasWallTexture ? "url(#room-wall-right-tex)" : walls.dark}
               stroke={walls.line}
               strokeWidth="1.5"
             />

@@ -211,7 +211,7 @@
   position: relative;
   width: calc(100% - 24px);
   margin: 4px 12px 10px;
-  min-height: 320px;
+  min-height: 340px;
   border-radius: 28px;
   overflow: hidden;
   display: grid;

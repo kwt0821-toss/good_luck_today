@@ -3,6 +3,8 @@ import {
   STARTER_WALLPAPER_ID,
   STARTER_YARN_ID,
   getItemById,
+  isCatalogFree,
+  shopPrice,
 } from "./items";
 import { canOccupy } from "./iso";
 import type { RoomPlacement, RoomState, ShopItem, UserState } from "../types";
@@ -42,17 +44,18 @@ function newInstanceId(): string {
 export function buyItem(user: UserState, itemId: string): RoomActionResult {
   const item = getItemById(itemId);
   if (!item) return { ok: false, message: "없는 아이템이에요." };
-  if (item.price <= 0) return { ok: false, message: "기본으로 가지고 있는 아이템이에요." };
+  if (isCatalogFree(item)) return { ok: false, message: "기본으로 가지고 있는 아이템이에요." };
   if (item.unique && ownedCount(user, itemId) > 0) {
     return { ok: false, message: "이미 가지고 있어요." };
   }
-  if (user.pinkJellyBalance < item.price) {
+  const price = shopPrice(item);
+  if (user.pinkJellyBalance < price) {
     return { ok: false, message: "핑크젤리가 부족해요." };
   }
 
   const next: UserState = {
     ...user,
-    pinkJellyBalance: user.pinkJellyBalance - item.price,
+    pinkJellyBalance: user.pinkJellyBalance - price,
     inventory: {
       ...user.inventory,
       [itemId]: ownedCount(user, itemId) + 1,
