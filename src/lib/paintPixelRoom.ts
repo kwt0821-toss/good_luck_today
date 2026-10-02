@@ -72,21 +72,23 @@ function shade(hex: string, amount: number): string {
   return `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 }
 
-function drawWindow(
+function drawIsoWindow(
   ctx: CanvasRenderingContext2D,
   originX: number,
   originY: number,
-  corners: Array<{ x: number; y: number }>,
+  side: "left" | "right",
 ) {
-  const cx = (corners[0].x + corners[1].x) / 2;
-  const cy = (corners[0].y + corners[3].y) / 2 - WALL_H * 0.42;
-  for (let y = -10; y <= 12; y += PIXEL) {
-    for (let x = -8; x <= 8; x += PIXEL) {
-      const inside = Math.abs(x) <= 8 && y >= -10 && y <= 12;
-      if (!inside) continue;
-      const frame = Math.abs(x) >= 6 || y <= -8 || y >= 10 || x === 0;
-      const color = frame ? WINDOW_FRAME : y < 0 ? WINDOW_SHINE : WINDOW_GLASS;
-      plot(ctx, originX + cx + x, originY + cy + y, color);
+  const base = side === "left" ? isoProject(0, 1) : isoProject(1, 0);
+  const topX = base.x + (side === "left" ? -8 : 8);
+  const topY = base.y - 52;
+  const dir = side === "left" ? -1 : 1;
+  for (let v = 0; v <= 24; v += PIXEL) {
+    for (let u = 0; u <= 18; u += PIXEL) {
+      const x = originX + topX + dir * u;
+      const y = originY + topY + v + u / 2;
+      const frame = u <= PIXEL || u >= 16 || v <= PIXEL || v >= 22;
+      const pane = !frame && v < 12 ? WINDOW_SHINE : WINDOW_GLASS;
+      plot(ctx, x, y, frame ? WINDOW_FRAME : pane);
     }
   }
 }
@@ -154,15 +156,8 @@ export function paintPixelRoom(
     return shade(samplePattern(wall, u, v), -18);
   });
 
-  drawWindow(ctx, ox, oy, leftWallIso);
-  drawWindow(
-    ctx,
-    ox,
-    oy,
-    rightWallIso.map((point, index) =>
-      index === 1 || index === 2 ? { x: point.x * 0.55, y: point.y } : point,
-    ),
-  );
+  drawIsoWindow(ctx, ox, oy, "left");
+  drawIsoWindow(ctx, ox, oy, "right");
 
   for (const edge of [
     [back, leftFront],
