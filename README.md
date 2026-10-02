@@ -18,7 +18,7 @@ npm install
 npm run dev
 ```
 
-브라우저에서 `http://localhost:5173`을 열면 미리볼 수 있어요. 토스 앱 안에서는 앱인토스 샌드박스 또는 `.ait` 번들로 실행해요.
+로컬에서 돌릴 때는 `http://localhost:5173`을 열면 됩니다. Cursor Cloud Agent에서는 내 PC Chrome의 localhost가 아니라 Agents 창 **플러그 아이콘(Forwarded Ports)** 의 **5173**을 여세요. 토스 앱 안에서는 앱인토스 샌드박스 또는 `.ait` 번들로 실행해요.
 
 ## 배포하기
 
