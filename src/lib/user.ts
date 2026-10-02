@@ -1,3 +1,4 @@
+import { createDefaultInventory, createDefaultRoom } from "./room";
 import type { Cat, DrawResult, Grade, UserState } from "../types";
 import { toKstDateKey } from "./date";
 
@@ -32,6 +33,8 @@ export function createDefaultUser(): UserState {
     unlockedCatIds: [],
     collection: {},
     lastResult: null,
+    inventory: createDefaultInventory(),
+    room: createDefaultRoom(),
   };
 }
 

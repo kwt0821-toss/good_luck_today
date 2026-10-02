@@ -1,8 +1,10 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
-import type { CollectionRecord, DrawResult, UserState } from "../types";
+import type { CollectionRecord, DrawResult, RoomPlacement, RoomState, UserState } from "../types";
 import { applyDailyReset, createDefaultUser } from "./user";
 import { toKstDateKey } from "./date";
+import { getItemById } from "./items";
+import { createDefaultInventory, createDefaultRoom } from "./room";
 
 const USER_KEY = "lucky-cat.user-state";
 
@@ -36,6 +38,54 @@ function parseCollection(value: unknown): Record<string, CollectionRecord> {
     next[id] = { unlockedAt: entry.unlockedAt, count: entry.count };
   }
   return next;
+}
+
+function parseInventory(value: unknown): Record<string, number> {
+  if (!isRecord(value)) return createDefaultInventory();
+
+  const next: Record<string, number> = {};
+  for (const [id, count] of Object.entries(value)) {
+    if (typeof count !== "number" || count < 1 || !getItemById(id)) continue;
+    next[id] = Math.floor(count);
+  }
+  return { ...createDefaultInventory(), ...next };
+}
+
+function parsePlacements(value: unknown): RoomPlacement[] {
+  if (!Array.isArray(value)) return createDefaultRoom().placements;
+
+  const next: RoomPlacement[] = [];
+  for (const entry of value) {
+    if (!isRecord(entry)) continue;
+    if (typeof entry.instanceId !== "string" || typeof entry.itemId !== "string") continue;
+    if (typeof entry.x !== "number" || typeof entry.y !== "number") continue;
+    if (!getItemById(entry.itemId)) continue;
+    next.push({
+      instanceId: entry.instanceId,
+      itemId: entry.itemId,
+      x: entry.x,
+      y: entry.y,
+    });
+  }
+  return next;
+}
+
+function parseRoom(value: unknown): RoomState {
+  const fallback = createDefaultRoom();
+  if (!isRecord(value)) return fallback;
+
+  const wallpaperId =
+    typeof value.wallpaperId === "string" && getItemById(value.wallpaperId)
+      ? value.wallpaperId
+      : fallback.wallpaperId;
+  const floorId =
+    typeof value.floorId === "string" && getItemById(value.floorId) ? value.floorId : fallback.floorId;
+
+  return {
+    wallpaperId,
+    floorId,
+    placements: parsePlacements(value.placements),
+  };
 }
 
 function parseLastResult(value: unknown): DrawResult | null {
@@ -77,6 +127,8 @@ function parseUser(raw: string | null): UserState {
         : [],
       collection: parseCollection(parsed.collection),
       lastResult: parseLastResult(parsed.lastResult),
+      inventory: parseInventory(parsed.inventory),
+      room: parseRoom(parsed.room),
     };
   } catch {
     return createDefaultUser();

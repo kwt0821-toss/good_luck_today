@@ -56,7 +56,7 @@ export function CollectionScreen({ user, onBack }: CollectionScreenProps) {
         }
         subtitleBottom={
           <Top.SubtitleParagraph size={15}>
-            뽑을 때마다 토스포인트와 핑크젤리를 받아요. 핑크젤리는 앱 안 재화예요.
+            뽑을 때마다 토스포인트와 핑크젤리를 받아요. 핑크젤리로는 고양이방을 꾸며요.
           </Top.SubtitleParagraph>
         }
       />

@@ -60,7 +60,7 @@ export function ResultScreen({
             ? "NEW! 도감에 새로 등록됐어요."
             : "이미 도감에 있는 고양이예요. 중복 카운터가 올라갔어요."}
         </p>
-        <p className="reward-hint">핑크젤리는 앱 안 재화예요. 사용처는 곧 열려요.</p>
+        <p className="reward-hint">핑크젤리로는 고양이방 아이템을 살 수 있어요.</p>
       </div>
 
       {result.boosted ? (

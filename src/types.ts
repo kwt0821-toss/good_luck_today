@@ -1,11 +1,12 @@
 export type Grade = "SSS" | "S" | "A" | "B" | "C";
 
-export type ScreenName = "home" | "result" | "collection";
+export type ScreenName = "home" | "result" | "collection" | "room";
 
 export type Screen =
   | { name: "home" }
   | { name: "result" }
-  | { name: "collection" };
+  | { name: "collection" }
+  | { name: "room" };
 
 export interface Cat {
   id: string;
@@ -29,6 +30,35 @@ export interface DrawResult {
   earnedPinkJelly: number;
 }
 
+export type ItemCategory = "wallpaper" | "floor" | "furniture" | "decor";
+
+export type ItemAnchor = "wall" | "floor" | "surface";
+
+export interface ShopItem {
+  id: string;
+  name: string;
+  category: ItemCategory;
+  price: number;
+  width: number;
+  anchor: ItemAnchor;
+  unique: boolean;
+  starter: boolean;
+  imageUrl: string;
+}
+
+export interface RoomPlacement {
+  instanceId: string;
+  itemId: string;
+  x: number;
+  y: number;
+}
+
+export interface RoomState {
+  wallpaperId: string;
+  floorId: string;
+  placements: RoomPlacement[];
+}
+
 export interface UserState {
   userId: string;
   pinkJellyBalance: number;
@@ -38,6 +68,8 @@ export interface UserState {
   unlockedCatIds: string[];
   collection: Record<string, CollectionRecord>;
   lastResult: DrawResult | null;
+  inventory: Record<string, number>;
+  room: RoomState;
 }
 
 export type AdKind = "interstitial" | "rewarded";
@@ -47,3 +79,5 @@ export type DrawPurpose = "daily" | "reroll-standard" | "reroll-boosted";
 export type GradeFilter = "ALL" | Grade;
 
 export type CollectionSort = "acquired" | "grade";
+
+export type RoomTab = "decorate" | "shop";

@@ -185,17 +185,258 @@
   color: #191f28;
 }
 
-.today-cat-copy p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.45;
-  color: #4e5968;
+.room-entry-icon {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  aspect-ratio: 1;
+  border-radius: 20px;
+  background: linear-gradient(160deg, #fff4c8, #c9ebf6 55%, #d8f3ee);
+  font-size: 40px;
 }
 
 .home-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.home-links {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cat-room {
+  position: relative;
+  width: calc(100% - 48px);
+  margin: 8px 24px 12px;
+  aspect-ratio: 4 / 3.35;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #d8f3ee;
+  box-shadow: 0 12px 28px rgba(80, 140, 140, 0.12);
+  touch-action: none;
+  user-select: none;
+}
+
+.cat-room.is-placing {
+  cursor: crosshair;
+}
+
+.room-wall,
+.room-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background-size: cover;
+  background-position: center;
+  pointer-events: none;
+}
+
+.room-wall {
+  top: 0;
+  height: 62%;
+}
+
+.room-floor {
+  bottom: 0;
+  height: 42%;
+}
+
+.room-baseboard {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 58%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+
+.room-item {
+  position: absolute;
+  padding: 0;
+  border: 2px solid transparent;
+  background: transparent;
+  transform: translate(-50%, -70%);
+  cursor: grab;
+}
+
+.room-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.room-item.is-selected {
+  border-color: #6ec8d4;
+  border-radius: 16px;
+  z-index: 40 !important;
+}
+
+.room-cat {
+  position: absolute;
+  left: 46%;
+  top: 64%;
+  width: 22%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 8px 18px rgba(25, 31, 40, 0.12);
+  pointer-events: none;
+  z-index: 20;
+}
+
+.room-cat img,
+.room-cat span {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  font-size: 36px;
+  background: #fff8d6;
+}
+
+.room-hint,
+.room-selected-bar {
+  margin: 0 24px 12px;
+  font-size: 13px;
+  color: #6b7684;
+  text-align: center;
+}
+
+.room-selected-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: #eaf8f4;
+  text-align: left;
+}
+
+.room-toolbar {
+  padding: 0 24px 12px;
+}
+
+.room-filters {
+  padding: 0 24px 8px;
+}
+
+.room-inventory {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 4px 24px 32px;
+}
+
+.inventory-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 2px solid transparent;
+  border-radius: 18px;
+  background: #eef6fa;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inventory-chip img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.inventory-chip strong {
+  font-size: 13px;
+  color: #191f28;
+}
+
+.inventory-chip span {
+  font-size: 12px;
+  color: #8b95a1;
+}
+
+.inventory-chip.is-active {
+  border-color: #6ec8d4;
+  background: #e7f6fc;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 8px 24px 32px;
+}
+
+.shop-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 20px;
+  background: #eef6fa;
+}
+
+.shop-preview {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.shop-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.shop-preview.is-surface img {
+  object-fit: cover;
+}
+
+.shop-card strong {
+  font-size: 14px;
+  color: #191f28;
+}
+
+.shop-card span {
+  font-size: 12px;
+  color: #6b7684;
+}
+
+.shop-buy {
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: #6ec8d4;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.shop-buy:disabled {
+  background: #d6e4e8;
+  color: #8b95a1;
+  cursor: default;
+}
+
+.shop-buy.is-owned {
+  background: #eaf8f4;
+  color: #2f6f68;
+}
+
+.room-screen .local-toast {
+  bottom: 24px;
 }
 
 .text-link {

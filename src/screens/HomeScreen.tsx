@@ -17,6 +17,7 @@ type HomeScreenProps = {
   onDraw: () => void;
   onOpenResult: () => void;
   onOpenCollection: () => void;
+  onOpenRoom: () => void;
 };
 
 export function HomeScreen({
@@ -28,6 +29,7 @@ export function HomeScreen({
   onDraw,
   onOpenResult,
   onOpenCollection,
+  onOpenRoom,
 }: HomeScreenProps) {
   return (
     <div className="screen">
@@ -87,18 +89,36 @@ export function HomeScreen({
           </Text>
           <Text typography="t6" color={adaptive.grey600} display="block">
             뽑을 때마다 토스포인트와 핑크젤리를 바로 받아요. 등급이 높을수록 1원·1개씩 더 쌓여요.
-            핑크젤리는 앱 안 재화예요. 사용처는 곧 열려요.
+            핑크젤리로는 고양이방 아이템을 살 수 있어요.
           </Text>
         </section>
       )}
+
+      <button type="button" className="today-cat-card" onClick={onOpenRoom}>
+        <div className="room-entry-icon" aria-hidden="true">
+          🏠
+        </div>
+        <div className="today-cat-copy">
+          <div className="today-cat-top">
+            <span>핑크젤리 상점</span>
+          </div>
+          <strong>고양이방</strong>
+          <p>아이템을 사고 드래그해서 나만의 방을 꾸며요.</p>
+        </div>
+      </button>
 
       <div className="home-meta">
         <Text typography="t6" color={adaptive.grey600} display="block">
           남은 재도전 {remainingRerolls}/{MAX_DAILY_REROLLS}
         </Text>
-        <button type="button" className="text-link" onClick={onOpenCollection}>
-          고양이 도감
-        </button>
+        <div className="home-links">
+          <button type="button" className="text-link" onClick={onOpenCollection}>
+            고양이 도감
+          </button>
+          <button type="button" className="text-link" onClick={onOpenRoom}>
+            고양이방
+          </button>
+        </div>
       </div>
 
       <div className="cta-spacer" aria-hidden="true" />

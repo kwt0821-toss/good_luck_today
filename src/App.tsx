@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AdModal } from "./components/AdModal";
 import { getCatById } from "./lib/cats";
 import { toKstDateKey } from "./lib/date";
 import { getRandomCat } from "./lib/gacha";
 import { configureNavigationBar, haptic } from "./lib/native";
+import { buyItem, equipSurface, movePlacement, placeItem, removePlacement } from "./lib/room";
 import { loadUserState, saveUserState } from "./lib/storage";
 import { applyDraw, createDefaultUser, hasDrawnToday, remainingRerolls } from "./lib/user";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { ResultScreen } from "./screens/ResultScreen";
+import { RoomScreen } from "./screens/RoomScreen";
 import type { AdKind, DrawPurpose, Screen, UserState } from "./types";
 import "./App.css";
 
@@ -19,6 +21,8 @@ function App() {
   const [screen, setScreen] = useState<Screen>({ name: "home" });
   const [rerollOpen, setRerollOpen] = useState(false);
   const [ad, setAd] = useState<{ kind: AdKind; purpose: DrawPurpose } | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<number>(0);
 
   const today = toKstDateKey();
   const drawnToday = hasDrawnToday(user, today);
@@ -48,6 +52,26 @@ function App() {
     setUser(next);
     await saveUserState(next);
   }, []);
+
+  const showToast = useCallback((message: string) => {
+    if (!message) return;
+    window.clearTimeout(toastTimer.current);
+    setToast(message);
+    toastTimer.current = window.setTimeout(() => setToast(null), 1800);
+  }, []);
+
+  const applyRoomAction = useCallback(
+    async (result: ReturnType<typeof buyItem>, withHaptic = false) => {
+      if (!result.ok) {
+        showToast(result.message);
+        return;
+      }
+      await persist(result.next);
+      showToast(result.message);
+      if (withHaptic) await haptic("success");
+    },
+    [persist, showToast],
+  );
 
   const startDraw = useCallback(
     (purpose: DrawPurpose) => {
@@ -86,6 +110,23 @@ function App() {
         <CollectionScreen user={user} onBack={() => setScreen({ name: "home" })} />
       ) : null}
 
+      {screen.name === "room" ? (
+        <RoomScreen
+          user={user}
+          cat={todayCat}
+          toast={toast}
+          onBack={() => setScreen({ name: "home" })}
+          onBuy={(itemId) => void applyRoomAction(buyItem(user, itemId), true)}
+          onEquip={(itemId) => void applyRoomAction(equipSurface(user, itemId), true)}
+          onPlace={(itemId, x, y) => void applyRoomAction(placeItem(user, itemId, x, y))}
+          onMove={(instanceId, x, y) => {
+            const result = movePlacement(user, instanceId, x, y);
+            if (result.ok) void persist(result.next);
+          }}
+          onRemove={(instanceId) => void applyRoomAction(removePlacement(user, instanceId))}
+        />
+      ) : null}
+
       {screen.name === "result" && resultCat && user.lastResult ? (
         <ResultScreen
           cat={resultCat}
@@ -113,6 +154,7 @@ function App() {
             if (user.lastResult) setScreen({ name: "result" });
           }}
           onOpenCollection={() => setScreen({ name: "collection" })}
+          onOpenRoom={() => setScreen({ name: "room" })}
         />
       ) : null}
 
