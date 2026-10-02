@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="160" viewBox="0 0 128 160">
+  <rect width="128" height="160" fill="#f7fcfb"/>
+  <rect x="0.5" y="0.5" width="127" height="159" fill="none" stroke="#c9ebf6" stroke-dasharray="4 3"/>
+  <text x="64" y="18" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#4e5968">1x Dt\</text>
+  <text x="64" y="34" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#8b95a1">128 × 160 px · PNG</text>
+  <polygon points="64,96 128,128 64,160 0,128" fill="#fff8d6" stroke="#6ec8d4" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="64" y="128" text-anchor="middle" font-size="9" font-family="sans-serif" fill="#2f6f68">@ t È„¨ HÐ</text>
+  <text x="64" y="80" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#5aabb8">Dt\@ ì0 8Ì</text>
+</svg>

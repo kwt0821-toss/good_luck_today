@@ -1,7 +1,8 @@
 import { adaptive } from "@toss/tds-colors";
-import { SegmentedControl, Text, Top } from "@toss/tds-mobile";
+import { BottomSheet, SegmentedControl, Text, Top } from "@toss/tds-mobile";
 import { useEffect, useMemo, useState } from "react";
 
+import { RoomArtImage } from "../components/RoomArtImage";
 import { RoomCanvas } from "../components/RoomCanvas";
 import { ScreenHeader } from "../components/ScreenHeader";
 import {
@@ -10,6 +11,7 @@ import {
   getItemById,
   getItemsByCategory,
 } from "../lib/items";
+import { ART_PROMPTS, ROOM_ART } from "../lib/roomArt";
 import {
   availableCount,
   isEquipped,
@@ -44,6 +46,7 @@ export function RoomScreen({
   const [filter, setFilter] = useState<ItemCategory | "ALL">("ALL");
   const [placingItemId, setPlacingItemId] = useState<string | null>(null);
   const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const ownedItems = useMemo(
     () =>
@@ -75,6 +78,11 @@ export function RoomScreen({
           </Top.SubtitleParagraph>
         }
       />
+      <div className="room-guide-link">
+        <button type="button" className="text-link" onClick={() => setGuideOpen(true)}>
+          그림 넣는 방법
+        </button>
+      </div>
 
       <RoomCanvas
         room={user.room}
@@ -153,7 +161,7 @@ export function RoomScreen({
                   setPlacingItemId((current) => (current === item.id ? null : item.id));
                 }}
               >
-                <img src={item.imageUrl} alt="" />
+                <RoomArtImage item={item} />
                 <strong>{item.name}</strong>
                 <span>x{availableCount(user, item.id)}</span>
               </button>
@@ -191,6 +199,51 @@ export function RoomScreen({
       )}
 
       {toast ? <div className="local-toast">{toast}</div> : null}
+
+      <BottomSheet
+        open={guideOpen}
+        onClose={() => setGuideOpen(false)}
+        header={<BottomSheet.Header>그림 넣는 방법</BottomSheet.Header>}
+        headerDescription={
+          <BottomSheet.HeaderDescription>
+            아이소 벽은 직접 그리지 마세요. 정사각 패턴과 아이템 PNG만 넣으면 맵에 붙어요.
+          </BottomSheet.HeaderDescription>
+        }
+        cta={
+          <BottomSheet.CTA onClick={() => setGuideOpen(false)}>
+            닫기
+          </BottomSheet.CTA>
+        }
+      >
+        <div className="art-guide">
+          <p>
+            <strong>벽지</strong> {ROOM_ART.wallpaper.width}×{ROOM_ART.wallpaper.height} 심리스 PNG
+            <br />
+            <code>public/room-art/walls/wall_mint.png</code>
+          </p>
+          <p>
+            <strong>바닥</strong> {ROOM_ART.floor.width}×{ROOM_ART.floor.height} 심리스 PNG
+            <br />
+            <code>public/room-art/floors/floor_wood.png</code>
+          </p>
+          <p>
+            <strong>1칸 아이템</strong> {ROOM_ART.item1.width}×{ROOM_ART.item1.height}, 배경 투명
+            <br />
+            <code>public/room-art/items/decor_yarn.png</code>
+          </p>
+          <p>
+            <strong>2칸 아이템</strong> {ROOM_ART.item2.width}×{ROOM_ART.item2.height}
+            <br />
+            <code>public/room-art/items/furn_bed.png</code>
+          </p>
+          <p className="art-guide-prompt">
+            도안은 <code>/room-art/templates/</code> 에 있어요. AI로 만들 때는 아래를 그대로 쓰세요.
+          </p>
+          <pre>{ART_PROMPTS.wallpaper}</pre>
+          <pre>{ART_PROMPTS.floor}</pre>
+          <pre>{ART_PROMPTS.item}</pre>
+        </div>
+      </BottomSheet>
     </div>
   );
 }
@@ -214,7 +267,7 @@ function ShopCard({
   return (
     <article className="shop-card">
       <div className={`shop-preview ${item.category === "wallpaper" || item.category === "floor" ? "is-surface" : ""}`}>
-        <img src={item.imageUrl} alt="" />
+        <RoomArtImage item={item} />
       </div>
       <strong>{item.name}</strong>
       <span>

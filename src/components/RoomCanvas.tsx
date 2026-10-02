@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   CAT_TILE,
@@ -20,7 +20,9 @@ import {
   wallTheme,
 } from "../lib/iso";
 import { getItemById } from "../lib/items";
+import { customArtUrlById } from "../lib/roomArt";
 import type { Cat, RoomState } from "../types";
+import { RoomArtImage } from "./RoomArtImage";
 
 type RoomCanvasProps = {
   room: RoomState;
@@ -32,6 +34,27 @@ type RoomCanvasProps = {
   onMove?: (instanceId: string, col: number, row: number) => void;
   onSelect?: (instanceId: string | null) => void;
 };
+
+function useRoomTexture(url: string): boolean {
+  const [ok, setOk] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const image = new Image();
+    image.onload = () => {
+      if (!cancelled) setOk(true);
+    };
+    image.onerror = () => {
+      if (!cancelled) setOk(false);
+    };
+    image.src = url;
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  return ok;
+}
 
 function pointerTile(element: HTMLElement, clientX: number, clientY: number) {
   const world = element.querySelector(".iso-world") ?? element;
@@ -58,6 +81,10 @@ export function RoomCanvas({
   const [hover, setHover] = useState<{ col: number; row: number } | null>(null);
   const walls = wallTheme(room.wallpaperId);
   const floors = floorTheme(room.floorId);
+  const wallTexture = customArtUrlById(room.wallpaperId, "wallpaper");
+  const floorTexture = customArtUrlById(room.floorId, "floor");
+  const hasWallTexture = useRoomTexture(wallTexture);
+  const hasFloorTexture = useRoomTexture(floorTexture);
   const placing = placingItemId ? getItemById(placingItemId) : undefined;
   const ghostItem = placing;
   const ghostValid =
@@ -128,19 +155,47 @@ export function RoomCanvas({
           viewBox={`0 0 ${ISO_VIEW_W} ${ISO_VIEW_H}`}
           aria-hidden="true"
         >
+          <defs>
+            {hasWallTexture ? (
+              <pattern
+                id="room-wall-tex"
+                width="48"
+                height="48"
+                patternUnits="userSpaceOnUse"
+              >
+                <image href={wallTexture} width="48" height="48" preserveAspectRatio="none" />
+              </pattern>
+            ) : null}
+            {hasFloorTexture ? (
+              <pattern
+                id="room-floor-tex"
+                width="64"
+                height="32"
+                patternUnits="userSpaceOnUse"
+              >
+                <image href={floorTexture} width="64" height="32" preserveAspectRatio="none" />
+              </pattern>
+            ) : null}
+          </defs>
           <g transform={`translate(${ISO_ORIGIN_X} ${ISO_ORIGIN_Y})`}>
             <polygon
               points={`${back.x},${back.y - WALL_H} ${leftFront.x},${leftFront.y - WALL_H} ${leftFront.x},${leftFront.y} ${back.x},${back.y}`}
-              fill={walls.light}
+              fill={hasWallTexture ? "url(#room-wall-tex)" : walls.light}
               stroke={walls.line}
               strokeWidth="1.5"
             />
             <polygon
               points={`${back.x},${back.y - WALL_H} ${rightFront.x},${rightFront.y - WALL_H} ${rightFront.x},${rightFront.y} ${back.x},${back.y}`}
-              fill={walls.dark}
+              fill={hasWallTexture ? "url(#room-wall-tex)" : walls.dark}
               stroke={walls.line}
               strokeWidth="1.5"
             />
+            {hasWallTexture ? (
+              <polygon
+                points={`${back.x},${back.y - WALL_H} ${rightFront.x},${rightFront.y - WALL_H} ${rightFront.x},${rightFront.y} ${back.x},${back.y}`}
+                fill="rgba(47, 101, 104, 0.12)"
+              />
+            ) : null}
             <ellipse cx={-72} cy={-48} rx="10" ry="14" fill={walls.window} stroke={walls.line} strokeWidth="3" />
             <ellipse cx={-72} cy={-62} rx="7" ry="7" fill={walls.window} stroke={walls.line} strokeWidth="3" />
             <ellipse cx={-58} cy={-62} rx="7" ry="7" fill={walls.window} stroke={walls.line} strokeWidth="3" />
@@ -160,7 +215,13 @@ export function RoomCanvas({
                 <polygon
                   key={`${col}-${row}`}
                   points={tileDiamond(col, row)}
-                  fill={(col + row) % 2 === 0 ? floors.a : floors.b}
+                  fill={
+                    hasFloorTexture
+                      ? "url(#room-floor-tex)"
+                      : (col + row) % 2 === 0
+                        ? floors.a
+                        : floors.b
+                  }
                   stroke={floors.line}
                   strokeWidth="1"
                 />
@@ -198,7 +259,7 @@ export function RoomCanvas({
                 event.currentTarget.setPointerCapture(event.pointerId);
               }}
             >
-              <img src={entry.item.imageUrl} alt="" draggable={false} />
+              <RoomArtImage item={entry.item} />
             </button>
           );
         })}

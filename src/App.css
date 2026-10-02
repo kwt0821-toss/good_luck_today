@@ -314,8 +314,44 @@
   text-align: left;
 }
 
+.room-guide-link {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 24px 8px;
+}
+
 .room-toolbar {
   padding: 0 24px 12px;
+}
+
+.art-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 8px 24px;
+  font-size: 13px;
+  color: #4e5968;
+  line-height: 1.5;
+}
+
+.art-guide p {
+  margin: 0;
+}
+
+.art-guide code,
+.art-guide pre {
+  display: block;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #eef6fa;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.art-guide-prompt {
+  margin-top: 8px !important;
 }
 
 .room-filters {
