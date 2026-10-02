@@ -34,7 +34,8 @@ type RoomCanvasProps = {
 };
 
 function pointerTile(element: HTMLElement, clientX: number, clientY: number) {
-  const box = element.getBoundingClientRect();
+  const world = element.querySelector(".iso-world") ?? element;
+  const box = world.getBoundingClientRect();
   const scaleX = ISO_VIEW_W / box.width;
   const scaleY = ISO_VIEW_H / box.height;
   const x = (clientX - box.left) * scaleX - ISO_ORIGIN_X;
