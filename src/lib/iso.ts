@@ -143,7 +143,7 @@ export function footprintAnchor(
 }
 
 export function sortDrawOrder(col: number, row: number): number {
-  return col + row;
+  return (col + row) * 10 + col;
 }
 
 export function wallTheme(id: string): WallTheme {
