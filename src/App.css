@@ -216,11 +216,10 @@
   overflow: hidden;
   display: grid;
   place-items: center;
-  background: #d7f1fa;
+  background: linear-gradient(180deg, #cfeee6 0%, #f7fcfb 62%);
   box-shadow: 0 12px 28px rgba(80, 140, 140, 0.12);
   touch-action: none;
   user-select: none;
-  image-rendering: pixelated;
 }
 
 .iso-stage.is-placing {
@@ -229,7 +228,6 @@
 
 .iso-world {
   position: relative;
-  image-rendering: pixelated;
 }
 
 .iso-shell {
@@ -238,7 +236,18 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  image-rendering: pixelated;
+}
+
+.iso-ghost.is-valid {
+  fill: rgba(94, 196, 168, 0.48);
+  stroke: #3aa88a;
+  stroke-width: 1.5;
+}
+
+.iso-ghost.is-invalid {
+  fill: rgba(232, 118, 118, 0.42);
+  stroke: #d65c5c;
+  stroke-width: 1.5;
 }
 
 .iso-item {
@@ -248,7 +257,7 @@
   background: transparent;
   transform: translate(-50%, -92%);
   cursor: grab;
-  image-rendering: pixelated;
+  filter: drop-shadow(0 6px 6px rgba(25, 31, 40, 0.12));
 }
 
 .iso-item img {
@@ -256,33 +265,34 @@
   width: 100%;
   height: auto;
   pointer-events: none;
-  image-rendering: pixelated;
 }
 
 .iso-item.is-selected {
   outline: 2px solid #6ec8d4;
-  outline-offset: 0;
+  outline-offset: -2px;
+  border-radius: 12px;
 }
 
 .iso-cat {
   position: absolute;
-  width: 64px;
-  height: 64px;
-  transform: translate(-50%, -88%);
+  width: 54px;
+  height: 54px;
+  transform: translate(-50%, -90%);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 16px rgba(25, 31, 40, 0.16);
   pointer-events: none;
-  image-rendering: pixelated;
 }
 
 .iso-cat img,
 .iso-cat span {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: grid;
   place-items: center;
   font-size: 32px;
-  background: transparent;
-  image-rendering: pixelated;
+  background: #fff8d6;
 }
 
 .room-hint,
@@ -371,9 +381,8 @@
   width: 100%;
   aspect-ratio: 1;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: 14px;
   background: #ffffff;
-  image-rendering: pixelated;
 }
 
 .inventory-chip strong {
@@ -418,7 +427,6 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  image-rendering: pixelated;
 }
 
 .shop-preview.is-surface img {

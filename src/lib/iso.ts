@@ -4,8 +4,6 @@ import { getItemById } from "./items";
 export const ROOM_SIZE = 5;
 export const TILE_W = 64;
 export const TILE_H = 32;
-/** 2px logical pixels so the room reads as chunky quarter-view pixel art. */
-export const PIXEL = 2;
 export const WALL_H = TILE_H * 3;
 export const ISO_VIEW_W = TILE_W * ROOM_SIZE + 16;
 export const ISO_ORIGIN_X = ISO_VIEW_W / 2;

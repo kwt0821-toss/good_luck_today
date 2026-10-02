@@ -208,7 +208,7 @@ export function RoomScreen({
         header={<BottomSheet.Header>그림 넣는 방법</BottomSheet.Header>}
         headerDescription={
           <BottomSheet.HeaderDescription>
-            파니룸처럼 쿼터뷰 픽셀아트로 그립니다. 벽은 직접 기울이지 말고 32×32 패턴만 넣으세요.
+            2D 벡터 일러스트로 그립니다. 아이소 벽은 직접 기울이지 말고 정사각 패턴만 넣으세요.
           </BottomSheet.HeaderDescription>
         }
         cta={
@@ -239,7 +239,7 @@ export function RoomScreen({
             <code>public/room-art/items/furn_bed.png</code>
           </p>
           <p className="art-guide-prompt">
-            도안은 <code>/room-art/templates/</code> 에 있어요. 파니룸식 픽셀아트 프롬프트는 아래를 그대로 쓰세요.
+            도안은 <code>/room-art/templates/</code> 에 있어요. 벡터 일러스트 프롬프트는 아래를 그대로 쓰세요.
           </p>
           <pre>{ART_PROMPTS.wallpaper}</pre>
           <pre>{ART_PROMPTS.floor}</pre>

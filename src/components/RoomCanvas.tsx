@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import {
   CAT_TILE,
@@ -6,16 +6,22 @@ import {
   ISO_ORIGIN_Y,
   ISO_VIEW_H,
   ISO_VIEW_W,
+  ROOM_SIZE,
   TILE_W,
+  WALL_H,
   canOccupy,
+  floorBackCorner,
+  floorLeftCorner,
+  floorRightCorner,
+  floorTheme,
   footprintAnchor,
   footprintCells,
   isoUnproject,
   sortDrawOrder,
+  tileDiamond,
+  wallTheme,
 } from "../lib/iso";
-import { isoCatSprite } from "../lib/isoCat";
 import { getItemById } from "../lib/items";
-import { paintPixelRoom } from "../lib/paintPixelRoom";
 import type { Cat, RoomState } from "../types";
 import { RoomArtImage } from "./RoomArtImage";
 
@@ -51,14 +57,11 @@ export function RoomCanvas({
   onSelect,
 }: RoomCanvasProps) {
   const roomRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const dragRef = useRef<{ instanceId: string } | null>(null);
   const [hover, setHover] = useState<{ col: number; row: number } | null>(null);
+  const walls = wallTheme(room.wallpaperId);
+  const floors = floorTheme(room.floorId);
   const placing = placingItemId ? getItemById(placingItemId) : undefined;
-  const ghostCells = useMemo(() => {
-    if (!hover || !placing) return [];
-    return footprintCells(placing, hover.col, hover.row);
-  }, [hover, placing]);
   const ghostValid =
     hover && placing
       ? canOccupy(
@@ -69,6 +72,8 @@ export function RoomCanvas({
           dragRef.current?.instanceId ?? null,
         )
       : false;
+  const ghostCells =
+    hover && placing ? footprintCells(placing, hover.col, hover.row) : [];
 
   const objects = useMemo(() => {
     const list = room.placements
@@ -89,15 +94,10 @@ export function RoomCanvas({
   }, [room.placements]);
 
   const catAnchor = footprintAnchor({ tilesW: 1, tilesH: 1 }, CAT_TILE.col, CAT_TILE.row);
-  const catSprite = useMemo(() => (cat ? isoCatSprite(cat.id) : null), [cat]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
-    ctx.imageSmoothingEnabled = false;
-    paintPixelRoom(ctx, room.wallpaperId, room.floorId, ghostCells, ghostValid);
-  }, [room.wallpaperId, room.floorId, ghostCells, ghostValid]);
+  const back = floorBackCorner();
+  const leftFront = floorLeftCorner();
+  const rightFront = floorRightCorner();
+  const patternId = `wall-pattern-${room.wallpaperId}`;
 
   return (
     <div
@@ -125,13 +125,83 @@ export function RoomCanvas({
       }}
     >
       <div className="iso-world" style={{ width: ISO_VIEW_W, height: ISO_VIEW_H }}>
-        <canvas
-          ref={canvasRef}
+        <svg
           className="iso-shell"
-          width={ISO_VIEW_W}
-          height={ISO_VIEW_H}
+          viewBox={`0 0 ${ISO_VIEW_W} ${ISO_VIEW_H}`}
           aria-hidden="true"
-        />
+        >
+          <defs>
+            <linearGradient id="iso-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#cfeee6" />
+              <stop offset="1" stopColor="#f7fcfb" />
+            </linearGradient>
+            <pattern id={patternId} width="28" height="28" patternUnits="userSpaceOnUse">
+              <rect width="28" height="28" fill={walls.light} />
+              <circle cx="8" cy="9" r="2.4" fill={walls.mid} />
+              <circle cx="21" cy="20" r="1.8" fill="#ffffff" opacity="0.72" />
+            </pattern>
+          </defs>
+          <rect width={ISO_VIEW_W} height={ISO_VIEW_H} fill="url(#iso-sky)" />
+          <g transform={`translate(${ISO_ORIGIN_X} ${ISO_ORIGIN_Y})`}>
+            <polygon
+              points={`${back.x},${back.y - WALL_H} ${leftFront.x},${leftFront.y - WALL_H} ${leftFront.x},${leftFront.y} ${back.x},${back.y}`}
+              fill={`url(#${patternId})`}
+              stroke={walls.line}
+              strokeWidth="1.5"
+            />
+            <polygon
+              points={`${back.x},${back.y - WALL_H} ${rightFront.x},${rightFront.y - WALL_H} ${rightFront.x},${rightFront.y} ${back.x},${back.y}`}
+              fill={walls.dark}
+              stroke={walls.line}
+              strokeWidth="1.5"
+            />
+            <polygon
+              points={`${back.x},${back.y - WALL_H} ${rightFront.x},${rightFront.y - WALL_H} ${rightFront.x},${rightFront.y} ${back.x},${back.y}`}
+              fill={`url(#${patternId})`}
+              opacity="0.55"
+            />
+            <ellipse
+              cx={-70}
+              cy={-50}
+              rx="11"
+              ry="15"
+              fill={walls.window}
+              stroke={walls.line}
+              strokeWidth="3"
+            />
+            <ellipse cx={-70} cy={-66} rx="7.5" ry="7.5" fill={walls.window} stroke={walls.line} strokeWidth="3" />
+            <ellipse cx={-55} cy={-66} rx="7.5" ry="7.5" fill={walls.window} stroke={walls.line} strokeWidth="3" />
+            <rect
+              x="46"
+              y={-88}
+              width="38"
+              height="36"
+              rx="8"
+              fill={walls.window}
+              stroke={walls.line}
+              strokeWidth="3"
+              transform="skewY(26) translate(8 8)"
+            />
+            {Array.from({ length: ROOM_SIZE }).flatMap((_, col) =>
+              Array.from({ length: ROOM_SIZE }).map((__, row) => (
+                <polygon
+                  key={`${col}-${row}`}
+                  points={tileDiamond(col, row)}
+                  fill={(col + row) % 2 === 0 ? floors.a : floors.b}
+                  stroke={floors.line}
+                  strokeWidth="1"
+                />
+              )),
+            )}
+            {ghostCells.map((cell) => (
+              <polygon
+                key={`ghost-${cell.col}-${cell.row}`}
+                points={tileDiamond(cell.col, cell.row)}
+                className={ghostValid ? "iso-ghost is-valid" : "iso-ghost is-invalid"}
+              />
+            ))}
+          </g>
+        </svg>
 
         {objects.map((entry) => {
           const selected = selectedInstanceId === entry.placement.instanceId;
@@ -143,7 +213,7 @@ export function RoomCanvas({
               style={{
                 left: ISO_ORIGIN_X + entry.anchor.x,
                 top: ISO_ORIGIN_Y + entry.anchor.y,
-                width: entry.item.tilesW * TILE_W,
+                width: entry.item.tilesW * TILE_W * 0.92,
                 zIndex: 10 + entry.order,
               }}
               aria-label={entry.item.name}
@@ -169,7 +239,7 @@ export function RoomCanvas({
           }}
           aria-hidden="true"
         >
-          {catSprite ? <img src={catSprite} alt="" /> : <span>🐱</span>}
+          {cat ? <img src={cat.imageUrl} alt="" /> : <span>🐱</span>}
         </div>
       </div>
     </div>
