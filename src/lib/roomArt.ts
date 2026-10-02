@@ -1,11 +1,11 @@
 import type { ItemCategory, ShopItem } from "../types";
 
-/** 맵에 맞춘 그림 크기. 이 숫자만 지키면 방에 바로 붙어요. */
+/** 파니룸식 쿼터뷰 픽셀아트 도안 크기. */
 export const ROOM_ART = {
-  wallpaper: { width: 256, height: 256, folder: "walls" },
-  floor: { width: 256, height: 256, folder: "floors" },
-  item1: { width: 128, height: 160, folder: "items" },
-  item2: { width: 256, height: 160, folder: "items" },
+  wallpaper: { width: 32, height: 32, folder: "walls" },
+  floor: { width: 32, height: 32, folder: "floors" },
+  item1: { width: 32, height: 40, folder: "items" },
+  item2: { width: 64, height: 40, folder: "items" },
 } as const;
 
 export function customArtUrl(item: Pick<ShopItem, "id" | "category">): string {
@@ -25,9 +25,9 @@ export function itemCanvasSize(tilesW: number): { width: number; height: number 
 
 export const ART_PROMPTS = {
   wallpaper:
-    "Seamless 256x256 pixel-art wallpaper texture, pastel mint, tiny cute paw prints, flat repeating pattern, no furniture, no characters, tileable",
+    "32x32 seamless pixel-art wallpaper texture, 1:1 pixels, junior-naver pani room style, pastel mint, tiny paw dots, flat repeating pattern, no furniture, no perspective, tileable",
   floor:
-    "Seamless 256x256 pixel-art floor texture, pastel cream wood planks, top-down, tileable, no objects",
+    "32x32 seamless pixel-art floor texture, 1:1 pixels, pani room style, pastel cream wood planks, top-down, tileable, no objects, no isometric diamond",
   item:
-    "Isometric pixel-art game sprite, 3/4 view, cute pastel, sitting on a small diamond floor shadow, transparent background, 128x160, no UI",
+    "Isometric pixel-art game sprite, 2:1 quarter view, pani room / habbo dollhouse style, cute pastel, 32x40, transparent background, chunky pixels, sitting on a small diamond shadow, no room, no UI",
 } as const;

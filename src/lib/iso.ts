@@ -4,20 +4,14 @@ import { getItemById } from "./items";
 export const ROOM_SIZE = 5;
 export const TILE_W = 64;
 export const TILE_H = 32;
-/** Two floor-tile units tall so wall and floor share the same 64px texture cell. */
-export const WALL_H = TILE_W * 2;
-export const SURFACE_PATTERN_SIZE = TILE_W;
+/** 2px logical pixels so the room reads as chunky quarter-view pixel art. */
+export const PIXEL = 2;
+export const WALL_H = TILE_H * 3;
 export const ISO_VIEW_W = TILE_W * ROOM_SIZE + 16;
 export const ISO_ORIGIN_X = ISO_VIEW_W / 2;
-export const ISO_ORIGIN_Y = WALL_H + 12;
+export const ISO_ORIGIN_Y = WALL_H + 16;
 export const ISO_VIEW_H = ISO_ORIGIN_Y + TILE_H * ROOM_SIZE + 16;
 export const CAT_TILE = { col: 2, row: 2 } as const;
-
-/** Skew a 64×64 square onto one isometric floor diamond. */
-export const FLOOR_PATTERN_TRANSFORM = "matrix(0.5, 0.25, -0.5, 0.25, 0, 0)";
-/** Walk the left wall: one tile along the floor, one texture cell up. */
-export const LEFT_WALL_PATTERN_TRANSFORM = "matrix(-0.5, 0.25, 0, -1, 0, 0)";
-export const RIGHT_WALL_PATTERN_TRANSFORM = "matrix(0.5, 0.25, 0, -1, 0, 0)";
 
 export function floorBackCorner(): { x: number; y: number } {
   return isoProject(0, 0);
