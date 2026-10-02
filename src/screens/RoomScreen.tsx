@@ -122,6 +122,7 @@ export function RoomScreen({
       <div className="room-toolbar">
         <SegmentedControl
           value={tab}
+          size="small"
           onChange={(value) => {
             setTab(value as RoomTab);
             setPlacingItemId(null);

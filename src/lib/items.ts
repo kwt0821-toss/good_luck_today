@@ -132,7 +132,7 @@ export const ITEMS: ShopItem[] = [
     name: "털실 공",
     category: "decor",
     price: 2,
-    width: 14,
+    width: 18,
     anchor: "floor",
     unique: false,
     starter: true,

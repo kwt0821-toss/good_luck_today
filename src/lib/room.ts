@@ -179,14 +179,7 @@ export function createDefaultRoom(): RoomState {
   return {
     wallpaperId: STARTER_WALLPAPER_ID,
     floorId: STARTER_FLOOR_ID,
-    placements: [
-      {
-        instanceId: "starter-yarn",
-        itemId: STARTER_YARN_ID,
-        x: 74,
-        y: 78,
-      },
-    ],
+    placements: [],
   };
 }
 
