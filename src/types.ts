@@ -25,11 +25,14 @@ export interface DrawResult {
   isNew: boolean;
   boosted: boolean;
   dateKey: string;
+  earnedTossPoints: number;
+  earnedPinkJelly: number;
 }
 
 export interface UserState {
   userId: string;
   pinkJellyBalance: number;
+  tossPointBalance: number;
   lastDrawDate: string;
   dailyRerollCount: number;
   unlockedCatIds: string[];

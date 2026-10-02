@@ -16,7 +16,7 @@ const COATS = [
   ["#8B6A4A", "#5C4330"],
   ["#C9B8A6", "#9C8A78"],
   ["#2F2F32", "#111114"],
-  ["#E7A1B0", "#D4788C"],
+  ["#A8D8C8", "#6DB8A4"],
   ["#7EA4C8", "#4E789C"],
   ["#B7D3A8", "#7FA36C"],
   ["#D8C4A2", "#B08962"],
@@ -44,8 +44,8 @@ export function catImageUrl(id: string, grade: Grade): string {
     </g>
     <ellipse cx="158" cy="214" rx="16" ry="22" fill="${eye}"/>
     <ellipse cx="242" cy="214" rx="16" ry="22" fill="${eye}"/>
-    <ellipse cx="200" cy="248" rx="14" ry="9" fill="#FF7A9A"/>
-    <path d="M186 268 Q200 286 214 268" fill="none" stroke="#FF7A9A" stroke-width="8" stroke-linecap="round"/>
+    <ellipse cx="200" cy="248" rx="14" ry="9" fill="#E8A070"/>
+    <path d="M186 268 Q200 286 214 268" fill="none" stroke="#E8A070" stroke-width="8" stroke-linecap="round"/>
     <circle cx="320" cy="56" r="10" fill="rgba(255,255,255,0.7)"/>
     <circle cx="58" cy="86" r="7" fill="rgba(255,255,255,0.45)"/>
   </svg>`;

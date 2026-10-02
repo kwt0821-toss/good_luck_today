@@ -4,7 +4,7 @@ export default defineConfig({
   appName: "good-luck-today",
   brand: {
     displayName: "럭키캣",
-    primaryColor: "#FF5C8A",
+    primaryColor: "#6EC8D4",
     icon: "",
   },
   web: {

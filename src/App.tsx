@@ -90,6 +90,7 @@ function App() {
         <ResultScreen
           cat={resultCat}
           result={user.lastResult}
+          pinkJellyBalance={user.pinkJellyBalance}
           remainingRerolls={rerollsLeft}
           rerollOpen={rerollOpen}
           onOpenReroll={() => setRerollOpen(true)}

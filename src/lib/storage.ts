@@ -49,6 +49,8 @@ function parseLastResult(value: unknown): DrawResult | null {
     isNew: value.isNew,
     boosted: value.boosted,
     dateKey: value.dateKey,
+    earnedTossPoints: typeof value.earnedTossPoints === "number" ? value.earnedTossPoints : 0,
+    earnedPinkJelly: typeof value.earnedPinkJelly === "number" ? value.earnedPinkJelly : 0,
   };
 }
 
@@ -65,6 +67,8 @@ function parseUser(raw: string | null): UserState {
       userId: typeof parsed.userId === "string" ? parsed.userId : base.userId,
       pinkJellyBalance:
         typeof parsed.pinkJellyBalance === "number" ? parsed.pinkJellyBalance : 0,
+      tossPointBalance:
+        typeof parsed.tossPointBalance === "number" ? parsed.tossPointBalance : 0,
       lastDrawDate: typeof parsed.lastDrawDate === "string" ? parsed.lastDrawDate : "",
       dailyRerollCount:
         typeof parsed.dailyRerollCount === "number" ? parsed.dailyRerollCount : 0,

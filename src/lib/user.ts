@@ -1,7 +1,21 @@
-import type { Cat, DrawResult, UserState } from "../types";
+import type { Cat, DrawResult, Grade, UserState } from "../types";
 import { toKstDateKey } from "./date";
 
 export const MAX_DAILY_REROLLS = 5;
+
+/** 기본 1 + 등급이 오를 때마다 토스포인트·핑크젤리 1씩 추가 */
+export const GRADE_REWARD: Record<Grade, number> = {
+  C: 1,
+  B: 2,
+  A: 3,
+  S: 4,
+  SSS: 5,
+};
+
+export function getDrawReward(grade: Grade): { tossPoints: number; pinkJelly: number } {
+  const amount = GRADE_REWARD[grade];
+  return { tossPoints: amount, pinkJelly: amount };
+}
 
 export function createDefaultUser(): UserState {
   const id =
@@ -12,6 +26,7 @@ export function createDefaultUser(): UserState {
   return {
     userId: `user_${id}`,
     pinkJellyBalance: 0,
+    tossPointBalance: 0,
     lastDrawDate: "",
     dailyRerollCount: 0,
     unlockedCatIds: [],
@@ -49,17 +64,21 @@ export function applyDraw(
   const today = options.today ?? toKstDateKey();
   const isNew = !user.unlockedCatIds.includes(cat.id);
   const previous = user.collection[cat.id];
+  const reward = getDrawReward(cat.grade);
 
   const result: DrawResult = {
     catId: cat.id,
     isNew,
     boosted: options.boosted,
     dateKey: today,
+    earnedTossPoints: reward.tossPoints,
+    earnedPinkJelly: reward.pinkJelly,
   };
 
   const next: UserState = {
     ...user,
-    pinkJellyBalance: user.pinkJellyBalance + (isNew ? 1 : 0),
+    pinkJellyBalance: user.pinkJellyBalance + reward.pinkJelly,
+    tossPointBalance: user.tossPointBalance + reward.tossPoints,
     lastDrawDate: today,
     dailyRerollCount: user.dailyRerollCount + (options.isReroll ? 1 : 0),
     unlockedCatIds: isNew ? [...user.unlockedCatIds, cat.id] : user.unlockedCatIds,

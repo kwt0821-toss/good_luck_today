@@ -47,7 +47,7 @@ export function CollectionScreen({ user, onBack }: CollectionScreenProps) {
 
   return (
     <div className="screen">
-      <ScreenHeader title="고양이 도감" showBack onBack={onBack} />
+      <ScreenHeader title="고양이 도감" showBack onBack={onBack} pinkJellyBalance={user.pinkJellyBalance} />
       <Top
         title={
           <Top.TitleParagraph size={22}>
@@ -56,7 +56,7 @@ export function CollectionScreen({ user, onBack }: CollectionScreenProps) {
         }
         subtitleBottom={
           <Top.SubtitleParagraph size={15}>
-            핑크젤리 {user.pinkJellyBalance}개 · 처음 만난 고양이만 젤리를 받아요
+            뽑을 때마다 토스포인트와 핑크젤리를 받아요. 핑크젤리는 앱 안 재화예요.
           </Top.SubtitleParagraph>
         }
       />

@@ -2,14 +2,15 @@ import { adaptive } from "@toss/tds-colors";
 import { BottomSheet, Button, FixedBottomCTA, Text, Top } from "@toss/tds-mobile";
 
 import { CatPortrait } from "../components/CatPortrait";
-import { ScreenHeader } from "../components/ScreenHeader";
 import { GradeBadge } from "../components/GradeBadge";
+import { ScreenHeader } from "../components/ScreenHeader";
 import { MAX_DAILY_REROLLS } from "../lib/user";
 import type { Cat, DrawResult } from "../types";
 
 type ResultScreenProps = {
   cat: Cat;
   result: DrawResult;
+  pinkJellyBalance: number;
   remainingRerolls: number;
   rerollOpen: boolean;
   onOpenReroll: () => void;
@@ -22,6 +23,7 @@ type ResultScreenProps = {
 export function ResultScreen({
   cat,
   result,
+  pinkJellyBalance,
   remainingRerolls,
   rerollOpen,
   onOpenReroll,
@@ -34,7 +36,7 @@ export function ResultScreen({
 
   return (
     <div className="screen result-screen">
-      <ScreenHeader title="소환 결과" showBack onBack={onConfirm} />
+      <ScreenHeader title="소환 결과" showBack onBack={onConfirm} pinkJellyBalance={pinkJellyBalance} />
       <Top
         title={<Top.TitleParagraph size={22}>{cat.name}</Top.TitleParagraph>}
         subtitleBottom={
@@ -48,15 +50,18 @@ export function ResultScreen({
         <GradeBadge grade={cat.grade} size="large" />
       </div>
 
-      {result.isNew ? (
-        <div className="new-banner" role="status">
-          NEW! 최초 해금 보상 핑크젤리 +1 획득!
+      <div className="reward-banner" role="status">
+        <div className="reward-pills">
+          <span className="reward-pill is-point">토스포인트 +{result.earnedTossPoints}원</span>
+          <span className="reward-pill is-jelly">핑크젤리 +{result.earnedPinkJelly}</span>
         </div>
-      ) : (
-        <Text typography="t6" color={adaptive.grey600} textAlign="center" display="block">
-          이미 도감에 있는 고양이예요. 중복 카운터가 올라갔어요.
-        </Text>
-      )}
+        <p>
+          {result.isNew
+            ? "NEW! 도감에 새로 등록됐어요."
+            : "이미 도감에 있는 고양이예요. 중복 카운터가 올라갔어요."}
+        </p>
+        <p className="reward-hint">핑크젤리는 앱 안 재화예요. 사용처는 곧 열려요.</p>
+      </div>
 
       {result.boosted ? (
         <Text typography="t7" color={adaptive.grey500} textAlign="center" display="block">

@@ -7,9 +7,9 @@ type BadgeColor = ComponentProps<typeof Badge>["color"];
 
 function gradeBadgeColor(grade: Grade): BadgeColor {
   if (grade === "SSS") return "yellow";
-  if (grade === "S") return "red";
-  if (grade === "A") return "blue";
-  if (grade === "B") return "teal";
+  if (grade === "S") return "blue";
+  if (grade === "A") return "teal";
+  if (grade === "B") return "yellow";
   return "elephant";
 }
 

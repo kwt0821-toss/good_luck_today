@@ -2,9 +2,9 @@ import { adaptive } from "@toss/tds-colors";
 import { Button, FixedBottomCTA, Text, Top } from "@toss/tds-mobile";
 
 import { CatPortrait } from "../components/CatPortrait";
+import { GradeBadge } from "../components/GradeBadge";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { formatKoreanDate } from "../lib/date";
-import { GradeBadge } from "../components/GradeBadge";
 import { MAX_DAILY_REROLLS } from "../lib/user";
 import type { Cat, DrawResult } from "../types";
 
@@ -31,14 +31,12 @@ export function HomeScreen({
 }: HomeScreenProps) {
   return (
     <div className="screen">
-      <ScreenHeader title="럭키캣" />
+      <ScreenHeader title="럭키캣" pinkJellyBalance={pinkJellyBalance} />
 
       <Top
         title={<Top.TitleParagraph size={22}>오늘의 행운 고양이</Top.TitleParagraph>}
         subtitleBottom={
-          <Top.SubtitleParagraph size={15}>
-            {formatKoreanDate()} · 핑크젤리 {pinkJellyBalance}개
-          </Top.SubtitleParagraph>
+          <Top.SubtitleParagraph size={15}>{formatKoreanDate()}</Top.SubtitleParagraph>
         }
       />
 
@@ -77,7 +75,9 @@ export function HomeScreen({
               <GradeBadge grade={todayCat.grade} />
             </div>
             <strong>{todayCat.name}</strong>
-            <p>{todayCat.description}</p>
+            <p>
+              토스포인트 +{lastResult.earnedTossPoints}원 · 핑크젤리 +{lastResult.earnedPinkJelly}
+            </p>
           </div>
         </button>
       ) : (
@@ -86,8 +86,8 @@ export function HomeScreen({
             하루 한 번, 행운의 고양이를 소환해요
           </Text>
           <Text typography="t6" color={adaptive.grey600} display="block">
-            처음 해금하면 핑크젤리 1개를 받아요. 마음에 들지 않으면 광고를 보고 하루 5번까지 다시
-            뽑을 수 있어요.
+            뽑을 때마다 토스포인트와 핑크젤리를 바로 받아요. 등급이 높을수록 1원·1개씩 더 쌓여요.
+            핑크젤리는 앱 안 재화예요. 사용처는 곧 열려요.
           </Text>
         </section>
       )}
