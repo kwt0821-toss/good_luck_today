@@ -24,8 +24,8 @@ type RoomScreenProps = {
   onBack: () => void;
   onBuy: (itemId: string) => void;
   onEquip: (itemId: string) => void;
-  onPlace: (itemId: string, x: number, y: number) => void;
-  onMove: (instanceId: string, x: number, y: number) => void;
+  onPlace: (itemId: string, col: number, row: number) => void;
+  onMove: (instanceId: string, col: number, row: number) => void;
   onRemove: (instanceId: string) => void;
 };
 
@@ -71,7 +71,7 @@ export function RoomScreen({
         title={<Top.TitleParagraph size={22}>나만의 고양이방</Top.TitleParagraph>}
         subtitleBottom={
           <Top.SubtitleParagraph size={15}>
-            핑크젤리로 아이템을 사고, 방을 눌러 직접 꾸며요.
+            핑크젤리로 아이템을 사고, 타일 위에 아기자기하게 꾸며요.
           </Top.SubtitleParagraph>
         }
       />
@@ -82,9 +82,9 @@ export function RoomScreen({
         editable
         selectedInstanceId={selectedInstanceId}
         placingItemId={placingItemId}
-        onPlace={(x, y) => {
+        onPlace={(col, row) => {
           if (!placingItemId) return;
-          onPlace(placingItemId, x, y);
+          onPlace(placingItemId, col, row);
         }}
         onMove={onMove}
         onSelect={(instanceId) => {
@@ -96,7 +96,7 @@ export function RoomScreen({
       {selectedPlacedItem && selectedInstanceId ? (
         <div className="room-selected-bar">
           <span>
-            {selectedPlacedItem.name} · 드래그해서 옮길 수 있어요
+            {selectedPlacedItem.name} · 다른 타일로 드래그할 수 있어요
           </span>
           <button
             type="button"
@@ -112,10 +112,10 @@ export function RoomScreen({
       ) : (
         <p className="room-hint">
           {tab === "shop"
-            ? "젤리를 써서 사고, 벽지·바닥은 사자마자 방에 적용돼요."
+            ? "젤리를 써서 사고, 벽지·바닥은 사자마자 타일방에 적용돼요."
             : placingItemId
-              ? "방을 눌러 선택한 아이템을 놓아요."
-              : "아래 아이템을 고른 뒤 방을 누르거나, 놓인 가구를 드래그하세요."}
+              ? "초록 타일을 누르면 놓여요. 빨가면 겹쳐서 못 놓아요."
+              : "아이템을 고른 뒤 타일을 누르거나, 놓인 가구를 드래그하세요."}
         </p>
       )}
 

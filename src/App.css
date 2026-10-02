@@ -207,97 +207,91 @@
   gap: 14px;
 }
 
-.cat-room {
+.iso-stage {
   position: relative;
-  width: calc(100% - 48px);
-  margin: 8px 24px 12px;
-  aspect-ratio: 4 / 3.35;
+  width: calc(100% - 24px);
+  margin: 4px 12px 10px;
+  min-height: 320px;
   border-radius: 28px;
   overflow: hidden;
-  background: #d8f3ee;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #cfeee6 0%, #f7fcfb 62%);
   box-shadow: 0 12px 28px rgba(80, 140, 140, 0.12);
   touch-action: none;
   user-select: none;
 }
 
-.cat-room.is-placing {
+.iso-stage.is-placing {
   cursor: crosshair;
 }
 
-.room-wall,
-.room-floor {
+.iso-world {
+  position: relative;
+}
+
+.iso-shell {
   position: absolute;
-  left: 0;
-  right: 0;
-  background-size: cover;
-  background-position: center;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
-.room-wall {
-  top: 0;
-  height: 62%;
+.iso-ghost.is-valid {
+  fill: rgba(94, 196, 168, 0.48);
+  stroke: #3aa88a;
+  stroke-width: 1.5;
 }
 
-.room-floor {
-  bottom: 0;
-  height: 42%;
+.iso-ghost.is-invalid {
+  fill: rgba(232, 118, 118, 0.42);
+  stroke: #d65c5c;
+  stroke-width: 1.5;
 }
 
-.room-baseboard {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 58%;
-  height: 10px;
-  background: rgba(255, 255, 255, 0.35);
-  pointer-events: none;
-}
-
-.room-item {
+.iso-item {
   position: absolute;
   padding: 0;
-  border: 2px solid transparent;
+  border: 0;
   background: transparent;
-  transform: translate(-50%, -70%);
+  transform: translate(-50%, -92%);
   cursor: grab;
+  filter: drop-shadow(0 6px 6px rgba(25, 31, 40, 0.12));
 }
 
-.room-item img {
+.iso-item img {
   display: block;
   width: 100%;
   height: auto;
   pointer-events: none;
 }
 
-.room-item.is-selected {
-  border-color: #6ec8d4;
-  border-radius: 16px;
-  z-index: 40 !important;
+.iso-item.is-selected {
+  outline: 2px solid #6ec8d4;
+  outline-offset: -2px;
+  border-radius: 12px;
 }
 
-.room-cat {
+.iso-cat {
   position: absolute;
-  left: 46%;
-  top: 64%;
-  width: 22%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border-radius: 28px;
+  width: 54px;
+  height: 54px;
+  transform: translate(-50%, -90%);
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 8px 18px rgba(25, 31, 40, 0.12);
+  box-shadow: 0 8px 16px rgba(25, 31, 40, 0.16);
   pointer-events: none;
-  z-index: 20;
 }
 
-.room-cat img,
-.room-cat span {
+.iso-cat img,
+.iso-cat span {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: grid;
   place-items: center;
-  font-size: 36px;
+  font-size: 32px;
   background: #fff8d6;
 }
 

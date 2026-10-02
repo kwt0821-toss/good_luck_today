@@ -118,9 +118,9 @@ function App() {
           onBack={() => setScreen({ name: "home" })}
           onBuy={(itemId) => void applyRoomAction(buyItem(user, itemId), true)}
           onEquip={(itemId) => void applyRoomAction(equipSurface(user, itemId), true)}
-          onPlace={(itemId, x, y) => void applyRoomAction(placeItem(user, itemId, x, y))}
-          onMove={(instanceId, x, y) => {
-            const result = movePlacement(user, instanceId, x, y);
+          onPlace={(itemId, col, row) => void applyRoomAction(placeItem(user, itemId, col, row))}
+          onMove={(instanceId, col, row) => {
+            const result = movePlacement(user, instanceId, col, row);
             if (result.ok) void persist(result.next);
           }}
           onRemove={(instanceId) => void applyRoomAction(removePlacement(user, instanceId))}

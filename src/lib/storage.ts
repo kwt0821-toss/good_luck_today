@@ -58,13 +58,13 @@ function parsePlacements(value: unknown): RoomPlacement[] {
   for (const entry of value) {
     if (!isRecord(entry)) continue;
     if (typeof entry.instanceId !== "string" || typeof entry.itemId !== "string") continue;
-    if (typeof entry.x !== "number" || typeof entry.y !== "number") continue;
+    if (typeof entry.col !== "number" || typeof entry.row !== "number") continue;
     if (!getItemById(entry.itemId)) continue;
     next.push({
       instanceId: entry.instanceId,
       itemId: entry.itemId,
-      x: entry.x,
-      y: entry.y,
+      col: entry.col,
+      row: entry.row,
     });
   }
   return next;

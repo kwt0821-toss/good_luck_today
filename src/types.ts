@@ -39,7 +39,8 @@ export interface ShopItem {
   name: string;
   category: ItemCategory;
   price: number;
-  width: number;
+  tilesW: number;
+  tilesH: number;
   anchor: ItemAnchor;
   unique: boolean;
   starter: boolean;
@@ -49,8 +50,8 @@ export interface ShopItem {
 export interface RoomPlacement {
   instanceId: string;
   itemId: string;
-  x: number;
-  y: number;
+  col: number;
+  row: number;
 }
 
 export interface RoomState {

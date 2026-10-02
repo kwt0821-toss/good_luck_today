@@ -4,6 +4,7 @@ import {
   STARTER_YARN_ID,
   getItemById,
 } from "./items";
+import { canOccupy } from "./iso";
 import type { RoomPlacement, RoomState, ShopItem, UserState } from "../types";
 
 export type RoomActionResult =
@@ -38,17 +39,6 @@ function newInstanceId(): string {
   return `place_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
-export function clampPlacement(item: ShopItem, x: number, y: number): { x: number; y: number } {
-  const nextX = clamp(x, 10, 90);
-  if (item.anchor === "wall") return { x: nextX, y: clamp(y, 16, 48) };
-  if (item.anchor === "floor") return { x: nextX, y: clamp(y, 58, 88) };
-  return { x: nextX, y: clamp(y, 16, 88) };
-}
-
 export function buyItem(user: UserState, itemId: string): RoomActionResult {
   const item = getItemById(itemId);
   if (!item) return { ok: false, message: "없는 아이템이에요." };
@@ -78,7 +68,7 @@ export function buyItem(user: UserState, itemId: string): RoomActionResult {
     };
   }
 
-  return { ok: true, next, message: `${item.name}을 샀어요. 꾸미기에서 놓아 보세요.` };
+  return { ok: true, next, message: `${item.name}을 샀어요. 타일 위에 놓아 보세요.` };
 }
 
 export function equipSurface(user: UserState, itemId: string): RoomActionResult {
@@ -103,18 +93,20 @@ export function equipSurface(user: UserState, itemId: string): RoomActionResult 
   };
 }
 
-export function placeItem(user: UserState, itemId: string, x: number, y: number): RoomActionResult {
+export function placeItem(user: UserState, itemId: string, col: number, row: number): RoomActionResult {
   const item = getItemById(itemId);
   if (!item) return { ok: false, message: "없는 아이템이에요." };
   if (item.unique) return { ok: false, message: "벽지와 바닥은 적용 버튼으로 바꿔요." };
   if (availableCount(user, itemId) < 1) return { ok: false, message: "놓을 수 있는 개수가 없어요." };
+  if (!canOccupy(user.room.placements, item, col, row)) {
+    return { ok: false, message: "그 타일에는 놓을 수 없어요." };
+  }
 
-  const point = clampPlacement(item, x, y);
   const placement: RoomPlacement = {
     instanceId: newInstanceId(),
     itemId,
-    x: point.x,
-    y: point.y,
+    col,
+    row,
   };
 
   return {
@@ -126,22 +118,24 @@ export function placeItem(user: UserState, itemId: string, x: number, y: number)
         placements: [...user.room.placements, placement],
       },
     },
-    message: `${item.name}을 방에 놓았어요.`,
+    message: `${item.name}을 타일에 놓았어요.`,
   };
 }
 
 export function movePlacement(
   user: UserState,
   instanceId: string,
-  x: number,
-  y: number,
+  col: number,
+  row: number,
 ): RoomActionResult {
   const current = user.room.placements.find((item) => item.instanceId === instanceId);
   if (!current) return { ok: false, message: "놓을 가구를 찾지 못했어요." };
   const item = getItemById(current.itemId);
   if (!item) return { ok: false, message: "없는 아이템이에요." };
+  if (!canOccupy(user.room.placements, item, col, row, instanceId)) {
+    return { ok: false, message: "" };
+  }
 
-  const point = clampPlacement(item, x, y);
   return {
     ok: true,
     next: {
@@ -149,7 +143,7 @@ export function movePlacement(
       room: {
         ...user.room,
         placements: user.room.placements.map((entry) =>
-          entry.instanceId === instanceId ? { ...entry, ...point } : entry,
+          entry.instanceId === instanceId ? { ...entry, col, row } : entry,
         ),
       },
     },
