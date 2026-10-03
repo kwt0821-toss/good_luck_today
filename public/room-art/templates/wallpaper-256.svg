@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <pattern id="g" width="32" height="32" patternUnits="userSpaceOnUse">
+      <rect width="32" height="32" fill="#eaf8f4"/>
+      <path d="M32 0H0V32" fill="none" stroke="#cfeee6" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="256" height="256" fill="url(#g)"/>
+  <circle cx="48" cy="48" r="10" fill="#d8f3ee"/>
+  <circle cx="208" cy="48" r="10" fill="#d8f3ee"/>
+  <circle cx="48" cy="208" r="10" fill="#d8f3ee"/>
+  <circle cx="208" cy="208" r="10" fill="#d8f3ee"/>
+  <text x="128" y="120" text-anchor="middle" font-size="14" font-family="sans-serif" fill="#2f6f68">½À 256 × 256</text>
+  <text x="128" y="142" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#6b7684">¬ ì¬¤ (4</text>
+  <text x="128" y="162" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#6b7684">DtŒ ½ ¨‘@ qt ™…Èä</text>
+</svg>
