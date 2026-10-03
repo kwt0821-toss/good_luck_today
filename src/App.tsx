@@ -16,7 +16,6 @@ import type { AdKind, DrawPurpose, Screen, UserState } from "./types";
 import "./App.css";
 
 function App() {
-  const [ready, setReady] = useState(false);
   const [user, setUser] = useState<UserState>(createDefaultUser);
   const [screen, setScreen] = useState<Screen>({ name: "home" });
   const [rerollOpen, setRerollOpen] = useState(false);
@@ -34,24 +33,15 @@ function App() {
 
   useEffect(() => {
     let cancelled = false;
-    const failSafe = window.setTimeout(() => {
-      if (!cancelled) setReady(true);
-    }, 1200);
-
     loadUserState()
       .then((next) => {
-        if (cancelled) return;
-        setUser(next);
-        setReady(true);
+        if (!cancelled) setUser(next);
       })
       .catch(() => {
-        if (!cancelled) setReady(true);
-      })
-      .finally(() => window.clearTimeout(failSafe));
-
+        // 브라우저 미리보기에서는 기본 상태로 바로 보여요.
+      });
     return () => {
       cancelled = true;
-      window.clearTimeout(failSafe);
     };
   }, []);
 
@@ -108,10 +98,6 @@ function App() {
     setAd(null);
     setScreen({ name: "result" });
   }, [ad, persist, today, user]);
-
-  if (!ready) {
-    return <div className="boot" />;
-  }
 
   const resultCat = user.lastResult ? getCatById(user.lastResult.catId) : undefined;
 

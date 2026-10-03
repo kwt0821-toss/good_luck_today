@@ -28,8 +28,19 @@
   }
 }
 
-.boot {
+.boot-fallback {
   min-height: 100vh;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  text-align: center;
+  color: #191f28;
+  background: #f7fcfb;
+}
+
+.boot-fallback span {
+  color: #8b95a1;
+  font-size: 14px;
 }
 
 .boot-error {
