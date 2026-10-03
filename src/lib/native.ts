@@ -8,8 +8,7 @@ import {
 
 export function isInTossApp(): boolean {
   try {
-    getAppsInTossGlobals();
-    return true;
+    return getAppsInTossGlobals() != null;
   } catch {
     return false;
   }

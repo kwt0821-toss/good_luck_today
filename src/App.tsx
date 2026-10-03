@@ -34,13 +34,24 @@ function App() {
 
   useEffect(() => {
     let cancelled = false;
-    loadUserState().then((next) => {
-      if (cancelled) return;
-      setUser(next);
-      setReady(true);
-    });
+    const failSafe = window.setTimeout(() => {
+      if (!cancelled) setReady(true);
+    }, 1200);
+
+    loadUserState()
+      .then((next) => {
+        if (cancelled) return;
+        setUser(next);
+        setReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) setReady(true);
+      })
+      .finally(() => window.clearTimeout(failSafe));
+
     return () => {
       cancelled = true;
+      window.clearTimeout(failSafe);
     };
   }, []);
 

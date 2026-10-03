@@ -4,23 +4,55 @@ import type { CollectionRecord, DrawResult, RoomPlacement, RoomState, UserState 
 import { applyDailyReset, createDefaultUser } from "./user";
 import { toKstDateKey } from "./date";
 import { getItemById } from "./items";
+import { isInTossApp } from "./native";
 import { createDefaultInventory, createDefaultRoom } from "./room";
 
 const USER_KEY = "lucky-cat.user-state";
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error("timeout")), ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 async function read(key: string): Promise<string | null> {
+  if (isInTossApp()) {
+    try {
+      return await withTimeout(Storage.getItem(key), 800);
+    } catch {
+      // 브라우저 미리보기에서는 토스 Storage가 응답하지 않을 수 있어요.
+    }
+  }
   try {
-    return await Storage.getItem(key);
-  } catch {
     return window.localStorage.getItem(key);
+  } catch {
+    return null;
   }
 }
 
 async function write(key: string, value: string): Promise<void> {
+  if (isInTossApp()) {
+    try {
+      await withTimeout(Storage.setItem(key, value), 800);
+      return;
+    } catch {
+      // 웹 미리보기는 localStorage로 저장해요.
+    }
+  }
   try {
-    await Storage.setItem(key, value);
-  } catch {
     window.localStorage.setItem(key, value);
+  } catch {
+    // 저장에 실패해도 화면은 유지해요.
   }
 }
 

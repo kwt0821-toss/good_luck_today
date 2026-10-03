@@ -32,6 +32,29 @@
   min-height: 100vh;
 }
 
+.boot-error {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  color: #191f28;
+}
+
+.boot-error small {
+  color: #8b95a1;
+  word-break: break-word;
+}
+
+.boot-error button {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #6ec8d4;
+  color: #ffffff;
+}
+
 .screen {
   min-height: 100%;
   padding-bottom: 24px;
