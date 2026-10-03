@@ -21,6 +21,34 @@ export const CUSTOM_FLOOR_IDS = new Set([
   "floor_puzzle",
 ]);
 
+/** Source PNG size and Y of the isometric left/right vertices. */
+export const FLOOR_ART_METRICS: Record<string, { width: number; height: number; leftY: number }> = {
+  floor_paw: { width: 575, height: 366, leftY: 170 },
+  floor_fish: { width: 580, height: 369, leftY: 178 },
+  floor_flower: { width: 513, height: 322, leftY: 155 },
+  floor_sparkle: { width: 483, height: 306, leftY: 146 },
+  floor_grass: { width: 454, height: 292, leftY: 134 },
+  floor_stone: { width: 365, height: 223, leftY: 114 },
+  floor_paw_tile: { width: 407, height: 241, leftY: 118 },
+  floor_puzzle: { width: 371, height: 262, leftY: 125 },
+};
+
+export function floorArtBox(id: string, tileW: number, tileH: number, roomSize: number) {
+  const width = roomSize * tileW;
+  const midY = (roomSize * tileH) / 2;
+  const metrics = FLOOR_ART_METRICS[id];
+  if (!metrics) {
+    return { x: -width / 2, y: 0, width, height: roomSize * tileH };
+  }
+  const scale = width / metrics.width;
+  return {
+    x: -width / 2,
+    y: midY - metrics.leftY * scale,
+    width,
+    height: metrics.height * scale,
+  };
+}
+
 export function customArtUrl(item: Pick<ShopItem, "id" | "category">): string {
   if (item.category === "wallpaper") return `/room-art/walls/${item.id}.png`;
   if (item.category === "floor") return `/room-art/floors/${item.id}.png`;

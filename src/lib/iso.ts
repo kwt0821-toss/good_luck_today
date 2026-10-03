@@ -8,7 +8,7 @@ export const WALL_H = TILE_H * 3;
 export const ISO_VIEW_W = TILE_W * ROOM_SIZE + 16;
 export const ISO_ORIGIN_X = ISO_VIEW_W / 2;
 export const ISO_ORIGIN_Y = WALL_H + 16;
-export const ISO_VIEW_H = ISO_ORIGIN_Y + TILE_H * ROOM_SIZE + 16;
+export const ISO_VIEW_H = ISO_ORIGIN_Y + TILE_H * ROOM_SIZE + 40;
 export const CAT_TILE = { col: 2, row: 2 } as const;
 
 export function floorBackCorner(): { x: number; y: number } {
@@ -23,6 +23,11 @@ export function floorLeftCorner(): { x: number; y: number } {
 export function floorRightCorner(): { x: number; y: number } {
   const point = isoProject(ROOM_SIZE - 1, 0);
   return { x: point.x + TILE_W / 2, y: point.y + TILE_H / 2 };
+}
+
+export function floorFrontCorner(): { x: number; y: number } {
+  const point = isoProject(ROOM_SIZE - 1, ROOM_SIZE - 1);
+  return { x: point.x, y: point.y + TILE_H };
 }
 
 export type Tile = { col: number; row: number };

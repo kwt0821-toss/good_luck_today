@@ -260,28 +260,8 @@
   cursor: crosshair;
 }
 
-.iso-wall-art,
-.iso-floor-art {
-  position: absolute;
-  pointer-events: none;
-  height: auto;
-  z-index: 1;
-}
-
-.iso-wall-art {
-  width: 74%;
-  transform: translate(-50%, -86%);
-}
-
-.iso-wall-art.is-cafe {
-  width: 82%;
-  transform: translate(-50%, -72%);
-}
-
-.iso-floor-art {
-  width: 90%;
-  transform: translate(-50%, -48%);
-  z-index: 2;
+.iso-world {
+  position: relative;
 }
 
 .iso-shell {
