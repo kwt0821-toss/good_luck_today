@@ -9,8 +9,13 @@ type RoomArtImageProps = {
   alt?: string;
 };
 
+function preferredSrc(item: RoomArtImageProps["item"]): string {
+  if (item.imageUrl.startsWith("data:")) return item.imageUrl;
+  return customArtUrl(item);
+}
+
 export function RoomArtImage({ item, className, alt = "" }: RoomArtImageProps) {
-  const custom = customArtUrl(item);
+  const custom = preferredSrc(item);
   const [src, setSrc] = useState(custom);
 
   useEffect(() => {

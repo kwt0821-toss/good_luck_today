@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import {
   CAT_TILE,
@@ -7,7 +7,7 @@ import {
   ISO_VIEW_H,
   ISO_VIEW_W,
   ROOM_SIZE,
-  TILE_W,
+  TILE_H,
   WALL_H,
   canOccupy,
   floorBackCorner,
@@ -17,11 +17,13 @@ import {
   footprintAnchor,
   footprintCells,
   isoUnproject,
+  itemDisplayWidth,
   sortDrawOrder,
   tileDiamond,
   wallTheme,
 } from "../lib/iso";
 import { getItemById } from "../lib/items";
+import { customArtUrlById, hasCustomSurfaceArt } from "../lib/roomArt";
 import type { Cat, RoomState } from "../types";
 import { RoomArtImage } from "./RoomArtImage";
 
@@ -46,6 +48,32 @@ function pointerTile(element: HTMLElement, clientX: number, clientY: number) {
   return isoUnproject(x, y);
 }
 
+function SurfaceArt({
+  src,
+  className,
+  style,
+}: {
+  src: string;
+  className: string;
+  style: CSSProperties;
+}) {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    setVisible(true);
+  }, [src]);
+  if (!visible) return null;
+  return (
+    <img
+      className={className}
+      src={src}
+      alt=""
+      draggable={false}
+      style={style}
+      onError={() => setVisible(false)}
+    />
+  );
+}
+
 export function RoomCanvas({
   room,
   cat,
@@ -61,6 +89,12 @@ export function RoomCanvas({
   const [hover, setHover] = useState<{ col: number; row: number } | null>(null);
   const walls = wallTheme(room.wallpaperId);
   const floors = floorTheme(room.floorId);
+  const wallArt = hasCustomSurfaceArt(room.wallpaperId, "wallpaper")
+    ? customArtUrlById(room.wallpaperId, "wallpaper")
+    : null;
+  const floorArt = hasCustomSurfaceArt(room.floorId, "floor")
+    ? customArtUrlById(room.floorId, "floor")
+    : null;
   const placing = placingItemId ? getItemById(placingItemId) : undefined;
   const ghostValid =
     hover && placing
@@ -168,9 +202,10 @@ export function RoomCanvas({
               fill={walls.window}
               stroke={walls.line}
               strokeWidth="3"
+              opacity={wallArt ? 0 : 1}
             />
-            <ellipse cx={-70} cy={-66} rx="7.5" ry="7.5" fill={walls.window} stroke={walls.line} strokeWidth="3" />
-            <ellipse cx={-55} cy={-66} rx="7.5" ry="7.5" fill={walls.window} stroke={walls.line} strokeWidth="3" />
+            <ellipse cx={-70} cy={-66} rx="7.5" ry="7.5" fill={walls.window} stroke={walls.line} strokeWidth="3" opacity={wallArt ? 0 : 1} />
+            <ellipse cx={-55} cy={-66} rx="7.5" ry="7.5" fill={walls.window} stroke={walls.line} strokeWidth="3" opacity={wallArt ? 0 : 1} />
             <rect
               x="46"
               y={-88}
@@ -181,6 +216,7 @@ export function RoomCanvas({
               stroke={walls.line}
               strokeWidth="3"
               transform="skewY(26) translate(8 8)"
+              opacity={wallArt ? 0 : 1}
             />
             {Array.from({ length: ROOM_SIZE }).flatMap((_, col) =>
               Array.from({ length: ROOM_SIZE }).map((__, row) => (
@@ -203,6 +239,27 @@ export function RoomCanvas({
           </g>
         </svg>
 
+        {wallArt ? (
+          <SurfaceArt
+            src={wallArt}
+            className={`iso-wall-art ${room.wallpaperId === "wall_cafe" ? "is-cafe" : ""}`}
+            style={{
+              left: ISO_ORIGIN_X,
+              top: ISO_ORIGIN_Y + TILE_H * 0.2,
+            }}
+          />
+        ) : null}
+        {floorArt ? (
+          <SurfaceArt
+            src={floorArt}
+            className="iso-floor-art"
+            style={{
+              left: ISO_ORIGIN_X,
+              top: ISO_ORIGIN_Y + (TILE_H * ROOM_SIZE) / 2 + 6,
+            }}
+          />
+        ) : null}
+
         {objects.map((entry) => {
           const selected = selectedInstanceId === entry.placement.instanceId;
           return (
@@ -213,7 +270,7 @@ export function RoomCanvas({
               style={{
                 left: ISO_ORIGIN_X + entry.anchor.x,
                 top: ISO_ORIGIN_Y + entry.anchor.y,
-                width: entry.item.tilesW * TILE_W * 0.92,
+                width: itemDisplayWidth(entry.item),
                 zIndex: 10 + entry.order,
               }}
               aria-label={entry.item.name}

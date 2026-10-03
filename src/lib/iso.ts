@@ -63,12 +63,34 @@ export const WALL_THEMES: Record<string, WallTheme> = {
     line: "#e8c86a",
     window: "#c9ebf6",
   },
+  wall_ivy: {
+    light: "#efe6d4",
+    mid: "#e4d4c0",
+    dark: "#d4c4ea",
+    line: "#c4b4d8",
+    window: "#c9ebf6",
+  },
+  wall_cafe: {
+    light: "#f4ead8",
+    mid: "#ead9c0",
+    dark: "#e0c8a8",
+    line: "#c9a36a",
+    window: "#c9ebf6",
+  },
 };
 
 export const FLOOR_THEMES: Record<string, FloorTheme> = {
   floor_wood: { a: "#f6e6c8", b: "#edd7b0", line: "#e0c394" },
   floor_tile: { a: "#d8f3ee", b: "#c3e8dc", line: "#9fd4c6" },
   floor_cloud: { a: "#eef9fd", b: "#dceff8", line: "#b7dcec" },
+  floor_paw: { a: "#f6ead4", b: "#ead7b8", line: "#dcc49a" },
+  floor_fish: { a: "#dceaf6", b: "#c8dcee", line: "#a8c4dc" },
+  floor_flower: { a: "#f8dce4", b: "#f0c8d4", line: "#e0a8b8" },
+  floor_sparkle: { a: "#daf2ec", b: "#c6e6dc", line: "#9fd4c6" },
+  floor_grass: { a: "#d4e8a8", b: "#c0dc90", line: "#9cc46a" },
+  floor_stone: { a: "#d4e0b0", b: "#c0d098", line: "#a0b878" },
+  floor_paw_tile: { a: "#f0e4d0", b: "#e4d4bc", line: "#d0c0a4" },
+  floor_puzzle: { a: "#e8e0f6", b: "#f8dce8", line: "#d4c4e8" },
 };
 
 export function isoProject(col: number, row: number): { x: number; y: number } {
@@ -154,6 +176,10 @@ export function footprintAnchor(
     x: (start.x + end.x) / 2,
     y: (start.y + end.y) / 2 + TILE_H * 0.72,
   };
+}
+
+export function itemDisplayWidth(item: Pick<ShopItem, "tilesW" | "tilesH">): number {
+  return TILE_W * ((item.tilesW + item.tilesH) / 2) * 1.22;
 }
 
 export function sortDrawOrder(col: number, row: number): number {

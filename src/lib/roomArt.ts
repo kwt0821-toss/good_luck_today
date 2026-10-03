@@ -8,10 +8,29 @@ export const ROOM_ART = {
   item2: { width: 256, height: 160, folder: "items" },
 } as const;
 
+export const CUSTOM_WALL_IDS = new Set(["wall_ivy", "wall_cafe"]);
+
+export const CUSTOM_FLOOR_IDS = new Set([
+  "floor_paw",
+  "floor_fish",
+  "floor_flower",
+  "floor_sparkle",
+  "floor_grass",
+  "floor_stone",
+  "floor_paw_tile",
+  "floor_puzzle",
+]);
+
 export function customArtUrl(item: Pick<ShopItem, "id" | "category">): string {
   if (item.category === "wallpaper") return `/room-art/walls/${item.id}.png`;
   if (item.category === "floor") return `/room-art/floors/${item.id}.png`;
   return `/room-art/items/${item.id}.png`;
+}
+
+export function hasCustomSurfaceArt(id: string, category: ItemCategory): boolean {
+  if (category === "wallpaper") return CUSTOM_WALL_IDS.has(id);
+  if (category === "floor") return CUSTOM_FLOOR_IDS.has(id);
+  return false;
 }
 
 export function customArtUrlById(id: string, category: ItemCategory): string {
