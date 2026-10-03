@@ -33,6 +33,12 @@ export const FLOOR_ART_METRICS: Record<string, { width: number; height: number; 
   floor_puzzle: { width: 371, height: 262, leftY: 125 },
 };
 
+/** Room-shell PNGs. leftY is the row where the sprite is widest (floor left/right). */
+export const WALL_ART_METRICS: Record<string, { width: number; height: number; leftY: number }> = {
+  wall_cafe: { width: 509, height: 400, leftY: 260 },
+  wall_ivy: { width: 417, height: 416, leftY: 297 },
+};
+
 export function floorArtBox(id: string, tileW: number, tileH: number, roomSize: number) {
   const width = roomSize * tileW;
   const midY = (roomSize * tileH) / 2;
@@ -44,6 +50,22 @@ export function floorArtBox(id: string, tileW: number, tileH: number, roomSize: 
   return {
     x: -width / 2,
     y: midY - metrics.leftY * scale,
+    width,
+    height: metrics.height * scale,
+  };
+}
+
+export function wallArtBox(id: string, tileW: number, tileH: number, wallH: number, roomSize: number) {
+  const width = roomSize * tileW;
+  const floorMidY = (roomSize * tileH) / 2;
+  const metrics = WALL_ART_METRICS[id];
+  if (!metrics) {
+    return { x: -width / 2, y: -wallH, width, height: wallH + floorMidY };
+  }
+  const scale = width / metrics.width;
+  return {
+    x: -width / 2,
+    y: floorMidY - metrics.leftY * scale,
     width,
     height: metrics.height * scale,
   };

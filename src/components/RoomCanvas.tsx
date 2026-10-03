@@ -25,7 +25,7 @@ import {
   wallTheme,
 } from "../lib/iso";
 import { getItemById } from "../lib/items";
-import { customArtUrlById, floorArtBox, hasCustomSurfaceArt } from "../lib/roomArt";
+import { customArtUrlById, floorArtBox, hasCustomSurfaceArt, wallArtBox } from "../lib/roomArt";
 import type { Cat, RoomState } from "../types";
 import { RoomArtImage } from "./RoomArtImage";
 
@@ -137,12 +137,7 @@ export function RoomCanvas({
     leftFront,
   ];
   const floorBox = floorArt ? floorArtBox(room.floorId, TILE_W, TILE_H, ROOM_SIZE) : null;
-  const wallBox = {
-    x: leftFront.x,
-    y: back.y - WALL_H,
-    width: rightFront.x - leftFront.x,
-    height: leftFront.y - (back.y - WALL_H),
-  };
+  const wallBox = wallArt ? wallArtBox(room.wallpaperId, TILE_W, TILE_H, WALL_H, ROOM_SIZE) : null;
 
   return (
     <div
@@ -214,19 +209,18 @@ export function RoomCanvas({
               fill={`url(#${patternId})`}
               opacity="0.55"
             />
-            {wallArt ? (
-              <image
-                href={wallArt}
-                x={wallBox.x}
-                y={wallBox.y}
-                width={wallBox.width}
-                height={wallBox.height}
-                preserveAspectRatio={
-                  room.wallpaperId === "wall_cafe" ? "xMidYMid slice" : "xMidYMax slice"
-                }
-                clipPath={`url(#${wallClipId})`}
-                pointerEvents="none"
-              />
+            {wallArt && wallBox ? (
+              <g clipPath={`url(#${wallClipId})`}>
+                <image
+                  href={wallArt}
+                  x={wallBox.x}
+                  y={wallBox.y}
+                  width={wallBox.width}
+                  height={wallBox.height}
+                  preserveAspectRatio="none"
+                  pointerEvents="none"
+                />
+              </g>
             ) : null}
             <ellipse
               cx={-70}
@@ -264,16 +258,17 @@ export function RoomCanvas({
               )),
             )}
             {floorArt && floorBox ? (
-              <image
-                href={floorArt}
-                x={floorBox.x}
-                y={floorBox.y}
-                width={floorBox.width}
-                height={floorBox.height}
-                preserveAspectRatio="none"
-                clipPath={`url(#${floorClipId})`}
-                pointerEvents="none"
-              />
+              <g clipPath={`url(#${floorClipId})`}>
+                <image
+                  href={floorArt}
+                  x={floorBox.x}
+                  y={floorBox.y}
+                  width={floorBox.width}
+                  height={floorBox.height}
+                  preserveAspectRatio="none"
+                  pointerEvents="none"
+                />
+              </g>
             ) : null}
             {ghostCells.map((cell) => (
               <polygon
