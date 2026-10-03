@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 
 import {
   CAT_TILE,
@@ -8,9 +8,11 @@ import {
   ISO_VIEW_W,
   ROOM_SIZE,
   TILE_H,
+  TILE_W,
   WALL_H,
   canOccupy,
   floorBackCorner,
+  floorFrontCorner,
   floorLeftCorner,
   floorRightCorner,
   floorTheme,
@@ -23,7 +25,7 @@ import {
   wallTheme,
 } from "../lib/iso";
 import { getItemById } from "../lib/items";
-import { customArtUrlById, hasCustomSurfaceArt } from "../lib/roomArt";
+import { customArtUrlById, floorArtBox, hasCustomSurfaceArt, wallArtBox } from "../lib/roomArt";
 import type { Cat, RoomState } from "../types";
 import { RoomArtImage } from "./RoomArtImage";
 
@@ -48,30 +50,8 @@ function pointerTile(element: HTMLElement, clientX: number, clientY: number) {
   return isoUnproject(x, y);
 }
 
-function SurfaceArt({
-  src,
-  className,
-  style,
-}: {
-  src: string;
-  className: string;
-  style: CSSProperties;
-}) {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    setVisible(true);
-  }, [src]);
-  if (!visible) return null;
-  return (
-    <img
-      className={className}
-      src={src}
-      alt=""
-      draggable={false}
-      style={style}
-      onError={() => setVisible(false)}
-    />
-  );
+function poly(points: Array<{ x: number; y: number }>) {
+  return points.map((point) => `${point.x},${point.y}`).join(" ");
 }
 
 export function RoomCanvas({
@@ -87,6 +67,7 @@ export function RoomCanvas({
   const roomRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ instanceId: string } | null>(null);
   const [hover, setHover] = useState<{ col: number; row: number } | null>(null);
+  const clipId = useId().replace(/:/g, "");
   const walls = wallTheme(room.wallpaperId);
   const floors = floorTheme(room.floorId);
   const wallArt = hasCustomSurfaceArt(room.wallpaperId, "wallpaper")
@@ -131,7 +112,32 @@ export function RoomCanvas({
   const back = floorBackCorner();
   const leftFront = floorLeftCorner();
   const rightFront = floorRightCorner();
+  const front = floorFrontCorner();
   const patternId = `wall-pattern-${room.wallpaperId}`;
+  const wallClipId = `iso-wall-clip-${clipId}`;
+  const floorClipId = `iso-floor-clip-${clipId}`;
+  const leftWall = [
+    { x: back.x, y: back.y - WALL_H },
+    { x: leftFront.x, y: leftFront.y - WALL_H },
+    { x: leftFront.x, y: leftFront.y },
+    { x: back.x, y: back.y },
+  ];
+  const rightWall = [
+    { x: back.x, y: back.y - WALL_H },
+    { x: rightFront.x, y: rightFront.y - WALL_H },
+    { x: rightFront.x, y: rightFront.y },
+    { x: back.x, y: back.y },
+  ];
+  const floorSlab = [
+    back,
+    rightFront,
+    { x: rightFront.x, y: rightFront.y + TILE_H },
+    { x: front.x, y: front.y + TILE_H },
+    { x: leftFront.x, y: leftFront.y + TILE_H },
+    leftFront,
+  ];
+  const floorBox = floorArt ? floorArtBox(room.floorId, TILE_W, TILE_H, ROOM_SIZE) : null;
+  const wallBox = wallArt ? wallArtBox(room.wallpaperId, TILE_W, TILE_H, WALL_H, ROOM_SIZE) : null;
 
   return (
     <div
@@ -177,23 +183,45 @@ export function RoomCanvas({
           </defs>
           <rect width={ISO_VIEW_W} height={ISO_VIEW_H} fill="url(#iso-sky)" />
           <g transform={`translate(${ISO_ORIGIN_X} ${ISO_ORIGIN_Y})`}>
+            <defs>
+              <clipPath id={wallClipId}>
+                <polygon points={poly(leftWall)} />
+                <polygon points={poly(rightWall)} />
+              </clipPath>
+              <clipPath id={floorClipId}>
+                <polygon points={poly(floorSlab)} />
+              </clipPath>
+            </defs>
             <polygon
-              points={`${back.x},${back.y - WALL_H} ${leftFront.x},${leftFront.y - WALL_H} ${leftFront.x},${leftFront.y} ${back.x},${back.y}`}
+              points={poly(leftWall)}
               fill={`url(#${patternId})`}
               stroke={walls.line}
               strokeWidth="1.5"
             />
             <polygon
-              points={`${back.x},${back.y - WALL_H} ${rightFront.x},${rightFront.y - WALL_H} ${rightFront.x},${rightFront.y} ${back.x},${back.y}`}
+              points={poly(rightWall)}
               fill={walls.dark}
               stroke={walls.line}
               strokeWidth="1.5"
             />
             <polygon
-              points={`${back.x},${back.y - WALL_H} ${rightFront.x},${rightFront.y - WALL_H} ${rightFront.x},${rightFront.y} ${back.x},${back.y}`}
+              points={poly(rightWall)}
               fill={`url(#${patternId})`}
               opacity="0.55"
             />
+            {wallArt && wallBox ? (
+              <g clipPath={`url(#${wallClipId})`}>
+                <image
+                  href={wallArt}
+                  x={wallBox.x}
+                  y={wallBox.y}
+                  width={wallBox.width}
+                  height={wallBox.height}
+                  preserveAspectRatio="none"
+                  pointerEvents="none"
+                />
+              </g>
+            ) : null}
             <ellipse
               cx={-70}
               cy={-50}
@@ -229,6 +257,19 @@ export function RoomCanvas({
                 />
               )),
             )}
+            {floorArt && floorBox ? (
+              <g clipPath={`url(#${floorClipId})`}>
+                <image
+                  href={floorArt}
+                  x={floorBox.x}
+                  y={floorBox.y}
+                  width={floorBox.width}
+                  height={floorBox.height}
+                  preserveAspectRatio="none"
+                  pointerEvents="none"
+                />
+              </g>
+            ) : null}
             {ghostCells.map((cell) => (
               <polygon
                 key={`ghost-${cell.col}-${cell.row}`}
@@ -238,27 +279,6 @@ export function RoomCanvas({
             ))}
           </g>
         </svg>
-
-        {wallArt ? (
-          <SurfaceArt
-            src={wallArt}
-            className={`iso-wall-art ${room.wallpaperId === "wall_cafe" ? "is-cafe" : ""}`}
-            style={{
-              left: ISO_ORIGIN_X,
-              top: ISO_ORIGIN_Y + TILE_H * 0.2,
-            }}
-          />
-        ) : null}
-        {floorArt ? (
-          <SurfaceArt
-            src={floorArt}
-            className="iso-floor-art"
-            style={{
-              left: ISO_ORIGIN_X,
-              top: ISO_ORIGIN_Y + (TILE_H * ROOM_SIZE) / 2 + 6,
-            }}
-          />
-        ) : null}
 
         {objects.map((entry) => {
           const selected = selectedInstanceId === entry.placement.instanceId;
