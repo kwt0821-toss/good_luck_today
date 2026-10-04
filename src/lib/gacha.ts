@@ -1,40 +1,40 @@
-import { CATS, getCatsByGrade } from "./cats";
-import type { Cat, Grade } from "../types";
+import { CATS, getCatsByStar } from "./cats";
+import type { Cat, Star } from "../types";
 
-export const STANDARD_WEIGHTS: Record<Grade, number> = {
-  SSS: 1,
-  S: 4,
-  A: 15,
-  B: 30,
-  C: 50,
+export const STANDARD_WEIGHTS: Record<Star, number> = {
+  5: 1,
+  4: 4,
+  3: 15,
+  2: 30,
+  1: 50,
 };
 
-export const BOOSTED_WEIGHTS: Record<Grade, number> = {
-  SSS: 5,
-  S: 15,
-  A: 30,
-  B: 35,
-  C: 15,
+export const BOOSTED_WEIGHTS: Record<Star, number> = {
+  5: 5,
+  4: 15,
+  3: 30,
+  2: 35,
+  1: 15,
 };
 
-const GRADE_ORDER: Grade[] = ["SSS", "S", "A", "B", "C"];
+const STAR_ORDER: Star[] = [5, 4, 3, 2, 1];
 
-export function pickGrade(isBoosted: boolean, random = Math.random): Grade {
+export function pickStar(isBoosted: boolean, random = Math.random): Star {
   const table = isBoosted ? BOOSTED_WEIGHTS : STANDARD_WEIGHTS;
-  const total = GRADE_ORDER.reduce((sum, grade) => sum + table[grade], 0);
+  const total = STAR_ORDER.reduce((sum, star) => sum + table[star], 0);
   let roll = random() * total;
 
-  for (const grade of GRADE_ORDER) {
-    roll -= table[grade];
-    if (roll < 0) return grade;
+  for (const star of STAR_ORDER) {
+    roll -= table[star];
+    if (roll < 0) return star;
   }
 
-  return "C";
+  return 1;
 }
 
 export function getRandomCat(isBoosted: boolean, random = Math.random): Cat {
-  const grade = pickGrade(isBoosted, random);
-  const pool = getCatsByGrade(grade);
+  const star = pickStar(isBoosted, random);
+  const pool = getCatsByStar(star);
   const source = pool.length > 0 ? pool : CATS;
   const index = Math.min(source.length - 1, Math.floor(random() * source.length));
   return source[index];

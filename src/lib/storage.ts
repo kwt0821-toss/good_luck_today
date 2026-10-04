@@ -2,6 +2,7 @@ import { Storage } from "@apps-in-toss/web-framework";
 
 import type { CollectionRecord, DrawResult, RoomPlacement, RoomState, UserState } from "../types";
 import { applyDailyReset, createDefaultUser } from "./user";
+import { getCatById } from "./cats";
 import { toKstDateKey } from "./date";
 import { getItemById } from "./items";
 import { isInTossApp } from "./native";
@@ -65,6 +66,7 @@ function parseCollection(value: unknown): Record<string, CollectionRecord> {
 
   const next: Record<string, CollectionRecord> = {};
   for (const [id, entry] of Object.entries(value)) {
+    if (!getCatById(id)) continue;
     if (!isRecord(entry)) continue;
     if (typeof entry.unlockedAt !== "string" || typeof entry.count !== "number") continue;
     next[id] = { unlockedAt: entry.unlockedAt, count: entry.count };
@@ -126,6 +128,7 @@ function parseLastResult(value: unknown): DrawResult | null {
   if (typeof value.isNew !== "boolean") return null;
   if (typeof value.boosted !== "boolean") return null;
   if (typeof value.dateKey !== "string") return null;
+  if (!getCatById(value.catId)) return null;
   return {
     catId: value.catId,
     isNew: value.isNew,
@@ -155,7 +158,9 @@ function parseUser(raw: string | null): UserState {
       dailyRerollCount:
         typeof parsed.dailyRerollCount === "number" ? parsed.dailyRerollCount : 0,
       unlockedCatIds: Array.isArray(parsed.unlockedCatIds)
-        ? parsed.unlockedCatIds.filter((id): id is string => typeof id === "string")
+        ? parsed.unlockedCatIds.filter(
+            (id): id is string => typeof id === "string" && Boolean(getCatById(id)),
+          )
         : [],
       collection: parseCollection(parsed.collection),
       lastResult: parseLastResult(parsed.lastResult),

@@ -2,15 +2,11 @@ import { adaptive } from "@toss/tds-colors";
 import { BottomSheet, ListHeader, SegmentedControl, Text, Top } from "@toss/tds-mobile";
 import { useMemo, useState } from "react";
 
-import { CatPortrait } from "../components/CatPortrait";
+import { LuckyCatCard } from "../components/LuckyCatCard";
 import { ScreenHeader } from "../components/ScreenHeader";
-import { CATS, TOTAL_CAT_COUNT } from "../lib/cats";
+import { CAT_SPECIES, TOTAL_CAT_COUNT, getCatsBySpecies, starLabel } from "../lib/cats";
 import { formatShortDate } from "../lib/date";
-import { GradeBadge } from "../components/GradeBadge";
-import type { Cat, CollectionSort, Grade, GradeFilter, UserState } from "../types";
-
-const GRADE_TABS: GradeFilter[] = ["ALL", "SSS", "S", "A", "B", "C"];
-const GRADE_RANK: Record<Grade, number> = { SSS: 0, S: 1, A: 2, B: 3, C: 4 };
+import type { Cat, CollectionSort, SpeciesFilter, UserState } from "../types";
 
 type CollectionScreenProps = {
   user: UserState;
@@ -18,28 +14,37 @@ type CollectionScreenProps = {
 };
 
 export function CollectionScreen({ user, onBack }: CollectionScreenProps) {
-  const [filter, setFilter] = useState<GradeFilter>("ALL");
-  const [sort, setSort] = useState<CollectionSort>("acquired");
+  const [filter, setFilter] = useState<SpeciesFilter>("ALL");
+  const [sort, setSort] = useState<CollectionSort>("species");
   const [selected, setSelected] = useState<Cat | null>(null);
 
-  const cats = useMemo(() => {
-    const filtered = CATS.filter((cat) => (filter === "ALL" ? true : cat.grade === filter));
-    return [...filtered].sort((a, b) => {
-      const aUnlocked = user.unlockedCatIds.includes(a.id);
-      const bUnlocked = user.unlockedCatIds.includes(b.id);
-      if (sort === "acquired") {
-        if (aUnlocked !== bUnlocked) return aUnlocked ? -1 : 1;
-        const aDate = user.collection[a.id]?.unlockedAt ?? "9999-99-99";
-        const bDate = user.collection[b.id]?.unlockedAt ?? "9999-99-99";
-        if (aDate !== bDate) return aDate.localeCompare(bDate);
-        return a.id.localeCompare(b.id);
-      }
-      if (GRADE_RANK[a.grade] !== GRADE_RANK[b.grade]) {
-        return GRADE_RANK[a.grade] - GRADE_RANK[b.grade];
-      }
-      if (aUnlocked !== bUnlocked) return aUnlocked ? -1 : 1;
-      return a.id.localeCompare(b.id);
+  const groups = useMemo(() => {
+    const speciesList =
+      filter === "ALL" ? CAT_SPECIES : CAT_SPECIES.filter((item) => item.id === filter);
+
+    const ordered = [...speciesList].sort((a, b) => {
+      if (sort !== "acquired") return 0;
+      const aDate = getCatsBySpecies(a.id)
+        .map((cat) => user.collection[cat.id]?.unlockedAt)
+        .filter(Boolean)
+        .sort()[0];
+      const bDate = getCatsBySpecies(b.id)
+        .map((cat) => user.collection[cat.id]?.unlockedAt)
+        .filter(Boolean)
+        .sort()[0];
+      if (!aDate && !bDate) return 0;
+      if (!aDate) return 1;
+      if (!bDate) return -1;
+      return aDate.localeCompare(bDate);
     });
+
+    return ordered.map((species) => ({
+      species,
+      cards: getCatsBySpecies(species.id),
+      unlockedCount: getCatsBySpecies(species.id).filter((cat) =>
+        user.unlockedCatIds.includes(cat.id),
+      ).length,
+    }));
   }, [filter, sort, user.collection, user.unlockedCatIds]);
 
   const selectedUnlocked = selected ? user.unlockedCatIds.includes(selected.id) : false;
@@ -51,28 +56,37 @@ export function CollectionScreen({ user, onBack }: CollectionScreenProps) {
       <Top
         title={
           <Top.TitleParagraph size={22}>
-            {user.unlockedCatIds.length}/{TOTAL_CAT_COUNT}마리 해금
+            {user.unlockedCatIds.length}/{TOTAL_CAT_COUNT}장 해금
           </Top.TitleParagraph>
         }
         subtitleBottom={
           <Top.SubtitleParagraph size={15}>
-            뽑을 때마다 토스포인트와 핑크젤리를 받아요. 핑크젤리로는 고양이방을 꾸며요.
+            고양이 종류마다 1성부터 5성 카드를 모아 보세요.
           </Top.SubtitleParagraph>
         }
       />
 
       <div className="collection-toolbar">
-        <div className="grade-filters" role="tablist" aria-label="등급 필터">
-          {GRADE_TABS.map((item) => (
+        <div className="grade-filters" role="tablist" aria-label="고양이 종류">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={filter === "ALL"}
+            className={`grade-filter ${filter === "ALL" ? "is-active" : ""}`}
+            onClick={() => setFilter("ALL")}
+          >
+            전체
+          </button>
+          {CAT_SPECIES.map((species) => (
             <button
-              key={item}
+              key={species.id}
               type="button"
               role="tab"
-              aria-selected={filter === item}
-              className={`grade-filter ${filter === item ? "is-active" : ""}`}
-              onClick={() => setFilter(item)}
+              aria-selected={filter === species.id}
+              className={`grade-filter ${filter === species.id ? "is-active" : ""}`}
+              onClick={() => setFilter(species.id)}
             >
-              {item === "ALL" ? "전체" : item}
+              {species.name}
             </button>
           ))}
         </div>
@@ -81,57 +95,54 @@ export function CollectionScreen({ user, onBack }: CollectionScreenProps) {
           value={sort}
           onChange={(value) => setSort(value as CollectionSort)}
         >
-          <SegmentedControl.Item value="grade">등급 순</SegmentedControl.Item>
+          <SegmentedControl.Item value="species">종류 순</SegmentedControl.Item>
           <SegmentedControl.Item value="acquired">획득 순</SegmentedControl.Item>
         </SegmentedControl>
       </div>
 
-      <ListHeader
-        title={
-          <ListHeader.TitleParagraph typography="t5" color={adaptive.grey800} fontWeight="bold">
-            {filter === "ALL" ? "모든 고양이" : `${filter} 등급`}
-          </ListHeader.TitleParagraph>
-        }
-      />
-
-      <div className="cat-grid">
-        {cats.map((cat) => {
-          const unlocked = user.unlockedCatIds.includes(cat.id);
-          const record = user.collection[cat.id];
-          return (
-            <button
-              key={cat.id}
-              type="button"
-              className={`cat-card ${unlocked ? "" : "is-locked"}`}
-              onClick={() => setSelected(cat)}
-            >
-              <CatPortrait cat={cat} unlocked={unlocked} />
-              <div className="cat-card-meta">
-                {unlocked ? <GradeBadge grade={cat.grade} /> : null}
-                <strong>{unlocked ? cat.name : "???"}</strong>
-                <span>
-                  {unlocked && record
-                    ? `${formatShortDate(record.unlockedAt)} · 중복 ${Math.max(0, record.count - 1)}`
-                    : "아직 만나지 못했어요"}
-                </span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+      {groups.map((group) => (
+        <section key={group.species.id} className="species-section">
+          <ListHeader
+            title={
+              <ListHeader.TitleParagraph typography="t5" color={adaptive.grey800} fontWeight="bold">
+                {group.species.name} · {group.unlockedCount}/5
+              </ListHeader.TitleParagraph>
+            }
+          />
+          <div className="cat-grid is-stars">
+            {group.cards.map((cat) => {
+              const unlocked = user.unlockedCatIds.includes(cat.id);
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className="star-slot"
+                  onClick={() => setSelected(cat)}
+                  aria-label={`${cat.name} ${starLabel(cat.star)}`}
+                >
+                  <LuckyCatCard cat={cat} unlocked={unlocked} size="mini" flippable={false} />
+                  <span className="star-slot-label">{starLabel(cat.star)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      ))}
 
       <BottomSheet
         open={selected !== null}
         onClose={() => setSelected(null)}
         header={
-          <BottomSheet.Header>{selectedUnlocked ? selected?.name : "아직 해금되지 않았어요"}</BottomSheet.Header>
+          <BottomSheet.Header>
+            {selected ? `${selected.name} ${starLabel(selected.star)}` : ""}
+          </BottomSheet.Header>
         }
         headerDescription={
-          selected ? (
-            <BottomSheet.HeaderDescription>
-              {selectedUnlocked ? selected.description : "소환하면 이름과 행운의 한마디가 열려요."}
-            </BottomSheet.HeaderDescription>
-          ) : undefined
+          selectedUnlocked ? (
+            <BottomSheet.HeaderDescription>카드를 누르면 뒷면이 보여요</BottomSheet.HeaderDescription>
+          ) : (
+            <BottomSheet.HeaderDescription>소환하면 이름과 문구가 열려요.</BottomSheet.HeaderDescription>
+          )
         }
         cta={
           <BottomSheet.CTA onClick={() => setSelected(null)}>
@@ -141,18 +152,15 @@ export function CollectionScreen({ user, onBack }: CollectionScreenProps) {
       >
         {selected ? (
           <div className="collection-detail">
-            <CatPortrait cat={selected} unlocked={selectedUnlocked} size="hero" />
+            <LuckyCatCard cat={selected} unlocked={selectedUnlocked} />
             {selectedUnlocked ? (
-              <>
-                <GradeBadge grade={selected.grade} size="large" />
-                <Text typography="t6" color={adaptive.grey700} display="block">
-                  획득일 {selectedRecord ? formatShortDate(selectedRecord.unlockedAt) : "-"} · 총{" "}
-                  {selectedRecord?.count ?? 1}회 · 중복 {Math.max(0, (selectedRecord?.count ?? 1) - 1)}회
-                </Text>
-              </>
+              <Text typography="t6" color={adaptive.grey700} display="block">
+                획득일 {selectedRecord ? formatShortDate(selectedRecord.unlockedAt) : "-"} · 총{" "}
+                {selectedRecord?.count ?? 1}회 · 중복 {Math.max(0, (selectedRecord?.count ?? 1) - 1)}회
+              </Text>
             ) : (
               <Text typography="t6" color={adaptive.grey600} display="block">
-                실루엣만 보이지만, 분명 어딘가에서 기다리고 있어요.
+                아직 만나지 못한 카드예요.
               </Text>
             )}
           </div>

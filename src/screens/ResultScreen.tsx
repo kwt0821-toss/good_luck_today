@@ -1,8 +1,7 @@
 import { adaptive } from "@toss/tds-colors";
-import { BottomSheet, Button, FixedBottomCTA, Text, Top } from "@toss/tds-mobile";
+import { BottomSheet, Button, FixedBottomCTA, Text } from "@toss/tds-mobile";
 
-import { CatPortrait } from "../components/CatPortrait";
-import { GradeBadge } from "../components/GradeBadge";
+import { LuckyCatCard } from "../components/LuckyCatCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { MAX_DAILY_REROLLS } from "../lib/user";
 import type { Cat, DrawResult } from "../types";
@@ -37,17 +36,12 @@ export function ResultScreen({
   return (
     <div className="screen result-screen">
       <ScreenHeader title="소환 결과" showBack onBack={onConfirm} pinkJellyBalance={pinkJellyBalance} />
-      <Top
-        title={<Top.TitleParagraph size={22}>{cat.name}</Top.TitleParagraph>}
-        subtitleBottom={
-          <Top.SubtitleParagraph size={15}>{cat.description}</Top.SubtitleParagraph>
-        }
-      />
 
       <div className="result-hero">
-        <div className={`result-burst grade-${cat.grade.toLowerCase()}`} />
-        <CatPortrait cat={cat} size="hero" />
-        <GradeBadge grade={cat.grade} size="large" />
+        <LuckyCatCard cat={cat} />
+        <Text typography="t7" color={adaptive.grey500} textAlign="center" display="block">
+          카드를 누르면 뒷면이 보여요
+        </Text>
       </div>
 
       <div className="reward-banner" role="status">
@@ -104,7 +98,7 @@ export function ResultScreen({
           </button>
           <button type="button" className="reroll-option is-boost" onClick={onBoostedReroll}>
             <strong>확률업 재소환 ⚡</strong>
-            <span>30초 리워드 광고 · 고급 등급 확률 상승</span>
+            <span>30초 리워드 광고 · 높은 성 확률 상승</span>
           </button>
         </div>
       </BottomSheet>

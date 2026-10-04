@@ -1,4 +1,4 @@
-export type Grade = "SSS" | "S" | "A" | "B" | "C";
+export type Star = 1 | 2 | 3 | 4 | 5;
 
 export type ScreenName = "home" | "result" | "collection" | "room";
 
@@ -8,12 +8,19 @@ export type Screen =
   | { name: "collection" }
   | { name: "room" };
 
-export interface Cat {
+export interface CatSpecies {
   id: string;
   name: string;
-  grade: Grade;
+}
+
+export interface Cat {
+  id: string;
+  speciesId: string;
+  name: string;
+  star: Star;
   imageUrl: string;
-  description: string;
+  luckPhrase: string;
+  description: [string, string];
 }
 
 export interface CollectionRecord {
@@ -77,8 +84,8 @@ export type AdKind = "interstitial" | "rewarded";
 
 export type DrawPurpose = "daily" | "reroll-standard" | "reroll-boosted";
 
-export type GradeFilter = "ALL" | Grade;
+export type SpeciesFilter = "ALL" | string;
 
-export type CollectionSort = "acquired" | "grade";
+export type CollectionSort = "acquired" | "species";
 
 export type RoomTab = "decorate" | "shop";
