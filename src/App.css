@@ -620,31 +620,42 @@ button.lucky-card {
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  padding: 13px;
-  border-radius: 10px;
-  background-color: #f7c2d0;
+  padding: 18px;
+  border-radius: 12px;
+  background-color: #fff3f6;
   background-image:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.72) 50%, transparent 50%),
-    linear-gradient(rgba(255, 255, 255, 0.72) 50%, transparent 50%);
-  background-size: 11px 11px;
+    repeating-linear-gradient(
+      90deg,
+      rgba(244, 156, 180, 0.7) 0 8px,
+      transparent 8px 16px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(244, 156, 180, 0.7) 0 8px,
+      transparent 8px 16px
+    );
   box-shadow: 0 10px 24px rgba(232, 140, 168, 0.18);
+}
+
+.lucky-card-mini .lucky-card-frame {
+  padding: 10px;
 }
 
 .lucky-card-bow {
   position: absolute;
-  top: -7px;
+  top: -8px;
   left: 50%;
-  width: 54px;
-  height: 27px;
+  width: 62px;
+  height: 31px;
   transform: translateX(-50%);
   z-index: 2;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6));
 }
 
 .lucky-card-mini .lucky-card-bow {
-  width: 36px;
-  height: 18px;
-  top: -4px;
+  width: 40px;
+  height: 20px;
+  top: -5px;
 }
 
 .lucky-card-panel {
@@ -653,16 +664,20 @@ button.lucky-card {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  padding: 14px 12px 10px;
-  border-radius: 8px;
+  padding: 16px 14px 12px;
+  border-radius: 10px;
   background: #fffdfb;
+}
+
+.lucky-card-mini .lucky-card-panel {
+  padding: 10px 8px 8px;
 }
 
 .lucky-card-art {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  border: 1.5px dashed #cfcfcf;
+  border: 1.5px dashed #c8c8c8;
   border-radius: 4px;
   background: #fffdfb;
 }

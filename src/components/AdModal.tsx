@@ -35,7 +35,7 @@ export function AdModal({ open, kind, onComplete, onCancel }: AdModalProps) {
   const title = kind === "rewarded" ? "확률업 리워드 광고" : "전면 광고";
   const subtitle =
     kind === "rewarded"
-      ? "30초 리워드 광고를 보면 고급 등급 확률이 올라가요."
+      ? "30초 리워드 광고를 보면 높은 성 확률이 올라가요."
       : "짧은 전면 광고를 보면 고양이를 소환할 수 있어요.";
 
   return (
