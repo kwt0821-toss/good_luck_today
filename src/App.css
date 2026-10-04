@@ -141,33 +141,24 @@
 .bell {
   position: absolute;
   left: 50%;
-  top: 42px;
-  font-size: 108px;
-  line-height: 1;
+  top: 16px;
+  width: 148px;
   transform: translateX(-50%);
-  transform-origin: top center;
+  transform-origin: 50% 3%;
   animation: bell-swing 1.8s ease-in-out infinite;
+}
+
+.bell-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 10px 14px rgba(176, 120, 48, 0.28));
 }
 
 .bell-button.is-done .bell {
   animation: none;
-}
-
-.bell-cat {
-  position: absolute;
-  left: 50%;
-  bottom: 28px;
-  transform: translateX(-50%);
-  font-size: 42px;
-}
-
-.bell-sparkle {
-  position: absolute;
-  top: 18px;
-  right: 28px;
-  color: #fff;
-  font-size: 22px;
-  animation: sparkle 1.6s ease-in-out infinite;
 }
 
 @keyframes bell-swing {
@@ -177,18 +168,6 @@
   }
   50% {
     transform: translateX(-50%) rotate(9deg);
-  }
-}
-
-@keyframes sparkle {
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: scale(0.9);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.15);
   }
 }
 
