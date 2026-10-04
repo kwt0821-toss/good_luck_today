@@ -91,7 +91,10 @@
 }
 
 .jelly-chip-icon {
-  font-size: 16px;
+  display: block;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }
 
 .cta-spacer {
@@ -849,6 +852,26 @@ button.lucky-card {
 .reward-pill.is-jelly {
   background: #e7f6fc;
   color: #2f6580;
+  gap: 6px;
+}
+
+.reward-pill-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.jelly-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.jelly-price img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
 }
 
 .reward-banner p {
