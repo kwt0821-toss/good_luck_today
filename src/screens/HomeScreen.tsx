@@ -50,14 +50,8 @@ export function HomeScreen({
           }}
           aria-label={hasDrawnToday ? "오늘은 이미 소환했어요" : "고양이 방울 흔들어 소환하기"}
         >
-          <span className="bell-sparkle" aria-hidden="true">
-            ✦
-          </span>
           <span className="bell" aria-hidden="true">
-            🔔
-          </span>
-          <span className="bell-cat" aria-hidden="true">
-            🐱
+            <img className="bell-img" src="/cat-bell.png" alt="" draggable={false} />
           </span>
         </button>
         <Text typography="t6" color={adaptive.grey600} textAlign="center" display="block">
