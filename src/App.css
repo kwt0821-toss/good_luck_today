@@ -141,10 +141,10 @@
 .bell {
   position: absolute;
   left: 50%;
-  top: 18px;
+  top: 16px;
   width: 148px;
   transform: translateX(-50%);
-  transform-origin: 71% 2%;
+  transform-origin: 50% 3%;
   animation: bell-swing 1.8s ease-in-out infinite;
 }
 
