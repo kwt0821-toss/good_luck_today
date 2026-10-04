@@ -2,7 +2,6 @@ import { adaptive } from "@toss/tds-colors";
 import { Button, FixedBottomCTA, Text, Top } from "@toss/tds-mobile";
 
 import { CatPortrait } from "../components/CatPortrait";
-import { GradeBadge } from "../components/GradeBadge";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { formatKoreanDate } from "../lib/date";
 import { MAX_DAILY_REROLLS } from "../lib/user";
@@ -74,7 +73,6 @@ export function HomeScreen({
           <div className="today-cat-copy">
             <div className="today-cat-top">
               <span>오늘의 고양이</span>
-              <GradeBadge grade={todayCat.grade} />
             </div>
             <strong>{todayCat.name}</strong>
             <p>
@@ -88,7 +86,7 @@ export function HomeScreen({
             하루 한 번, 행운의 고양이를 소환해요
           </Text>
           <Text typography="t6" color={adaptive.grey600} display="block">
-            뽑을 때마다 토스포인트와 핑크젤리를 바로 받아요. 등급이 높을수록 1원·1개씩 더 쌓여요.
+            뽑을 때마다 토스포인트와 핑크젤리를 바로 받아요. 성이 높을수록 1원·1개씩 더 쌓여요.
             핑크젤리로는 고양이방 아이템을 살 수 있어요.
           </Text>
         </section>

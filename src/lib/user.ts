@@ -1,20 +1,20 @@
 import { createDefaultInventory, createDefaultRoom } from "./room";
-import type { Cat, DrawResult, Grade, UserState } from "../types";
+import type { Cat, DrawResult, Star, UserState } from "../types";
 import { toKstDateKey } from "./date";
 
 export const MAX_DAILY_REROLLS = 5;
 
-/** 기본 1 + 등급이 오를 때마다 토스포인트·핑크젤리 1씩 추가 */
-export const GRADE_REWARD: Record<Grade, number> = {
-  C: 1,
-  B: 2,
-  A: 3,
-  S: 4,
-  SSS: 5,
+/** 기본 1 + 성이 오를 때마다 토스포인트·핑크젤리 1씩 추가 */
+export const STAR_REWARD: Record<Star, number> = {
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
 };
 
-export function getDrawReward(grade: Grade): { tossPoints: number; pinkJelly: number } {
-  const amount = GRADE_REWARD[grade];
+export function getDrawReward(star: Star): { tossPoints: number; pinkJelly: number } {
+  const amount = STAR_REWARD[star];
   return { tossPoints: amount, pinkJelly: amount };
 }
 
@@ -67,7 +67,7 @@ export function applyDraw(
   const today = options.today ?? toKstDateKey();
   const isNew = !user.unlockedCatIds.includes(cat.id);
   const previous = user.collection[cat.id];
-  const reward = getDrawReward(cat.grade);
+  const reward = getDrawReward(cat.star);
 
   const result: DrawResult = {
     catId: cat.id,
