@@ -2,6 +2,7 @@ import { adaptive } from "@toss/tds-colors";
 import { BottomSheet, Button, FixedBottomCTA, Text } from "@toss/tds-mobile";
 
 import { LuckyCatCard } from "../components/LuckyCatCard";
+import { PinkJellyIcon } from "../components/JellyChip";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { MAX_DAILY_REROLLS } from "../lib/user";
 import type { Cat, DrawResult } from "../types";
@@ -47,7 +48,10 @@ export function ResultScreen({
       <div className="reward-banner" role="status">
         <div className="reward-pills">
           <span className="reward-pill is-point">토스포인트 +{result.earnedTossPoints}원</span>
-          <span className="reward-pill is-jelly">핑크젤리 +{result.earnedPinkJelly}</span>
+          <span className="reward-pill is-jelly">
+            <PinkJellyIcon className="reward-pill-icon" />
+            핑크젤리 +{result.earnedPinkJelly}
+          </span>
         </div>
         <p>
           {result.isNew

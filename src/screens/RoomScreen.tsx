@@ -2,6 +2,7 @@ import { adaptive } from "@toss/tds-colors";
 import { BottomSheet, SegmentedControl, Text, Top } from "@toss/tds-mobile";
 import { useEffect, useMemo, useState } from "react";
 
+import { PinkJellyIcon } from "../components/JellyChip";
 import { RoomArtImage } from "../components/RoomArtImage";
 import { RoomCanvas } from "../components/RoomCanvas";
 import { ScreenHeader } from "../components/ScreenHeader";
@@ -266,7 +267,6 @@ function ShopCard({
   const uniqueOwned = item.unique && owned > 0;
   const price = shopPrice(item);
   const canBuy = !uniqueOwned && !isCatalogFree(item) && user.pinkJellyBalance >= price;
-  const priceLabel = isCatalogFree(item) ? "기본 아이템" : price === 0 ? "무료" : `🍬 ${price}`;
 
   return (
     <article className="shop-card">
@@ -275,7 +275,16 @@ function ShopCard({
       </div>
       <strong>{item.name}</strong>
       <span>
-        {priceLabel}
+        {isCatalogFree(item) ? (
+          "기본 아이템"
+        ) : price === 0 ? (
+          "무료"
+        ) : (
+          <span className="jelly-price">
+            <PinkJellyIcon />
+            {price}
+          </span>
+        )}
         {owned > 0 ? ` · 보유 ${owned}` : ""}
       </span>
       {item.unique && uniqueOwned ? (
