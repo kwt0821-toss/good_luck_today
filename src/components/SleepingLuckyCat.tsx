@@ -94,38 +94,38 @@ export function SleepingLuckyCat({ className }: SleepingLuckyCatProps) {
 
         <g className="lucky-cat-breathe">
           <path
-            d="M108 92 L98 22 L164 78 Z"
+            d="M118 86 L110 32 L158 78 Z"
             fill="#F7CD9F"
             stroke="#5C4038"
             strokeWidth="5.5"
             strokeLinejoin="round"
           />
           <path
-            d="M252 92 L262 22 L196 78 Z"
+            d="M242 86 L250 32 L202 78 Z"
             fill="#F7CD9F"
             stroke="#5C4038"
             strokeWidth="5.5"
             strokeLinejoin="round"
           />
-          <path d="M118 78 L112 40 L148 74 Z" fill="#F4B4AA" />
-          <path d="M242 78 L248 40 L212 74 Z" fill="#F4B4AA" />
-          <ellipse cx="180" cy="116" rx="88" ry="78" fill="#F7CD9F" stroke="#5C4038" strokeWidth="5.5" />
-          <path d="M166 58 L164 92" stroke="#D4A06A" strokeWidth="4.5" strokeLinecap="round" />
-          <path d="M180 52 L180 90" stroke="#D4A06A" strokeWidth="4.5" strokeLinecap="round" />
-          <path d="M194 58 L196 92" stroke="#D4A06A" strokeWidth="4.5" strokeLinecap="round" />
-          <path d="M136 118 Q150 132 164 118" stroke="#5C4038" strokeWidth="5" strokeLinecap="round" />
-          <path d="M196 118 Q210 132 224 118" stroke="#5C4038" strokeWidth="5" strokeLinecap="round" />
-          <ellipse cx="136" cy="140" rx="16" ry="9" fill="#F3A8A0" />
-          <ellipse cx="224" cy="140" rx="16" ry="9" fill="#F3A8A0" />
-          <path d="M168 150 Q180 162 192 150" stroke="#5C4038" strokeWidth="4" strokeLinecap="round" />
-          <ellipse cx="136" cy="186" rx="42" ry="26" fill="#F7CD9F" stroke="#5C4038" strokeWidth="5" />
-          <ellipse cx="224" cy="186" rx="42" ry="26" fill="#F7CD9F" stroke="#5C4038" strokeWidth="5" />
-          <circle cx="124" cy="186" r="4.2" fill="#E89A90" />
-          <circle cx="136" cy="178" r="3.4" fill="#E89A90" />
-          <circle cx="148" cy="186" r="4.2" fill="#E89A90" />
-          <circle cx="212" cy="186" r="4.2" fill="#E89A90" />
-          <circle cx="224" cy="178" r="3.4" fill="#E89A90" />
-          <circle cx="236" cy="186" r="4.2" fill="#E89A90" />
+          <path d="M126 74 L122 44 L150 72 Z" fill="#F4B4AA" />
+          <path d="M234 74 L238 44 L210 72 Z" fill="#F4B4AA" />
+          <ellipse cx="180" cy="112" rx="82" ry="72" fill="#F7CD9F" stroke="#5C4038" strokeWidth="5.5" />
+          <path d="M168 58 L166 88" stroke="#D4A06A" strokeWidth="4.5" strokeLinecap="round" />
+          <path d="M180 52 L180 86" stroke="#D4A06A" strokeWidth="4.5" strokeLinecap="round" />
+          <path d="M192 58 L194 88" stroke="#D4A06A" strokeWidth="4.5" strokeLinecap="round" />
+          <path d="M140 114 Q152 128 166 114" stroke="#5C4038" strokeWidth="5" strokeLinecap="round" />
+          <path d="M194 114 Q208 128 220 114" stroke="#5C4038" strokeWidth="5" strokeLinecap="round" />
+          <ellipse cx="140" cy="136" rx="15" ry="8" fill="#F3A8A0" />
+          <ellipse cx="220" cy="136" rx="15" ry="8" fill="#F3A8A0" />
+          <path d="M168 146 Q180 157 192 146" stroke="#5C4038" strokeWidth="4" strokeLinecap="round" />
+          <ellipse cx="120" cy="176" rx="38" ry="23" fill="#F7CD9F" stroke="#5C4038" strokeWidth="5" />
+          <ellipse cx="240" cy="176" rx="38" ry="23" fill="#F7CD9F" stroke="#5C4038" strokeWidth="5" />
+          <circle cx="108" cy="176" r="3.8" fill="#E89A90" />
+          <circle cx="120" cy="168" r="3.2" fill="#E89A90" />
+          <circle cx="132" cy="176" r="3.8" fill="#E89A90" />
+          <circle cx="228" cy="176" r="3.8" fill="#E89A90" />
+          <circle cx="240" cy="168" r="3.2" fill="#E89A90" />
+          <circle cx="252" cy="176" r="3.8" fill="#E89A90" />
         </g>
       </svg>
 
