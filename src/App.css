@@ -960,6 +960,11 @@
   font-size: 11px;
   letter-spacing: 0.02em;
   cursor: pointer;
+  transform-origin: 50% 50%;
+}
+
+.main-nav-btn.is-pop {
+  animation: main-nav-pop 0.22s ease-out;
 }
 
 .main-nav-btn img {
@@ -1246,6 +1251,18 @@
   }
   50% {
     top: calc(50% - 12px);
+  }
+}
+
+@keyframes main-nav-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 

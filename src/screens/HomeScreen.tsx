@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type MouseEvent } from "react";
 
 import { formatLuckyCatalogDate } from "../lib/date";
 
@@ -32,6 +32,8 @@ export function HomeScreen({
   const [notice, setNotice] = useState<string | null>(null);
   const wakeTimer = useRef<number>(0);
   const noticeTimer = useRef<number>(0);
+  const navTimer = useRef<number>(0);
+  const navLock = useRef(false);
   const dateLabel = formatLuckyCatalogDate();
   const drawsDone = remainingDraws <= 0;
 
@@ -39,6 +41,20 @@ export function HomeScreen({
     setNotice(message);
     window.clearTimeout(noticeTimer.current);
     noticeTimer.current = window.setTimeout(() => setNotice(null), 1800);
+  };
+
+  const popThen = (action: () => void) => (event: MouseEvent<HTMLButtonElement>) => {
+    if (navLock.current) return;
+    navLock.current = true;
+    const btn = event.currentTarget;
+    btn.classList.remove("is-pop");
+    void btn.offsetWidth;
+    btn.classList.add("is-pop");
+    window.clearTimeout(navTimer.current);
+    navTimer.current = window.setTimeout(() => {
+      navLock.current = false;
+      action();
+    }, 220);
   };
 
   const handleDrawTap = () => {
@@ -89,7 +105,7 @@ export function HomeScreen({
             </text>
           </svg>
         </h1>
-        <button type="button" className="main-nav-btn main-menu-btn" aria-label="메뉴" onClick={onOpenMenu}>
+        <button type="button" className="main-nav-btn main-menu-btn" aria-label="메뉴" onClick={popThen(onOpenMenu)}>
           <img src={ASSETS.menu} alt="" width={28} height={28} />
           <span>메뉴</span>
         </button>
@@ -142,11 +158,11 @@ export function HomeScreen({
       <p className="main-cta-en">TAP THE CAT TO DRAW</p>
 
       <nav className="main-bottom">
-        <button type="button" className="main-nav-btn" aria-label="도감" onClick={onOpenCollection}>
+        <button type="button" className="main-nav-btn" aria-label="도감" onClick={popThen(onOpenCollection)}>
           <img src={ASSETS.dex} alt="" width={28} height={28} />
           <span>도감</span>
         </button>
-        <button type="button" className="main-nav-btn" aria-label="방꾸미기" onClick={onOpenRoom}>
+        <button type="button" className="main-nav-btn" aria-label="방꾸미기" onClick={popThen(onOpenRoom)}>
           <img src={ASSETS.room} alt="" width={28} height={28} />
           <span>방꾸미기</span>
         </button>
