@@ -125,7 +125,9 @@ export function HomeScreen({
           <img className="main-tail" src={ASSETS.tail} alt="" />
           <div className="main-card-shadow" aria-hidden="true" />
           <img className="main-card" src={ASSETS.card} alt="뒤집힌 행운 카드" />
-          <img className="main-cat" src={ASSETS.cat} alt="잠자는 고양이" />
+          <div className="main-cat">
+            <img src={ASSETS.cat} alt="잠자는 고양이" />
+          </div>
           <div className="main-zzz" aria-hidden="true">
             <span>z</span>
             <span>z</span>
