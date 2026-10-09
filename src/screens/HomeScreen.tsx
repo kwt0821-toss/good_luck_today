@@ -1,12 +1,18 @@
-import { adaptive } from "@toss/tds-colors";
-import { Button, FixedBottomCTA, Text, Top } from "@toss/tds-mobile";
+import { TopNavigation } from "@toss/tds-mobile";
+import { useState } from "react";
 
-import { CatPortrait } from "../components/CatPortrait";
-import { GradeBadge } from "../components/GradeBadge";
-import { ScreenHeader } from "../components/ScreenHeader";
-import { formatKoreanDate } from "../lib/date";
-import { MAX_DAILY_REROLLS } from "../lib/user";
+import { SleepingLuckyCat } from "../components/SleepingLuckyCat";
+import { formatLuckyCatalogDate } from "../lib/date";
+import { isInTossApp } from "../lib/native";
 import type { Cat, DrawResult } from "../types";
+
+const ICONS = {
+  menu: "/home-icons/menu.png",
+  draws: "/home-icons/draws.png",
+  date: "/home-icons/date.png",
+  collection: "/home-icons/collection.png",
+  room: "/home-icons/room.png",
+} as const;
 
 type HomeScreenProps = {
   pinkJellyBalance: number;
@@ -31,119 +37,111 @@ export function HomeScreen({
   onOpenCollection,
   onOpenRoom,
 }: HomeScreenProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const remainingDraws = hasDrawnToday ? remainingRerolls : 1;
+  const dateLabel = formatLuckyCatalogDate();
+
+  const handleCatTap = () => {
+    if (!hasDrawnToday) {
+      onDraw();
+      return;
+    }
+    if (lastResult) onOpenResult();
+  };
+
   return (
-    <div className="screen">
-      <ScreenHeader title="럭키캣" pinkJellyBalance={pinkJellyBalance} />
+    <div className="screen screen--night">
+      {isInTossApp() ? null : (
+        <div className="lucky-chrome">
+          <TopNavigation withSafeAreaTop={false} content="럭키캣" />
+        </div>
+      )}
 
-      <Top
-        title={<Top.TitleParagraph size={22}>오늘의 행운 고양이</Top.TitleParagraph>}
-        subtitleBottom={
-          <Top.SubtitleParagraph size={15}>{formatKoreanDate()}</Top.SubtitleParagraph>
-        }
-      />
+      <div className="lucky-home">
+        <span className="lucky-star lucky-star-a" aria-hidden="true" />
+        <span className="lucky-star lucky-star-b" aria-hidden="true" />
+        <span className="lucky-star lucky-star-c" aria-hidden="true" />
+        <span className="lucky-star lucky-star-d" aria-hidden="true" />
 
-      <div className="home-hero">
+        <header className="lucky-hero">
+          <h1 className="lucky-title">
+            <span className="lucky-title-fill">LUCKY</span>
+            <span className="lucky-title-outline">CAT.</span>
+          </h1>
+          <div className="lucky-menu-wrap">
+            <button
+              type="button"
+              className="lucky-icon-btn lucky-menu-btn"
+              aria-expanded={menuOpen}
+              aria-label="메뉴"
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              <img src={ICONS.menu} alt="" width={40} height={40} draggable={false} />
+              <span>메뉴</span>
+            </button>
+            {menuOpen ? (
+              <div className="lucky-menu-pop" role="menu">
+                <p>핑크젤리 {pinkJellyBalance.toLocaleString("ko-KR")}</p>
+                {todayCat && lastResult ? (
+                  <button type="button" onClick={onOpenResult}>
+                    오늘의 카드
+                  </button>
+                ) : null}
+                <button type="button" onClick={onOpenCollection}>
+                  도감
+                </button>
+                <button type="button" onClick={onOpenRoom}>
+                  방꾸미기
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </header>
+
+        <div className="lucky-draws">
+          <span className="lucky-draws-pill">
+            <img src={ICONS.draws} alt="" width={12} height={12} draggable={false} />
+            오늘 남은 뽑기 {remainingDraws}
+          </span>
+        </div>
+
+        <div className="lucky-meta">
+          <p>고양이가 골라 주는 오늘의 행운</p>
+          <p className="lucky-date">
+            <img src={ICONS.date} alt="" width={16} height={16} draggable={false} />
+            <span>{dateLabel}</span>
+          </p>
+        </div>
+
         <button
           type="button"
-          className={`bell-button ${hasDrawnToday ? "is-done" : ""}`}
-          onClick={() => {
-            if (!hasDrawnToday) onDraw();
-          }}
-          aria-label={hasDrawnToday ? "오늘은 이미 소환했어요" : "고양이 방울 흔들어 소환하기"}
+          className="lucky-stage"
+          onClick={handleCatTap}
+          aria-label={hasDrawnToday ? "오늘의 카드 보기" : "고양이 톡해서 오늘의 카드 받기"}
         >
-          <span className="bell-sparkle" aria-hidden="true">
-            ✦
-          </span>
-          <span className="bell" aria-hidden="true">
-            🔔
-          </span>
-          <span className="bell-cat" aria-hidden="true">
-            🐱
-          </span>
+          <SleepingLuckyCat />
         </button>
-        <Text typography="t6" color={adaptive.grey600} textAlign="center" display="block">
+
+        <p className="lucky-cta">
           {hasDrawnToday
-            ? "오늘은 이미 방울을 울렸어요. 내일 00:00에 다시 열려요."
-            : "방울을 누르면 광고 후 오늘의 고양이가 나타나요."}
-        </Text>
-      </div>
+            ? remainingRerolls > 0
+              ? "톡, 카드를 다시 열어볼까요"
+              : "오늘은 이미 카드를 받았어요"
+            : "톡, 깨워서 오늘의 카드 받기"}
+        </p>
+        <p className="lucky-cta-en">{hasDrawnToday ? "TAP TO OPEN TODAY'S CARD" : "TAP THE CAT TO DRAW"}</p>
 
-      {todayCat && lastResult ? (
-        <button type="button" className="today-cat-card" onClick={onOpenResult}>
-          <CatPortrait cat={todayCat} size="card" />
-          <div className="today-cat-copy">
-            <div className="today-cat-top">
-              <span>오늘의 고양이</span>
-              <GradeBadge grade={todayCat.grade} />
-            </div>
-            <strong>{todayCat.name}</strong>
-            <p>
-              토스포인트 +{lastResult.earnedTossPoints}원 · 핑크젤리 +{lastResult.earnedPinkJelly}
-            </p>
-          </div>
-        </button>
-      ) : (
-        <section className="intro-card">
-          <Text typography="t5" fontWeight="bold" color={adaptive.grey800} display="block">
-            하루 한 번, 행운의 고양이를 소환해요
-          </Text>
-          <Text typography="t6" color={adaptive.grey600} display="block">
-            뽑을 때마다 토스포인트와 핑크젤리를 바로 받아요. 등급이 높을수록 1원·1개씩 더 쌓여요.
-            핑크젤리로는 고양이방 아이템을 살 수 있어요.
-          </Text>
-        </section>
-      )}
-
-      <button type="button" className="today-cat-card" onClick={onOpenRoom}>
-        <div className="room-entry-icon" aria-hidden="true">
-          🏠
-        </div>
-        <div className="today-cat-copy">
-          <div className="today-cat-top">
-            <span>핑크젤리 상점</span>
-          </div>
-          <strong>고양이방</strong>
-          <p>아이템을 사고 드래그해서 나만의 방을 꾸며요.</p>
-        </div>
-      </button>
-
-      <div className="home-meta">
-        <Text typography="t6" color={adaptive.grey600} display="block">
-          남은 재도전 {remainingRerolls}/{MAX_DAILY_REROLLS}
-        </Text>
-        <div className="home-links">
-          <button type="button" className="text-link" onClick={onOpenCollection}>
-            고양이 도감
+        <nav className="lucky-nav">
+          <button type="button" className="lucky-icon-btn" onClick={onOpenCollection}>
+            <img src={ICONS.collection} alt="" width={44} height={44} draggable={false} />
+            <span>도감</span>
           </button>
-          <button type="button" className="text-link" onClick={onOpenRoom}>
-            고양이방
+          <button type="button" className="lucky-icon-btn" onClick={onOpenRoom}>
+            <img src={ICONS.room} alt="" width={44} height={44} draggable={false} />
+            <span>방꾸미기</span>
           </button>
-        </div>
+        </nav>
       </div>
-
-      <div className="cta-spacer" aria-hidden="true" />
-
-      {hasDrawnToday ? (
-        remainingRerolls > 0 ? (
-          <FixedBottomCTA.Double
-            takeSpace
-            leftButton={
-              <Button color="dark" variant="weak" disabled>
-                내일 다시 도전하세요
-              </Button>
-            }
-            rightButton={<Button onClick={onOpenResult}>다시 뽑기</Button>}
-          />
-        ) : (
-          <FixedBottomCTA takeSpace onClick={() => undefined}>
-            내일 다시 도전하세요
-          </FixedBottomCTA>
-        )
-      ) : (
-        <FixedBottomCTA takeSpace onClick={onDraw}>
-          오늘의 행운 고양이 뽑기
-        </FixedBottomCTA>
-      )}
     </div>
   );
 }

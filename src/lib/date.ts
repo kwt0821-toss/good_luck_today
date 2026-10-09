@@ -28,3 +28,21 @@ export function formatShortDate(dateKey: string): string {
   const [, month, day] = dateKey.split("-");
   return `${Number(month)}월 ${Number(day)}일`;
 }
+
+/** 홈 시안용 날짜. 예: Nº 023 · FRI 10.09 */
+export function formatLuckyCatalogDate(date = new Date()): string {
+  const key = toKstDateKey(date);
+  const [year, month, day] = key.split("-").map(Number);
+  const start = Date.UTC(year, 0, 1);
+  const current = Date.UTC(year, month - 1, day);
+  const dayOfYear = Math.floor((current - start) / 86_400_000) + 1;
+  const weekday =
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Seoul",
+      weekday: "short",
+    })
+      .format(date)
+      .toUpperCase();
+
+  return `Nº ${String(dayOfYear).padStart(3, "0")} · ${weekday} ${String(month).padStart(2, "0")}.${String(day).padStart(2, "0")}`;
+}

@@ -5,6 +5,8 @@
   box-sizing: border-box;
   background: #f7fcfb;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (min-width: 481px) {
@@ -877,4 +879,380 @@
   color: #fff;
   font-size: 14px;
   z-index: 30;
+}
+
+.screen--night {
+  flex: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: 0;
+  background: #221e3a;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 481px) {
+  .screen--night {
+    min-height: 844px;
+  }
+}
+
+.lucky-chrome {
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.lucky-home {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 22px 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 70% at 50% 58%, #3a335c 0%, #221e3a 58%, #1a1730 100%);
+  color: #f3ebd7;
+}
+
+.lucky-star {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #f3ebd7;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.lucky-star-a {
+  top: 38%;
+  left: 10%;
+  width: 7px;
+  height: 7px;
+}
+
+.lucky-star-b {
+  top: 46%;
+  right: 12%;
+  width: 10px;
+  height: 10px;
+  opacity: 0.7;
+}
+
+.lucky-star-c {
+  top: 62%;
+  left: 8%;
+  width: 6px;
+  height: 6px;
+}
+
+.lucky-star-d {
+  bottom: 28%;
+  right: 16%;
+  width: 5px;
+  height: 5px;
+}
+
+.lucky-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lucky-title {
+  margin: 0;
+  font-family: Oswald, "Arial Narrow", Impact, sans-serif;
+  font-weight: 700;
+  font-size: clamp(52px, 16vw, 68px);
+  line-height: 0.82;
+  letter-spacing: -0.03em;
+}
+
+.lucky-title-fill {
+  display: block;
+  color: #f3ebd7;
+}
+
+.lucky-title-outline {
+  display: block;
+  color: #221e3a;
+  -webkit-text-stroke: 2.2px #f3ebd7;
+  paint-order: stroke fill;
+}
+
+.lucky-menu-wrap {
+  position: relative;
+  padding-top: 8px;
+}
+
+.lucky-icon-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  color: #c9c0b0;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  padding: 0;
+}
+
+.lucky-icon-btn img {
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.lucky-menu-btn span {
+  font-size: 11px;
+}
+
+.lucky-menu-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 8;
+  min-width: 148px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(24, 20, 42, 0.96);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  color: #f3ebd7;
+  font-size: 13px;
+}
+
+.lucky-menu-pop p {
+  margin: 0 0 8px;
+}
+
+.lucky-menu-pop button {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #f3ebd7;
+  text-align: left;
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.lucky-draws {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -6px;
+}
+
+.lucky-draws-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px 7px 10px;
+  border: 1.5px solid rgba(243, 235, 215, 0.55);
+  border-radius: 999px;
+  font-size: 12px;
+  color: #f3ebd7;
+  letter-spacing: -0.01em;
+}
+
+.lucky-draws-pill img {
+  display: block;
+  flex-shrink: 0;
+}
+
+.lucky-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(243, 235, 215, 0.18);
+  font-size: 12px;
+  color: #c9c0b0;
+}
+
+.lucky-meta p {
+  margin: 0;
+}
+
+.lucky-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: Oswald, "Arial Narrow", sans-serif;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.lucky-date img {
+  display: block;
+  flex-shrink: 0;
+}
+
+.lucky-stage {
+  position: relative;
+  width: 100%;
+  margin: 8px 0 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.lucky-cat-scene {
+  position: relative;
+  width: min(100%, 340px);
+  margin: 0 auto;
+}
+
+.lucky-cat-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.lucky-card-glow {
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  top: 28%;
+  bottom: 8%;
+  border-radius: 32px;
+  background: radial-gradient(ellipse at 50% 40%, rgba(255, 236, 176, 0.55), rgba(168, 196, 255, 0.12) 48%, transparent 72%);
+  filter: blur(16px);
+  animation: lucky-glow 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.lucky-cat-breathe {
+  animation: lucky-breathe 3.2s ease-in-out infinite;
+}
+
+.lucky-tail {
+  transform-box: fill-box;
+  transform-origin: 8% 18%;
+  animation: lucky-tail 2.8s ease-in-out infinite;
+}
+
+.lucky-zzz {
+  position: absolute;
+  top: 6%;
+  right: 14%;
+  display: flex;
+  gap: 2px;
+  color: #d7cbd8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.lucky-zzz span {
+  display: block;
+  animation: lucky-zzz 3s ease-in-out infinite;
+}
+
+.lucky-zzz span:nth-child(1) {
+  font-size: 18px;
+  animation-delay: 0s;
+}
+
+.lucky-zzz span:nth-child(2) {
+  font-size: 13px;
+  transform: translate(6px, -8px);
+  animation-delay: 0.45s;
+}
+
+.lucky-zzz span:nth-child(3) {
+  font-size: 10px;
+  transform: translate(12px, -16px);
+  animation-delay: 0.9s;
+}
+
+.lucky-cta {
+  margin: 4px 0 0;
+  text-align: center;
+  font-family: Gaegu, "Apple SD Gothic Neo", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #e8a070;
+  letter-spacing: -0.02em;
+}
+
+.lucky-cta-en {
+  margin: 2px 0 0;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: rgba(201, 192, 176, 0.7);
+  text-transform: uppercase;
+}
+
+.lucky-nav {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: auto;
+  padding: 16px 8px 8px;
+}
+
+@keyframes lucky-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes lucky-tail {
+  0%,
+  100% {
+    transform: rotate(-9deg);
+  }
+  50% {
+    transform: rotate(11deg);
+  }
+}
+
+@keyframes lucky-glow {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes lucky-zzz {
+  0%,
+  100% {
+    opacity: 0.2;
+    translate: 0 8px;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 8px -18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lucky-card-glow,
+  .lucky-cat-breathe,
+  .lucky-tail,
+  .lucky-zzz span {
+    animation: none;
+  }
 }
