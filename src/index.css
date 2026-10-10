@@ -14,11 +14,14 @@ html,
 body {
   margin: 0;
   min-width: 320px;
+  height: 100%;
   min-height: 100%;
+  overflow: hidden;
 }
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 button {
@@ -26,6 +29,12 @@ button {
 }
 
 @media (min-width: 481px) {
+  html,
+  body {
+    height: auto;
+    overflow: auto;
+  }
+
   body {
     display: block;
     background-color: #e8f3f0 !important;

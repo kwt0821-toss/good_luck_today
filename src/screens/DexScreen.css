@@ -4,12 +4,12 @@
   --ink: #221d38;
   position: relative;
   flex: 1;
-  min-height: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overscroll-behavior: none;
   color: var(--cream);
   font-family: "Noto Sans KR", "Toss Product Sans", sans-serif;
   background: radial-gradient(120% 70% at 70% 30%, #3a2f55 0%, #221d38 45%, #14132a 100%);
@@ -189,7 +189,10 @@
 
 .dex-body {
   flex: 1;
+  min-height: 0;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   margin: 18px -24px 0;
   padding: 0 24px 90px;
   animation: dex-tab-in 200ms ease-out;
