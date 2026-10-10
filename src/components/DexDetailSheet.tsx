@@ -93,18 +93,21 @@ export function DexDetailSheet({ card, group, owned, onClose, onChangeCard }: De
     startY.current = event.clientY;
     dragKind.current = "swipe";
     ignoreFlipClick.current = false;
-    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const onCardPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+  const onCardPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (dragKind.current !== "swipe") return;
-    dragKind.current = null;
     const dx = event.clientX - startX.current;
     const dy = event.clientY - startY.current;
     if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) {
       ignoreFlipClick.current = true;
+      dragKind.current = null;
       goOwned(dx < 0 ? 1 : -1);
     }
+  };
+
+  const onCardPointerUp = () => {
+    if (dragKind.current === "swipe") dragKind.current = null;
   };
 
   const onFlipClick = () => {
@@ -153,7 +156,9 @@ export function DexDetailSheet({ card, group, owned, onClose, onChangeCard }: De
         <div
           className="dex-flip-stage"
           onPointerDown={onCardPointerDown}
+          onPointerMove={onCardPointerMove}
           onPointerUp={onCardPointerUp}
+          onPointerCancel={onCardPointerUp}
         >
           <div className="dex-card-glow" />
           <button
