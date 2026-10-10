@@ -16,9 +16,18 @@ import { StubScreen } from "./screens/StubScreen";
 import type { AdKind, DrawPurpose, Screen, UserState } from "./types";
 import "./App.css";
 
+function initialScreen(): Screen {
+  if (typeof window === "undefined") return { name: "home" };
+  const name = new URLSearchParams(window.location.search).get("screen");
+  if (name === "collection" || name === "room" || name === "menu" || name === "draw") {
+    return { name };
+  }
+  return { name: "home" };
+}
+
 function App() {
   const [user, setUser] = useState<UserState>(createDefaultUser);
-  const [screen, setScreen] = useState<Screen>({ name: "home" });
+  const [screen, setScreen] = useState<Screen>(initialScreen);
   const [rerollOpen, setRerollOpen] = useState(false);
   const [ad, setAd] = useState<{ kind: AdKind; purpose: DrawPurpose } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
