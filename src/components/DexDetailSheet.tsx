@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { createPortal } from "react-dom";
 
 import { cardDisplayName, cardKoreanName, dexAsset, formatMetDate } from "../lib/dexCatalog";
 import type { DexCard, DexOwnedMap } from "../lib/dexTypes";
@@ -14,9 +15,12 @@ type DexDetailSheetProps = {
 export function DexDetailSheet({ card, group, owned, onClose, onChangeCard }: DexDetailSheetProps) {
   const [flipped, setFlipped] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [armed, setArmed] = useState(false);
+  const [settled, setSettled] = useState(false);
   const startX = useRef(0);
   const startY = useRef(0);
-  const dragging = useRef(false);
+  const dragKind = useRef<"close" | "swipe" | null>(null);
+  const ignoreFlipClick = useRef(false);
   const record = owned[card.id];
   const ownedInGroup = group.filter((item) => (owned[item.id]?.count ?? 0) > 0);
   const ownedCount = ownedInGroup.length;
@@ -34,9 +38,16 @@ export function DexDetailSheet({ card, group, owned, onClose, onChangeCard }: De
           : "레전드 카드";
 
   const collectionLabel =
-    card.type === "breed" ? `${ko} 컬렉션` : card.type === "special" ? "스페셜 컬렉션" : card.type === "character" ? "캐릭터 컬렉션" : "레전드 컬렉션";
+    card.type === "breed"
+      ? `${ko} 컬렉션`
+      : card.type === "special"
+        ? "스페셜 컬렉션"
+        : card.type === "character"
+          ? "캐릭터 컬렉션"
+          : "레전드 컬렉션";
 
   const close = () => {
+    if (closing) return;
     setClosing(true);
     window.setTimeout(onClose, 240);
   };
@@ -53,37 +64,81 @@ export function DexDetailSheet({ card, group, owned, onClose, onChangeCard }: De
     setFlipped(false);
   }, [card.id]);
 
-  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+  useEffect(() => {
+    const arm = window.setTimeout(() => setArmed(true), 280);
+    const settle = window.setTimeout(() => setSettled(true), 420);
+    return () => {
+      window.clearTimeout(arm);
+      window.clearTimeout(settle);
+    };
+  }, []);
+
+  const onHandlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
     startX.current = event.clientX;
     startY.current = event.clientY;
-    dragging.current = true;
+    dragKind.current = "close";
+    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    if (!dragging.current) return;
-    dragging.current = false;
+  const onHandlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    if (dragKind.current !== "close") return;
+    dragKind.current = null;
+    const dy = event.clientY - startY.current;
+    const dx = event.clientX - startX.current;
+    if (dy > 80 && Math.abs(dy) > Math.abs(dx)) close();
+  };
+
+  const onCardPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    startX.current = event.clientX;
+    startY.current = event.clientY;
+    dragKind.current = "swipe";
+    ignoreFlipClick.current = false;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const onCardPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    if (dragKind.current !== "swipe") return;
+    dragKind.current = null;
     const dx = event.clientX - startX.current;
     const dy = event.clientY - startY.current;
-    if (dy > 80 && Math.abs(dy) > Math.abs(dx)) {
-      close();
-      return;
-    }
     if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) {
+      ignoreFlipClick.current = true;
       goOwned(dx < 0 ? 1 : -1);
     }
   };
 
-  return (
-    <div className={`dex-sheet-root ${closing ? "is-closing" : ""}`}>
-      <button type="button" className="dex-sheet-backdrop" aria-label="닫기" onClick={close} />
+  const onFlipClick = () => {
+    if (ignoreFlipClick.current) {
+      ignoreFlipClick.current = false;
+      return;
+    }
+    setFlipped((value) => !value);
+  };
+
+  const host = document.getElementById("root") ?? document.body;
+
+  return createPortal(
+    <div className={`dex-sheet-root ${closing ? "is-closing" : ""} ${settled ? "is-settled" : ""}`}>
+      <button
+        type="button"
+        className="dex-sheet-backdrop"
+        aria-label="닫기"
+        onClick={() => {
+          if (armed) close();
+        }}
+      />
       <div
         className="dex-sheet"
         role="dialog"
+        aria-modal="true"
         aria-label={cardDisplayName(card)}
-        onPointerDown={onPointerDown}
-        onPointerUp={onPointerUp}
+        onClick={(event) => event.stopPropagation()}
       >
-        <div className="dex-sheet-handle" />
+        <div
+          className="dex-sheet-handle"
+          onPointerDown={onHandlePointerDown}
+          onPointerUp={onHandlePointerUp}
+        />
         <button type="button" className="dex-sheet-close" aria-label="닫기" onClick={close}>
           <img src={dexAsset("icons/icon-close.svg")} alt="" />
         </button>
@@ -95,12 +150,16 @@ export function DexDetailSheet({ card, group, owned, onClose, onChangeCard }: De
           ) : null}
         </p>
 
-        <div className="dex-flip-stage">
+        <div
+          className="dex-flip-stage"
+          onPointerDown={onCardPointerDown}
+          onPointerUp={onCardPointerUp}
+        >
           <div className="dex-card-glow" />
           <button
             type="button"
             className={`dex-flip ${flipped ? "is-flipped" : ""}`}
-            onClick={() => setFlipped((value) => !value)}
+            onClick={onFlipClick}
             aria-label={flipped ? "앞면 보기" : "뒷면 보기"}
           >
             <div className="dex-flip-inner">
@@ -108,12 +167,7 @@ export function DexDetailSheet({ card, group, owned, onClose, onChangeCard }: De
               <img className="dex-flip-face is-back" src={dexAsset(card.back)} alt={`${cardDisplayName(card)} 뒷면`} />
             </div>
           </button>
-          <button
-            type="button"
-            className="dex-flip-btn"
-            aria-label="카드 뒤집기"
-            onClick={() => setFlipped((value) => !value)}
-          >
+          <button type="button" className="dex-flip-btn" aria-label="카드 뒤집기" onClick={onFlipClick}>
             <img src={dexAsset("icons/icon-flip.svg")} alt="" />
           </button>
         </div>
@@ -150,6 +204,7 @@ export function DexDetailSheet({ card, group, owned, onClose, onChangeCard }: De
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    host,
   );
 }

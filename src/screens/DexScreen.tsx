@@ -86,16 +86,15 @@ export function DexScreen({ onBack }: DexScreenProps) {
     tabCounts.breed.owned + tabCounts.special.owned + tabCounts.character.owned + tabCounts.legend.owned;
   const percent = totalCards ? Math.round((ownedTotal / totalCards) * 100) : 0;
 
-  const openOwned = async (card: DexCard) => {
-    await haptic("tap");
+  const openOwned = (card: DexCard) => {
     setOpenCard(card);
-    const next = await markDexCardViewed(owned, card.id);
-    setOwned(next);
+    void haptic("tap");
+    void markDexCardViewed(owned, card.id).then(setOwned);
   };
 
   const onSlot = (card: DexCard) => {
     if ((owned[card.id]?.count ?? 0) > 0) {
-      void openOwned(card);
+      openOwned(card);
       return;
     }
     void haptic("softMedium");
