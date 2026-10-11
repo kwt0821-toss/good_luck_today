@@ -929,6 +929,7 @@
 .main-rule,
 .main-meta,
 .main-stage,
+.main-cta-ad,
 .main-cta,
 .main-cta-en,
 .main-bottom {
@@ -1196,6 +1197,16 @@
 
 .main-stage.is-waking .main-zzz {
   opacity: 0;
+}
+
+.main-cta-ad {
+  margin: 0 0 4px;
+  text-align: center;
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: rgba(243, 235, 215, 0.55);
 }
 
 .main-cta {
