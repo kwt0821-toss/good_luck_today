@@ -789,32 +789,37 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
             return (
               <div
                 key={roomId}
-                className={`lucky-island ${mode === "view" ? "is-float" : ""}`}
-                style={{
-                  left: screen.left + (mode === "view" ? index * VIEW_W : 0),
-                  top: screen.top,
-                  width: screen.width,
-                  height: screen.height,
-                  pointerEvents: active ? "auto" : "none",
-                }}
+                className="lucky-island-page"
+                style={{ left: mode === "view" ? index * VIEW_W : 0 }}
               >
-                <div className="lucky-island-scale" style={{ transform: `scale(${screen.scale})` }}>
-                  <RoomWorld
-                    mode={active ? mode : "view"}
-                    itemsById={itemsById}
-                    layout={roomLayout}
-                    selectedId={active && !paintTab ? selectedId : null}
-                    dragging={active && !paintTab ? dragging : null}
-                    hints={active && !paintTab ? hints : null}
-                    frameThumbs={frameThumbs}
-                    shakeId={active ? shakeId : null}
-                    shadowsEnabled={state.shadowsEnabled}
-                    painting={active && paintTab}
-                    paintHover={active && paintTab ? paintHover : null}
-                    onSelect={onSelect}
-                    onItemPointerDown={onItemPointerDown}
-                    onFloorPointerDown={onFloorPointerDown}
-                  />
+                <div
+                  className={`lucky-island ${mode === "view" ? "is-float" : ""}`}
+                  style={{
+                    left: screen.left,
+                    top: screen.top,
+                    width: screen.width,
+                    height: screen.height,
+                    pointerEvents: active ? "auto" : "none",
+                  }}
+                >
+                  <div className="lucky-island-scale" style={{ transform: `scale(${screen.scale})` }}>
+                    <RoomWorld
+                      mode={active ? mode : "view"}
+                      itemsById={itemsById}
+                      layout={roomLayout}
+                      selectedId={active && !paintTab ? selectedId : null}
+                      dragging={active && !paintTab ? dragging : null}
+                      hints={active && !paintTab ? hints : null}
+                      frameThumbs={frameThumbs}
+                      shakeId={active ? shakeId : null}
+                      shadowsEnabled={state.shadowsEnabled}
+                      painting={active && paintTab}
+                      paintHover={active && paintTab ? paintHover : null}
+                      onSelect={onSelect}
+                      onItemPointerDown={onItemPointerDown}
+                      onFloorPointerDown={onFloorPointerDown}
+                    />
+                  </div>
                 </div>
               </div>
             );
