@@ -481,7 +481,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin: 14px 0 8px;
   font-size: 12px;
   color: rgba(243, 233, 215, 0.7);
 }
@@ -496,7 +496,7 @@
   border-radius: 2px;
   background: rgba(243, 233, 215, 0.12);
   overflow: hidden;
-  margin-bottom: 14px;
+  margin-bottom: 4px;
 }
 
 .att-bar > i {
@@ -533,6 +533,7 @@
 .att-cell.is-today {
   border: 1.5px solid var(--menu-amber);
   box-shadow: 0 0 18px rgba(255, 196, 138, 0.28);
+  padding-bottom: 22px;
 }
 
 .att-cell.is-claimed img.att-thumb {
@@ -587,20 +588,28 @@
 
 .att-today-tag {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
   font-size: 9px;
   font-weight: 700;
   color: #1e1a2b;
   background: var(--menu-amber);
   border-radius: 6px;
   padding: 1px 5px;
+  white-space: nowrap;
 }
 
 .att-cell.is-today .menu-dot {
-  top: 8px;
-  left: 8px;
-  right: auto;
+  top: 6px;
+  right: 6px;
+  left: auto;
+}
+
+.att-day7-note {
+  font-size: 9px;
+  color: rgba(243, 233, 215, 0.5);
+  line-height: 1.2;
 }
 
 /* rates */
@@ -697,7 +706,26 @@
   border: 1px dashed rgba(255, 196, 138, 0.55);
   font-size: 12px;
   color: var(--menu-amber);
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rates-sum b {
+  font-family: Poppins, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.rates-count {
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(243, 233, 215, 0.45);
+}
+
+.rates-table .is-hi .rates-count {
+  color: rgba(255, 196, 138, 0.55);
 }
 
 .rates-note {
@@ -705,6 +733,7 @@
   font-size: 11px;
   color: rgba(243, 233, 215, 0.45);
   line-height: 1.4;
+  text-align: center;
 }
 
 /* exchange / rewards lists */

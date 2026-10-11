@@ -198,12 +198,13 @@ export function MenuPanel({
       const rate = table[key] ?? 0;
       const perCard = rate / count;
       const decimals = model.menu.sheets.rates.perCardDecimals;
+      const pct = rate * 100;
       return {
         key,
         label,
         count,
         rate,
-        percent: `${(rate * 100).toFixed(1)}%`,
+        percent: Number.isInteger(pct) ? `${pct}%` : `${pct.toFixed(1)}%`,
         perCard: `${(perCard * 100).toFixed(decimals)}%`,
         highlight: model.menu.sheets.rates.highlight.includes(key),
       };
@@ -218,6 +219,17 @@ export function MenuPanel({
         : model.config.economy.draws.rates_proposal.normal;
     return model.menu.sheets.rates.highlight.reduce((sum, key) => sum + (table[key] ?? 0), 0);
   }, [model, ratesTab]);
+
+  const rateUpHighlightSum = useMemo(() => {
+    if (!model) return 0;
+    const table = model.config.economy.draws.rates_proposal.rateUp;
+    return model.menu.sheets.rates.highlight.reduce((sum, key) => sum + (table[key] ?? 0), 0);
+  }, [model]);
+
+  const formatGradePct = (rate: number) => {
+    const pct = rate * 100;
+    return Number.isInteger(pct) ? `${pct}%` : `${pct.toFixed(1)}%`;
+  };
 
   if (!open && !closing) return null;
 
@@ -407,15 +419,6 @@ export function MenuPanel({
               <div className="menu-sheet-body">
                 {sheet === "attendance" ? (
                   <>
-                    <div className="att-progress">
-                      <span>출석 진행</span>
-                      <b>
-                        {model.attendance.claimedDays} / 7일
-                      </b>
-                    </div>
-                    <div className="att-bar">
-                      <i style={{ width: `${(model.attendance.claimedDays / 7) * 100}%` }} />
-                    </div>
                     <div className="att-grid">
                       {model.attendance.gifts.map((gift) => (
                         <div
@@ -425,6 +428,7 @@ export function MenuPanel({
                           <span className="att-day">DAY {gift.day}</span>
                           <img className="att-thumb" src={gift.thumb} alt="" />
                           <span className="att-name">{gift.nameKo}</span>
+                          {gift.day === 7 ? <span className="att-day7-note">마지막 날 큰 선물</span> : null}
                           {gift.claimed || stampDay === gift.day ? (
                             <img className="att-stamp" src={menuAsset("icon-stamp.svg")} alt="" />
                           ) : null}
@@ -436,6 +440,15 @@ export function MenuPanel({
                           ) : null}
                         </div>
                       ))}
+                    </div>
+                    <div className="att-progress">
+                      <span>출석 진행</span>
+                      <b>
+                        {model.attendance.claimedDays} / 7일
+                      </b>
+                    </div>
+                    <div className="att-bar">
+                      <i style={{ width: `${(model.attendance.claimedDays / 7) * 100}%` }} />
                     </div>
                   </>
                 ) : null}
@@ -466,7 +479,10 @@ export function MenuPanel({
                       <tbody>
                         {ratesRows.map((row) => (
                           <tr key={row.key} className={row.highlight ? "is-hi" : ""}>
-                            <td>{row.label}</td>
+                            <td>
+                              {row.label}
+                              <small className="rates-count"> ({row.count}장)</small>
+                            </td>
                             <td>
                               <div className="rates-bar">
                                 <i style={{ width: `${Math.min(100, row.rate * 100 * 2)}%` }} />
@@ -479,9 +495,18 @@ export function MenuPanel({
                       </tbody>
                     </table>
                     <div className="rates-sum">
-                      5성 + 스페셜 + 캐릭터 + 레전드 = {(highlightSum * 100).toFixed(1)}%
+                      <span>5성 + 스페셜 + 캐릭터 + 레전드</span>
+                      <b>{formatGradePct(highlightSum)}</b>
                     </div>
-                    <p className="rates-note">{model.menu.sheets.rates.note}</p>
+                    <p className="rates-note">
+                      {ratesTab === "normal" ? (
+                        <>
+                          확률업 뽑기에선 이 합계가 {formatGradePct(rateUpHighlightSum)}로 올라가요
+                          <br />
+                        </>
+                      ) : null}
+                      {model.menu.sheets.rates.note}
+                    </p>
                   </>
                 ) : null}
 
