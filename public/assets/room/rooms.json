@@ -11,8 +11,9 @@
   ]
  },
  "catRoaming": {
-  "note": "one collected cat per room (from 도감); it may walk on walkableTiles (free tiles of the default layout — recompute after edits). PLACEHOLDER for the roaming feature, no cat art in this package.",
-  "perRoom": 1
+  "note": "one collected cat per room (from 도감); walks on free floor tiles recomputed after edits.",
+  "perRoom": 1,
+  "defaultBreedId": "cheese"
  },
  "rooms": [
   {
@@ -28,7 +29,8 @@
     "R": "plum_sparkle"
    },
    "layoutRef": "room-assets-v5-tiles/grid.json → defaultLayout (+ tileMaps.defaults)",
-   "themeItems": "room-assets-v5 items.json (all v5 items)"
+   "themeItems": "room-assets-v5 items.json (all v5 items)",
+   "roamingCatId": "cheese"
   },
   {
    "id": "cat_cafe",
@@ -688,7 +690,8 @@
     "tiny_cups",
     "chalk_cream"
    ],
-   "mockup": "mockups/room-cafe-a.png"
+   "mockup": "mockups/room-cafe-a.png",
+   "roamingCatId": "cheese"
   },
   {
    "id": "sakura_greenhouse",
@@ -1276,7 +1279,8 @@
     "sage_panel",
     "white_lattice"
    ],
-   "mockup": "mockups/room-greenhouse-a.png"
+   "mockup": "mockups/room-greenhouse-a.png",
+   "roamingCatId": "cheese"
   }
  ]
 }

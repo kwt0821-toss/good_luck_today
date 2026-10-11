@@ -3,6 +3,7 @@ import { Storage } from "@apps-in-toss/web-framework";
 import { isInTossApp } from "./native";
 import type { GridLayoutEntry, RoomDefinition, RoomGridFile, RoomsFile } from "./roomCatalog";
 import { defaultRoomId } from "./roomCatalog";
+import { DEFAULT_CAT_BREED_ID } from "./roomCat";
 import { wallCoordsFromT } from "./roomLayout";
 import {
   defaultFloorTiles,
@@ -137,7 +138,7 @@ export function defaultLayout(grid?: RoomGridFile): RoomLayoutState {
 }
 
 export function defaultRecord(def: RoomDefinition, grid?: RoomGridFile): RoomRecord {
-  return asRecord(layoutFromRoom(def, grid), null);
+  return asRecord(layoutFromRoom(def, grid), def.roamingCatId ?? DEFAULT_CAT_BREED_ID);
 }
 
 function countDefaultPlacements(def: RoomDefinition, grid?: RoomGridFile) {
@@ -267,7 +268,10 @@ function parseRoomRecord(raw: unknown, def: RoomDefinition, grid?: RoomGridFile)
   if (!layout) return fallback;
   return {
     ...layout,
-    roamingCatId: typeof raw.roamingCatId === "string" ? raw.roamingCatId : null,
+    roamingCatId:
+      typeof raw.roamingCatId === "string"
+        ? raw.roamingCatId
+        : (def.roamingCatId ?? DEFAULT_CAT_BREED_ID),
   };
 }
 
@@ -385,7 +389,11 @@ export function patchCurrentRoom(state: RoomSaveState, layout: RoomLayoutState):
     ...state,
     rooms: {
       ...state.rooms,
-      [state.currentRoomId]: { ...prev, ...layout, roamingCatId: prev?.roamingCatId ?? null },
+      [state.currentRoomId]: {
+        ...prev,
+        ...layout,
+        roamingCatId: prev?.roamingCatId ?? DEFAULT_CAT_BREED_ID,
+      },
     },
   };
 }

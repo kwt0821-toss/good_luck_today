@@ -269,6 +269,7 @@
   inset: 0;
   z-index: 2;
   overflow: hidden;
+  touch-action: pan-y;
 }
 
 .lucky-island-page {
@@ -287,13 +288,6 @@
 
 .lucky-island-slider.is-dragging {
   transition: none;
-}
-
-.lucky-swipe-catch {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  touch-action: pan-y;
 }
 
 .lucky-island {
@@ -500,11 +494,43 @@
   object-fit: fill;
 }
 
-.lucky-contact-shadow {
+.lucky-contact-shadow,
+.lucky-roam-shadow {
   position: absolute;
   z-index: 2;
   pointer-events: none;
   user-select: none;
+}
+
+.lucky-roam-cat {
+  z-index: 5;
+  overflow: visible;
+}
+
+.lucky-roam-frame {
+  display: block;
+  pointer-events: none;
+  image-rendering: auto;
+  background-repeat: no-repeat;
+}
+
+.lucky-roam-cat.is-sleeping .lucky-roam-frame {
+  transform-origin: 50% 90%;
+  animation: lucky-roam-breathe 2s ease-in-out infinite;
+}
+
+.lucky-world.is-view .lucky-sprite:not(.lucky-roam-cat) {
+  pointer-events: none;
+}
+
+@keyframes lucky-roam-breathe {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.03);
+  }
 }
 
 .lucky-shadow-toggle {
@@ -1377,6 +1403,7 @@
   .lucky-lamp-glow,
   .lucky-world-layer.is-lights,
   .lucky-sprite.is-catbed img,
+  .lucky-roam-cat.is-sleeping .lucky-roam-frame,
   .lucky-drawer,
   .lucky-island,
   .lucky-island-scale {

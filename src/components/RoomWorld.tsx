@@ -1,6 +1,7 @@
 import type { PointerEvent } from "react";
 
 import { roomAsset } from "../lib/roomCatalog";
+import { catAsset, catDepthKey, furnitureDepthKey } from "../lib/roomCat";
 import {
   WALL_BANDS,
   WALL_SLOTS,
@@ -33,9 +34,13 @@ import type {
   SpriteRect,
   WallPlacement,
 } from "../lib/roomTypes";
+import { useRoomCat, type RoomCatView } from "../lib/useRoomCat";
 
 type RoomWorldProps = {
   mode: RoomMode;
+  roomId: string;
+  roamingCatId: string | null;
+  roamingActive: boolean;
   itemsById: Map<string, RoomItem>;
   layout: RoomLayoutState;
   selectedId: string | null;
@@ -148,8 +153,71 @@ function FloorSprite({
   );
 }
 
+function RoamingCatShadow({ view }: { view: RoomCatView }) {
+  if (!view.sheet || !view.ready) return null;
+  const shadow = view.sheet.shadow;
+  const loafish = view.anim === "loaf" || view.anim === "sleep";
+  const scale = loafish ? 0.8 : 1;
+  return (
+    <img
+      className="lucky-roam-shadow"
+      src={catAsset(shadow.image)}
+      alt=""
+      draggable={false}
+      style={{
+        left: view.worldX - shadow.anchor[0] * scale,
+        top: view.worldY - shadow.anchor[1] * scale,
+        width: shadow.size[0] * scale,
+        height: shadow.size[1] * scale,
+        opacity: view.opacity,
+      }}
+    />
+  );
+}
+
+function RoamingCatBody({ view, onTap }: { view: RoomCatView; onTap: () => void }) {
+  if (!view.sheet || !view.ready) return null;
+  const frame = view.sheet.frames[view.frameName] ?? view.sheet.frames.sit;
+  if (!frame) return null;
+  const [fw, fh] = view.sheet.frameSize;
+  const [sw, sh] = view.sheet.sheetSize;
+  return (
+    <button
+      type="button"
+      className={`lucky-sprite lucky-roam-cat ${view.sleeping ? "is-sleeping" : ""}`}
+      aria-label="돌아다니는 고양이"
+      style={{
+        left: view.worldX - view.sheet.anchor.x,
+        top: view.worldY - view.sheet.anchor.y,
+        width: fw,
+        height: fh,
+        opacity: view.opacity,
+      }}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation();
+        onTap();
+      }}
+    >
+      <span
+        className="lucky-roam-frame"
+        style={{
+          width: fw,
+          height: fh,
+          backgroundImage: `url(${catAsset(view.sheet.image)})`,
+          backgroundPosition: `-${frame.x}px -${frame.y}px`,
+          backgroundSize: `${sw}px ${sh}px`,
+        }}
+      />
+    </button>
+  );
+}
+
 export function RoomWorld({
   mode,
+  roomId,
+  roamingCatId,
+  roamingActive,
   itemsById,
   layout,
   selectedId,
@@ -164,6 +232,15 @@ export function RoomWorld({
   onItemPointerDown,
   onFloorPointerDown,
 }: RoomWorldProps) {
+  const { view: catView, tap: tapCat } = useRoomCat({
+    roomId,
+    breedId: roamingCatId,
+    floor: layout.floor,
+    itemsById,
+    mode,
+    active: roamingActive,
+    reducedMotion: false,
+  });
   const selected = [...layout.floor, ...layout.walls].find((item) => item.instanceId === selectedId);
   const selectedItem = selected ? itemsById.get(selected.id) : undefined;
   const used = occupancy(layout.floor, itemsById, dragging?.instanceId ?? selectedId ?? undefined);
@@ -246,8 +323,25 @@ export function RoomWorld({
       ? { x: lampRect.x - defaultLampRect.x, y: lampRect.y - defaultLampRect.y }
       : { x: 0, y: 0 };
 
+  type DrawEntry =
+    | { kind: "furniture"; place: FloorPlacement; front: number; bias: number }
+    | { kind: "cat"; front: number; bias: number };
+  const drawList: DrawEntry[] = furnitureDrawn.map((place) => {
+    const item = itemsById.get(place.id);
+    const depth = item ? furnitureDepthKey(place, item) : { front: 0, bias: 0 };
+    return { kind: "furniture" as const, place, front: depth.front, bias: depth.bias };
+  });
+  if (catView.ready) {
+    const depth = catDepthKey(catView.depthCol, catView.depthRow);
+    drawList.push({ kind: "cat", front: depth.front, bias: depth.bias });
+  }
+  drawList.sort((a, b) => (a.front !== b.front ? a.front - b.front : a.bias - b.bias));
+
   return (
-    <div className={`lucky-world ${painting ? "is-painting" : ""}`} onPointerDown={onFloorPointerDown}>
+    <div
+      className={`lucky-world ${painting ? "is-painting" : ""} ${mode === "view" ? "is-view" : ""}`}
+      onPointerDown={onFloorPointerDown}
+    >
       <Layer src="world/base-bg.webp" />
       <div className="lucky-world-layer lucky-floor-tiles" aria-hidden="true">
         {layout.floorTiles.map((row, r) =>
@@ -377,6 +471,8 @@ export function RoomWorld({
           })
         : null}
 
+      {catView.ready ? <RoamingCatShadow view={catView} /> : null}
+
       {shownWalls.map((place) => (
         <WallSprite
           key={place.instanceId}
@@ -393,7 +489,11 @@ export function RoomWorld({
 
       {/* string lights are baked into world/room-frame-* */}
 
-      {furnitureDrawn.map((place) => {
+      {drawList.map((entry) => {
+        if (entry.kind === "cat") {
+          return <RoamingCatBody key="roaming-cat" view={catView} onTap={tapCat} />;
+        }
+        const place = entry.place;
         const item = itemsById.get(place.id);
         if (!item) return null;
         const rect = spriteRect(item, place, shownFloor, itemsById);

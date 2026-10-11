@@ -124,6 +124,7 @@ export type RoomDefinition = {
   wallTiles?: { L: string[]; R: string[] };
   defaultLayout?: GridLayoutEntry[];
   walkableTiles?: [number, number][];
+  roamingCatId?: string | null;
   catRoaming?: unknown;
   hint: string;
 };
@@ -451,6 +452,7 @@ function normalizeRoom(raw: Record<string, unknown>): RoomDefinition | null {
         : undefined,
     defaultLayout: asLayoutEntries(raw.defaultLayout),
     walkableTiles: walkable,
+    roamingCatId: typeof raw.roamingCatId === "string" ? raw.roamingCatId : "cheese",
     catRoaming: raw.catRoaming,
     hint: ROOM_HINTS[raw.id]?.rest ? `${ROOM_HINTS[raw.id].lead ?? ""}${ROOM_HINTS[raw.id].rest}` : "",
   };
@@ -466,6 +468,7 @@ const FALLBACK_ROOMS: RoomsFile = {
       unlock: { type: "default" },
       defaultFloor: DEFAULT_FLOOR_TILE,
       defaultWall: { L: DEFAULT_WALL_TILE, R: DEFAULT_WALL_TILE },
+      roamingCatId: "cheese",
       hint: `${ROOM_HINTS.moon_bedroom.lead ?? ""}${ROOM_HINTS.moon_bedroom.rest}`,
     },
   ],

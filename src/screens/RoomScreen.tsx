@@ -766,16 +766,13 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
         </div>
       ) : null}
 
-      <div className="lucky-island-port">
-        {mode === "view" ? (
-          <div
-            className="lucky-swipe-catch"
-            onPointerDown={onSwipeDown}
-            onPointerMove={onSwipeMove}
-            onPointerUp={onSwipeUp}
-            onPointerCancel={onSwipeUp}
-          />
-        ) : null}
+      <div
+        className="lucky-island-port"
+        onPointerDown={mode === "view" ? onSwipeDown : undefined}
+        onPointerMove={mode === "view" ? onSwipeMove : undefined}
+        onPointerUp={mode === "view" ? onSwipeUp : undefined}
+        onPointerCancel={mode === "view" ? onSwipeUp : undefined}
+      >
         <div
           className={`lucky-island-slider ${dragX ? "is-dragging" : ""}`}
           style={{
@@ -805,6 +802,9 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
                   <div className="lucky-island-scale" style={{ transform: `scale(${screen.scale})` }}>
                     <RoomWorld
                       mode={active ? mode : "view"}
+                      roomId={roomId}
+                      roamingCatId={roomLayout.roamingCatId}
+                      roamingActive={active}
                       itemsById={itemsById}
                       layout={roomLayout}
                       selectedId={active && !paintTab ? selectedId : null}
