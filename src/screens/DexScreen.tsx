@@ -11,11 +11,11 @@ import {
   groupForCard,
   loadDexCatalog,
   ownedCount,
-  sortBreedRowsAz,
-  sortCardsAz,
+  shuffleBreedRows,
+  shuffleCards,
 } from "../lib/dexCatalog";
 import { loadDexOwned, markDexCardViewed } from "../lib/dexCollection";
-import { haptic, isInTossApp } from "../lib/native";
+import { haptic } from "../lib/native";
 import type { DexCard, DexCatalog, DexOwnedMap, DexTab } from "../lib/dexTypes";
 import { convertDuplicate } from "../lib/opsRewards";
 import { loadOpsState } from "../lib/opsStorage";
@@ -72,11 +72,20 @@ export function DexScreen({ onBack }: DexScreenProps) {
 
   const totals = catalog?.counts ?? { breed: 0, special: 0, character: 0, legend: 0 };
   const totalCards = catalog?.total ?? 107;
-  const breedCards = catalog ? cardsOfType(catalog, "breed") : [];
-  const specialCards = catalog ? sortCardsAz(cardsOfType(catalog, "special"), "special") : [];
-  const characterCards = catalog ? sortCardsAz(cardsOfType(catalog, "character"), "character") : [];
-  const legendCards = catalog ? sortCardsAz(cardsOfType(catalog, "legend"), "legend") : [];
-  const breedRows = useMemo(() => sortBreedRowsAz(groupBreedRows(breedCards)), [breedCards]);
+  const breedCards = useMemo(() => (catalog ? cardsOfType(catalog, "breed") : []), [catalog]);
+  const specialCards = useMemo(
+    () => (catalog ? shuffleCards(cardsOfType(catalog, "special"), "special") : []),
+    [catalog],
+  );
+  const characterCards = useMemo(
+    () => (catalog ? shuffleCards(cardsOfType(catalog, "character"), "character") : []),
+    [catalog],
+  );
+  const legendCards = useMemo(
+    () => (catalog ? shuffleCards(cardsOfType(catalog, "legend"), "legend") : []),
+    [catalog],
+  );
+  const breedRows = useMemo(() => shuffleBreedRows(groupBreedRows(breedCards)), [breedCards]);
 
   const tabCounts: Record<DexTab, { owned: number; total: number }> = {
     breed: { owned: ownedCount(breedCards, owned), total: totals.breed },
@@ -109,12 +118,21 @@ export function DexScreen({ onBack }: DexScreenProps) {
       <div className="dex-grain" aria-hidden="true" />
 
       <header className="dex-header">
-        {!isInTossApp() ? (
+        <div className="dex-title-row">
           <button type="button" className="dex-back" onClick={onBack} aria-label="뒤로 가기">
-            ←
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M15 5l-7 7 7 7"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </button>
-        ) : null}
-        <p className="dex-eyebrow">고양이 도감</p>
+          <p className="dex-eyebrow">고양이 도감</p>
+        </div>
         <img className="dex-logo" src={dexAsset("logo-collection.svg")} alt="COLLECTION." />
         <div className="dex-progress-row">
           <p>
@@ -151,7 +169,6 @@ export function DexScreen({ onBack }: DexScreenProps) {
             </button>
           );
         })}
-        <span className="dex-sort">A–Z</span>
         <span className="dex-tab-underline" style={{ left: underline.left, width: underline.width }} />
       </div>
 
@@ -161,11 +178,13 @@ export function DexScreen({ onBack }: DexScreenProps) {
             {breedRows.map((row) => {
               const have = row.slots.filter((slot) => (owned[slot.id]?.count ?? 0) > 0).length;
               const complete = have === 5;
+              const nameUnlocked = have > 0;
               return (
                 <section key={row.breedId} className="dex-breed-row">
                   <div className="dex-row-head">
-                    <h2>
-                      {row.en} <span>{row.ko}</span>
+                    <h2 className={nameUnlocked ? "" : "is-locked-name"}>
+                      {nameUnlocked ? row.en : "???"}{" "}
+                      <span>{nameUnlocked ? row.ko : "???"}</span>
                     </h2>
                     {complete ? (
                       <span className="dex-complete">COMPLETE</span>
