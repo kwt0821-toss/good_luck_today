@@ -145,11 +145,12 @@ export function RoomDrawer({
         </div>
       ) : null}
       <div className="lucky-drawer-grid">
-        {visible.map((item) => {
+        {visible.map((item, index) => {
           const state = tileState(item, layout, owned, selectedId, brushId, otherRoomIds[item.id] ?? null);
           return (
             <button
               key={item.id}
+              id={index === 0 ? "drawer-item-0" : undefined}
               type="button"
               className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom ? "is-other" : ""} ${state.selected ? "is-selected" : ""}`}
               onClick={() => onPick(item)}

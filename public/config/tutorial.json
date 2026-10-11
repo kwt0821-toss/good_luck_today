@@ -1,0 +1,99 @@
+{
+ "_version": "tutorial-1.0",
+ "maxDurationSec": 60,
+ "style": "coach marks (dim + 하이라이트 원/라운드 사각 + 말풍선)",
+ "skip": {
+  "button": {
+   "id": "tut-skip",
+   "label": "건너뛰기",
+   "position": "top-right, 모든 단계"
+  },
+  "onSkip": "남은 단계 보상은 그대로 지급 (첫 뽑기 무료·도감 등록·토스 1원은 서버에서 처리), tutorialDone=true",
+  "resume": "앱 종료 시 다음 실행 때 현재 단계부터, 2회 이상 중단 시 자동 완료"
+ },
+ "steps": [
+  {
+   "step": 1,
+   "screen": "main",
+   "target": "#stage-cat",
+   "copy": "톡, 깨워 볼까요?",
+   "sub": "첫 뽑기는 광고 없이 무료예요",
+   "action": "tap",
+   "reward": "free first draw (no ad)"
+  },
+  {
+   "step": 2,
+   "screen": "draw-reveal",
+   "target": "#reveal-card",
+   "copy": "오늘의 행운 문구가 도착했어요",
+   "toast": {
+    "id": "dex-toast",
+    "text": "도감에 등록됐어요! 토스 1원 받았어요"
+   },
+   "action": "tap #btn-to-dex (도감에 넣기)"
+  },
+  {
+   "step": 3,
+   "screen": "main→dex",
+   "target": "#icon-dex",
+   "effect": "glow pulse",
+   "copy": "도감에서 모은 카드를 볼 수 있어요",
+   "then": {
+    "screen": "dex",
+    "target": "#dex-slot-{cardId}",
+    "copy": "방금 뽑은 카드가 여기 들어갔어요"
+   },
+   "action": "tap"
+  },
+  {
+   "step": 4,
+   "screen": "room",
+   "target": "#drawer-item-0",
+   "copy": "서랍에서 아이템을 꺼내 방에 놓아 보세요",
+   "gesture": "drag hint (손가락 애니메이션)",
+   "then": {
+    "target": "#room-done",
+    "copy": "다 꾸몄으면 완료를 눌러요"
+   },
+   "action": "drag + tap 완료",
+   "complete": "tutorialDone=true"
+  }
+ ],
+ "featureIntros": {
+  "ui": "'새 기능' 말풍선 (대상 요소 옆, 1회 노출, 탭하면 닫힘)",
+  "schedule": [
+   {
+    "day": 2,
+    "id": "intro-extra-draws",
+    "target": "#chip-draws",
+    "copy": "광고를 보면 하루 2번 더 뽑을 수 있어요"
+   },
+   {
+    "day": 3,
+    "id": "intro-rateup",
+    "target": "#btn-rateup",
+    "copy": "확률업 뽑기가 열렸어요! 레어 이상이 더 잘 나와요"
+   },
+   {
+    "day": 4,
+    "id": "intro-paw-ads",
+    "target": "#btn-paw-ad",
+    "copy": "광고 보고 포인트 10개 받아요 (하루 10번까지)"
+   },
+   {
+    "day": 5,
+    "id": "intro-dup-convert",
+    "target": "#dex-dup-convert",
+    "copy": "겹친 카드는 포인트로 바꿀 수 있어요",
+    "condition": "중복 카드 1장 이상"
+   },
+   {
+    "day": 6,
+    "id": "intro-cozy",
+    "target": "#cozy-meter",
+    "copy": "아이템을 모을수록 아늑함 레벨이 올라가요"
+   }
+  ],
+  "rule": "하루 최대 1개, 조건 미충족 시 다음 날로 밀림, 튜토리얼 미완료면 노출 안 함"
+ }
+}

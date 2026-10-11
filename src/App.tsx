@@ -1,147 +1,466 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AdModal } from "./components/AdModal";
-import { getCatById } from "./lib/cats";
+import { MenuPanel } from "./components/MenuPanel";
+import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import { toKstDateKey } from "./lib/date";
-import { getRandomCat } from "./lib/gacha";
+import { buildMenuViewModel } from "./lib/menuModel";
+import type { MockAdKind } from "./lib/mockAds";
+import { cancelDrawReservation, preloadDrawImages, reserveDraw } from "./lib/mockDrawApi";
 import { configureNavigationBar, haptic } from "./lib/native";
-import { loadUserState, saveUserState } from "./lib/storage";
-import { applyDraw, createDefaultUser, hasDrawnToday, remainingRerolls } from "./lib/user";
+import { loadOpsConfig } from "./lib/opsConfig";
+import {
+  confirmDrawAfterAd,
+  grantPawAdReward,
+} from "./lib/opsRewards";
+import {
+  daysSinceInstall,
+  nextDrawSlot,
+  remainingPawAds,
+  remainingRateUpDraws,
+  remainingTotalDraws,
+} from "./lib/opsState";
+import { loadOpsState, saveOpsState } from "./lib/opsStorage";
+import type { DrawReservation, FeatureIntro, OpsConfig, OpsState, TutorialStep } from "./lib/opsTypes";
+import { DRAW_REVEAL_WAIT_MAX_MS, DrawRevealScreen } from "./screens/DrawRevealScreen";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
-import { ResultScreen } from "./screens/ResultScreen";
+import { RatesGuideScreen } from "./screens/RatesGuideScreen";
 import { RoomScreen } from "./screens/RoomScreen";
-import { StubScreen } from "./screens/StubScreen";
-import type { AdKind, DrawPurpose, Screen, UserState } from "./types";
+import type { Screen } from "./types";
 import "./App.css";
 
 function initialScreen(): Screen {
   if (typeof window === "undefined") return { name: "home" };
   const name = new URLSearchParams(window.location.search).get("screen");
-  if (name === "collection" || name === "room" || name === "menu" || name === "draw") {
+  if (
+    name === "collection" ||
+    name === "room" ||
+    name === "draw" ||
+    name === "rates" ||
+    name === "reveal"
+  ) {
     return { name };
   }
   return { name: "home" };
 }
 
-function App() {
-  const [user, setUser] = useState<UserState>(createDefaultUser);
+function initialMenuOpen(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("screen") === "menu";
+}
+
+type AdSession = {
+  kind: MockAdKind;
+  purpose: "draw" | "paw";
+  drawId?: string;
+};
+
+export default function App() {
+  const [ops, setOps] = useState<OpsState | null>(null);
+  const [config, setConfig] = useState<OpsConfig | null>(null);
   const [screen, setScreen] = useState<Screen>(initialScreen);
-  const [rerollOpen, setRerollOpen] = useState(false);
-  const [ad, setAd] = useState<{ kind: AdKind; purpose: DrawPurpose } | null>(null);
+  const [menuOpen, setMenuOpen] = useState(initialMenuOpen);
+  const [menuIconDot, setMenuIconDot] = useState(false);
+  const [tutorialReplayStep, setTutorialReplayStep] = useState<number | null>(null);
+  const menuHistRef = useRef(false);
+  const [ad, setAd] = useState<AdSession | null>(null);
+  const [reservation, setReservation] = useState<DrawReservation | null>(null);
+  const [revealReady, setRevealReady] = useState(false);
+  const [waitFailed, setWaitFailed] = useState(false);
+  const [revealToast, setRevealToast] = useState<string | null>(null);
+  const [bootError, setBootError] = useState<string | null>(null);
+  const [featureIntro, setFeatureIntro] = useState<FeatureIntro | null>(null);
+  const [localToast, setLocalToast] = useState<string | null>(null);
 
   const today = toKstDateKey();
-  const drawnToday = hasDrawnToday(user, today);
-  const rerollsLeft = remainingRerolls(user, today);
-  const remainingDraws = drawnToday ? rerollsLeft : 1;
 
   useEffect(() => {
     let cancelled = false;
-    loadUserState()
-      .then((next) => {
-        if (!cancelled) setUser(next);
-      })
-      .catch(() => {
-        // 브라우저 미리보기에서는 기본 상태로 바로 보여요.
-      });
+    void (async () => {
+      try {
+        const [nextConfig, nextOps] = await Promise.all([loadOpsConfig(), loadOpsState()]);
+        if (cancelled) return;
+        setConfig(nextConfig);
+        setOps(nextOps);
+      } catch (error) {
+        if (!cancelled) {
+          setBootError(error instanceof Error ? error.message : "설정을 불러오지 못했어요");
+        }
+      }
+    })();
     return () => {
       cancelled = true;
     };
   }, []);
 
   useEffect(() => {
-    void configureNavigationBar({ withBackButton: screen.name !== "home" });
-  }, [screen]);
+    if (!ops) return;
+    let cancelled = false;
+    void buildMenuViewModel(ops).then((model) => {
+      if (!cancelled) setMenuIconDot(model.menuIconDot);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ops]);
 
-  const persist = useCallback(async (next: UserState) => {
-    setUser(next);
-    await saveUserState(next);
+  useEffect(() => {
+    if (!menuOpen) return;
+    if (!menuHistRef.current) {
+      window.history.pushState({ menu: true }, "");
+      menuHistRef.current = true;
+    }
+    const onPop = () => {
+      menuHistRef.current = false;
+      setMenuOpen(false);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [menuOpen]);
+
+  const closeMenu = useCallback(() => {
+    setMenuOpen(false);
+    if (menuHistRef.current) {
+      menuHistRef.current = false;
+      window.history.back();
+    }
   }, []);
 
-  const startDraw = useCallback(
-    (purpose: DrawPurpose) => {
-      if (purpose !== "daily" && rerollsLeft <= 0) return;
-      if (purpose === "daily" && drawnToday) return;
-      setRerollOpen(false);
+  useEffect(() => {
+    void configureNavigationBar({
+      withBackButton: screen.name !== "home" && screen.name !== "reveal",
+    });
+  }, [screen]);
+
+  const persistOps = useCallback(async (next: OpsState) => {
+    setOps(next);
+    await saveOpsState(next);
+  }, []);
+
+  const remainingDraws = ops && config ? remainingTotalDraws(ops, config) : 0;
+  const remainingRateUp = ops && config ? remainingRateUpDraws(ops, config) : 0;
+  const pawAdsLeft = ops && config ? remainingPawAds(ops, config) : 0;
+
+  const tutorialStep: TutorialStep | null = useMemo(() => {
+    if (!ops || !config) return null;
+    if (tutorialReplayStep != null) {
+      return config.tutorial.steps.find((step) => step.step === tutorialReplayStep) ?? null;
+    }
+    if (ops.tutorialDone) return null;
+    return config.tutorial.steps.find((step) => step.step === ops.tutorialStep) ?? null;
+  }, [ops, config, tutorialReplayStep]);
+
+  useEffect(() => {
+    if (!ops || !config || !ops.tutorialDone || featureIntro) return;
+    const day = daysSinceInstall(ops, today);
+    const ownedDup = false; // day-5 condition checked lightly; full dup check in dex later
+    const candidate = config.tutorial.featureIntros.schedule.find((intro) => {
+      if (ops.featureIntrosSeen.includes(intro.id)) return false;
+      if (intro.day > day) return false;
+      if (intro.condition === "중복 카드 1장 이상" && !ownedDup) return false;
+      return true;
+    });
+    if (candidate) setFeatureIntro(candidate);
+  }, [ops, config, today, featureIntro]);
+
+  const beginDraw = useCallback(
+    async (forceSlot?: "tutorial" | "normal" | "rateUp") => {
+      if (!ops || !config) return;
+      const slot = forceSlot ?? nextDrawSlot(ops, config);
+      if (!slot) {
+        setLocalToast("내일 또 만나요");
+        window.setTimeout(() => setLocalToast(null), 1800);
+        return;
+      }
+
+      setRevealReady(false);
+      setWaitFailed(false);
+      setRevealToast(null);
+
+      const reserved = await reserveDraw(ops, { forceSlot: slot });
+      await persistOps(reserved.state);
+      if (!reserved.reservation) {
+        setLocalToast(reserved.error ?? "뽑기를 시작하지 못했어요");
+        window.setTimeout(() => setLocalToast(null), 1800);
+        return;
+      }
+
+      setReservation(reserved.reservation);
+      // Prefetch while the ad plays; the 1.5s wait clock starts when the ad closes.
+      void preloadDrawImages(reserved.reservation).then((quality) => {
+        if (quality !== "none") setRevealReady(true);
+      });
+
+      if (slot === "tutorial") {
+        const confirmed = await confirmDrawAfterAd(reserved.state, reserved.reservation.drawId);
+        if ("error" in confirmed) {
+          setLocalToast(confirmed.error);
+          return;
+        }
+        await persistOps({
+          ...confirmed.state,
+          tutorialStep: Math.max(confirmed.state.tutorialStep, 2),
+        });
+        setReservation(confirmed.reservation);
+        setRevealToast(confirmed.toast);
+        setRevealReady(true);
+        setWaitFailed(false);
+        await haptic("success");
+        setScreen({ name: "reveal" });
+        return;
+      }
+
       setAd({
-        kind: purpose === "reroll-boosted" ? "rewarded" : "interstitial",
-        purpose,
+        kind: slot === "rateUp" ? "long" : "short",
+        purpose: "draw",
+        drawId: reserved.reservation.drawId,
       });
     },
-    [drawnToday, rerollsLeft],
+    [ops, config, persistOps],
   );
 
   const completeAd = useCallback(async () => {
-    if (!ad) return;
-    const boosted = ad.purpose === "reroll-boosted";
-    const isReroll = ad.purpose !== "daily";
-    const cat = getRandomCat(boosted);
-    const { next } = applyDraw(user, cat, { isReroll, boosted, today });
-    await persist(next);
-    await haptic("success");
-    setAd(null);
-    setScreen({ name: "result" });
-  }, [ad, persist, today, user]);
+    if (!ad || !ops) return;
+    if (ad.purpose === "paw") {
+      const result = await grantPawAdReward(ops);
+      setAd(null);
+      if ("error" in result) {
+        setLocalToast(result.error);
+        return;
+      }
+      await persistOps(result.state);
+      setLocalToast(`포인트 +${result.gained}`);
+      window.setTimeout(() => setLocalToast(null), 1800);
+      await haptic("success");
+      return;
+    }
 
-  const resultCat = user.lastResult ? getCatById(user.lastResult.catId) : undefined;
+    if (!ad.drawId) {
+      setAd(null);
+      return;
+    }
+    const confirmed = await confirmDrawAfterAd(ops, ad.drawId);
+    setAd(null);
+    if ("error" in confirmed) {
+      setLocalToast(confirmed.error);
+      return;
+    }
+    await persistOps(confirmed.state);
+    setReservation(confirmed.reservation);
+    setRevealToast(confirmed.toast);
+    // Start the post-ad wait clock now (images may already be decoded).
+    if (!revealReady) {
+      window.setTimeout(() => {
+        setRevealReady((prev) => {
+          if (!prev) setWaitFailed(true);
+          return prev;
+        });
+      }, DRAW_REVEAL_WAIT_MAX_MS);
+    } else {
+      setWaitFailed(false);
+    }
+    await haptic("success");
+    setScreen({ name: "reveal" });
+  }, [ad, ops, persistOps, revealReady]);
+
+  const cancelAd = useCallback(async () => {
+    if (!ops) {
+      setAd(null);
+      return;
+    }
+    if (ad?.purpose === "draw") {
+      const next = await cancelDrawReservation(ops);
+      await persistOps(next);
+      setReservation(null);
+    }
+    setAd(null);
+  }, [ad, ops, persistOps]);
+
+  const skipTutorial = useCallback(async () => {
+    if (tutorialReplayStep != null) {
+      setTutorialReplayStep(null);
+      setScreen({ name: "home" });
+      return;
+    }
+    if (!ops) return;
+    await persistOps({
+      ...ops,
+      tutorialDone: true,
+      tutorialStep: 99,
+      tutorialInterruptions: ops.tutorialInterruptions + 1,
+    });
+  }, [ops, persistOps, tutorialReplayStep]);
+
+  const advanceTutorial = useCallback(async () => {
+    if (!ops || !config || !tutorialStep) return;
+
+    // Replay: walk steps with no rewards / no state mutation of tutorialDone.
+    if (tutorialReplayStep != null) {
+      if (tutorialStep.complete || tutorialStep.step >= config.tutorial.steps.length) {
+        setTutorialReplayStep(null);
+        setScreen({ name: "home" });
+        return;
+      }
+      const nextStep = tutorialStep.step + 1;
+      setTutorialReplayStep(nextStep);
+      if (tutorialStep.screen.includes("dex")) setScreen({ name: "collection" });
+      else if (tutorialStep.screen === "room") setScreen({ name: "room" });
+      else if (tutorialStep.screen === "main" || tutorialStep.screen === "draw-reveal") {
+        setScreen({ name: "home" });
+      }
+      return;
+    }
+
+    if (tutorialStep.step === 1) {
+      await beginDraw("tutorial");
+      return;
+    }
+    if (tutorialStep.complete || tutorialStep.step >= config.tutorial.steps.length) {
+      await persistOps({ ...ops, tutorialDone: true, tutorialStep: tutorialStep.step });
+      setScreen({ name: "home" });
+      return;
+    }
+    const nextStep = tutorialStep.step + 1;
+    await persistOps({ ...ops, tutorialStep: nextStep });
+    if (tutorialStep.screen.includes("dex")) setScreen({ name: "collection" });
+    if (tutorialStep.screen === "room") setScreen({ name: "room" });
+  }, [ops, config, tutorialStep, tutorialReplayStep, beginDraw, persistOps]);
+
+  if (bootError) {
+    return (
+      <div className="boot-error">
+        <p>설정을 불러오지 못했어요.</p>
+        <small>{bootError}</small>
+      </div>
+    );
+  }
+
+  if (!ops || !config) {
+    return (
+      <div className="boot-error">
+        <p>럭키캣</p>
+        <small>화면을 불러오는 중이에요.</small>
+      </div>
+    );
+  }
 
   return (
     <>
-      {screen.name === "menu" ? (
-        <StubScreen
-          title="메뉴"
-          body="메뉴 화면은 곧 연결될 예정이에요."
-          onBack={() => setScreen({ name: "home" })}
-        />
-      ) : null}
-
-      {screen.name === "draw" ? (
-        <StubScreen
-          title="오늘의 카드"
-          body="카드 뽑기 화면은 곧 연결될 예정이에요."
-          onBack={() => setScreen({ name: "home" })}
-        />
-      ) : null}
+      {screen.name === "rates" ? <RatesGuideScreen onBack={() => setScreen({ name: "home" })} /> : null}
 
       {screen.name === "collection" ? (
-        <CollectionScreen user={user} onBack={() => setScreen({ name: "home" })} />
+        <CollectionScreen onBack={() => setScreen({ name: "home" })} />
       ) : null}
 
       {screen.name === "room" ? <RoomScreen onBack={() => setScreen({ name: "home" })} /> : null}
 
-      {screen.name === "result" && resultCat && user.lastResult ? (
-        <ResultScreen
-          cat={resultCat}
-          result={user.lastResult}
-          pinkJellyBalance={user.pinkJellyBalance}
-          remainingRerolls={rerollsLeft}
-          rerollOpen={rerollOpen}
-          onOpenReroll={() => setRerollOpen(true)}
-          onCloseReroll={() => setRerollOpen(false)}
-          onConfirm={() => setScreen({ name: "home" })}
-          onStandardReroll={() => startDraw("reroll-standard")}
-          onBoostedReroll={() => startDraw("reroll-boosted")}
+      {screen.name === "reveal" && reservation ? (
+        <DrawRevealScreen
+          reservation={reservation}
+          ready={revealReady && !waitFailed}
+          waitFailed={waitFailed && !revealReady}
+          toastText={revealToast}
+          remainingDraws={remainingDraws}
+          onToDex={() => {
+            void (async () => {
+              if (ops.tutorialStep === 2 && !ops.tutorialDone && tutorialReplayStep == null) {
+                await persistOps({ ...ops, tutorialStep: 3 });
+              }
+              setScreen({ name: "collection" });
+            })();
+          }}
+          onDrawAgain={() => {
+            setScreen({ name: "home" });
+            void beginDraw();
+          }}
+          onRetry={() => {
+            if (!reservation) return;
+            void preloadDrawImages(reservation).then((quality) => {
+              if (quality === "none") {
+                setWaitFailed(true);
+                return;
+              }
+              setRevealReady(true);
+              setWaitFailed(false);
+            });
+          }}
         />
       ) : null}
 
-      {screen.name === "home" ? (
+      {screen.name === "home" || screen.name === "draw" ? (
         <HomeScreen
           remainingDraws={remainingDraws}
-          onDraw={() => setScreen({ name: "draw" })}
-          onOpenMenu={() => setScreen({ name: "menu" })}
+          remainingRateUp={remainingRateUp}
+          remainingPawAds={pawAdsLeft}
+          pawBalance={ops.pawBalance}
+          menuBadge={menuIconDot}
+          onDraw={() => void beginDraw()}
+          onRateUpDraw={() => void beginDraw("rateUp")}
+          onPawAd={() => setAd({ kind: "short", purpose: "paw" })}
+          onOpenMenu={() => setMenuOpen(true)}
           onOpenCollection={() => setScreen({ name: "collection" })}
           onOpenRoom={() => setScreen({ name: "room" })}
         />
       ) : null}
 
+      <MenuPanel
+        open={menuOpen}
+        ops={ops}
+        onClose={closeMenu}
+        onOpsChange={(next) => void persistOps(next)}
+        onOpenDex={() => setScreen({ name: "collection" })}
+        onOpenRoom={() => setScreen({ name: "room" })}
+        onPawAd={() => {
+          closeMenu();
+          setAd({ kind: "short", purpose: "paw" });
+        }}
+        onReplayTutorial={() => {
+          closeMenu();
+          setScreen({ name: "home" });
+          setTutorialReplayStep(1);
+        }}
+      />
+
       <AdModal
         open={ad !== null}
-        kind={ad?.kind ?? "interstitial"}
+        kind={ad?.kind ?? "short"}
         onComplete={() => void completeAd()}
-        onCancel={() => setAd(null)}
+        onCancel={() => void cancelAd()}
       />
+
+      {(screen.name === "home" || tutorialReplayStep != null) &&
+      tutorialStep &&
+      (tutorialStep.screen === "main" ||
+        (tutorialReplayStep != null &&
+          (tutorialStep.screen === "main" ||
+            tutorialStep.screen.includes("dex") ||
+            tutorialStep.screen === "room"))) ? (
+        <TutorialCoach step={tutorialStep} onSkip={() => void skipTutorial()} onAdvance={() => void advanceTutorial()} />
+      ) : null}
+
+      {screen.name === "reveal" && tutorialStep && tutorialStep.screen === "draw-reveal" && tutorialReplayStep == null ? (
+        <TutorialCoach step={tutorialStep} onSkip={() => void skipTutorial()} onAdvance={() => void advanceTutorial()} />
+      ) : null}
+
+      {featureIntro ? (
+        <FeatureIntroBubble
+          intro={featureIntro}
+          onDismiss={() => {
+            void persistOps({
+              ...ops,
+              featureIntrosSeen: [...ops.featureIntrosSeen, featureIntro.id],
+            });
+            setFeatureIntro(null);
+          }}
+        />
+      ) : null}
+
+      {localToast ? (
+        <div className="local-toast" role="status">
+          {localToast}
+        </div>
+      ) : null}
     </>
   );
 }
-
-export default App;

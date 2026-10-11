@@ -5,7 +5,7 @@ import { RoomDrawer } from "../components/RoomDrawer";
 import { RoomWorld } from "../components/RoomWorld";
 import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
 import { loadDexOwned } from "../lib/dexCollection";
-import { haptic, isInTossApp } from "../lib/native";
+import { haptic } from "../lib/native";
 import {
   isPaintItem,
   itemMap,
@@ -137,10 +137,13 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
 
   useEffect(() => {
     void Promise.all([loadRoomCatalog(), loadRoomGrid(), loadRoomsFile()]).then(async ([catalog, gridFile, rooms]) => {
-      setItems(catalog.items);
+      const { applyOpsPrices, syncRoomSaveWithOps } = await import("../lib/roomEconomy");
+      const priced = await applyOpsPrices(catalog.items);
+      setItems(priced);
       setGrid(gridFile);
       setRoomsFile(rooms);
-      setState(await loadRoomState(catalog.items, rooms, gridFile));
+      const loaded = await loadRoomState(priced, rooms, gridFile);
+      setState(await syncRoomSaveWithOps(loaded));
     });
     void Promise.all([loadDexCatalog(), loadDexOwned()]).then(([catalog, owned]) => {
       const thumbs = catalog.cards
@@ -622,11 +625,13 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
 
   const buy = (item: RoomItem) => {
     if (state.points < item.price) return;
+    const nextPoints = state.points - item.price;
     persist({
       ...state,
-      points: state.points - item.price,
+      points: nextPoints,
       owned: { ...state.owned, [item.id]: (state.owned[item.id] ?? 0) + 1 },
     });
+    void import("../lib/roomEconomy").then(({ spendRoomPoints }) => spendRoomPoints(nextPoints));
     setBuyItem(null);
     showToast(`${item.nameKo}를 샀어요`);
   };
@@ -684,18 +689,26 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       <div className="lucky-grain" aria-hidden="true" />
       <div className="lucky-warm-glow" aria-hidden="true" />
 
-      {!isInTossApp() && mode === "view" ? (
-        <button type="button" className="lucky-back" onClick={onBack} aria-label="뒤로 가기">
-          ←
-        </button>
-      ) : null}
-
       {mode === "view" ? (
         <header className="lucky-header">
-          <p className="lucky-eyebrow">방꾸미기</p>
+          <div className="lucky-title-row">
+            <button type="button" className="lucky-back" onClick={onBack} aria-label="뒤로 가기">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M15 5l-7 7 7 7"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <p className="lucky-eyebrow">방꾸미기</p>
+          </div>
           <img className="lucky-logo" src={roomAsset("ui/logo-myroom.svg")} alt="MY ROOM." />
           <div className="lucky-meta">
-            <strong>COZY Lv.{state.cozyLevel}</strong>
+            <strong id="cozy-meter">COZY Lv.{state.cozyLevel}</strong>
             <span>ITEMS {String(placedCount).padStart(2, "0")}</span>
           </div>
         </header>
@@ -710,6 +723,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
           </p>
           <button
             type="button"
+            id="room-done"
             className="lucky-done"
             onClick={() => {
               persist(state);

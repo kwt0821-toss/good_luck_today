@@ -2,22 +2,19 @@ import { adaptive } from "@toss/tds-colors";
 import { Button, Text } from "@toss/tds-mobile";
 import { useEffect, useState } from "react";
 
-import type { AdKind } from "../types";
-
-const AD_DURATION: Record<AdKind, number> = {
-  interstitial: 3,
-  rewarded: 30,
-};
+import { mockAdDurationSec, type MockAdKind } from "../lib/mockAds";
 
 type AdModalProps = {
   open: boolean;
-  kind: AdKind;
+  kind: MockAdKind;
+  title?: string;
+  subtitle?: string;
   onComplete: () => void;
   onCancel: () => void;
 };
 
-export function AdModal({ open, kind, onComplete, onCancel }: AdModalProps) {
-  const duration = AD_DURATION[kind];
+export function AdModal({ open, kind, title, subtitle, onComplete, onCancel }: AdModalProps) {
+  const duration = mockAdDurationSec(kind);
   const [remaining, setRemaining] = useState(duration);
 
   useEffect(() => {
@@ -32,20 +29,21 @@ export function AdModal({ open, kind, onComplete, onCancel }: AdModalProps) {
   if (!open) return null;
 
   const done = remaining <= 0;
-  const title = kind === "rewarded" ? "확률업 리워드 광고" : "전면 광고";
-  const subtitle =
-    kind === "rewarded"
-      ? "30초 리워드 광고를 보면 고급 등급 확률이 올라가요."
-      : "짧은 전면 광고를 보면 고양이를 소환할 수 있어요.";
+  const resolvedTitle = title ?? (kind === "long" ? "확률업 리워드 광고" : "짧은 광고");
+  const resolvedSubtitle =
+    subtitle ??
+    (kind === "long"
+      ? "긴 광고를 끝까지 보면 확률업 뽑기를 할 수 있어요."
+      : "짧은 광고를 끝까지 보면 보상을 받을 수 있어요.");
 
   return (
     <div className="ad-modal" role="dialog" aria-modal="true" aria-labelledby="ad-modal-title">
       <div className="ad-modal-card">
-        <Text typography="t4" fontWeight="bold" color={adaptive.grey800} display="block">
-          {title}
+        <Text id="ad-modal-title" typography="t4" fontWeight="bold" color={adaptive.grey800} display="block">
+          {resolvedTitle}
         </Text>
         <Text typography="t6" color={adaptive.grey600} display="block">
-          {subtitle}
+          {resolvedSubtitle}
         </Text>
 
         <div className="ad-mock" aria-hidden="true">
@@ -62,7 +60,7 @@ export function AdModal({ open, kind, onComplete, onCancel }: AdModalProps) {
         </div>
 
         <Button disabled={!done} onClick={onComplete}>
-          {done ? "광고 종료 후 소환하기" : "광고를 끝까지 봐 주세요"}
+          {done ? "광고 종료 후 계속" : "광고를 끝까지 봐 주세요"}
         </Button>
         <Button color="dark" variant="weak" onClick={onCancel}>
           닫기

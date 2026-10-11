@@ -929,6 +929,7 @@
 .main-rule,
 .main-meta,
 .main-stage,
+.main-cta-ad,
 .main-cta,
 .main-cta-en,
 .main-bottom {
@@ -980,7 +981,34 @@
 }
 
 .main-menu-btn {
-  padding-top: 6px;
+  padding-top: 2px;
+  gap: 2px;
+}
+
+.main-menu-icon-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+}
+
+.main-menu-dot {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff5a5f;
+  box-shadow: 0 0 0 2px #1a1731;
+  pointer-events: none;
+}
+
+.main-menu-btn > span:last-child {
+  /* Keep the label clear of the draw-status chip border below. */
+  margin-top: -2px;
+  transform: translateY(-3px);
 }
 
 .main-chip {
@@ -1191,6 +1219,16 @@
   opacity: 0;
 }
 
+.main-cta-ad {
+  margin: 0 0 4px;
+  text-align: center;
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: rgba(243, 235, 215, 0.55);
+}
+
 .main-cta {
   margin: 2px 0 0;
   text-align: center;
@@ -1212,6 +1250,65 @@
   font-size: 10px;
   letter-spacing: 0.22em;
   color: rgba(201, 192, 176, 0.7);
+}
+
+.main-ops-row {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.main-ops-btn {
+  min-height: 56px;
+  border-radius: 14px;
+  border: 1px solid rgba(243, 233, 215, 0.22);
+  background: rgba(28, 24, 48, 0.72);
+  color: #f3e9d7;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 10px;
+}
+
+.main-ops-hint {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: rgba(243, 233, 215, 0.55);
+  line-height: 1.2;
+}
+
+.main-ops-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: 1.2;
+}
+
+.main-ops-paw img {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.main-ops-btn em {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(243, 233, 215, 0.65);
+}
+
+.main-ops-btn:disabled {
+  opacity: 0.45;
 }
 
 .main-bottom {

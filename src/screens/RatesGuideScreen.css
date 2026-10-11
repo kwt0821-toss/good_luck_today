@@ -1,0 +1,96 @@
+.rates-screen {
+  min-height: 100dvh;
+  max-width: 390px;
+  margin: 0 auto;
+  padding: 16px 20px 40px;
+  background: radial-gradient(120% 70% at 50% 0%, #3a2f55 0%, #14132a 70%);
+  color: #f3e9d7;
+  font-family: "Noto Sans KR", sans-serif;
+}
+
+.rates-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.rates-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.rates-back {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(243, 233, 215, 0.1);
+  color: #f3e9d7;
+  font-size: 18px;
+}
+
+.rates-lead {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: rgba(243, 233, 215, 0.7);
+  line-height: 1.45;
+}
+
+.rates-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.rates-tabs button {
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(243, 233, 215, 0.25);
+  background: transparent;
+  color: rgba(243, 233, 215, 0.75);
+  font: inherit;
+  font-weight: 600;
+}
+
+.rates-tabs button.is-on {
+  background: linear-gradient(180deg, #ffd3a0, #ffb36b);
+  color: #2a1e10;
+  border-color: transparent;
+}
+
+.rates-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(243, 233, 215, 0.16);
+}
+
+.rates-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: rgba(28, 24, 48, 0.85);
+  border-bottom: 1px solid rgba(243, 233, 215, 0.08);
+  font-size: 14px;
+}
+
+.rates-list li:last-child {
+  border-bottom: 0;
+}
+
+.rates-list strong {
+  font-variant-numeric: tabular-nums;
+  color: #ffc48a;
+}
+
+.rates-note {
+  margin: 14px 2px 0;
+  font-size: 12px;
+  color: rgba(243, 233, 215, 0.55);
+  line-height: 1.45;
+}

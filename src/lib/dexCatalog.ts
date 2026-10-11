@@ -85,6 +85,37 @@ export function sortBreedRowsAz(rows: DexBreedRow[]): DexBreedRow[] {
   return [...rows].sort((a, b) => a.en.localeCompare(b.en, "en"));
 }
 
+/** Stable non-alphabetical order so the list doesn't reshuffle every render. */
+function seededShuffle<T>(items: T[], seed: string): T[] {
+  const next = [...items];
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i += 1) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    h ^= h << 13;
+    h ^= h >>> 17;
+    h ^= h << 5;
+    const j = Math.abs(h) % (i + 1);
+    const tmp = next[i];
+    next[i] = next[j]!;
+    next[j] = tmp!;
+  }
+  return next;
+}
+
+export function shuffleCards(cards: DexCard[], tab: DexTab): DexCard[] {
+  return seededShuffle(cards, `dex-cards-${tab}-${cards.map((card) => card.id).join(",")}`);
+}
+
+export function shuffleBreedRows(rows: DexBreedRow[]): DexBreedRow[] {
+  return seededShuffle(
+    rows,
+    `dex-breeds-${rows.map((row) => row.breedId).join(",")}`,
+  );
+}
+
 export function formatMetDate(dateKey: string): { day: string; year: string } {
   const [year, month, day] = dateKey.split("-");
   return {
@@ -102,7 +133,7 @@ export function groupForCard(catalog: DexCatalog, card: DexCard): DexCard[] {
 }
 
 export const TAB_META: { id: DexTab; label: string }[] = [
-  { id: "breed", label: "품종" },
+  { id: "breed", label: "고양이" },
   { id: "special", label: "스페셜" },
   { id: "character", label: "캐릭터" },
   { id: "legend", label: "레전드" },
@@ -115,12 +146,12 @@ export const TAB_COPY: Record<
   special: {
     en: "Special",
     ko: "스페셜 카드",
-    note: "별 등급 없이, 딱 한 종류씩만 있는 특별 카드",
+    note: "특별한 고양이 카드를 모아요",
   },
   character: {
     en: "Character",
     ko: "캐릭터 카드",
-    note: "어디서 본 듯한 그 고양이들, 계속 늘어나요",
+    note: "어디서 본 듯한 그 고양이들",
   },
   legend: {
     en: "Legend",

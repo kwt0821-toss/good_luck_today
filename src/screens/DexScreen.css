@@ -44,26 +44,45 @@
   z-index: 1;
 }
 
+.dex-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  margin: 0 0 2px;
+}
+
 .dex-back {
-  position: absolute;
-  left: 0;
-  top: 14px;
-  border: 0;
-  background: transparent;
-  color: var(--cream);
-  font-size: 20px;
-  line-height: 1;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: -4px;
+  border: 1px solid rgba(243, 233, 215, 0.35);
+  border-radius: 10px;
+  background: rgba(243, 233, 215, 0.14);
+  color: #fff8ea;
   cursor: pointer;
-  padding: 4px 8px 4px 0;
+  padding: 0;
+}
+
+.dex-back svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dex-back:active {
+  background: rgba(243, 233, 215, 0.24);
 }
 
 .dex-eyebrow {
   margin: 0;
-  height: 16px;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.5px;
-  color: rgba(243, 233, 215, 0.6);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #f3e9d7;
 }
 
 .dex-logo {
@@ -167,16 +186,6 @@
   color: var(--amber);
 }
 
-.dex-sort {
-  margin-left: auto;
-  font-family: Poppins, sans-serif;
-  font-weight: 500;
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  color: rgba(243, 233, 215, 0.45);
-  padding-bottom: 2px;
-}
-
 .dex-tab-underline {
   position: absolute;
   bottom: -1px;
@@ -232,6 +241,12 @@
   font-size: 10.5px;
   letter-spacing: 0;
   color: rgba(243, 233, 215, 0.5);
+}
+
+.dex-row-head h2.is-locked-name,
+.dex-row-head h2.is-locked-name span {
+  color: rgba(243, 233, 215, 0.42);
+  letter-spacing: 0.08em;
 }
 
 .dex-row-count {
@@ -415,9 +430,14 @@
 }
 
 .dex-slot-legend .dex-slot-img {
-  inset: 2px;
-  width: auto;
-  height: auto;
+  /* Replaced <img> ignores inset stretch when width/height are auto — pin to the gold frame. */
+  top: 2px;
+  left: 2px;
+  right: auto;
+  bottom: auto;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  object-fit: cover;
   z-index: 1;
   border-radius: 10px;
 }
@@ -828,6 +848,20 @@
   width: 16px;
   border-radius: 3px;
   background: var(--cream);
+}
+
+.dex-convert-btn {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  height: 46px;
+  border: 1px solid rgba(255, 196, 138, 0.45);
+  border-radius: 14px;
+  background: rgba(255, 196, 138, 0.12);
+  color: var(--cream);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 @keyframes dex-bar {

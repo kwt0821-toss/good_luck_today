@@ -11,11 +11,18 @@ const ASSETS = {
   tail: "/assets/main/cat-tail.png",
   card: "/assets/main/card-facedown.png",
   cat: "/assets/main/cat-body.png",
+  paw: "/assets/room/ui/icon-paw-point.svg",
 } as const;
 
 type HomeScreenProps = {
   remainingDraws: number;
+  remainingRateUp: number;
+  remainingPawAds: number;
+  pawBalance: number;
+  menuBadge?: boolean;
   onDraw: () => void;
+  onRateUpDraw: () => void;
+  onPawAd: () => void;
   onOpenMenu: () => void;
   onOpenCollection: () => void;
   onOpenRoom: () => void;
@@ -23,7 +30,13 @@ type HomeScreenProps = {
 
 export function HomeScreen({
   remainingDraws,
+  remainingRateUp,
+  remainingPawAds,
+  pawBalance,
+  menuBadge = false,
   onDraw,
+  onRateUpDraw,
+  onPawAd,
   onOpenMenu,
   onOpenCollection,
   onOpenRoom,
@@ -105,14 +118,24 @@ export function HomeScreen({
             </text>
           </svg>
         </h1>
-        <button type="button" className="main-nav-btn main-menu-btn" aria-label="메뉴" onClick={popThen(onOpenMenu)}>
-          <img src={ASSETS.menu} alt="" width={28} height={28} />
+        <button
+          type="button"
+          id="icon-menu"
+          className="main-nav-btn main-menu-btn"
+          aria-label="메뉴"
+          onClick={popThen(onOpenMenu)}
+        >
+          <span className="main-menu-icon-wrap">
+            <img src={ASSETS.menu} alt="" width={28} height={28} />
+            {menuBadge ? <span className="main-menu-dot" aria-hidden="true" /> : null}
+          </span>
           <span>메뉴</span>
         </button>
       </header>
 
       <button
         type="button"
+        id="chip-draws"
         className={`main-chip ${drawsDone ? "is-done" : ""}`}
         aria-label={drawsDone ? "오늘 뽑기 완료" : `오늘 남은 뽑기 ${remainingDraws}`}
         onClick={() => {
@@ -132,6 +155,7 @@ export function HomeScreen({
 
       <button
         type="button"
+        id="stage-cat"
         className={`main-stage ${waking ? "is-waking" : ""}`}
         aria-label={drawsDone ? "오늘은 이미 뽑았어요" : "고양이 톡해서 오늘의 카드 받기"}
         onClick={handleDrawTap}
@@ -152,13 +176,62 @@ export function HomeScreen({
         </div>
       </button>
 
+      <p className="main-cta-ad">(짧은 광고가 나온 뒤 카드를 뽑아요)</p>
       <p className="main-cta">
         <span className="main-cta-accent">톡,</span> 깨워서 오늘의 카드 받기
       </p>
       <p className="main-cta-en">TAP THE CAT TO DRAW</p>
 
+      <div className="main-ops-row">
+        <button
+          type="button"
+          id="btn-rateup"
+          className="main-ops-btn"
+          disabled={remainingRateUp <= 0}
+          onClick={() => {
+            if (remainingRateUp <= 0) {
+              showNotice("오늘 확률업을 모두 썼어요");
+              return;
+            }
+            onRateUpDraw();
+          }}
+        >
+          <span className="main-ops-hint">(30초 광고보고)</span>
+          <span className="main-ops-label">확률업 뽑기</span>
+          <em>{remainingRateUp}회</em>
+        </button>
+        <button
+          type="button"
+          id="btn-paw-ad"
+          className="main-ops-btn"
+          disabled={remainingPawAds <= 0}
+          onClick={() => {
+            if (remainingPawAds <= 0) {
+              showNotice("오늘 포인트 광고를 모두 봤어요");
+              return;
+            }
+            onPawAd();
+          }}
+        >
+          <span className="main-ops-hint">(짧은 광고 보고)</span>
+          <span className="main-ops-label main-ops-paw">
+            <img src={ASSETS.paw} alt="" width={16} height={16} />
+            받기
+          </span>
+          <em>
+            {pawBalance.toLocaleString("en-US")} · {remainingPawAds}회
+          </em>
+        </button>
+      </div>
+
       <nav className="main-bottom">
-        <button type="button" className="main-nav-btn" aria-label="도감" onClick={popThen(onOpenCollection)}>
+        <button
+          type="button"
+          id="icon-dex"
+          className="main-nav-btn"
+          aria-label="도감"
+          onClick={popThen(onOpenCollection)}
+        >
           <img src={ASSETS.dex} alt="" width={28} height={28} />
           <span>도감</span>
         </button>
