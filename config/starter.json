@@ -1,0 +1,99 @@
+{
+ "_version": "starter-1.0",
+ "startPaw": 300,
+ "firstRoom": {
+  "roomId": "moon_bedroom",
+  "floor": "floor_wood_honey",
+  "wall": {
+   "L": "wall_plum_sparkle",
+   "R": "wall_plum_sparkle"
+  },
+  "placed": [
+   {
+    "id": "catbed",
+    "hero": true,
+    "withCat": "heroCat",
+    "sprite": "catbed_cat",
+    "c": 3,
+    "r": 4,
+    "orientation": "default"
+   },
+   {
+    "id": "floorlamp",
+    "c": 0,
+    "r": 0,
+    "orientation": "default"
+   },
+   {
+    "id": "plant",
+    "c": 2,
+    "r": 0,
+    "orientation": "default"
+   },
+   {
+    "id": "pawrug",
+    "c": 3,
+    "r": 3,
+    "w": 2,
+    "d": 2
+   },
+   {
+    "id": "archwindow",
+    "wall": "L",
+    "t": 2.6,
+    "heightUnits": 92
+   },
+   {
+    "id": "cardframe",
+    "wall": "R",
+    "t": 1.0,
+    "heightUnits": 98
+   }
+  ],
+  "layoutNote": "좌표는 room-assets-v6/grid.json defaultLayout과 같은 칸 — 미배치 칸은 고양이 이동 가능"
+ },
+ "drawer": [
+  "floor_check_pink",
+  "wall_mint_gingham",
+  "cushions",
+  "yarnbasket"
+ ],
+ "attendance7": [
+  {
+   "day": 1,
+   "itemId": "catcactus",
+   "tier": "small"
+  },
+  {
+   "day": 2,
+   "itemId": "calendar",
+   "tier": "wall"
+  },
+  {
+   "day": 3,
+   "itemId": "starlight",
+   "tier": "small"
+  },
+  {
+   "day": 4,
+   "itemId": "bunting",
+   "tier": "wall"
+  },
+  {
+   "day": 5,
+   "itemId": "globe",
+   "tier": "small"
+  },
+  {
+   "day": 6,
+   "itemId": "fishbowl",
+   "tier": "small"
+  },
+  {
+   "day": 7,
+   "itemId": "cattower",
+   "tier": "large"
+  }
+ ],
+ "attendanceRule": "연속이 아니어도 출석 일수 기준으로 1→7일차 순서 지급, 7일 완료 후 종료(시즌 출석은 events로 별도)"
+}
