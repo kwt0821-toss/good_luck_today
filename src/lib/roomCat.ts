@@ -266,14 +266,15 @@ export function findPath(from: CatTile, to: CatTile, walkable: CatTile[]): CatTi
 }
 
 export function pickIdlePose(preferSleep = false): { anim: CatIdlePose; durationMs: number } {
-  if (preferSleep || Math.random() < 0.2) {
-    return { anim: "sleep", durationMs: 10000 + Math.random() * 10000 };
+  if (preferSleep || Math.random() < 0.08) {
+    return { anim: "sleep", durationMs: 6000 + Math.random() * 6000 };
   }
   const poses: CatIdlePose[] = ["idle_sit", "groom", "loaf", "stretch", "yawn"];
   const anim = poses[Math.floor(Math.random() * poses.length)] ?? "idle_sit";
   if (anim === "stretch") return { anim, durationMs: 900 };
   if (anim === "yawn") return { anim, durationMs: 900 };
-  return { anim, durationMs: 2000 + Math.random() * 4000 };
+  // Keep short idles so the cat doesn't look frozen between walks.
+  return { anim, durationMs: 900 + Math.random() * 1600 };
 }
 
 export function catDepthKey(col: number, row: number) {

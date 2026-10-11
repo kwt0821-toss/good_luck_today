@@ -1,4 +1,4 @@
-import type { PointerEvent } from "react";
+import { useEffect, useRef, type PointerEvent } from "react";
 
 import { roomAsset } from "../lib/roomCatalog";
 import { catAsset, catDepthKey, furnitureDepthKey } from "../lib/roomCat";
@@ -34,7 +34,7 @@ import type {
   SpriteRect,
   WallPlacement,
 } from "../lib/roomTypes";
-import { useRoomCat, type RoomCatView } from "../lib/useRoomCat";
+import { useRoomCat, type CatMotionRef, type RoomCatView } from "../lib/useRoomCat";
 
 type RoomWorldProps = {
   mode: RoomMode;
@@ -153,46 +153,79 @@ function FloorSprite({
   );
 }
 
-function RoamingCatShadow({ view }: { view: RoomCatView }) {
+function RoamingCatShadow({
+  view,
+  motionRef,
+}: {
+  view: RoomCatView;
+  motionRef: CatMotionRef;
+}) {
+  const imgRef = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    if (!view.sheet) return;
+    const shadow = view.sheet.shadow;
+    const apply = () => {
+      const el = imgRef.current;
+      if (!el) return;
+      const motion = motionRef.current;
+      const loafish = motion.anim === "loaf" || motion.anim === "sleep";
+      const scale = loafish ? 0.8 : 1;
+      el.style.left = `${motion.worldX - shadow.anchor[0] * scale}px`;
+      el.style.top = `${motion.worldY - shadow.anchor[1] * scale}px`;
+      el.style.width = `${shadow.size[0] * scale}px`;
+      el.style.height = `${shadow.size[1] * scale}px`;
+      el.style.opacity = String(motion.opacity);
+    };
+    apply();
+    return motionRef.subscribe?.(apply);
+  }, [view.sheet, motionRef]);
   if (!view.sheet || !view.ready) return null;
-  const shadow = view.sheet.shadow;
-  const loafish = view.anim === "loaf" || view.anim === "sleep";
-  const scale = loafish ? 0.8 : 1;
-  return (
-    <img
-      className="lucky-roam-shadow"
-      src={catAsset(shadow.image)}
-      alt=""
-      draggable={false}
-      style={{
-        left: view.worldX - shadow.anchor[0] * scale,
-        top: view.worldY - shadow.anchor[1] * scale,
-        width: shadow.size[0] * scale,
-        height: shadow.size[1] * scale,
-        opacity: view.opacity,
-      }}
-    />
-  );
+  return <img ref={imgRef} className="lucky-roam-shadow" src={catAsset(view.sheet.shadow.image)} alt="" draggable={false} />;
 }
 
-function RoamingCatBody({ view, onTap }: { view: RoomCatView; onTap: () => void }) {
+function RoamingCatBody({
+  view,
+  motionRef,
+  onTap,
+}: {
+  view: RoomCatView;
+  motionRef: CatMotionRef;
+  onTap: () => void;
+}) {
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const frameRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (!view.sheet) return;
+    const sheet = view.sheet;
+    const [fw, fh] = sheet.frameSize;
+    const apply = () => {
+      const btn = btnRef.current;
+      const frameEl = frameRef.current;
+      if (!btn || !frameEl) return;
+      const motion = motionRef.current;
+      const frame = sheet.frames[motion.frameName] ?? sheet.frames.sit;
+      if (!frame) return;
+      btn.style.left = `${motion.worldX - sheet.anchor.x}px`;
+      btn.style.top = `${motion.worldY - sheet.anchor.y}px`;
+      btn.style.width = `${fw}px`;
+      btn.style.height = `${fh}px`;
+      btn.style.opacity = String(motion.opacity);
+      btn.classList.toggle("is-sleeping", motion.anim === "sleep");
+      frameEl.style.backgroundPosition = `-${frame.x}px -${frame.y}px`;
+    };
+    apply();
+    return motionRef.subscribe?.(apply);
+  }, [view.sheet, motionRef]);
   if (!view.sheet || !view.ready) return null;
-  const frame = view.sheet.frames[view.frameName] ?? view.sheet.frames.sit;
-  if (!frame) return null;
   const [fw, fh] = view.sheet.frameSize;
   const [sw, sh] = view.sheet.sheetSize;
   return (
     <button
+      ref={btnRef}
       type="button"
       className={`lucky-sprite lucky-roam-cat ${view.sleeping ? "is-sleeping" : ""}`}
       aria-label="돌아다니는 고양이"
-      style={{
-        left: view.worldX - view.sheet.anchor.x,
-        top: view.worldY - view.sheet.anchor.y,
-        width: fw,
-        height: fh,
-        opacity: view.opacity,
-      }}
+      style={{ width: fw, height: fh, opacity: view.opacity }}
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => {
         event.stopPropagation();
@@ -200,13 +233,14 @@ function RoamingCatBody({ view, onTap }: { view: RoomCatView; onTap: () => void 
       }}
     >
       <span
+        ref={frameRef}
         className="lucky-roam-frame"
         style={{
           width: fw,
           height: fh,
           backgroundImage: `url(${catAsset(view.sheet.image)})`,
-          backgroundPosition: `-${frame.x}px -${frame.y}px`,
           backgroundSize: `${sw}px ${sh}px`,
+          backgroundRepeat: "no-repeat",
         }}
       />
     </button>
@@ -232,7 +266,7 @@ export function RoomWorld({
   onItemPointerDown,
   onFloorPointerDown,
 }: RoomWorldProps) {
-  const { view: catView, tap: tapCat } = useRoomCat({
+  const { view: catView, motionRef: catMotionRef, tap: tapCat } = useRoomCat({
     roomId,
     breedId: roamingCatId,
     floor: layout.floor,
@@ -471,7 +505,7 @@ export function RoomWorld({
           })
         : null}
 
-      {catView.ready ? <RoamingCatShadow view={catView} /> : null}
+      {catView.ready ? <RoamingCatShadow view={catView} motionRef={catMotionRef} /> : null}
 
       {shownWalls.map((place) => (
         <WallSprite
@@ -491,7 +525,9 @@ export function RoomWorld({
 
       {drawList.map((entry) => {
         if (entry.kind === "cat") {
-          return <RoamingCatBody key="roaming-cat" view={catView} onTap={tapCat} />;
+          return (
+            <RoamingCatBody key="roaming-cat" view={catView} motionRef={catMotionRef} onTap={tapCat} />
+          );
         }
         const place = entry.place;
         const item = itemsById.get(place.id);
