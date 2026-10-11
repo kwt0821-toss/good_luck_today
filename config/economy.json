@@ -1,5 +1,5 @@
 {
- "_version": "economy-1.0 (2026-10-11)",
+ "_version": "economy-1.1 (2026-10-11)",
  "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
  "currency": {
   "paw": {
@@ -55,7 +55,27 @@
     "toss": 100
    }
   },
-  "attendance": "starter.json → attendance7"
+  "attendance": {
+   "ref": "starter.json → attendance",
+   "firstWeek": "아이템 7개(출석 한정)",
+   "weeklyCycle": {
+    "pawDays1to6": [
+     10,
+     10,
+     15,
+     15,
+     20,
+     20
+    ],
+    "pawPerWeek": 90,
+    "day7": "홀수 주기 출석 선물 상자 / 짝수 주기 확률업 뽑기권 1장 (mode로 변경 가능)"
+   },
+   "milestones": [
+    30,
+    100
+   ],
+   "noReset": true
+  }
  },
  "tossPayout": {
   "maxPerUserKRW": 417,
@@ -243,7 +263,11 @@
   "tilesBuyOnce": true,
   "tilesPaintUnlimited": true,
   "legendItemsRequire": "레전드 카드 보유 (requireCards 목록) — 현재 카탈로그엔 해당 아이템 없음",
-  "prices": "prices.json"
+  "prices": "prices.json",
+  "excludeSources": [
+   "attendance"
+  ],
+  "attendanceOnlyRule": "prices.json에서 source==\"attendance\" / purchasable=false 아이템은 상점 목록·가격표·다른 보상 풀(방 해금 선물, 이벤트, 상자)에 넣지 않아요. 지급은 서버 출석 API에서만."
  },
  "rooms": [
   {
@@ -340,11 +364,25 @@
   "adRewardOnlyAfterCompleteCallback": true,
   "drawResultServerDecided": true,
   "rateLimit": "동일 계정 뽑기/광고 보상 요청 1초 1회",
-  "deviceChange": "계정 기준 지급 (기기 무관)"
+  "deviceChange": "계정 기준 지급 (기기 무관)",
+  "attendance": "출석은 서버 시각(KST) 기준 계정당 하루 1회, attendanceDays는 서버에서만 증가. 기념 보상은 계정당 milestone별 1회(멱등키 tossUserKey+attendanceMilestone:{days})."
  },
  "files": {
   "prices": "prices.json",
   "starter": "starter.json",
   "tutorial": "tutorial.json"
+ },
+ "tickets": {
+  "rateUpTicket": {
+   "nameKo": "확률업 뽑기권",
+   "use": "광고 없이 확률업 뽑기 1회",
+   "separateFromDailyCap": true,
+   "maxHold": 3,
+   "expires": null,
+   "sources": [
+    "attendance.weeklyCycle.day7"
+   ],
+   "rates": "draws.rates_proposal.rateUp"
+  }
  }
 }

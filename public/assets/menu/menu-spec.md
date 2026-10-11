@@ -1,6 +1,6 @@
-# Lucky Cat — 메뉴 패널 스펙 (menu-1.0)
+# Lucky Cat — 메뉴 패널 스펙 (menu-1.1)
 
-디자인 프레임 **390 × 844 pt**, 에셋 3x. 시안: `menu-screen-a.png`(패널), `-b`(출석 체크 시트), `-c`(확률 안내 시트).
+디자인 프레임 **390 × 844 pt**, 에셋 3x. 시안: `menu-screen-a.png`(패널), `-b`(출석 체크 · 1주차), `-b2`(출석 체크 · 주간 반복), `-c`(확률 안내 시트).
 > 상태바 47 + 토스 내비 56 = 103 pt는 시안용이에요. **토스 내비는 앱인토스가 그려요 → 패널/딤은 콘텐츠 영역 top(=0)부터 시작.** 아래 y는 콘텐츠 영역 기준.
 
 ## 0. 토큰 (메인화면 layout-spec.md와 동일 + 추가)
@@ -56,7 +56,7 @@ radius `28 28 0 0`, padding `10 24 0`, 그랩바 40×4. eyebrow Poppins 800 11px
 | 내 포인트 | 유저 API `pawBalance` (초기값 economy.json `currency.paw.startBalance` = starter.json `startPaw` 300) |
 | 도감 42/107 | 유저 `dexOwned` / 전체 107 (= 18품종×5 + 스페셜 9 + 캐릭터 4 + 레전드 4, economy `tossPayout.formula`와 동일) |
 | 방 레벨 | 유저 `cozyPoints` → economy.json `cozy.levels`(minCozy) / `beyondLv10` |
-| 출석 체크 | starter.json `attendance7`(day, itemId, tier) + `attendanceRule`, 이름·썸네일 = prices.json `nameKo` / gift-{itemId}.png |
+| 출석 체크 | starter.json `attendance` (`firstWeek`, `weeklyCycle`, `milestones`, `noReset`), 이름·썸네일 = prices.json `nameKo` / gift-{itemId}.png, 출석 한정 = prices.json `attendanceOnly` |
 | 포인트 받기 | economy.json `pawSources.rewardedAd.pawPerAd`(10) / `maxPerDay`(10), 주말 2배 = `events.weekendDoublePaw`; 보상은 광고 완료 콜백 후 서버 지급만 |
 | 중복 카드 교환 | economy.json `pawSources.duplicateConvert` (1–2★ 10, 3–5★ 30, 스페셜/캐릭터 60, 레전드 150) |
 | 보상함 | economy.json `pawSources.newCardFirstGet`, `setComplete`, `tossPayout`(서버 검증·계정당 1회) |
@@ -67,3 +67,17 @@ radius `28 28 0 0`, padding `10 24 0`, 그랩바 40×4. eyebrow Poppins 800 11px
 
 ## 5. 파일
 icon-attendance / points / exchange / rewards / rates / notice / invite / settings (행 아이콘 26×26 viewBox, 24pt로 표시), icon-close, icon-chevron, icon-paw-mini, icon-dex-mini, icon-room-mini, icon-stamp, icon-lock, panel-bg.png, gift-*.png(192px, 출석 썸네일), menu.json, menu-spec.md, menu-screen-a/b/c.png.
+
+## 6. 출석 (menu-1.1 추가)
+- **규칙(서버)**: 누적 출석일 `attendanceDays` 기준, 빠져도 리셋 없음. 1~7일 = `firstWeek` 출석 한정 아이템, 8일차부터 `weeklyCycle` (cycleNo = floor((n−8)/7)+1, cycleDay = ((n−8) % 7)+1). 30·100일 = `milestones` 추가 지급.
+- **시트 상태 2개**: `firstWeek`(menu-screen-b) / `weeklyCycle`(menu-screen-b2). 문구·조건은 menu.json `sheets.attendance.states`.
+- **b (1주차)**: 제목 옆 "출석 한정" 태그, DAY 7 칸에도 태그. 나머지 레이아웃은 2번 섹션과 같아요. 시트 높이 ≈ 572.
+- **b2 (주간 반복)**: 시트 높이 ≈ 668.
+  - 누적 카드: margin-top 16, radius 18, 1px amber 35 %, amber→라벤더 그라데이션. 숫자 Poppins 800 40px + "DAYS" 8.5px ls 2.5. 가운데 "30일 기념 보상까지 **12일**"(12px, 숫자 amber Poppins 700 14px) + 진행 바 4px + 보상 이름 9.5px + 출석 한정 태그. 오른쪽 배지 52×52 (`badge-att-30.svg` / `badge-att-100.svg`).
+  - "이번 주 출석" 12px 700 + 오른쪽 "WEEK 02 · DAY 4/7" Poppins 500 9px ls 2.
+  - 1~6일 칸: `icon-paw-coin.svg` 40 + "+15P" Poppins 700 13px. 받음/오늘/잠김 상태는 1주차와 같아요.
+  - DAY 7 칸(2칸): 확률업 뽑기권 = `icon-ticket.svg` 58, 출석 선물 상자 = `icon-att-box.svg` 70. sub에 다음 주 보상 안내.
+  - CTA: "오늘 {paw}포인트 받기" / "오늘 선물 상자 열기" / "오늘 뽑기권 받기".
+- **출석 한정 태그**: pill 8.5px 700, bg `#C9B6F2`, 글자 `#1E1A2B`, radius 999, padding 1×6. 출석 시트, 방꾸미기 서랍 카드, 아이템 상세에 표시해요(`item.attendanceOnly`). 상점 목록에는 출석 아이템 자체를 띄우지 않아요.
+- **애니메이션 추가**: 선물 상자는 흔들기(rotate ±6°, 3회, 360ms) 후 뚜껑이 열리고 아이템이 scale 0.6→1로 튀어나와요. 뽑기권은 슬라이드 인 후 반짝이 1회. 기념일은 배지가 scale 0→1.15→1(420ms) + 컨페티 대신 별 6개가 퍼져요(움직임 줄이기 ON이면 페이드만).
+- **새 파일**: `gift-att_*.png`(출석 한정 14종 타일), `badge-att-30.svg`, `badge-att-100.svg`, `icon-ticket.svg`, `icon-att-box.svg`, `icon-paw-coin.svg`. 방 렌더용 아트·레지스트리는 `attendance-items.zip`(items-attendance.json, items/, tiles/)에 있어요.

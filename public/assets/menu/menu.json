@@ -1,5 +1,5 @@
 {
- "_version": "menu-1.0 (2026-10-11)",
+ "_version": "menu-1.1 (2026-10-11)",
  "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
  "panel": {
   "side": "right",
@@ -68,13 +68,12 @@
    "icon": "icon-attendance.svg",
    "enabled": true,
    "open": "sheet:attendance",
-   "meta": "'{attendance.claimedDays+1}일째 · 선물 도착' if canClaimToday else '{attendance.claimedDays}/7 · 내일 또 만나요'",
-   "data": "starter.json → attendance7, attendanceRule",
+   "meta": "firstWeek(누적 1~7일): '{attendanceDays+1}일째 · 선물 도착' / 이후: '누적 {attendanceDays}일 · {nextMilestone.days}일까지 {left}일' — 오늘 받았으면 '내일 또 만나요'",
+   "data": "starter.json → attendance (firstWeek, weeklyCycle, milestones, noReset), prices.json → attendanceOnly",
    "badge": {
     "type": "dot",
-    "when": "attendance.canClaimToday && attendance.claimedDays < 7"
-   },
-   "hideWhen": "attendance.claimedDays >= 7 && !events.seasonAttendance"
+    "when": "attendance.canClaimToday"
+   }
   },
   "points": {
    "label": "포인트 받기",
@@ -219,13 +218,44 @@
  },
  "sheets": {
   "attendance": {
-   "title": "출석 체크",
-   "eyebrow": "DAILY GIFT",
-   "desc": "7일 출석하면 {day7.nameKo}가 방으로 와요.\n하루 빠져도 괜찮아요, 출석한 날만큼 이어서 받아요.",
-   "cta": "오늘 선물 받기 · {todayItem.nameKo}",
-   "ctaDone": "오늘 선물 받았어요",
-   "note": "받은 아이템은 방꾸미기 서랍에 들어가요",
-   "thumbs": "gift-{itemId}.png"
+   "states": {
+    "firstWeek": {
+     "when": "attendanceDays < 7 (또는 오늘 7일차 받기 전)",
+     "eyebrow": "DAILY GIFT · WEEK 01",
+     "title": "출석 체크",
+     "titleTag": "출석 한정",
+     "desc": "7일 출석하면 {firstWeek[6].nameKo}가 방으로 와요.\n하루 빠져도 괜찮아요, 출석한 날만큼 이어서 받아요.",
+     "cells": "firstWeek 7칸 (DAY 7은 2칸, \"출석 한정\" 태그)",
+     "cta": "오늘 선물 받기 · {todayItem.nameKo}",
+     "note": "출석 선물은 상점에서 팔지 않는 출석 한정 아이템이에요",
+     "mock": "menu-screen-b.png"
+    },
+    "weeklyCycle": {
+     "when": "attendanceDays >= 7",
+     "eyebrow": "DAILY GIFT",
+     "title": "출석 체크",
+     "desc": "출석은 누적으로 쌓여요. 하루 빠져도 이어서 받아요.",
+     "cumulativeCard": {
+      "big": "{attendanceDays}",
+      "caption": "DAYS",
+      "milestone": "{nextMilestone.titleKo}까지 {nextMilestone.days - attendanceDays}일",
+      "sub": "{milestoneItem.nameKo} + 배지 [출석 한정]",
+      "badgeImage": "badge-att-{days}.svg",
+      "progress": "attendanceDays / nextMilestone.days",
+      "afterLast": "모든 기념 보상을 받았으면 카드는 누적 일수만 보여 줘요"
+     },
+     "weekLabel": "이번 주 출석 · WEEK {cycleNo:02} · DAY {cycleDay}/7",
+     "cells": "weeklyCycle.days 1~6 = icon-paw-coin.svg + \"+{paw}P\", DAY 7 = itemBox(icon-att-box.svg \"출석 선물 상자\") 또는 rateUpTicket(icon-ticket.svg \"확률업 뽑기권\") — 다음 주기 보상을 sub로 안내",
+     "cta": "오늘 {paw}포인트 받기 | 오늘 선물 상자 열기 | 오늘 뽑기권 받기",
+     "note": "7일차 보상은 주마다 선물 상자와 확률업 뽑기권이 번갈아 와요",
+     "mock": "menu-screen-b2.png"
+    }
+   },
+   "ctaDone": "오늘 출석 완료! 내일 또 만나요",
+   "milestoneToast": "{days}일 출석 기념! {itemNameKo}와 배지를 받았어요",
+   "boxAllOwnedToast": "상자를 다 모았어요! 대신 100포인트를 드려요",
+   "thumbs": "gift-{itemId}.png (출석 한정 아이템 타일)",
+   "note": "받은 아이템은 방꾸미기 서랍에 들어가요"
   },
   "rates": {
    "title": "확률 안내",
@@ -298,5 +328,16 @@
    "desc": "도감을 채우면 토스 포인트와 발바닥 포인트가 와요.",
    "cta": "모두 받기"
   }
+ },
+ "attendanceOnlyTag": {
+  "text": "출석 한정",
+  "style": "pill 8.5px 700, bg #C9B6F2, text #1E1A2B, radius 999, padding 1×6",
+  "showIn": [
+   "출석 시트",
+   "방꾸미기 서랍",
+   "상점(목록에는 안 나오지만 보유 아이템 상세)",
+   "아이템 상세"
+  ],
+  "when": "item.attendanceOnly == true"
  }
 }

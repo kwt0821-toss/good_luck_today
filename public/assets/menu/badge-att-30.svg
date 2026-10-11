@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><defs><radialGradient id="g" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFC48A"/><stop offset="1" stop-color="#C98A3E"/></radialGradient></defs>
+<path d="M48 4 l9 7 11-2 4 10 10 5-2 11 7 9-7 9 2 11-10 5-4 10-11-2-9 7-9-7-11 2-4-10-10-5 2-11-7-9 7-9-2-11 10-5 4-10 11 2z" fill="url(#g)" stroke="#F3E9D7" stroke-width="2"/>
+<circle cx="48" cy="48" r="29" fill="#1A1731" stroke="#FFC48A" stroke-width="1.5"/>
+<path d="M34 30 a15 15 0 1 0 12 -6 a11 11 0 1 1 -12 6z" fill="#FFC48A" opacity=".35"/>
+<text x="48" y="54" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-weight="800" font-size="22" fill="#F3E9D7">30</text>
+<text x="48" y="67" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-weight="600" font-size="7" letter-spacing="1.5" fill="#FFC48A">DAYS</text></svg>
