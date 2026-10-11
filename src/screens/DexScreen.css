@@ -57,27 +57,32 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-left: -6px;
-  border: 0;
-  border-radius: 8px;
-  background: rgba(243, 233, 215, 0.1);
-  color: #f3e9d7;
+  width: 32px;
+  height: 32px;
+  margin-left: -4px;
+  border: 1px solid rgba(243, 233, 215, 0.35);
+  border-radius: 10px;
+  background: rgba(243, 233, 215, 0.14);
+  color: #fff8ea;
   cursor: pointer;
   padding: 0;
 }
 
+.dex-back svg {
+  width: 18px;
+  height: 18px;
+}
+
 .dex-back:active {
-  background: rgba(243, 233, 215, 0.18);
+  background: rgba(243, 233, 215, 0.24);
 }
 
 .dex-eyebrow {
   margin: 0;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   letter-spacing: 0.2px;
-  color: rgba(243, 233, 215, 0.88);
+  color: #f3e9d7;
 }
 
 .dex-logo {
