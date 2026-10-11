@@ -2,6 +2,7 @@ import { Storage } from "@apps-in-toss/web-framework";
 
 import { isInTossApp } from "./native";
 import type { GridLayoutEntry, RoomGridFile } from "./roomCatalog";
+import { wallCoordsFromT } from "./roomLayout";
 import type { FloorPlacement, RoomItem, RoomLayoutState, RoomOrientation, RoomSaveState, WallPlacement } from "./roomTypes";
 
 const ROOM_KEY = "lucky-cat.my-room.v5";
@@ -17,12 +18,17 @@ export function layoutFromGrid(grid: RoomGridFile | undefined): RoomLayoutState 
   const walls: WallPlacement[] = [];
   for (const entry of grid?.defaultLayout ?? []) {
     if (entry.wall) {
+      const t = entry.t ?? 2;
+      const heightUnits = entry.heightUnits ?? 90;
+      const coords = wallCoordsFromT({ wallSpanTiles: 1 } as RoomItem, t, heightUnits);
       walls.push({
         instanceId: `p-${entry.id}`,
         id: entry.id,
         wall: entry.wall,
-        t: entry.t ?? 2,
-        heightUnits: entry.heightUnits ?? 90,
+        t,
+        heightUnits,
+        slot: coords.slot,
+        band: coords.band,
         worldPx: entry.worldPx,
       });
       continue;
@@ -106,12 +112,17 @@ function parseWalls(raw: unknown): WallPlacement[] {
   const out: WallPlacement[] = [];
   for (const entry of raw) {
     if (!isRecord(entry) || typeof entry.id !== "string" || typeof entry.instanceId !== "string") continue;
+    const t = typeof entry.t === "number" ? entry.t : 2;
+    const heightUnits = typeof entry.heightUnits === "number" ? entry.heightUnits : 90;
+    const inferred = wallCoordsFromT({ wallSpanTiles: 1, footprint: null } as RoomItem, t, heightUnits);
     out.push({
       instanceId: entry.instanceId,
       id: entry.id,
       wall: entry.wall === "R" ? "R" : "L",
-      t: typeof entry.t === "number" ? entry.t : 2,
-      heightUnits: typeof entry.heightUnits === "number" ? entry.heightUnits : 90,
+      t,
+      heightUnits,
+      slot: typeof entry.slot === "number" ? entry.slot : inferred.slot,
+      band: typeof entry.band === "number" ? entry.band : inferred.band,
       worldPx: Array.isArray(entry.worldPx) ? (entry.worldPx as [number, number]) : undefined,
     });
   }

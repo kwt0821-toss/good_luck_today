@@ -1,4 +1,4 @@
-import type { FurnitureOrientation, RoomCatalog, RoomCategory, RoomItem, RoomPlacementKind } from "./roomTypes";
+import type { FurnitureOrientation, RoomCatalog, RoomCategory, RoomItem, RoomPlacementKind, RoomTab } from "./roomTypes";
 
 export const ROOM_BASE = "/assets/room";
 
@@ -196,7 +196,16 @@ export function itemMap(items: RoomItem[]) {
 export const ROOM_TABS: { id: RoomCategory; label: string }[] = [
   { id: "가구", label: "가구" },
   { id: "소품", label: "소품" },
-  { id: "벽 꾸미기", label: "벽지" },
+  { id: "벽 꾸미기", label: "벽 꾸미기" },
   { id: "바닥", label: "바닥" },
   { id: "카드액자", label: "카드액자" },
 ];
+
+export const CARD_FRAME_IDS = new Set(["squareframe", "cardframe"]);
+
+export function itemMatchesTab(item: RoomItem, tab: RoomTab) {
+  if (tab === "벽 꾸미기") return item.placement === "wall";
+  if (tab === "카드액자") return item.category === "카드액자" || CARD_FRAME_IDS.has(item.id);
+  if (tab === "바닥") return item.placement === "floor-skin" || item.category === "바닥";
+  return item.category === tab && item.placement !== "wall";
+}

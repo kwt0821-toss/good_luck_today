@@ -9,23 +9,38 @@ import { haptic, isInTossApp } from "../lib/native";
 import { itemMap, loadRoomCatalog, loadRoomGrid, roomAsset, type RoomGridFile } from "../lib/roomCatalog";
 import {
   canPlace,
+  canPlaceWall,
   cloneLayout,
   firstFreeTile,
+  firstFreeOnWall,
   hitTestTile,
+  hitTestWall,
   inGrid,
   isDecal,
   itemSize,
   nearestHints,
-  nextWallSlot,
   occupancy,
   screenOf,
+  snapWallHit,
   spriteRect,
   toggledOrientation,
+  wallOccupancy,
+  wallPlaceFromSlot,
   wallSpriteRect,
+  resolvedWallSlot,
 } from "../lib/roomLayout";
 import { defaultLayout, loadRoomState, newInstanceId, saveRoomState } from "../lib/roomStore";
 import type { DexCard } from "../lib/dexTypes";
-import type { FloorPlacement, RoomItem, RoomLayoutState, RoomMode, RoomSaveState, RoomTab, WallPlacement } from "../lib/roomTypes";
+import type {
+  FloorPlacement,
+  RoomDrag,
+  RoomItem,
+  RoomLayoutState,
+  RoomMode,
+  RoomSaveState,
+  RoomTab,
+  WallPlacement,
+} from "../lib/roomTypes";
 import "./RoomScreen.css";
 
 type RoomScreenProps = {
@@ -52,12 +67,13 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   const [confirm, setConfirm] = useState<"reset" | "discard" | "save-ph" | null>(null);
   const [exchangeOpen, setExchangeOpen] = useState(false);
   const [dupes, setDupes] = useState<{ card: DexCard; extra: number; pick: number }[]>([]);
-  const [dragging, setDragging] = useState<{ instanceId: string; col: number; row: number } | null>(null);
+  const [dragging, setDragging] = useState<RoomDrag | null>(null);
   const [shakeId, setShakeId] = useState<string | null>(null);
+  const [activeWall, setActiveWall] = useState<"L" | "R">("L");
   const [stars] = useState(() => makeStars());
   const toastTimer = useRef(0);
   const longPress = useRef(0);
-  const dragOrigin = useRef<FloorPlacement | null>(null);
+  const dragOrigin = useRef<FloorPlacement | WallPlacement | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const itemsById = useMemo(() => itemMap(items), [items]);
 
@@ -103,6 +119,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     layout.walls.find((item) => item.instanceId === selectedId);
   const selectedItem = selected ? itemsById.get(selected.id) : undefined;
   const selectedFloor = selected && "col" in selected ? selected : null;
+  const selectedWall = selected && "wall" in selected && !("col" in selected) ? (selected as WallPlacement) : null;
   const hints =
     mode === "edit" && selectedFloor && selectedItem && !selectedFloor.onTopOf && selectedItem.placement !== "wall"
       ? nearestHints(selectedItem, selectedFloor.orientation, layout.floor, itemsById, selectedId ?? undefined)
@@ -130,6 +147,8 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   const onSelect = (instanceId: string | null) => {
     if (mode !== "edit") return;
     setSelectedId(instanceId);
+    const wall = layout.walls.find((item) => item.instanceId === instanceId);
+    if (wall) setActiveWall(wall.wall);
     if (instanceId) void haptic("tap");
   };
 
@@ -142,40 +161,91 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   const onItemPointerDown = (event: PointerEvent<HTMLButtonElement>, instanceId: string) => {
     if (mode !== "edit") return;
     event.stopPropagation();
-    const place = layout.floor.find((item) => item.instanceId === instanceId);
     setSelectedId(instanceId);
-    if (!place || place.onTopOf) return;
+    const floorPlace = layout.floor.find((item) => item.instanceId === instanceId);
+    const wallPlace = layout.walls.find((item) => item.instanceId === instanceId);
+    if (wallPlace) setActiveWall(wallPlace.wall);
     window.clearTimeout(longPress.current);
     longPress.current = window.setTimeout(() => {
-      dragOrigin.current = { ...place };
-      setDragging({ instanceId, col: place.col, row: place.row });
+      if (floorPlace && !floorPlace.onTopOf) {
+        dragOrigin.current = { ...floorPlace };
+        setDragging({ kind: "floor", instanceId, col: floorPlace.col, row: floorPlace.row });
+        return;
+      }
+      if (wallPlace) {
+        const item = itemsById.get(wallPlace.id);
+        const slot = item ? resolvedWallSlot(item, wallPlace) : { slot: wallPlace.slot, band: wallPlace.band };
+        dragOrigin.current = { ...wallPlace };
+        setDragging({ kind: "wall", instanceId, wall: wallPlace.wall, slot: slot.slot, band: slot.band });
+      }
     }, 200);
   };
 
   const onStagePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (!dragging || !stageRef.current) return;
     const rect = stageRef.current.getBoundingClientRect();
-    const tile = hitTestTile(event.clientX - rect.left, event.clientY - rect.top, mode);
-    setDragging((current) => (current ? { ...current, col: tile.col, row: tile.row } : current));
+    const localX = event.clientX - rect.left;
+    const localY = event.clientY - rect.top;
+    if (dragging.kind === "floor") {
+      const tile = hitTestTile(localX, localY, mode);
+      setDragging((current) => (current?.kind === "floor" ? { ...current, col: tile.col, row: tile.row } : current));
+      return;
+    }
+    const place = layout.walls.find((item) => item.instanceId === dragging.instanceId);
+    const item = place ? itemsById.get(place.id) : undefined;
+    if (!item) return;
+    const hit = hitTestWall(localX, localY, mode);
+    if (!hit) return;
+    const snapped = snapWallHit(item, hit);
+    setActiveWall(snapped.wall);
+    setDragging((current) =>
+      current?.kind === "wall"
+        ? { ...current, wall: snapped.wall, slot: snapped.slot, band: snapped.band }
+        : current,
+    );
   };
 
   const onStagePointerUp = () => {
     window.clearTimeout(longPress.current);
     if (!dragging) return;
-    const place = layout.floor.find((item) => item.instanceId === dragging.instanceId);
-    const item = place ? itemsById.get(place.id) : undefined;
-    if (place && item) {
-      const [w, d] = itemSize(item, place.orientation);
-      const used = occupancy(layout.floor, itemsById, place.instanceId);
-      const ok = isDecal(item) ? inGrid(dragging.col, dragging.row, w, d) : canPlace(dragging.col, dragging.row, w, d, used);
-      if (ok) {
-        patchLayout({
-          ...layout,
-          floor: layout.floor.map((entry) =>
-            entry.instanceId === place.instanceId ? { ...entry, col: dragging.col, row: dragging.row } : entry,
-          ),
-        });
-        void haptic("softMedium");
+    if (dragging.kind === "floor") {
+      const place = layout.floor.find((item) => item.instanceId === dragging.instanceId);
+      const item = place ? itemsById.get(place.id) : undefined;
+      if (place && item) {
+        const [w, d] = itemSize(item, place.orientation);
+        const used = occupancy(layout.floor, itemsById, place.instanceId);
+        const ok = isDecal(item)
+          ? inGrid(dragging.col, dragging.row, w, d)
+          : canPlace(dragging.col, dragging.row, w, d, used);
+        if (ok) {
+          patchLayout({
+            ...layout,
+            floor: layout.floor.map((entry) =>
+              entry.instanceId === place.instanceId ? { ...entry, col: dragging.col, row: dragging.row } : entry,
+            ),
+          });
+          void haptic("softMedium");
+        }
+      }
+    } else {
+      const place = layout.walls.find((item) => item.instanceId === dragging.instanceId);
+      const item = place ? itemsById.get(place.id) : undefined;
+      if (place && item) {
+        const used = wallOccupancy(layout.walls, itemsById, place.instanceId);
+        const ok = canPlaceWall(item, dragging.wall, dragging.slot, dragging.band, used);
+        if (ok) {
+          const next = wallPlaceFromSlot(item, dragging.wall, dragging.slot, dragging.band);
+          patchLayout({
+            ...layout,
+            walls: layout.walls.map((entry) =>
+              entry.instanceId === place.instanceId ? { ...entry, ...next, worldPx: undefined } : entry,
+            ),
+          });
+          setActiveWall(next.wall);
+          void haptic("softMedium");
+        } else {
+          shake(place.instanceId);
+        }
       }
     }
     setDragging(null);
@@ -233,9 +303,53 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   };
 
   const startMove = () => {
-    if (!selectedFloor || selectedFloor.onTopOf) return;
-    dragOrigin.current = { ...selectedFloor };
-    setDragging({ instanceId: selectedFloor.instanceId, col: selectedFloor.col, row: selectedFloor.row });
+    if (selectedFloor && !selectedFloor.onTopOf) {
+      dragOrigin.current = { ...selectedFloor };
+      setDragging({
+        kind: "floor",
+        instanceId: selectedFloor.instanceId,
+        col: selectedFloor.col,
+        row: selectedFloor.row,
+      });
+      return;
+    }
+    if (selectedWall && selectedItem) {
+      const slot = resolvedWallSlot(selectedItem, selectedWall);
+      dragOrigin.current = { ...selectedWall };
+      setDragging({
+        kind: "wall",
+        instanceId: selectedWall.instanceId,
+        wall: selectedWall.wall,
+        slot: slot.slot,
+        band: slot.band,
+      });
+    }
+  };
+
+  const sendToOtherWall = () => {
+    if (!selectedWall || !selectedItem) return;
+    const other: "L" | "R" = selectedWall.wall === "L" ? "R" : "L";
+    const current = resolvedWallSlot(selectedItem, selectedWall);
+    const used = wallOccupancy(layout.walls, itemsById, selectedWall.instanceId);
+    const target = canPlaceWall(selectedItem, other, current.slot, current.band, used)
+      ? wallPlaceFromSlot(selectedItem, other, current.slot, current.band)
+      : firstFreeOnWall(
+          selectedItem,
+          layout.walls.filter((entry) => entry.instanceId !== selectedWall.instanceId),
+          itemsById,
+          other,
+        );
+    if (!target) {
+      shake(selectedWall.instanceId);
+      return;
+    }
+    patchLayout({
+      ...layout,
+      walls: layout.walls.map((entry) =>
+        entry.instanceId === selectedWall.instanceId ? { ...entry, ...target, worldPx: undefined } : entry,
+      ),
+    });
+    setActiveWall(other);
   };
 
   const pickDrawerItem = (item: RoomItem) => {
@@ -258,7 +372,11 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       return;
     }
     if (item.placement === "wall") {
-      const slot = nextWallSlot(layout.walls, "L");
+      const slot = firstFreeOnWall(item, layout.walls, itemsById, activeWall);
+      if (!slot) {
+        showToast("걸 자리가 없어요");
+        return;
+      }
       const instanceId = newInstanceId(item.id);
       const draft: WallPlacement = {
         instanceId,
@@ -266,13 +384,15 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
         wall: slot.wall,
         t: slot.t,
         heightUnits: slot.heightUnits,
+        slot: slot.slot,
+        band: slot.band,
       };
-      const rect = wallSpriteRect(item, draft);
       patchLayout({
         ...layout,
-        walls: [...layout.walls, { ...draft, worldPx: [rect.x, rect.y] }],
+        walls: [...layout.walls, draft],
       });
       setSelectedId(instanceId);
+      setActiveWall(slot.wall);
       return;
     }
     const spot = firstFreeTile(item, "default", layout.floor, itemsById);
@@ -316,7 +436,16 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   };
 
   const screen = screenOf(mode);
-  const hud = selectedItem && selected ? selectionHud(selectedItem, selected, layout, itemsById, screen) : null;
+  const hudPlace =
+    dragging?.kind === "wall" && selectedWall && selectedItem
+      ? {
+          ...selectedWall,
+          ...wallPlaceFromSlot(selectedItem, dragging.wall, dragging.slot, dragging.band),
+          worldPx: undefined,
+        }
+      : selected;
+  const hud =
+    selectedItem && hudPlace ? selectionHud(selectedItem, hudPlace, layout, itemsById, screen) : null;
 
   return (
     <div
@@ -431,24 +560,33 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
             <i />
             <i />
           </div>
-          {selectedFloor ? (
-            <div className="lucky-mini-toolbar">
-              <button type="button" aria-label="이동" onClick={startMove}>
-                <img src={roomAsset("ui/icon-move.svg")} alt="" />
-              </button>
-              <button type="button" aria-label="회전" onClick={rotateSelected}>
-                <img src={roomAsset("ui/icon-rotate.svg")} alt="" />
-              </button>
-              <button type="button" aria-label="뒤집기" onClick={rotateSelected}>
+          <div className="lucky-mini-toolbar">
+            <button type="button" aria-label="이동" onClick={startMove}>
+              <img src={roomAsset("ui/icon-move.svg")} alt="" />
+            </button>
+            {selectedWall ? (
+              <button type="button" aria-label="반대쪽 벽으로 보내기" onClick={sendToOtherWall}>
                 <img src={roomAsset("ui/icon-flip.svg")} alt="" />
               </button>
-              <button type="button" className="is-delete" aria-label="삭제" onClick={deleteSelected}>
-                <img src={roomAsset("ui/icon-delete.svg")} alt="" />
-              </button>
-            </div>
-          ) : null}
+            ) : (
+              <>
+                <button type="button" aria-label="회전" onClick={rotateSelected}>
+                  <img src={roomAsset("ui/icon-rotate.svg")} alt="" />
+                </button>
+                <button type="button" aria-label="뒤집기" onClick={rotateSelected}>
+                  <img src={roomAsset("ui/icon-flip.svg")} alt="" />
+                </button>
+              </>
+            )}
+            <button type="button" className="is-delete" aria-label="삭제" onClick={deleteSelected}>
+              <img src={roomAsset("ui/icon-delete.svg")} alt="" />
+            </button>
+          </div>
           <span className="lucky-select-tag">
-            {selectedItem.nameKo} · {selectedFloor ? itemSize(selectedItem, selectedFloor.orientation).join("×") : "벽"}
+            {selectedItem.nameKo} ·{" "}
+            {selectedFloor
+              ? itemSize(selectedItem, selectedFloor.orientation).join("×")
+              : `${(dragging?.kind === "wall" ? dragging.wall : selectedWall?.wall) === "R" ? "오른쪽 벽" : "왼쪽 벽"}`}
           </span>
         </div>
       ) : null}

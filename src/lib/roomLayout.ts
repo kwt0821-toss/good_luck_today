@@ -9,6 +9,9 @@ import type {
 } from "./roomTypes";
 
 export const GRID = 8;
+export const WALL_SLOTS = 8;
+export const WALL_BANDS = 3;
+export const WALL_BAND_EDGES = [32, 76, 118, 160] as const;
 export const WORLD_W = 3840;
 export const WORLD_H = 2160;
 export const ISO_OX = 1920;
@@ -275,10 +278,13 @@ export function wallSpriteRect(item: RoomItem, place: WallPlacement): SpriteRect
   if (place.worldPx) {
     return { x: place.worldPx[0], y: place.worldPx[1], w, h, src };
   }
-  const base = place.wall === "L" ? tileTopWorld(0, place.t) : tileTopWorld(place.t, 0);
+  const coords = wallPlaceFromSlot(item, place.wall, place.slot, place.band);
+  const t = Number.isFinite(place.t) ? place.t : coords.t;
+  const heightUnits = Number.isFinite(place.heightUnits) ? place.heightUnits : coords.heightUnits;
+  const base = place.wall === "L" ? tileTopWorld(0, t) : tileTopWorld(t, 0);
   return {
     x: base.x - w / 2,
-    y: base.y - place.heightUnits * 3 - h / 2,
+    y: base.y - heightUnits * 3 - h / 2,
     w,
     h,
     src,
@@ -356,17 +362,178 @@ export function previewTiles(
   }));
 }
 
-export function nextWallSlot(walls: WallPlacement[], prefer: "L" | "R" = "L") {
-  const wall: "L" | "R" =
-    walls.filter((item) => item.wall === "L").length <= walls.filter((item) => item.wall === "R").length
-      ? prefer
-      : prefer === "L"
-        ? "R"
-        : "L";
-  const used = walls.filter((item) => item.wall === wall).map((item) => item.t);
-  let t = 1.2;
-  while (used.some((slot) => Math.abs(slot - t) < 1.1) && t < 7) t += 1.15;
-  return { wall, t, heightUnits: 92 };
+export function clamp(n: number, lo: number, hi: number) {
+  return Math.max(lo, Math.min(hi, n));
+}
+
+export function wallSpanOf(item: RoomItem) {
+  return clamp(Math.round(item.wallSpanTiles ?? 1), 1, WALL_SLOTS);
+}
+
+export function wallBandCenter(band: number) {
+  const i = clamp(band, 0, WALL_BANDS - 1);
+  return (WALL_BAND_EDGES[i] + WALL_BAND_EDGES[i + 1]) / 2;
+}
+
+export function wallBandFromHeight(heightUnits: number) {
+  for (let band = 0; band < WALL_BANDS; band += 1) {
+    if (heightUnits < WALL_BAND_EDGES[band + 1]) return band;
+  }
+  return WALL_BANDS - 1;
+}
+
+export function wallCoordsFromT(item: RoomItem, t: number, heightUnits: number) {
+  const span = wallSpanOf(item);
+  const slot = clamp(Math.round(t - span / 2), 0, WALL_SLOTS - span);
+  return { slot, band: wallBandFromHeight(heightUnits), span };
+}
+
+export function wallPlaceFromSlot(
+  item: RoomItem,
+  wall: "L" | "R",
+  slot: number,
+  band: number,
+): Pick<WallPlacement, "wall" | "slot" | "band" | "t" | "heightUnits"> {
+  const span = wallSpanOf(item);
+  const nextSlot = clamp(slot, 0, WALL_SLOTS - span);
+  const nextBand = clamp(band, 0, WALL_BANDS - 1);
+  return {
+    wall,
+    slot: nextSlot,
+    band: nextBand,
+    t: nextSlot + span / 2,
+    heightUnits: wallBandCenter(nextBand),
+  };
+}
+
+export function resolvedWallSlot(item: RoomItem, place: WallPlacement) {
+  if (Number.isInteger(place.slot) && Number.isInteger(place.band)) {
+    return { slot: place.slot, band: place.band, span: wallSpanOf(item) };
+  }
+  return wallCoordsFromT(item, place.t, place.heightUnits);
+}
+
+export function wallCellsOf(item: RoomItem, place: Pick<WallPlacement, "wall" | "slot" | "band" | "t" | "heightUnits">) {
+  const { slot, band, span } = resolvedWallSlot(item, place as WallPlacement);
+  const cells: { wall: "L" | "R"; slot: number; band: number }[] = [];
+  for (let i = 0; i < span; i += 1) {
+    cells.push({ wall: place.wall, slot: slot + i, band });
+  }
+  return cells;
+}
+
+export function wallOccupancy(
+  walls: WallPlacement[],
+  byId: Map<string, RoomItem>,
+  ignoreInstanceId?: string,
+) {
+  const used = new Set<string>();
+  for (const place of walls) {
+    if (place.instanceId === ignoreInstanceId) continue;
+    const item = byId.get(place.id);
+    if (!item) continue;
+    for (const cell of wallCellsOf(item, place)) {
+      used.add(`${cell.wall}:${cell.slot}:${cell.band}`);
+    }
+  }
+  return used;
+}
+
+export function canPlaceWall(
+  item: RoomItem,
+  wall: "L" | "R",
+  slot: number,
+  band: number,
+  used: Set<string>,
+) {
+  const span = wallSpanOf(item);
+  if (slot < 0 || band < 0 || band >= WALL_BANDS || slot + span > WALL_SLOTS) return false;
+  for (let i = 0; i < span; i += 1) {
+    if (used.has(`${wall}:${slot + i}:${band}`)) return false;
+  }
+  return true;
+}
+
+export function firstFreeOnWall(
+  item: RoomItem,
+  walls: WallPlacement[],
+  byId: Map<string, RoomItem>,
+  wall: "L" | "R",
+) {
+  const used = wallOccupancy(walls, byId);
+  for (const band of [1, 0, 2]) {
+    for (let slot = 0; slot < WALL_SLOTS; slot += 1) {
+      if (canPlaceWall(item, wall, slot, band, used)) {
+        return wallPlaceFromSlot(item, wall, slot, band);
+      }
+    }
+  }
+  return null;
+}
+
+export function firstFreeWallSlot(
+  item: RoomItem,
+  walls: WallPlacement[],
+  byId: Map<string, RoomItem>,
+  prefer: "L" | "R" = "L",
+) {
+  return firstFreeOnWall(item, walls, byId, prefer) ?? firstFreeOnWall(item, walls, byId, prefer === "L" ? "R" : "L");
+}
+
+export function wallCellPoints(wall: "L" | "R", slot: number, band: number) {
+  const h0 = WALL_BAND_EDGES[band] * 3;
+  const h1 = WALL_BAND_EDGES[band + 1] * 3;
+  const a = wall === "L" ? tileTopWorld(0, slot) : tileTopWorld(slot, 0);
+  const b = wall === "L" ? tileTopWorld(0, slot + 1) : tileTopWorld(slot + 1, 0);
+  return `${a.x},${a.y - h0} ${b.x},${b.y - h0} ${b.x},${b.y - h1} ${a.x},${a.y - h1}`;
+}
+
+export function isoFromScreen(localX: number, localY: number, mode: RoomMode) {
+  const scr = screenOf(mode);
+  const u = (localX - scr.left) / scr.S;
+  const v = (localY - scr.top) / scr.S;
+  const col = ((u - 640) / 26 + (v - 300) / 13) / 2;
+  const row = ((v - 300) / 13 - (u - 640) / 26) / 2;
+  return { u, v, col, row };
+}
+
+export function hitTestWall(localX: number, localY: number, mode: RoomMode): {
+  wall: "L" | "R";
+  t: number;
+  heightUnits: number;
+} | null {
+  const { u, v, col, row } = isoFromScreen(localX, localY, mode);
+  const leftT = (640 - u) / 26;
+  const leftH = 300 + leftT * 13 - v;
+  const rightT = (u - 640) / 26;
+  const rightH = 300 + rightT * 13 - v;
+  const leftOk = leftT >= -0.35 && leftT <= WALL_SLOTS + 0.35 && leftH >= 18 && leftH <= 175;
+  const rightOk = rightT >= -0.35 && rightT <= WALL_SLOTS + 0.35 && rightH >= 18 && rightH <= 175;
+  if (leftOk && rightOk) {
+    return col < row
+      ? { wall: "L", t: clamp(leftT, 0, WALL_SLOTS), heightUnits: clamp(leftH, WALL_BAND_EDGES[0], WALL_BAND_EDGES[3]) }
+      : { wall: "R", t: clamp(rightT, 0, WALL_SLOTS), heightUnits: clamp(rightH, WALL_BAND_EDGES[0], WALL_BAND_EDGES[3]) };
+  }
+  if (leftOk) {
+    return { wall: "L", t: clamp(leftT, 0, WALL_SLOTS), heightUnits: clamp(leftH, WALL_BAND_EDGES[0], WALL_BAND_EDGES[3]) };
+  }
+  if (rightOk) {
+    return { wall: "R", t: clamp(rightT, 0, WALL_SLOTS), heightUnits: clamp(rightH, WALL_BAND_EDGES[0], WALL_BAND_EDGES[3]) };
+  }
+  if (col < 1.2 || row < 1.2) {
+    const wall: "L" | "R" = col <= row ? "L" : "R";
+    const t = wall === "L" ? clamp(row, 0, WALL_SLOTS - 0.01) : clamp(col, 0, WALL_SLOTS - 0.01);
+    const h = wall === "L" ? leftH : rightH;
+    return { wall, t, heightUnits: clamp(h, WALL_BAND_EDGES[0], WALL_BAND_EDGES[3]) };
+  }
+  return null;
+}
+
+export function snapWallHit(item: RoomItem, hit: { wall: "L" | "R"; t: number; heightUnits: number }) {
+  const span = wallSpanOf(item);
+  const slot = clamp(Math.floor(hit.t - (span - 1) / 2), 0, WALL_SLOTS - span);
+  const band = wallBandFromHeight(hit.heightUnits);
+  return wallPlaceFromSlot(item, hit.wall, slot, band);
 }
 
 export function cloneLayout<T>(value: T): T {

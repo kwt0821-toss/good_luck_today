@@ -270,6 +270,37 @@
   stroke-dasharray: 15 9;
 }
 
+.lucky-wall-tile-layer {
+  z-index: 4;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.lucky-tile.is-wall-grid {
+  fill: rgba(243, 233, 215, 0.04);
+  stroke: rgba(243, 233, 215, 0.28);
+  stroke-width: 3;
+}
+
+.lucky-tile.is-wall-valid {
+  fill: rgba(110, 210, 140, 0.45);
+  stroke: #6ed28a;
+  stroke-width: 5;
+}
+
+.lucky-tile.is-wall-invalid {
+  fill: rgba(255, 126, 126, 0.45);
+  stroke: #ff7e7e;
+  stroke-width: 5;
+}
+
+.lucky-tile.is-wall-selected {
+  fill: rgba(255, 196, 138, 0.35);
+  stroke: #ffc48a;
+  stroke-width: 5;
+  stroke-dasharray: 15 9;
+}
+
 .lucky-sprite {
   position: absolute;
   z-index: 5;
@@ -684,10 +715,11 @@
 
 .lucky-drawer-tabs {
   display: flex;
-  gap: 17px;
+  gap: 12px;
   margin-top: 14px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(243, 233, 215, 0.12);
+  overflow-x: auto;
 }
 
 .lucky-drawer-tabs button {

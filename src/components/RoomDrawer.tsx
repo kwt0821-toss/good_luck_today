@@ -1,4 +1,4 @@
-import { roomAsset, ROOM_TABS } from "../lib/roomCatalog";
+import { itemMatchesTab, roomAsset, ROOM_TABS } from "../lib/roomCatalog";
 import type { RoomItem, RoomLayoutState, RoomTab } from "../lib/roomTypes";
 
 type RoomDrawerProps = {
@@ -37,7 +37,7 @@ export function RoomDrawer({
   onPick,
   onExchange,
 }: RoomDrawerProps) {
-  const visible = items.filter((item) => item.category === tab);
+  const visible = items.filter((item) => itemMatchesTab(item, tab));
 
   return (
     <section className="lucky-drawer" aria-label="꾸미기 서랍">

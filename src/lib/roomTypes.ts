@@ -62,8 +62,14 @@ export type WallPlacement = {
   wall: "L" | "R";
   t: number;
   heightUnits: number;
+  slot: number;
+  band: number;
   worldPx?: [number, number];
 };
+
+export type RoomDrag =
+  | { kind: "floor"; instanceId: string; col: number; row: number }
+  | { kind: "wall"; instanceId: string; wall: "L" | "R"; slot: number; band: number };
 
 export type RoomLayoutState = {
   floor: FloorPlacement[];

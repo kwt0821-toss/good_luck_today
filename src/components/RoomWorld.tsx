@@ -2,8 +2,11 @@ import type { PointerEvent } from "react";
 
 import { roomAsset } from "../lib/roomCatalog";
 import {
+  WALL_BANDS,
+  WALL_SLOTS,
   WORLD_H,
   WORLD_W,
+  canPlaceWall,
   diamondPoints,
   hostOf,
   isDecal,
@@ -13,16 +16,20 @@ import {
   shadowRect,
   sortFloor,
   spriteRect,
+  wallCellPoints,
+  wallCellsOf,
+  wallOccupancy,
+  wallPlaceFromSlot,
   wallSpriteRect,
 } from "../lib/roomLayout";
-import type { FloorPlacement, RoomItem, RoomLayoutState, RoomMode, SpriteRect, WallPlacement } from "../lib/roomTypes";
+import type { FloorPlacement, RoomDrag, RoomItem, RoomLayoutState, RoomMode, SpriteRect, WallPlacement } from "../lib/roomTypes";
 
 type RoomWorldProps = {
   mode: RoomMode;
   itemsById: Map<string, RoomItem>;
   layout: RoomLayoutState;
   selectedId: string | null;
-  dragging: { instanceId: string; col: number; row: number } | null;
+  dragging: RoomDrag | null;
   hints: { col: number; row: number }[] | null;
   frameThumbs: string[];
   shakeId: string | null;
@@ -46,6 +53,25 @@ function TilePoly({
   tone: "selected" | "valid" | "invalid" | "hint";
 }) {
   return <polygon className={`lucky-tile is-${tone}`} points={diamondPoints(col, row)} />;
+}
+
+function WallCell({
+  wall,
+  slot,
+  band,
+  tone,
+}: {
+  wall: "L" | "R";
+  slot: number;
+  band: number;
+  tone: "grid" | "valid" | "invalid" | "selected";
+}) {
+  return (
+    <polygon
+      className={`lucky-tile is-wall is-wall-${tone}`}
+      points={wallCellPoints(wall, slot, band)}
+    />
+  );
 }
 
 function FloorSprite({
@@ -127,12 +153,24 @@ export function RoomWorld({
   const selected = [...layout.floor, ...layout.walls].find((item) => item.instanceId === selectedId);
   const selectedItem = selected ? itemsById.get(selected.id) : undefined;
   const used = occupancy(layout.floor, itemsById, dragging?.instanceId ?? selectedId ?? undefined);
-  const dragPlace = dragging ? layout.floor.find((place) => place.instanceId === dragging.instanceId) : undefined;
+  const floorDrag = dragging?.kind === "floor" ? dragging : null;
+  const wallDrag = dragging?.kind === "wall" ? dragging : null;
+  const dragPlace = floorDrag ? layout.floor.find((place) => place.instanceId === floorDrag.instanceId) : undefined;
   const dragItem = dragPlace ? itemsById.get(dragPlace.id) : undefined;
   const dragTiles =
-    dragging && dragItem && dragPlace && !dragPlace.onTopOf
-      ? previewTiles(dragItem, dragging.col, dragging.row, dragPlace.orientation, used)
+    floorDrag && dragItem && dragPlace && !dragPlace.onTopOf
+      ? previewTiles(dragItem, floorDrag.col, floorDrag.row, dragPlace.orientation, used)
       : [];
+  const wallDragPlace = wallDrag ? layout.walls.find((place) => place.instanceId === wallDrag.instanceId) : undefined;
+  const wallDragItem = wallDragPlace ? itemsById.get(wallDragPlace.id) : undefined;
+  const wallUsed = wallOccupancy(layout.walls, itemsById, wallDrag?.instanceId);
+  const wallPreviewOk =
+    wallDrag && wallDragItem ? canPlaceWall(wallDragItem, wallDrag.wall, wallDrag.slot, wallDrag.band, wallUsed) : false;
+  const wallPreviewCells =
+    wallDrag && wallDragItem
+      ? wallCellsOf(wallDragItem, wallPlaceFromSlot(wallDragItem, wallDrag.wall, wallDrag.slot, wallDrag.band))
+      : [];
+  const wallGridWall = wallDrag?.wall ?? null;
   const selectedFloor = selected && "col" in selected ? (selected as FloorPlacement) : null;
   const selectedTiles =
     mode === "edit" && selectedFloor && selectedItem && selectedItem.placement !== "wall" && !selectedFloor.onTopOf && !dragging
@@ -140,8 +178,18 @@ export function RoomWorld({
       : [];
 
   const shownFloor = layout.floor.map((place) => {
-    if (dragging && place.instanceId === dragging.instanceId && !place.onTopOf) {
-      return { ...place, col: dragging.col, row: dragging.row };
+    if (floorDrag && place.instanceId === floorDrag.instanceId && !place.onTopOf) {
+      return { ...place, col: floorDrag.col, row: floorDrag.row };
+    }
+    return place;
+  });
+  const shownWalls = layout.walls.map((place) => {
+    if (wallDrag && wallDragItem && place.instanceId === wallDrag.instanceId) {
+      return {
+        ...place,
+        ...wallPlaceFromSlot(wallDragItem, wallDrag.wall, wallDrag.slot, wallDrag.band),
+        worldPx: undefined,
+      };
     }
     return place;
   });
@@ -209,6 +257,25 @@ export function RoomWorld({
         </svg>
       ) : null}
 
+      {mode === "edit" && wallGridWall ? (
+        <svg className="lucky-world-layer lucky-wall-tile-layer" viewBox={`0 0 ${WORLD_W} ${WORLD_H}`}>
+          {Array.from({ length: WALL_SLOTS }, (_, slot) =>
+            Array.from({ length: WALL_BANDS }, (_, band) => (
+              <WallCell key={`g-${wallGridWall}-${slot}-${band}`} wall={wallGridWall} slot={slot} band={band} tone="grid" />
+            )),
+          )}
+          {wallPreviewCells.map((cell) => (
+            <WallCell
+              key={`p-${cell.wall}-${cell.slot}-${cell.band}`}
+              wall={cell.wall}
+              slot={cell.slot}
+              band={cell.band}
+              tone={wallPreviewOk ? "valid" : "invalid"}
+            />
+          ))}
+        </svg>
+      ) : null}
+
       {decals.map((place) => {
         const item = itemsById.get(place.id);
         if (!item) return null;
@@ -254,12 +321,13 @@ export function RoomWorld({
           })
         : null}
 
-      {layout.walls.map((place) => (
+      {shownWalls.map((place) => (
         <WallSprite
           key={place.instanceId}
           place={place}
           item={itemsById.get(place.id)}
           selected={place.instanceId === selectedId}
+          lifted={place.instanceId === selectedId && mode === "edit"}
           shaking={place.instanceId === shakeId}
           thumbs={frameThumbs}
           onSelect={(id) => onSelect(id, "wall")}
@@ -320,6 +388,7 @@ function WallSprite({
   place,
   item,
   selected,
+  lifted,
   shaking,
   thumbs,
   onSelect,
@@ -328,6 +397,7 @@ function WallSprite({
   place: WallPlacement;
   item?: RoomItem;
   selected: boolean;
+  lifted: boolean;
   shaking: boolean;
   thumbs: string[];
   onSelect: (id: string) => void;
@@ -339,8 +409,14 @@ function WallSprite({
   return (
     <button
       type="button"
-      className={`lucky-sprite is-wall is-wall-${place.wall} ${selected ? "is-selected" : ""} ${shaking ? "is-shake" : ""}`}
-      style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
+      className={`lucky-sprite is-wall is-wall-${place.wall} ${selected ? "is-selected" : ""} ${lifted ? "is-lifted" : ""} ${shaking ? "is-shake" : ""}`}
+      style={{
+        left: rect.x,
+        top: rect.y,
+        width: rect.w,
+        height: rect.h,
+        transform: lifted ? "translateY(-12px)" : undefined,
+      }}
       aria-label={item.nameKo}
       onPointerDown={(event) => onItemPointerDown(event, place.instanceId)}
       onClick={() => onSelect(place.instanceId)}
