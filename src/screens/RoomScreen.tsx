@@ -327,7 +327,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       <div className="lucky-grain" aria-hidden="true" />
       <div className="lucky-warm-glow" aria-hidden="true" />
 
-      {!isInTossApp() ? (
+      {!isInTossApp() && mode === "view" ? (
         <button type="button" className="lucky-back" onClick={onBack} aria-label="뒤로 가기">
           ←
         </button>
@@ -394,7 +394,12 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
           className="lucky-select-hud"
           style={{ left: hud.left, top: hud.top, width: hud.width, height: hud.height }}
         >
-          <div className="lucky-select-box" />
+          <div className="lucky-select-box">
+            <i />
+            <i />
+            <i />
+            <i />
+          </div>
           {selectedFloor ? (
             <div className="lucky-mini-toolbar">
               <button type="button" aria-label="이동" onClick={startMove}>

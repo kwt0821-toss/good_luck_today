@@ -62,13 +62,14 @@
 
 .lucky-back {
   position: absolute;
-  left: 12px;
-  top: 10px;
+  left: 4px;
+  top: 14px;
   z-index: 6;
   border: 0;
   background: transparent;
   color: var(--cream);
-  font-size: 20px;
+  font-size: 18px;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -82,6 +83,7 @@
 .lucky-eyebrow {
   margin: 0;
   height: 16px;
+  padding-left: 18px;
   font-size: 11px;
   letter-spacing: 0.5px;
   color: rgba(243, 233, 215, 0.6);
@@ -288,6 +290,10 @@
   z-index: 5;
 }
 
+.lucky-sprite.is-wall {
+  overflow: hidden;
+}
+
 .lucky-sprite-fallback {
   display: grid;
   place-items: center;
@@ -299,18 +305,39 @@
 
 .lucky-frame-arts {
   position: absolute;
-  inset: 8% 6% 18%;
-  display: flex;
-  gap: 4%;
+  inset: 0;
   pointer-events: none;
 }
 
-.lucky-frame-arts img {
-  flex: 1;
-  height: 100%;
+.lucky-sprite .lucky-frame-arts img {
+  position: absolute;
+  width: auto;
+  height: auto;
   object-fit: cover;
-  border-radius: 6%;
-  opacity: 0.92;
+  border-radius: 5px;
+}
+
+.lucky-sprite .lucky-frame-arts img:nth-child(1) {
+  left: 5%;
+  top: 9%;
+  width: 31%;
+  height: 70%;
+  transform: rotate(-11deg);
+}
+
+.lucky-sprite .lucky-frame-arts img:nth-child(2) {
+  left: 36%;
+  top: 3%;
+  width: 31%;
+  height: 68%;
+}
+
+.lucky-sprite .lucky-frame-arts img:nth-child(3) {
+  left: 66%;
+  top: 15%;
+  width: 29%;
+  height: 66%;
+  transform: rotate(9deg);
 }
 
 .lucky-hint {
@@ -432,9 +459,7 @@
     inset 0 0 0 0 #ffc48a;
 }
 
-.lucky-select-box::before,
-.lucky-select-box::after {
-  content: "";
+.lucky-select-box i {
   position: absolute;
   width: 9px;
   height: 9px;
@@ -443,10 +468,21 @@
   border: 2px solid var(--amber);
 }
 
-.lucky-select-box::before {
+.lucky-select-box i:nth-child(1) {
   left: -5px;
   top: -5px;
-  box-shadow: calc(100% + 1px) 0 0 0 var(--cream);
+}
+.lucky-select-box i:nth-child(2) {
+  right: -5px;
+  top: -5px;
+}
+.lucky-select-box i:nth-child(3) {
+  left: -5px;
+  bottom: -5px;
+}
+.lucky-select-box i:nth-child(4) {
+  right: -5px;
+  bottom: -5px;
 }
 
 .lucky-mini-toolbar {
