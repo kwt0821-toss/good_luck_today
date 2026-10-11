@@ -36,6 +36,8 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     ownedItemIds: [...new Set(starterItems)],
     unlockedRoomIds: ["moon_bedroom"],
     pendingDraw: null,
+    rewardInbox: [],
+    lastSeenNoticeId: "",
   };
 }
 

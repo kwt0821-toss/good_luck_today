@@ -72,6 +72,13 @@ export type OpsEconomy = {
       multiplier: number;
       appliesTo: string[];
     };
+    friendInvite?: {
+      enabled: boolean;
+      inviterPaw?: number;
+      inviteePaw?: number;
+      maxPerMonth?: number;
+      grantOn?: string;
+    };
   };
 };
 
@@ -205,6 +212,9 @@ export type OpsState = {
   ownedItemIds: string[];
   unlockedRoomIds: string[];
   pendingDraw: DrawReservation | null;
+  /** Rewards granted to balance but not yet collected from the inbox UI */
+  rewardInbox: Array<{ id: string; label: string; paw: number; toss: number; collected: boolean }>;
+  lastSeenNoticeId: string;
 };
 
 export type ConfirmDrawResult = {

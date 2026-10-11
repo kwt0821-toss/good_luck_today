@@ -19,6 +19,7 @@ type HomeScreenProps = {
   remainingRateUp: number;
   remainingPawAds: number;
   pawBalance: number;
+  menuBadge?: boolean;
   onDraw: () => void;
   onRateUpDraw: () => void;
   onPawAd: () => void;
@@ -32,6 +33,7 @@ export function HomeScreen({
   remainingRateUp,
   remainingPawAds,
   pawBalance,
+  menuBadge = false,
   onDraw,
   onRateUpDraw,
   onPawAd,
@@ -116,8 +118,17 @@ export function HomeScreen({
             </text>
           </svg>
         </h1>
-        <button type="button" className="main-nav-btn main-menu-btn" aria-label="메뉴" onClick={popThen(onOpenMenu)}>
-          <img src={ASSETS.menu} alt="" width={28} height={28} />
+        <button
+          type="button"
+          id="icon-menu"
+          className="main-nav-btn main-menu-btn"
+          aria-label="메뉴"
+          onClick={popThen(onOpenMenu)}
+        >
+          <span className="main-menu-icon-wrap">
+            <img src={ASSETS.menu} alt="" width={28} height={28} />
+            {menuBadge ? <span className="main-menu-dot" aria-hidden="true" /> : null}
+          </span>
           <span>메뉴</span>
         </button>
       </header>

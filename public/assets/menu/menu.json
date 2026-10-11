@@ -1,0 +1,302 @@
+{
+ "_version": "menu-1.0 (2026-10-11)",
+ "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
+ "panel": {
+  "side": "right",
+  "widthPt": 312,
+  "openMs": 280,
+  "closeMs": 220,
+  "easingOpen": "cubic-bezier(.22,1,.36,1)",
+  "easingClose": "cubic-bezier(.4,0,1,1)",
+  "dimOpacity": 0.58,
+  "swipeToCloseThresholdPt": 80
+ },
+ "header": {
+  "title": "MENU.",
+  "subtitle": "오늘도 고양이랑 천천히 놀아요",
+  "stats": [
+   {
+    "id": "paw",
+    "label": "내 포인트",
+    "value": "user.pawBalance",
+    "format": "number(ko-KR)",
+    "icon": "icon-paw-mini.svg"
+   },
+   {
+    "id": "dex",
+    "label": "도감",
+    "value": "user.dexOwned",
+    "total": "dex.totalCards",
+    "showProgressBar": true,
+    "tapTo": "dex"
+   },
+   {
+    "id": "roomLv",
+    "label": "방 레벨",
+    "value": "user.cozyLevel",
+    "format": "'Lv.'+value",
+    "source": "economy.json → cozy.levels",
+    "tapTo": "room"
+   }
+  ]
+ },
+ "sections": [
+  {
+   "id": "daily",
+   "label": "DAILY",
+   "rows": [
+    "attendance",
+    "points",
+    "exchange",
+    "rewards"
+   ]
+  },
+  {
+   "id": "more",
+   "label": "MORE",
+   "rows": [
+    "rates",
+    "notice",
+    "invite",
+    "settings"
+   ]
+  }
+ ],
+ "rows": {
+  "attendance": {
+   "label": "출석 체크",
+   "icon": "icon-attendance.svg",
+   "enabled": true,
+   "open": "sheet:attendance",
+   "meta": "'{attendance.claimedDays+1}일째 · 선물 도착' if canClaimToday else '{attendance.claimedDays}/7 · 내일 또 만나요'",
+   "data": "starter.json → attendance7, attendanceRule",
+   "badge": {
+    "type": "dot",
+    "when": "attendance.canClaimToday && attendance.claimedDays < 7"
+   },
+   "hideWhen": "attendance.claimedDays >= 7 && !events.seasonAttendance"
+  },
+  "points": {
+   "label": "포인트 받기",
+   "icon": "icon-points.svg",
+   "enabled": true,
+   "open": "action:rewardedAd(paw)",
+   "meta": "'남은 횟수 {remaining}/{economy.pawSources.rewardedAd.maxPerDay}'",
+   "data": "economy.json → pawSources.rewardedAd (pawPerAd 10, maxPerDay 10), events.weekendDoublePaw",
+   "badge": {
+    "type": "pill",
+    "text": "주말 2배",
+    "when": "events.weekendDoublePaw.enabled && today in events.weekendDoublePaw.days"
+   },
+   "disabledWhen": "remaining == 0",
+   "disabledMeta": "내일 다시 열려요"
+  },
+  "exchange": {
+   "label": "중복 카드 교환",
+   "icon": "icon-exchange.svg",
+   "enabled": true,
+   "open": "sheet:exchange",
+   "meta": "'중복 {user.duplicateCount}장'",
+   "data": "economy.json → pawSources.duplicateConvert",
+   "badge": {
+    "type": "none"
+   },
+   "disabledWhen": "user.duplicateCount == 0",
+   "disabledMeta": "아직 겹친 카드가 없어요"
+  },
+  "rewards": {
+   "label": "보상함",
+   "icon": "icon-rewards.svg",
+   "enabled": true,
+   "open": "sheet:rewards",
+   "meta": "'받을 보상 {rewards.unclaimedCount}'",
+   "data": "economy.json → pawSources.newCardFirstGet, setComplete, tossPayout",
+   "badge": {
+    "type": "dot",
+    "when": "rewards.unclaimedCount > 0"
+   }
+  },
+  "rates": {
+   "label": "확률 안내",
+   "icon": "icon-rates.svg",
+   "enabled": true,
+   "open": "sheet:rates",
+   "meta": "5성↑·스페셜 {sum(b5,special,character,legend)}%",
+   "data": "economy.json → draws.rates_proposal.normal / rateUp / keys",
+   "badge": {
+    "type": "none"
+   },
+   "required": true,
+   "_note": "확률 공개는 필수 — enabled=false로 내리지 마세요"
+  },
+  "notice": {
+   "label": "공지·이벤트",
+   "icon": "icon-notice.svg",
+   "enabled": true,
+   "open": "sheet:notice",
+   "meta": "최신 이벤트 제목 pill (예: 주말 포인트 2배)",
+   "data": "/notices API + economy.json → events",
+   "badge": {
+    "type": "pill-new",
+    "text": "NEW",
+    "when": "latestNotice.id > user.lastSeenNoticeId"
+   }
+  },
+  "invite": {
+   "label": "친구 초대",
+   "icon": "icon-invite.svg",
+   "enabled": false,
+   "open": "sheet:invite",
+   "disabledPill": "준비 중",
+   "data": "economy.json → events.friendInvite (enabled=false)",
+   "enableWhen": "economy.events.friendInvite.enabled == true"
+  },
+  "settings": {
+   "label": "설정",
+   "icon": "icon-settings.svg",
+   "enabled": true,
+   "open": "page:settings",
+   "items": [
+    {
+     "id": "sfx",
+     "label": "효과음",
+     "type": "toggle",
+     "default": true,
+     "storage": "local"
+    },
+    {
+     "id": "haptic",
+     "label": "진동",
+     "type": "toggle",
+     "default": true,
+     "storage": "local"
+    },
+    {
+     "id": "reduceMotion",
+     "label": "움직임 줄이기",
+     "type": "toggle",
+     "default": "prefers-reduced-motion",
+     "storage": "local"
+    },
+    {
+     "id": "replayTutorial",
+     "label": "튜토리얼 다시 보기",
+     "type": "action",
+     "action": "tutorial.replay",
+     "data": "tutorial.json (보상 재지급 없음)"
+    },
+    {
+     "id": "contact",
+     "label": "문의하기",
+     "type": "link",
+     "url": "TODO"
+    },
+    {
+     "id": "terms",
+     "label": "이용약관",
+     "type": "link",
+     "url": "TODO"
+    },
+    {
+     "id": "privacy",
+     "label": "개인정보처리방침",
+     "type": "link",
+     "url": "TODO"
+    },
+    {
+     "id": "version",
+     "label": "버전",
+     "type": "text",
+     "value": "app.version"
+    }
+   ]
+  }
+ },
+ "menuIconBadge": {
+  "type": "dot",
+  "on": "#icon-menu (메인 우상단 발바닥)",
+  "when": "any(row.badge.type=='dot' && row.badge.when)"
+ },
+ "sheets": {
+  "attendance": {
+   "title": "출석 체크",
+   "eyebrow": "DAILY GIFT",
+   "desc": "7일 출석하면 {day7.nameKo}가 방으로 와요.\n하루 빠져도 괜찮아요, 출석한 날만큼 이어서 받아요.",
+   "cta": "오늘 선물 받기 · {todayItem.nameKo}",
+   "ctaDone": "오늘 선물 받았어요",
+   "note": "받은 아이템은 방꾸미기 서랍에 들어가요",
+   "thumbs": "gift-{itemId}.png"
+  },
+  "rates": {
+   "title": "확률 안내",
+   "eyebrow": "DRAW RATES",
+   "desc": "뽑기 결과는 서버에서 정해져요.\n같은 등급 안에서는 카드마다 확률이 같아요.",
+   "tabs": [
+    "일반 뽑기",
+    "확률업 뽑기"
+   ],
+   "rows": [
+    [
+     "b1",
+     "1성",
+     18
+    ],
+    [
+     "b2",
+     "2성",
+     18
+    ],
+    [
+     "b3",
+     "3성",
+     18
+    ],
+    [
+     "b4",
+     "4성",
+     18
+    ],
+    [
+     "b5",
+     "5성",
+     18
+    ],
+    [
+     "special",
+     "스페셜",
+     9
+    ],
+    [
+     "character",
+     "캐릭터",
+     4
+    ],
+    [
+     "legend",
+     "레전드",
+     4
+    ]
+   ],
+   "highlight": [
+    "b5",
+    "special",
+    "character",
+    "legend"
+   ],
+   "perCardDecimals": 3,
+   "note": "카드 1장 확률은 소수점 넷째 자리에서 반올림했어요"
+  },
+  "exchange": {
+   "title": "중복 카드 교환",
+   "eyebrow": "SWAP",
+   "desc": "겹친 카드를 포인트로 바꿔요. 카드는 1장씩 남아요.",
+   "cta": "한 번에 바꾸기 · {total}P"
+  },
+  "rewards": {
+   "title": "보상함",
+   "eyebrow": "REWARDS",
+   "desc": "도감을 채우면 토스 포인트와 발바닥 포인트가 와요.",
+   "cta": "모두 받기"
+  }
+ }
+}

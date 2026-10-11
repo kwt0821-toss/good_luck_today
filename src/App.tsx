@@ -1,14 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AdModal } from "./components/AdModal";
+import { MenuPanel } from "./components/MenuPanel";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import { toKstDateKey } from "./lib/date";
+import { buildMenuViewModel } from "./lib/menuModel";
 import type { MockAdKind } from "./lib/mockAds";
 import { cancelDrawReservation, preloadDrawImages, reserveDraw } from "./lib/mockDrawApi";
 import { configureNavigationBar, haptic } from "./lib/native";
 import { loadOpsConfig } from "./lib/opsConfig";
 import {
-  claimAttendanceIfNeeded,
   confirmDrawAfterAd,
   grantPawAdReward,
 } from "./lib/opsRewards";
@@ -26,7 +27,6 @@ import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { RatesGuideScreen } from "./screens/RatesGuideScreen";
 import { RoomScreen } from "./screens/RoomScreen";
-import { StubScreen } from "./screens/StubScreen";
 import type { Screen } from "./types";
 import "./App.css";
 
@@ -36,7 +36,6 @@ function initialScreen(): Screen {
   if (
     name === "collection" ||
     name === "room" ||
-    name === "menu" ||
     name === "draw" ||
     name === "rates" ||
     name === "reveal"
@@ -44,6 +43,11 @@ function initialScreen(): Screen {
     return { name };
   }
   return { name: "home" };
+}
+
+function initialMenuOpen(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("screen") === "menu";
 }
 
 type AdSession = {
@@ -56,6 +60,10 @@ export default function App() {
   const [ops, setOps] = useState<OpsState | null>(null);
   const [config, setConfig] = useState<OpsConfig | null>(null);
   const [screen, setScreen] = useState<Screen>(initialScreen);
+  const [menuOpen, setMenuOpen] = useState(initialMenuOpen);
+  const [menuIconDot, setMenuIconDot] = useState(false);
+  const [tutorialReplayStep, setTutorialReplayStep] = useState<number | null>(null);
+  const menuHistRef = useRef(false);
   const [ad, setAd] = useState<AdSession | null>(null);
   const [reservation, setReservation] = useState<DrawReservation | null>(null);
   const [revealReady, setRevealReady] = useState(false);
@@ -74,12 +82,7 @@ export default function App() {
         const [nextConfig, nextOps] = await Promise.all([loadOpsConfig(), loadOpsState()]);
         if (cancelled) return;
         setConfig(nextConfig);
-        const attendance = await claimAttendanceIfNeeded(nextOps);
-        setOps(attendance.state);
-        if (attendance.itemId) {
-          setLocalToast(`출석 선물: ${attendance.itemId}`);
-          window.setTimeout(() => setLocalToast(null), 2200);
-        }
+        setOps(nextOps);
       } catch (error) {
         if (!cancelled) {
           setBootError(error instanceof Error ? error.message : "설정을 불러오지 못했어요");
@@ -89,6 +92,39 @@ export default function App() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    if (!ops) return;
+    let cancelled = false;
+    void buildMenuViewModel(ops).then((model) => {
+      if (!cancelled) setMenuIconDot(model.menuIconDot);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ops]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    if (!menuHistRef.current) {
+      window.history.pushState({ menu: true }, "");
+      menuHistRef.current = true;
+    }
+    const onPop = () => {
+      menuHistRef.current = false;
+      setMenuOpen(false);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [menuOpen]);
+
+  const closeMenu = useCallback(() => {
+    setMenuOpen(false);
+    if (menuHistRef.current) {
+      menuHistRef.current = false;
+      window.history.back();
+    }
   }, []);
 
   useEffect(() => {
@@ -107,9 +143,13 @@ export default function App() {
   const pawAdsLeft = ops && config ? remainingPawAds(ops, config) : 0;
 
   const tutorialStep: TutorialStep | null = useMemo(() => {
-    if (!ops || !config || ops.tutorialDone) return null;
+    if (!ops || !config) return null;
+    if (tutorialReplayStep != null) {
+      return config.tutorial.steps.find((step) => step.step === tutorialReplayStep) ?? null;
+    }
+    if (ops.tutorialDone) return null;
     return config.tutorial.steps.find((step) => step.step === ops.tutorialStep) ?? null;
-  }, [ops, config]);
+  }, [ops, config, tutorialReplayStep]);
 
   useEffect(() => {
     if (!ops || !config || !ops.tutorialDone || featureIntro) return;
@@ -238,6 +278,11 @@ export default function App() {
   }, [ad, ops, persistOps]);
 
   const skipTutorial = useCallback(async () => {
+    if (tutorialReplayStep != null) {
+      setTutorialReplayStep(null);
+      setScreen({ name: "home" });
+      return;
+    }
     if (!ops) return;
     await persistOps({
       ...ops,
@@ -245,10 +290,28 @@ export default function App() {
       tutorialStep: 99,
       tutorialInterruptions: ops.tutorialInterruptions + 1,
     });
-  }, [ops, persistOps]);
+  }, [ops, persistOps, tutorialReplayStep]);
 
   const advanceTutorial = useCallback(async () => {
     if (!ops || !config || !tutorialStep) return;
+
+    // Replay: walk steps with no rewards / no state mutation of tutorialDone.
+    if (tutorialReplayStep != null) {
+      if (tutorialStep.complete || tutorialStep.step >= config.tutorial.steps.length) {
+        setTutorialReplayStep(null);
+        setScreen({ name: "home" });
+        return;
+      }
+      const nextStep = tutorialStep.step + 1;
+      setTutorialReplayStep(nextStep);
+      if (tutorialStep.screen.includes("dex")) setScreen({ name: "collection" });
+      else if (tutorialStep.screen === "room") setScreen({ name: "room" });
+      else if (tutorialStep.screen === "main" || tutorialStep.screen === "draw-reveal") {
+        setScreen({ name: "home" });
+      }
+      return;
+    }
+
     if (tutorialStep.step === 1) {
       await beginDraw("tutorial");
       return;
@@ -262,7 +325,7 @@ export default function App() {
     await persistOps({ ...ops, tutorialStep: nextStep });
     if (tutorialStep.screen.includes("dex")) setScreen({ name: "collection" });
     if (tutorialStep.screen === "room") setScreen({ name: "room" });
-  }, [ops, config, tutorialStep, beginDraw, persistOps]);
+  }, [ops, config, tutorialStep, tutorialReplayStep, beginDraw, persistOps]);
 
   if (bootError) {
     return (
@@ -284,14 +347,6 @@ export default function App() {
 
   return (
     <>
-      {screen.name === "menu" ? (
-        <StubScreen
-          title="메뉴"
-          body="메뉴 화면은 곧 연결될 예정이에요. 확률 안내는 홈에서 열 수 있어요."
-          onBack={() => setScreen({ name: "home" })}
-        />
-      ) : null}
-
       {screen.name === "rates" ? <RatesGuideScreen onBack={() => setScreen({ name: "home" })} /> : null}
 
       {screen.name === "collection" ? (
@@ -309,7 +364,7 @@ export default function App() {
           remainingDraws={remainingDraws}
           onToDex={() => {
             void (async () => {
-              if (ops.tutorialStep === 2 && !ops.tutorialDone) {
+              if (ops.tutorialStep === 2 && !ops.tutorialDone && tutorialReplayStep == null) {
                 await persistOps({ ...ops, tutorialStep: 3 });
               }
               setScreen({ name: "collection" });
@@ -339,14 +394,33 @@ export default function App() {
           remainingRateUp={remainingRateUp}
           remainingPawAds={pawAdsLeft}
           pawBalance={ops.pawBalance}
+          menuBadge={menuIconDot}
           onDraw={() => void beginDraw()}
           onRateUpDraw={() => void beginDraw("rateUp")}
           onPawAd={() => setAd({ kind: "short", purpose: "paw" })}
-          onOpenMenu={() => setScreen({ name: "menu" })}
+          onOpenMenu={() => setMenuOpen(true)}
           onOpenCollection={() => setScreen({ name: "collection" })}
           onOpenRoom={() => setScreen({ name: "room" })}
         />
       ) : null}
+
+      <MenuPanel
+        open={menuOpen}
+        ops={ops}
+        onClose={closeMenu}
+        onOpsChange={(next) => void persistOps(next)}
+        onOpenDex={() => setScreen({ name: "collection" })}
+        onOpenRoom={() => setScreen({ name: "room" })}
+        onPawAd={() => {
+          closeMenu();
+          setAd({ kind: "short", purpose: "paw" });
+        }}
+        onReplayTutorial={() => {
+          closeMenu();
+          setScreen({ name: "home" });
+          setTutorialReplayStep(1);
+        }}
+      />
 
       <AdModal
         open={ad !== null}
@@ -355,11 +429,17 @@ export default function App() {
         onCancel={() => void cancelAd()}
       />
 
-      {screen.name === "home" && tutorialStep && tutorialStep.screen === "main" ? (
+      {(screen.name === "home" || tutorialReplayStep != null) &&
+      tutorialStep &&
+      (tutorialStep.screen === "main" ||
+        (tutorialReplayStep != null &&
+          (tutorialStep.screen === "main" ||
+            tutorialStep.screen.includes("dex") ||
+            tutorialStep.screen === "room"))) ? (
         <TutorialCoach step={tutorialStep} onSkip={() => void skipTutorial()} onAdvance={() => void advanceTutorial()} />
       ) : null}
 
-      {screen.name === "reveal" && tutorialStep && tutorialStep.screen === "draw-reveal" ? (
+      {screen.name === "reveal" && tutorialStep && tutorialStep.screen === "draw-reveal" && tutorialReplayStep == null ? (
         <TutorialCoach step={tutorialStep} onSkip={() => void skipTutorial()} onAdvance={() => void advanceTutorial()} />
       ) : null}
 

@@ -30,6 +30,10 @@ async function evaluateSetRewards(
       ...next,
       pawBalance: next.pawBalance + paw,
       grantedSetRewardIds: [...next.grantedSetRewardIds, rewardId],
+      rewardInbox: [
+        ...next.rewardInbox,
+        { id: rewardId, label, paw, toss, collected: false },
+      ],
     };
     if (toss > 0) {
       const tossRes = await grantTossOnce(next, {
@@ -141,10 +145,26 @@ export async function confirmDrawAfterAd(
 
   if (isNew) {
     const grant = config.economy.pawSources.newCardFirstGet;
-    next = { ...next, pawBalance: next.pawBalance + grant.paw };
+    const inboxId = `card:${card.id}`;
+    next = {
+      ...next,
+      pawBalance: next.pawBalance + grant.paw,
+      rewardInbox: next.rewardInbox.some((item) => item.id === inboxId)
+        ? next.rewardInbox
+        : [
+            ...next.rewardInbox,
+            {
+              id: inboxId,
+              label: `${card.id} 첫 획득`,
+              paw: grant.paw,
+              toss: grant.toss,
+              collected: false,
+            },
+          ],
+    };
     const tossRes = await grantTossOnce(next, {
       tossUserKey: next.userId,
-      rewardId: `card:${card.id}`,
+      rewardId: inboxId,
       amountKRW: grant.toss,
     });
     next = tossRes.state;
@@ -209,18 +229,24 @@ export async function convertDuplicate(
   return { state: next, gained, owned: nextOwned };
 }
 
-export async function claimAttendanceIfNeeded(
+export function canClaimAttendanceToday(state: OpsState, maxDays: number, today = toKstDateKey()): boolean {
+  if (state.attendanceClaimed >= maxDays) return false;
+  return state.lastAttendanceDateKey !== today;
+}
+
+/** Manual claim from the attendance sheet (not auto on boot). */
+export async function claimAttendanceGift(
   state: OpsState,
-): Promise<{ state: OpsState; itemId: string | null }> {
+): Promise<{ state: OpsState; itemId: string | null; error?: string }> {
   const config = await loadOpsConfig();
   const today = toKstDateKey();
   let next = applyOpsDailyReset(state, today);
-  if (next.lastAttendanceDateKey === today) return { state: next, itemId: null };
-  if (next.attendanceClaimed >= config.starter.attendance7.length) {
-    return { state: next, itemId: null };
+  const max = config.starter.attendance7.length;
+  if (!canClaimAttendanceToday(next, max, today)) {
+    return { state: next, itemId: null, error: "오늘 선물은 이미 받았어요" };
   }
   const gift = config.starter.attendance7[next.attendanceClaimed];
-  if (!gift) return { state: next, itemId: null };
+  if (!gift) return { state: next, itemId: null, error: "받을 선물이 없어요" };
   next = {
     ...next,
     attendanceClaimed: next.attendanceClaimed + 1,
@@ -231,4 +257,51 @@ export async function claimAttendanceIfNeeded(
   };
   await saveOpsState(next);
   return { state: next, itemId: gift.itemId };
+}
+
+/** @deprecated use claimAttendanceGift — kept as no-op so boot doesn't auto-grant */
+export async function claimAttendanceIfNeeded(
+  state: OpsState,
+): Promise<{ state: OpsState; itemId: string | null }> {
+  return { state, itemId: null };
+}
+
+export async function convertAllDuplicates(
+  state: OpsState,
+): Promise<{ state: OpsState; gained: number; converted: number; owned: DexOwnedMap } | { error: string }> {
+  const config = await loadOpsConfig();
+  const catalog = await loadDexCatalog();
+  let owned = await loadDexOwned();
+  let gained = 0;
+  let converted = 0;
+  const nextOwned: DexOwnedMap = { ...owned };
+  for (const card of catalog.cards) {
+    const record = nextOwned[card.id];
+    if (!record || record.count <= 1) continue;
+    const extras = record.count - 1;
+    gained += dupPawForCard(card, config.economy) * extras;
+    converted += extras;
+    nextOwned[card.id] = { ...record, count: 1 };
+  }
+  if (converted <= 0) return { error: "바꿀 중복 카드가 없어요" };
+  owned = nextOwned;
+  await saveDexOwned(owned);
+  const next = { ...state, pawBalance: state.pawBalance + gained };
+  await saveOpsState(next);
+  return { state: next, gained, converted, owned };
+}
+
+export async function collectAllRewards(
+  state: OpsState,
+): Promise<{ state: OpsState; count: number }> {
+  const pending = state.rewardInbox.filter((item) => !item.collected);
+  if (!pending.length) return { state, count: 0 };
+  const next: OpsState = {
+    ...state,
+    rewardInbox: state.rewardInbox.map((item) =>
+      item.collected ? item : { ...item, collected: true },
+    ),
+  };
+  await saveOpsState(next);
+  return { state: next, count: pending.length };
 }

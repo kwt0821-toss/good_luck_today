@@ -985,7 +985,27 @@
   gap: 2px;
 }
 
-.main-menu-btn span {
+.main-menu-icon-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+}
+
+.main-menu-dot {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff5a5f;
+  box-shadow: 0 0 0 2px #1a1731;
+  pointer-events: none;
+}
+
+.main-menu-btn > span:last-child {
   /* Keep the label clear of the draw-status chip border below. */
   margin-top: -2px;
   transform: translateY(-3px);

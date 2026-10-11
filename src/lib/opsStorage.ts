@@ -98,6 +98,20 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         ? parseStringArray(parsed.unlockedRoomIds)
         : fallback.unlockedRoomIds,
       pendingDraw: null,
+      rewardInbox: Array.isArray(parsed.rewardInbox)
+        ? parsed.rewardInbox
+            .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+            .map((item) => ({
+              id: typeof item.id === "string" ? item.id : "",
+              label: typeof item.label === "string" ? item.label : "",
+              paw: typeof item.paw === "number" ? item.paw : 0,
+              toss: typeof item.toss === "number" ? item.toss : 0,
+              collected: Boolean(item.collected),
+            }))
+            .filter((item) => item.id)
+        : fallback.rewardInbox,
+      lastSeenNoticeId:
+        typeof parsed.lastSeenNoticeId === "string" ? parsed.lastSeenNoticeId : "",
     };
   } catch {
     return fallback;
