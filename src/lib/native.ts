@@ -31,7 +31,12 @@ export async function configureNavigationBar(options: {
 
 export async function haptic(type: "tap" | "success" | "softMedium" = "tap"): Promise<void> {
   try {
-    await Device.triggerHaptic({ type });
+    await Promise.race([
+      Device.triggerHaptic({ type }),
+      new Promise<void>((resolve) => {
+        window.setTimeout(resolve, 120);
+      }),
+    ]);
   } catch {
     // 웹 미리보기에서는 햅틱을 건너뛰어요.
   }

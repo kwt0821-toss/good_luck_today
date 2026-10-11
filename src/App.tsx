@@ -12,12 +12,22 @@ import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { ResultScreen } from "./screens/ResultScreen";
 import { RoomScreen } from "./screens/RoomScreen";
+import { StubScreen } from "./screens/StubScreen";
 import type { AdKind, DrawPurpose, Screen, UserState } from "./types";
 import "./App.css";
 
+function initialScreen(): Screen {
+  if (typeof window === "undefined") return { name: "home" };
+  const name = new URLSearchParams(window.location.search).get("screen");
+  if (name === "collection" || name === "room" || name === "menu" || name === "draw") {
+    return { name };
+  }
+  return { name: "home" };
+}
+
 function App() {
   const [user, setUser] = useState<UserState>(createDefaultUser);
-  const [screen, setScreen] = useState<Screen>({ name: "home" });
+  const [screen, setScreen] = useState<Screen>(initialScreen);
   const [rerollOpen, setRerollOpen] = useState(false);
   const [ad, setAd] = useState<{ kind: AdKind; purpose: DrawPurpose } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -26,6 +36,7 @@ function App() {
   const today = toKstDateKey();
   const drawnToday = hasDrawnToday(user, today);
   const rerollsLeft = remainingRerolls(user, today);
+  const remainingDraws = drawnToday ? rerollsLeft : 1;
   const todayCat = useMemo(
     () => (user.lastResult ? (getCatById(user.lastResult.catId) ?? null) : null),
     [user.lastResult],
@@ -103,6 +114,22 @@ function App() {
 
   return (
     <>
+      {screen.name === "menu" ? (
+        <StubScreen
+          title="메뉴"
+          body="메뉴 화면은 곧 연결될 예정이에요."
+          onBack={() => setScreen({ name: "home" })}
+        />
+      ) : null}
+
+      {screen.name === "draw" ? (
+        <StubScreen
+          title="오늘의 카드"
+          body="카드 뽑기 화면은 곧 연결될 예정이에요."
+          onBack={() => setScreen({ name: "home" })}
+        />
+      ) : null}
+
       {screen.name === "collection" ? (
         <CollectionScreen user={user} onBack={() => setScreen({ name: "home" })} />
       ) : null}
@@ -141,15 +168,9 @@ function App() {
 
       {screen.name === "home" ? (
         <HomeScreen
-          pinkJellyBalance={user.pinkJellyBalance}
-          hasDrawnToday={drawnToday}
-          remainingRerolls={rerollsLeft}
-          todayCat={todayCat}
-          lastResult={user.lastResult}
-          onDraw={() => startDraw("daily")}
-          onOpenResult={() => {
-            if (user.lastResult) setScreen({ name: "result" });
-          }}
+          remainingDraws={remainingDraws}
+          onDraw={() => setScreen({ name: "draw" })}
+          onOpenMenu={() => setScreen({ name: "menu" })}
           onOpenCollection={() => setScreen({ name: "collection" })}
           onOpenRoom={() => setScreen({ name: "room" })}
         />

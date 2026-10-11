@@ -1,0 +1,316 @@
+{
+ "_placeholders": "price (all values), ownedDefault for locked items, footprints of sofa/scratcher/bookshelf/tent, wall slots, Korean names of window/wallpaper/floor, frame art are PLACEHOLDERS",
+ "categories": [
+  "가구",
+  "소품",
+  "벽지",
+  "바닥",
+  "카드액자"
+ ],
+ "footprintNote": "[w,h] = tiles along col axis × row axis at rotation 0; rotate swaps to [h,w] and mirrors the sprite",
+ "imageNote": "image = world sprite at 3x world px (draw at sprite size × screen.ptPerWorldPx); tileImage = drawer icon SVG (fit in 56×58 pt). anchorOffsetWorldPx = sprite top-left minus footprint centre (world px).",
+ "items": [
+  {
+   "id": "sofa",
+   "nameKo": "소파",
+   "category": "가구",
+   "footprint": [
+    2,
+    1
+   ],
+   "placement": "floor",
+   "price": 800,
+   "ownedDefault": false,
+   "image": null,
+   "tileImage": "items/tiles/tile-sofa.svg",
+   "_note": "world sprite TODO (only drawer tile exists); footprint placeholder"
+  },
+  {
+   "id": "cattower",
+   "nameKo": "캣타워",
+   "category": "가구",
+   "footprint": [
+    1,
+    1
+   ],
+   "placement": "floor",
+   "price": 300,
+   "ownedDefault": true,
+   "tileImage": "items/tiles/tile-cattower.svg",
+   "image": "items/cattower@3x.webp",
+   "imagePng": "items/cattower@3x.png",
+   "spriteWorldPx": [
+    181,
+    263
+   ],
+   "anchorOffsetWorldPx": [
+    -92.0,
+    -245.0
+   ]
+  },
+  {
+   "id": "catbed",
+   "nameKo": "쿠션 침대",
+   "category": "가구",
+   "footprint": [
+    2,
+    2
+   ],
+   "placement": "floor",
+   "price": 300,
+   "ownedDefault": true,
+   "tileImage": "items/tiles/tile-catbed.svg",
+   "_note": "sprite includes the sleeping cat; for the live cat, see room-spec (breathing reuse)",
+   "image": "items/catbed@3x.webp",
+   "imagePng": "items/catbed@3x.png",
+   "spriteWorldPx": [
+    266,
+    218
+   ],
+   "anchorOffsetWorldPx": [
+    -129.5,
+    -162.8
+   ]
+  },
+  {
+   "id": "floorlamp",
+   "nameKo": "플로어 램프",
+   "category": "가구",
+   "footprint": [
+    1,
+    1
+   ],
+   "placement": "floor",
+   "price": 250,
+   "ownedDefault": true,
+   "tileImage": "items/tiles/tile-floorlamp.svg",
+   "glow": "world/lamp-glow-additive.webp",
+   "image": "items/floorlamp@3x.webp",
+   "imagePng": "items/floorlamp@3x.png",
+   "spriteWorldPx": [
+    120,
+    328
+   ],
+   "anchorOffsetWorldPx": [
+    -64.0,
+    -305.0
+   ]
+  },
+  {
+   "id": "cabinet",
+   "nameKo": "수납장",
+   "category": "가구",
+   "footprint": [
+    2,
+    1
+   ],
+   "placement": "floor",
+   "price": 350,
+   "ownedDefault": true,
+   "tileImage": "items/tiles/tile-cabinet.svg",
+   "_note": "sprite has fishbowl + moon lamp baked on top",
+   "image": "items/cabinet@3x.webp",
+   "imagePng": "items/cabinet@3x.png",
+   "spriteWorldPx": [
+    266,
+    286
+   ],
+   "anchorOffsetWorldPx": [
+    -135.0,
+    -195.0
+   ]
+  },
+  {
+   "id": "scratcher",
+   "nameKo": "스크래처",
+   "category": "가구",
+   "footprint": [
+    2,
+    1
+   ],
+   "placement": "floor",
+   "price": 200,
+   "ownedDefault": true,
+   "image": null,
+   "tileImage": "items/tiles/tile-scratcher.svg",
+   "_note": "owned but no world sprite yet (mockup drawer shows 배치 중 though it is not in the room — treat as 보유 in default layout)"
+  },
+  {
+   "id": "bookshelf",
+   "nameKo": "책장",
+   "category": "가구",
+   "footprint": [
+    1,
+    1
+   ],
+   "placement": "floor",
+   "price": 450,
+   "ownedDefault": false,
+   "image": null,
+   "tileImage": "items/tiles/tile-bookshelf.svg",
+   "_note": "world sprite TODO"
+  },
+  {
+   "id": "tent",
+   "nameKo": "숨숨집",
+   "category": "가구",
+   "footprint": [
+    2,
+    2
+   ],
+   "placement": "floor",
+   "price": 600,
+   "ownedDefault": false,
+   "image": null,
+   "tileImage": "items/tiles/tile-tent.svg",
+   "_note": "world sprite TODO"
+  },
+  {
+   "id": "plant",
+   "nameKo": "화분",
+   "category": "소품",
+   "footprint": [
+    1,
+    1
+   ],
+   "placement": "floor",
+   "price": 120,
+   "ownedDefault": true,
+   "tileImage": "items/tiles/tile-plant.svg",
+   "image": "items/plant@3x.webp",
+   "imagePng": "items/plant@3x.png",
+   "spriteWorldPx": [
+    142,
+    234
+   ],
+   "anchorOffsetWorldPx": [
+    -73.0,
+    -225.0
+   ]
+  },
+  {
+   "id": "yarn",
+   "nameKo": "털실 공",
+   "category": "소품",
+   "footprint": [
+    1,
+    1
+   ],
+   "placement": "floor",
+   "price": 50,
+   "ownedDefault": true,
+   "tileImage": "items/tiles/tile-yarn.svg",
+   "stackable": true,
+   "_note": "tiny prop: may share a tile with nothing else; vector alt items/yarn-vector.svg",
+   "image": "items/yarn@3x.webp",
+   "imagePng": "items/yarn@3x.png",
+   "spriteWorldPx": [
+    49,
+    50
+   ],
+   "anchorOffsetWorldPx": [
+    -23.0,
+    -33.0
+   ]
+  },
+  {
+   "id": "rug",
+   "nameKo": "러그",
+   "category": "소품",
+   "footprint": [
+    3,
+    3
+   ],
+   "placement": "floor",
+   "layer": "decal",
+   "price": 200,
+   "ownedDefault": true,
+   "tileImage": "items/tiles/tile-rug.svg",
+   "_note": "decal: drawn under shadows/items, does NOT block tiles",
+   "image": "items/rug@3x.webp",
+   "imagePng": "items/rug@3x.png",
+   "spriteWorldPx": [
+    338,
+    172
+   ],
+   "anchorOffsetWorldPx": [
+    -169.0,
+    -86.0
+   ]
+  },
+  {
+   "id": "window",
+   "nameKo": "달밤 창문",
+   "category": "소품",
+   "footprint": [
+    3,
+    1
+   ],
+   "placement": "wall",
+   "wall": "L",
+   "price": 300,
+   "ownedDefault": true,
+   "tileImage": null,
+   "_note": "tile icon TODO; wall slot approx.",
+   "image": "items/window@3x.webp",
+   "imagePng": "items/window@3x.png",
+   "spriteWorldPx": [
+    230,
+    341
+   ],
+   "wallPosWorldPx": [
+    1699,
+    549
+   ]
+  },
+  {
+   "id": "frames",
+   "nameKo": "카드 액자 세트",
+   "category": "카드액자",
+   "footprint": [
+    3,
+    1
+   ],
+   "placement": "wall",
+   "wall": "R",
+   "price": 0,
+   "ownedDefault": true,
+   "tileImage": "items/tiles/tile-frame.svg",
+   "_note": "frames should show the user's collected cards (replace the art in code); current sprite shows concept art",
+   "image": "items/frames@3x.webp",
+   "imagePng": "items/frames@3x.png",
+   "spriteWorldPx": [
+    309,
+    246
+   ],
+   "wallPosWorldPx": [
+    1968,
+    594
+   ]
+  },
+  {
+   "id": "wallpaper-plum-sparkle",
+   "nameKo": "별빛 자두 벽지",
+   "category": "벽지",
+   "footprint": null,
+   "placement": "wallpaper",
+   "price": 0,
+   "ownedDefault": true,
+   "image": "world/room-walls.svg",
+   "tileImage": null,
+   "_note": "default wallpaper; others TODO"
+  },
+  {
+   "id": "floor-honey-check",
+   "nameKo": "꿀빛 원목 바닥",
+   "category": "바닥",
+   "footprint": null,
+   "placement": "floor-skin",
+   "price": 0,
+   "ownedDefault": true,
+   "image": "world/room-floor.svg",
+   "tileImage": null,
+   "_note": "default floor; others TODO"
+  }
+ ]
+}

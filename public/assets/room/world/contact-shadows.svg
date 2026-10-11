@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<defs><filter id="bl" x="-2" y="-2" width="5" height="5"><feGaussianBlur stdDeviation="2.6" /></filter>
+<filter id="ao" x="-.2" y="-.2" width="1.4" height="1.4"><feGaussianBlur stdDeviation="7" /></filter>
+<filter id="sh" x="-.5" y="-.5" width="2" height="2"><feGaussianBlur stdDeviation="3.2" /></filter>
+<clipPath id="fl"><polygon points="640.00,300.00 848.00,404.00 640.00,508.00 432.00,404.00" /></clipPath></defs>
+<g id="shadows"><ellipse cx="731.0" cy="360.5" rx="48.4" ry="24.2" fill="#2A1530" opacity=".32" filter="url(#sh)" /><ellipse cx="536.0" cy="367.0" rx="32.2" ry="16.1" fill="#2A1530" opacity=".32" filter="url(#sh)" /><ellipse cx="796.0" cy="393.0" rx="15.0" ry="6.0" fill="#2A1530" opacity=".32" filter="url(#sh)" /><ellipse cx="458.0" cy="406.0" rx="32.2" ry="16.1" fill="#2A1530" opacity=".32" filter="url(#sh)" /><ellipse cx="640.0" cy="406.0" rx="64.5" ry="32.2" fill="#2A1530" opacity=".32" filter="url(#sh)" /><ellipse cx="640.0" cy="445.0" rx="9.0" ry="4.0" fill="#2A1530" opacity=".32" filter="url(#sh)" /></g>
+
+</svg>
