@@ -1,5 +1,5 @@
 {
- "_version": "economy-1.0 (2026-10-11)",
+ "_version": "economy-1.1 (2026-10-11)",
  "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
  "currency": {
   "paw": {
@@ -55,7 +55,7 @@
     "toss": 100
    }
   },
-  "attendance": "starter.json → attendance7"
+  "attendance": "starter.json → attendance"
  },
  "tossPayout": {
   "maxPerUserKRW": 417,
@@ -214,36 +214,10 @@
   "simulation": "activeUser(광고 8회/일, 뽑기 4회/일, 하루 최대 3개 구매) 중앙값: Lv5 12일차, Lv8 28일차"
  },
  "shop": {
-  "tierPriceRange": {
-   "small": [
-    80,
-    150
-   ],
-   "normal": [
-    200,
-    400
-   ],
-   "large": [
-    500,
-    900
-   ],
-   "wall": [
-    100,
-    250
-   ],
-   "tile": [
-    200,
-    400
-   ],
-   "legend": [
-    1500,
-    null
-   ]
-  },
-  "tilesBuyOnce": true,
-  "tilesPaintUnlimited": true,
-  "legendItemsRequire": "레전드 카드 보유 (requireCards 목록) — 현재 카탈로그엔 해당 아이템 없음",
-  "prices": "prices.json"
+  "excludeSources": [
+   "attendance"
+  ],
+  "note": "attendanceOnly 아이템은 상점·구매·서랍 기본지급·방 해금 선물·다른 보상 풀에서 제외. 출석 API만 지급."
  },
  "rooms": [
   {
@@ -346,5 +320,14 @@
   "prices": "prices.json",
   "starter": "starter.json",
   "tutorial": "tutorial.json"
+ },
+ "tickets": {
+  "rateUpTicket": {
+   "nameKo": "확률업 이용권",
+   "grantsRateUpWithoutAd": true,
+   "separateDailyCap": true,
+   "maxHold": 3,
+   "note": "광고 없이 확률업 1회. 하루 rateUp 한도와 별개. 보유 상한 maxHold."
+  }
  }
 }

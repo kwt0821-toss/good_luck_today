@@ -1,5 +1,5 @@
 {
- "_version": "prices-1.0",
+ "_version": "prices-1.1",
  "_note": "모든 방 아이템·타일 가격/코지 포인트. id는 room-assets-v6/items.json, room-assets-themes/items-themes.json 기준. price 0 = 방 기본 타일(방 해금 시 지급).",
  "tiers": {
   "small": {
@@ -59,7 +59,7 @@
  "items": [
   {
    "id": "cattower",
-   "source": "room-assets-v6",
+   "source": "attendance",
    "room": "moon_bedroom",
    "nameKo": "캣타워",
    "category": "가구",
@@ -301,7 +301,7 @@
   },
   {
    "id": "fishbowl",
-   "source": "room-assets-v6",
+   "source": "attendance",
    "room": "moon_bedroom",
    "nameKo": "금붕어 어항",
    "category": "소품",
@@ -416,7 +416,7 @@
   },
   {
    "id": "globe",
-   "source": "room-assets-v6",
+   "source": "attendance",
    "room": "moon_bedroom",
    "nameKo": "지구본",
    "category": "소품",
@@ -431,7 +431,7 @@
   },
   {
    "id": "catcactus",
-   "source": "room-assets-v6",
+   "source": "attendance",
    "room": "moon_bedroom",
    "nameKo": "냥이 선인장",
    "category": "소품",
@@ -472,7 +472,7 @@
   },
   {
    "id": "starlight",
-   "source": "room-assets-v6",
+   "source": "attendance",
    "room": "moon_bedroom",
    "nameKo": "별 수면등",
    "category": "소품",
@@ -598,7 +598,7 @@
   },
   {
    "id": "bunting",
-   "source": "room-assets-v6",
+   "source": "attendance",
    "room": "moon_bedroom",
    "nameKo": "발바닥 가랜드",
    "category": "벽 꾸미기",
@@ -704,7 +704,7 @@
   },
   {
    "id": "calendar",
-   "source": "room-assets-v6",
+   "source": "attendance",
    "room": "moon_bedroom",
    "nameKo": "발바닥 달력",
    "category": "벽 꾸미기",
@@ -2001,5 +2001,17 @@
    "tierKo": "벽지/바닥",
    "flags": []
   }
- ]
+ ],
+ "attendanceOnly": {
+  "ids": [
+   "catcactus",
+   "calendar",
+   "starlight",
+   "bunting",
+   "globe",
+   "fishbowl",
+   "cattower"
+  ],
+  "note": "source==attendance. 상점·구매 불가, 출석 API만 지급."
+ }
 }

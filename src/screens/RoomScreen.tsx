@@ -562,6 +562,10 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
 
   const pickDrawerItem = (item: RoomItem) => {
     if ((state.owned[item.id] ?? 0) < 1) {
+      if (item.attendanceOnly) {
+        showToast("출석 체크에서만 받을 수 있어요");
+        return;
+      }
       setBuyItem(item);
       return;
     }
@@ -624,6 +628,11 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   };
 
   const buy = (item: RoomItem) => {
+    if (item.attendanceOnly) {
+      showToast("출석 한정 아이템은 구매할 수 없어요");
+      setBuyItem(null);
+      return;
+    }
     if (state.points < item.price) return;
     const nextPoints = state.points - item.price;
     persist({

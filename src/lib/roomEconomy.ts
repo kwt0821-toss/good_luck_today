@@ -5,13 +5,21 @@ import type { RoomItem, RoomSaveState } from "./roomTypes";
 /** Overlay prices/cozy from prices.json onto catalog items. */
 export async function applyOpsPrices(items: RoomItem[]): Promise<RoomItem[]> {
   const config = await loadOpsConfig();
+  const attendanceIds = new Set(config.prices.attendanceOnly?.ids ?? []);
+  const exclude = new Set(config.economy.shop?.excludeSources ?? ["attendance"]);
   return items.map((item) => {
     const priced = priceById(config.prices, item.id);
-    if (!priced) return item;
+    const attendanceOnly =
+      item.attendanceOnly ||
+      attendanceIds.has(item.id) ||
+      Boolean(priced?.flags?.includes("attendance")) ||
+      (priced?.source != null && exclude.has(priced.source));
+    if (!priced) return { ...item, attendanceOnly, ownedDefault: attendanceOnly ? false : item.ownedDefault };
     return {
       ...item,
       price: priced.price,
-      // keep name from catalog; economy drives cost/cozy only
+      attendanceOnly,
+      ownedDefault: attendanceOnly ? false : item.ownedDefault,
     };
   });
 }

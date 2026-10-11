@@ -5,7 +5,13 @@ import type { DexCard, DexOwnedMap } from "./dexTypes";
 import { groupBreedRows, cardsOfType } from "./dexCatalog";
 import { dupPawForCard } from "./drawRates";
 import { isWeekendDoublePaw, loadOpsConfig } from "./opsConfig";
-import { applyOpsDailyReset, remainingPawAds } from "./opsState";
+import {
+  applyOpsDailyReset,
+  consumeRateUpTicket,
+  remainingPawAds,
+  remainingRateUpAdSlots,
+  remainingTotalDraws,
+} from "./opsState";
 import { saveOpsState } from "./opsStorage";
 import type { ConfirmDrawResult, DrawReservation, OpsState } from "./opsTypes";
 import { grantTossOnce } from "./mockToss";
@@ -124,8 +130,10 @@ export async function confirmDrawAfterAd(
       normalDrawsUsed: next.normalDrawsUsed + 1,
       tutorialFirstDrawUsed: true,
     };
-  } else {
+  } else if (remainingRateUpAdSlots(next, config) > 0) {
     next = { ...next, rateUpUsed: next.rateUpUsed + 1 };
+  } else {
+    next = consumeRateUpTicket(next);
   }
 
   let toast: string | null = null;
@@ -134,13 +142,7 @@ export async function confirmDrawAfterAd(
     isNew,
     dupPaw: isNew ? 0 : dupPawForCard(card, config.economy),
     confirmed: true,
-    remainingAfter: Math.max(
-      0,
-      config.economy.draws.normalPerDay +
-        config.economy.draws.rateUpPerDay -
-        next.normalDrawsUsed -
-        next.rateUpUsed,
-    ),
+    remainingAfter: Math.max(0, remainingTotalDraws(next, config)),
   };
 
   if (isNew) {
@@ -229,37 +231,25 @@ export async function convertDuplicate(
   return { state: next, gained, owned: nextOwned };
 }
 
-export function canClaimAttendanceToday(state: OpsState, maxDays: number, today = toKstDateKey()): boolean {
-  if (state.attendanceClaimed >= maxDays) return false;
-  return state.lastAttendanceDateKey !== today;
-}
+export { canClaimAttendanceToday } from "./attendanceServer";
 
-/** Manual claim from the attendance sheet (not auto on boot). */
+/** Manual claim — delegates to server-only attendance API. */
 export async function claimAttendanceGift(
   state: OpsState,
-): Promise<{ state: OpsState; itemId: string | null; error?: string }> {
-  const config = await loadOpsConfig();
+): Promise<{ state: OpsState; itemId: string | null; error?: string; response?: import("./attendanceTypes").AttendanceClaimResponse }> {
+  const { claimAttendanceOnServer } = await import("./attendanceServer");
   const today = toKstDateKey();
-  let next = applyOpsDailyReset(state, today);
-  const max = config.starter.attendance7.length;
-  if (!canClaimAttendanceToday(next, max, today)) {
-    return { state: next, itemId: null, error: "오늘 선물은 이미 받았어요" };
+  const next = applyOpsDailyReset(state, today);
+  const result = await claimAttendanceOnServer(next);
+  if (result.response.error) {
+    return { state: result.state, itemId: null, error: result.response.error, response: result.response };
   }
-  const gift = config.starter.attendance7[next.attendanceClaimed];
-  if (!gift) return { state: next, itemId: null, error: "받을 선물이 없어요" };
-  next = {
-    ...next,
-    attendanceClaimed: next.attendanceClaimed + 1,
-    lastAttendanceDateKey: today,
-    ownedItemIds: next.ownedItemIds.includes(gift.itemId)
-      ? next.ownedItemIds
-      : [...next.ownedItemIds, gift.itemId],
-  };
-  await saveOpsState(next);
-  return { state: next, itemId: gift.itemId };
+  const itemId =
+    result.response.rewards.find((reward) => reward.kind === "item")?.itemId ?? null;
+  return { state: result.state, itemId, response: result.response };
 }
 
-/** @deprecated use claimAttendanceGift — kept as no-op so boot doesn't auto-grant */
+/** @deprecated attendance is never auto-granted on boot */
 export async function claimAttendanceIfNeeded(
   state: OpsState,
 ): Promise<{ state: OpsState; itemId: string | null }> {

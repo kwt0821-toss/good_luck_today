@@ -42,6 +42,7 @@ export type RoomItem = {
   shadow?: string | null;
   hero?: boolean;
   theme?: RoomThemeId | string;
+  attendanceOnly?: boolean;
 };
 
 export type RoomCatalog = {

@@ -1,8 +1,8 @@
-import { toKstDateKey } from "./date";
+import { getAttendanceStatus } from "./attendanceServer";
+import type { AttendanceStatusResponse } from "./attendanceTypes";
 import { loadDexCatalog } from "./dexCatalog";
 import { loadDexOwned } from "./dexCollection";
 import { isWeekendDoublePaw, loadOpsConfig, computeOwnedCozy, cozyLevelFromPoints } from "./opsConfig";
-import { canClaimAttendanceToday } from "./opsRewards";
 import { remainingPawAds } from "./opsState";
 import type { OpsConfig, OpsState } from "./opsTypes";
 import { loadMenuConfig, menuAsset } from "./menuConfig";
@@ -18,12 +18,7 @@ export type MenuViewModel = {
   cozyPoints: number;
   sections: Array<{ id: string; label: string; rows: MenuRowView[] }>;
   menuIconDot: boolean;
-  attendance: {
-    claimedDays: number;
-    canClaimToday: boolean;
-    todayItemId: string | null;
-    gifts: Array<{ day: number; itemId: string; nameKo: string; thumb: string; claimed: boolean; isToday: boolean }>;
-  };
+  attendance: AttendanceStatusResponse;
   pawAds: { remaining: number; max: number; weekendDouble: boolean };
   exchange: { duplicateCount: number; totalPaw: number };
   rewards: { unclaimedCount: number; items: OpsState["rewardInbox"] };
@@ -37,34 +32,18 @@ function ratesHighlightSum(menu: MenuConfig, config: OpsConfig): number {
 }
 
 export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> {
-  const [menu, config, catalog, owned] = await Promise.all([
+  const [menu, config, catalog, owned, attendancePack] = await Promise.all([
     loadMenuConfig(),
     loadOpsConfig(),
     loadDexCatalog(),
     loadDexOwned(),
+    getAttendanceStatus(ops),
   ]);
-  const today = toKstDateKey();
+  const attendance = attendancePack.status;
   const dexOwned = Object.values(owned).filter((r) => r.count > 0).length;
   const dexTotal = catalog.total || 107;
   const cozyPoints = computeOwnedCozy(config.prices, ops.ownedItemIds);
   const cozyLevel = cozyLevelFromPoints(config.economy, cozyPoints);
-
-  const claimedDays = ops.attendanceClaimed;
-  const maxAttend = config.starter.attendance7.length;
-  const canClaim = canClaimAttendanceToday(ops, maxAttend, today);
-  const todayGift = canClaim ? config.starter.attendance7[claimedDays] : null;
-
-  const gifts = config.starter.attendance7.map((gift, index) => {
-    const price = config.prices.items.find((item) => item.id === gift.itemId);
-    return {
-      day: gift.day,
-      itemId: gift.itemId,
-      nameKo: price?.nameKo ?? gift.itemId,
-      thumb: menuAsset(`gift-${gift.itemId}.png`),
-      claimed: index < claimedDays,
-      isToday: canClaim && index === claimedDays,
-    };
-  });
 
   let duplicateCount = 0;
   let exchangeTotal = 0;
@@ -99,18 +78,15 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     if (id === "invite") enabled = friendEnabled;
     if (def.required) enabled = true;
 
-    let hidden = false;
-    if (id === "attendance" && claimedDays >= maxAttend) hidden = true;
-
     let meta = "";
     let badge: MenuBadge = { type: "none" };
     let rowDisabled = !enabled;
 
     if (id === "attendance") {
-      meta = canClaim
-        ? `${claimedDays + 1}일째 · 선물 도착`
-        : `${claimedDays}/7 · 내일 또 만나요`;
-      if (canClaim && claimedDays < maxAttend) badge = { type: "dot" };
+      meta = attendance.canClaimToday
+        ? `${Math.max(1, attendance.attendanceDays + 1)}일째 · 선물 도착`
+        : `누적 ${attendance.attendanceDays}일 · 내일 또 만나요`;
+      if (attendance.canClaimToday) badge = { type: "dot" };
     } else if (id === "points") {
       meta =
         pawRemaining > 0
@@ -149,14 +125,13 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
       label: def.label,
       icon: menuAsset(def.icon),
       enabled: enabled && !rowDisabled,
-      hidden,
+      hidden: false,
       meta,
       badge: enabled ? badge : { type: "pill", text: def.disabledPill ?? "준비 중", tone: "muted" },
       open: def.open ?? "",
       chevron: enabled && !rowDisabled,
     };
 
-    // Disabled-but-visible rows (invite / points empty) keep chevron rules from spec
     if (!enabled) {
       rowViews[id].enabled = false;
       rowViews[id].chevron = false;
@@ -187,16 +162,20 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     cozyPoints,
     sections,
     menuIconDot,
-    attendance: {
-      claimedDays,
-      canClaimToday: canClaim,
-      todayItemId: todayGift?.itemId ?? null,
-      gifts,
-    },
+    attendance,
     pawAds: { remaining: pawRemaining, max: pawMax, weekendDouble },
     exchange: { duplicateCount, totalPaw: exchangeTotal },
     rewards: { unclaimedCount: unclaimed.length, items: ops.rewardInbox },
     ratesMetaPercent: highlightPct,
     latestNotice,
   };
+}
+
+export function daysToMilestone(attendance: AttendanceStatusResponse): number | null {
+  if (!attendance.nextMilestone) return null;
+  return Math.max(0, attendance.nextMilestone.days - attendance.attendanceDays);
+}
+
+export function attendanceSheetState(attendance: AttendanceStatusResponse): "firstWeek" | "weeklyCycle" {
+  return attendance.phase === "weeklyCycle" ? "weeklyCycle" : "firstWeek";
 }

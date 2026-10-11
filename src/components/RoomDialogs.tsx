@@ -53,7 +53,10 @@ export function RoomBuySheet({
         <div className="lucky-buy-preview">
           {item.tileImage ? <img src={roomAsset(item.tileImage)} alt="" /> : null}
         </div>
-        <h3>{item.nameKo}</h3>
+        <h3>
+          {item.nameKo}
+          {item.attendanceOnly ? <span className="lucky-attend-tag">출석 한정</span> : null}
+        </h3>
         <p className="lucky-buy-price">
           <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />
           {item.price.toLocaleString("en-US")}

@@ -19,6 +19,7 @@ import {
   remainingPawAds,
   remainingRateUpDraws,
   remainingTotalDraws,
+  willUseRateUpTicket,
 } from "./lib/opsState";
 import { loadOpsState, saveOpsState } from "./lib/opsStorage";
 import type { DrawReservation, FeatureIntro, OpsConfig, OpsState, TutorialStep } from "./lib/opsTypes";
@@ -192,16 +193,17 @@ export default function App() {
         if (quality !== "none") setRevealReady(true);
       });
 
-      if (slot === "tutorial") {
+      if (slot === "tutorial" || (slot === "rateUp" && willUseRateUpTicket(ops, config))) {
         const confirmed = await confirmDrawAfterAd(reserved.state, reserved.reservation.drawId);
         if ("error" in confirmed) {
           setLocalToast(confirmed.error);
           return;
         }
-        await persistOps({
-          ...confirmed.state,
-          tutorialStep: Math.max(confirmed.state.tutorialStep, 2),
-        });
+        await persistOps(
+          slot === "tutorial"
+            ? { ...confirmed.state, tutorialStep: Math.max(confirmed.state.tutorialStep, 2) }
+            : confirmed.state,
+        );
         setReservation(confirmed.reservation);
         setRevealToast(confirmed.toast);
         setRevealReady(true);

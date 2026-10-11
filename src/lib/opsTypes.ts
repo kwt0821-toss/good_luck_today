@@ -29,6 +29,20 @@ export type OpsEconomy = {
       legend: { paw: number; toss: number };
       fullDex: { paw: number; toss: number };
     };
+    attendance?: string;
+  };
+  tickets?: {
+    rateUpTicket: {
+      nameKo: string;
+      grantsRateUpWithoutAd: boolean;
+      separateDailyCap: boolean;
+      maxHold: number;
+      note?: string;
+    };
+  };
+  shop?: {
+    excludeSources: string[];
+    note?: string;
   };
   tossPayout: {
     maxPerUserKRW: number;
@@ -91,6 +105,7 @@ export type PriceItem = {
   price: number;
   cozy: number;
   flags?: string[];
+  source?: string;
   room?: string;
   category?: string;
   placement?: string;
@@ -100,6 +115,23 @@ export type OpsPrices = {
   tiers: Record<PriceTier, { nameKo: string; cozy: number; range: (number | null)[] }>;
   items: PriceItem[];
   limitedItems: string[];
+  attendanceOnly?: { ids: string[]; note?: string };
+};
+
+export type AttendanceConfig = {
+  noReset: boolean;
+  rule?: string;
+  firstWeek: Array<{ day: number; itemId: string; tier: string }>;
+  weeklyCycle: {
+    days: Array<{ day: number; paw: number }>;
+    day7: {
+      mode: "alternate" | string;
+      itemBox: { pool: string[]; fallbackWhenAllOwned: { paw: number } };
+      rateUpTicket: boolean;
+      note?: string;
+    };
+  };
+  milestones: Array<{ days: number; itemId: string; badgeId: string; labelKo?: string }>;
 };
 
 export type OpsStarter = {
@@ -111,7 +143,9 @@ export type OpsStarter = {
     placed: Array<Record<string, unknown>>;
   };
   drawer: string[];
-  attendance7: Array<{ day: number; itemId: string; tier: string }>;
+  /** @deprecated use attendance */
+  attendance7?: Array<{ day: number; itemId: string; tier: string }>;
+  attendance?: AttendanceConfig;
 };
 
 export type TutorialStep = {
@@ -202,9 +236,16 @@ export type OpsState = {
   tutorialStep: number;
   tutorialInterruptions: number;
   installDateKey: string;
-  /** How many attendance gifts claimed (0..7) */
+  /** Cumulative attendance days (never resets) */
+  attendanceDays: number;
+  lastAttendDateKST: string;
+  /** @deprecated migrated from attendanceDays */
   attendanceClaimed: number;
+  /** @deprecated use lastAttendDateKST */
   lastAttendanceDateKey: string;
+  rateUpTickets: number;
+  attendanceBadges: string[];
+  claimedMilestoneDays: number[];
   featureIntrosSeen: string[];
   /** tossUserKey+rewardId style ids already granted */
   grantedTossRewardIds: string[];

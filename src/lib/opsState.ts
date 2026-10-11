@@ -28,8 +28,13 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     tutorialStep: 1,
     tutorialInterruptions: 0,
     installDateKey: today,
+    attendanceDays: 0,
+    lastAttendDateKST: "",
     attendanceClaimed: 0,
     lastAttendanceDateKey: "",
+    rateUpTickets: 0,
+    attendanceBadges: [],
+    claimedMilestoneDays: [],
     featureIntrosSeen: [],
     grantedTossRewardIds: [],
     grantedSetRewardIds: [],
@@ -65,8 +70,22 @@ export function remainingNormalDraws(state: OpsState, config: OpsConfig): number
   return Math.max(0, config.economy.draws.normalPerDay - state.normalDrawsUsed);
 }
 
-export function remainingRateUpDraws(state: OpsState, config: OpsConfig): number {
+export function remainingRateUpAdSlots(state: OpsState, config: OpsConfig): number {
   return Math.max(0, config.economy.draws.rateUpPerDay - state.rateUpUsed);
+}
+
+export function remainingRateUpDraws(state: OpsState, config: OpsConfig): number {
+  // Tickets are separate from the daily ad cap (economy.tickets.rateUpTicket.separateDailyCap).
+  return remainingRateUpAdSlots(state, config) + Math.max(0, state.rateUpTickets);
+}
+
+export function willUseRateUpTicket(state: OpsState, config: OpsConfig): boolean {
+  return remainingRateUpAdSlots(state, config) <= 0 && state.rateUpTickets > 0;
+}
+
+export function consumeRateUpTicket(state: OpsState): OpsState {
+  if (state.rateUpTickets <= 0) return state;
+  return { ...state, rateUpTickets: state.rateUpTickets - 1 };
 }
 
 export function remainingTotalDraws(state: OpsState, config: OpsConfig): number {

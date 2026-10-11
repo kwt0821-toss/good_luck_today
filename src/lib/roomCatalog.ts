@@ -16,6 +16,7 @@ export const ROOM_BASE = "/assets/room";
 
 export function roomAsset(relative: string | null | undefined): string {
   if (!relative) return "";
+  if (relative.startsWith("/assets/")) return relative;
   return `${ROOM_BASE}/${relative.replace(/^\//, "")}`;
 }
 
@@ -349,6 +350,35 @@ function normalizeHero(raw: RawHero): RoomItem {
   };
 }
 
+type AttendanceCatalogFile = RawCatalog & {
+  basePath?: string;
+  items?: Array<RawItem & { attendanceOnly?: boolean; basePath?: string; source?: string }>;
+};
+
+function mergeAttendanceItems(base: RoomItem[], attendanceFile: AttendanceCatalogFile): RoomItem[] {
+  const byId = new Map(base.map((item) => [item.id, item]));
+  const packBase = (attendanceFile.basePath ?? "/assets/room").replace(/\/$/, "");
+  const usesRoomBase = packBase === "/assets/room" || packBase.endsWith("/room");
+  for (const raw of attendanceFile.items ?? []) {
+    const theme = raw.theme ?? "moon_bedroom";
+    const normalized = normalizeItem(raw, theme);
+    const rebase = (path: string | null) => {
+      if (!path || usesRoomBase) return path;
+      if (path.startsWith("/")) return path;
+      return `${packBase}/${path}`;
+    };
+    const item: RoomItem = {
+      ...normalized,
+      ownedDefault: false,
+      attendanceOnly: true,
+      image: rebase(normalized.image),
+      tileImage: rebase(normalized.tileImage),
+    };
+    byId.set(item.id, item);
+  }
+  return [...byId.values()];
+}
+
 export function loadRoomCatalog(): Promise<RoomCatalog> {
   if (!catalogPromise) {
     catalogPromise = Promise.all([
@@ -359,8 +389,11 @@ export function loadRoomCatalog(): Promise<RoomCatalog> {
       fetch(roomAsset("items-themes.json"))
         .then((res) => (res.ok ? (res.json() as Promise<RawCatalog>) : { items: [] }))
         .catch(() => ({ items: [] as RawItem[] })),
+      fetch("/assets/attendance-items/items-attendance.json")
+        .then((res) => (res.ok ? (res.json() as Promise<AttendanceCatalogFile>) : { items: [] }))
+        .catch(() => ({ items: [] as AttendanceCatalogFile["items"] })),
     ])
-      .then(([data, themes]) => {
+      .then(([data, themes, attendance]) => {
         setTileRules(parseTileRules(data.tileRules));
         const seen = new Set<string>();
         const merged: RoomItem[] = [];
@@ -368,7 +401,13 @@ export function loadRoomCatalog(): Promise<RoomCatalog> {
           const item = normalizeItem(raw, "moon_bedroom");
           if (seen.has(item.id)) continue;
           seen.add(item.id);
-          merged.push(item);
+          merged.push({
+            ...item,
+            attendanceOnly: Boolean((raw as { attendanceOnly?: boolean }).attendanceOnly),
+            ownedDefault: (raw as { attendanceOnly?: boolean }).attendanceOnly
+              ? false
+              : item.ownedDefault,
+          });
         }
         for (const raw of themes.items ?? []) {
           const item = normalizeItem(raw, raw.theme ?? "cat_cafe");
@@ -376,7 +415,8 @@ export function loadRoomCatalog(): Promise<RoomCatalog> {
           seen.add(item.id);
           merged.push(item);
         }
-        const items = mergeSkinItems(merged);
+        const withAttendance = mergeAttendanceItems(merged, attendance);
+        const items = mergeSkinItems(withAttendance);
         if (data.heroCat && !items.some((item) => item.id === data.heroCat?.id)) {
           items.push(normalizeHero(data.heroCat));
         }
