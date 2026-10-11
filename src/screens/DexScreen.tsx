@@ -17,6 +17,8 @@ import {
 import { loadDexOwned, markDexCardViewed } from "../lib/dexCollection";
 import { haptic, isInTossApp } from "../lib/native";
 import type { DexCard, DexCatalog, DexOwnedMap, DexTab } from "../lib/dexTypes";
+import { convertDuplicate } from "../lib/opsRewards";
+import { loadOpsState } from "../lib/opsStorage";
 import "./DexScreen.css";
 
 type DexScreenProps = {
@@ -210,6 +212,19 @@ export function DexScreen({ onBack }: DexScreenProps) {
           owned={owned}
           onClose={() => setOpenCard(null)}
           onChangeCard={setOpenCard}
+          onConvertDuplicate={(card) => {
+            void (async () => {
+              const ops = await loadOpsState();
+              const result = await convertDuplicate(ops, card);
+              if ("error" in result) {
+                showToast(result.error);
+                return;
+              }
+              setOwned(result.owned);
+              showToast(`중복 카드 → +${result.gained}포인트`);
+              void haptic("success");
+            })();
+          }}
         />
       ) : null}
 

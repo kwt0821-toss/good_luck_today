@@ -1,6 +1,14 @@
 export type Grade = "SSS" | "S" | "A" | "B" | "C";
 
-export type ScreenName = "home" | "result" | "collection" | "room" | "menu" | "draw";
+export type ScreenName =
+  | "home"
+  | "result"
+  | "collection"
+  | "room"
+  | "menu"
+  | "draw"
+  | "reveal"
+  | "rates";
 
 export type Screen =
   | { name: "home" }
@@ -8,7 +16,9 @@ export type Screen =
   | { name: "collection" }
   | { name: "room" }
   | { name: "menu" }
-  | { name: "draw" };
+  | { name: "draw" }
+  | { name: "reveal" }
+  | { name: "rates" };
 
 export interface Cat {
   id: string;

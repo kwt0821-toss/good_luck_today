@@ -137,10 +137,13 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
 
   useEffect(() => {
     void Promise.all([loadRoomCatalog(), loadRoomGrid(), loadRoomsFile()]).then(async ([catalog, gridFile, rooms]) => {
-      setItems(catalog.items);
+      const { applyOpsPrices, syncRoomSaveWithOps } = await import("../lib/roomEconomy");
+      const priced = await applyOpsPrices(catalog.items);
+      setItems(priced);
       setGrid(gridFile);
       setRoomsFile(rooms);
-      setState(await loadRoomState(catalog.items, rooms, gridFile));
+      const loaded = await loadRoomState(priced, rooms, gridFile);
+      setState(await syncRoomSaveWithOps(loaded));
     });
     void Promise.all([loadDexCatalog(), loadDexOwned()]).then(([catalog, owned]) => {
       const thumbs = catalog.cards
@@ -622,11 +625,13 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
 
   const buy = (item: RoomItem) => {
     if (state.points < item.price) return;
+    const nextPoints = state.points - item.price;
     persist({
       ...state,
-      points: state.points - item.price,
+      points: nextPoints,
       owned: { ...state.owned, [item.id]: (state.owned[item.id] ?? 0) + 1 },
     });
+    void import("../lib/roomEconomy").then(({ spendRoomPoints }) => spendRoomPoints(nextPoints));
     setBuyItem(null);
     showToast(`${item.nameKo}를 샀어요`);
   };
@@ -710,6 +715,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
           </p>
           <button
             type="button"
+            id="room-done"
             className="lucky-done"
             onClick={() => {
               persist(state);

@@ -830,6 +830,20 @@
   background: var(--cream);
 }
 
+.dex-convert-btn {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  height: 46px;
+  border: 1px solid rgba(255, 196, 138, 0.45);
+  border-radius: 14px;
+  background: rgba(255, 196, 138, 0.12);
+  color: var(--cream);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}
+
 @keyframes dex-bar {
   from {
     transform: scaleX(0);

@@ -1214,6 +1214,48 @@
   color: rgba(201, 192, 176, 0.7);
 }
 
+.main-ops-row {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1.1fr 1.1fr 0.9fr;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.main-ops-btn {
+  min-height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(243, 233, 215, 0.22);
+  background: rgba(28, 24, 48, 0.72);
+  color: #f3e9d7;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 4px;
+}
+
+.main-ops-btn em {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(243, 233, 215, 0.65);
+}
+
+.main-ops-btn:disabled {
+  opacity: 0.45;
+}
+
+.main-ops-btn.is-ghost {
+  font-weight: 600;
+  color: rgba(243, 233, 215, 0.8);
+}
+
 .main-bottom {
   display: flex;
   align-items: flex-end;

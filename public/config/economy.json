@@ -1,0 +1,350 @@
+{
+ "_version": "economy-1.0 (2026-10-11)",
+ "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
+ "currency": {
+  "paw": {
+   "nameKo": "포인트(발바닥)",
+   "startBalance": 300
+  },
+  "toss": {
+   "nameKo": "토스 포인트(원)",
+   "unit": "KRW"
+  }
+ },
+ "pawSources": {
+  "rewardedAd": {
+   "pawPerAd": 10,
+   "maxPerDay": 10,
+   "maxPawPerDay": 100,
+   "adType": "short",
+   "grantOn": "adCompleteCallback"
+  },
+  "newCardFirstGet": {
+   "paw": 20,
+   "toss": 1
+  },
+  "duplicateConvert": {
+   "common_1to2star": 10,
+   "rare_3to5star": 30,
+   "special": 60,
+   "character": 60,
+   "legend": 150,
+   "auto": false,
+   "note": "중복 카드는 '포인트로 바꾸기'로 전환 (카드 보유 수량 1 유지)"
+  },
+  "setComplete": {
+   "breed_1to5star": {
+    "paw": 200,
+    "toss": 10,
+    "count": 18
+   },
+   "special": {
+    "paw": 300,
+    "toss": 10
+   },
+   "character": {
+    "paw": 300,
+    "toss": 10
+   },
+   "legend": {
+    "paw": 300,
+    "toss": 10
+   },
+   "fullDex": {
+    "paw": 3000,
+    "toss": 100
+   }
+  },
+  "attendance": "starter.json → attendance7"
+ },
+ "tossPayout": {
+  "maxPerUserKRW": 417,
+  "formula": "107×1 + 18×10 + 3×10 + 100",
+  "oncePerTossAccount": true,
+  "serverVerified": true,
+  "idempotencyKey": "tossUserKey + rewardId",
+  "budgetAlertKRW": null
+ },
+ "draws": {
+  "resetTimeKST": "00:00",
+  "daily": [
+   {
+    "slot": 1,
+    "type": "normal",
+    "ad": "short",
+    "note": "그날 첫 뽑기"
+   },
+   {
+    "slot": 2,
+    "type": "normal",
+    "ad": "short"
+   },
+   {
+    "slot": 3,
+    "type": "normal",
+    "ad": "short"
+   },
+   {
+    "slot": "up",
+    "type": "rateUp",
+    "ad": "long",
+    "perDay": 1
+   }
+  ],
+  "normalPerDay": 3,
+  "rateUpPerDay": 1,
+  "tutorialFirstDrawFree": true,
+  "tutorialNote": "생애 첫 뽑기만 광고 없이 무료, 그날 남은 일반 뽑기는 2회(추가 광고 뽑기)",
+  "adFailFallback": "광고 로드 실패 시 재시도 1회, 그래도 실패면 뽑기 소진 없이 '잠시 후 다시 시도해 주세요'",
+  "rates_proposal": {
+   "_proposal": true,
+   "normal": {
+    "b1": 0.345,
+    "b2": 0.285,
+    "b3": 0.17,
+    "b4": 0.1,
+    "b5": 0.035,
+    "special": 0.04,
+    "character": 0.015,
+    "legend": 0.01
+   },
+   "rateUp": {
+    "b1": 0.15,
+    "b2": 0.2,
+    "b3": 0.22,
+    "b4": 0.16,
+    "b5": 0.1,
+    "special": 0.1,
+    "character": 0.045,
+    "legend": 0.025
+   },
+   "keys": "b1~b5 = 품종 n★ (18품종 균등), special 9장, character 4장, legend 4장 — 같은 등급 안에서는 균등",
+   "disclosure": "확률은 앱 내 '확률 안내'에 공개"
+  }
+ },
+ "ads": {
+  "short": {
+   "use": [
+    "draw",
+    "paw"
+   ],
+   "rewardOn": "complete callback only"
+  },
+  "long": {
+   "use": [
+    "rateUpDraw"
+   ]
+  },
+  "dailyCaps": {
+   "drawAds": 3,
+   "rateUpAds": 1,
+   "pawAds": 10
+  },
+  "ecpmKRW": {
+   "short": null,
+   "long": null,
+   "source": "앱인토스 대시보드에서 입력 (추정치 쓰지 않음)"
+  }
+ },
+ "cozy": {
+  "pointsPerTier": {
+   "small": 4,
+   "normal": 10,
+   "large": 25,
+   "wall": 6,
+   "tile": 8,
+   "legend": 60
+  },
+  "tierNameKo": {
+   "small": "작은 소품",
+   "normal": "일반 가구",
+   "large": "큰/테마 대표 가구",
+   "wall": "벽 꾸미기",
+   "tile": "벽지/바닥",
+   "legend": "레전드급 한정"
+  },
+  "countRule": "보유한 아이템 1개당 1회 (배치 여부 무관, 같은 아이템 중복 구매 불가)",
+  "levels": [
+   {
+    "lv": 1,
+    "minCozy": 0
+   },
+   {
+    "lv": 2,
+    "minCozy": 100
+   },
+   {
+    "lv": 3,
+    "minCozy": 130
+   },
+   {
+    "lv": 4,
+    "minCozy": 165
+   },
+   {
+    "lv": 5,
+    "minCozy": 200
+   },
+   {
+    "lv": 6,
+    "minCozy": 225
+   },
+   {
+    "lv": 7,
+    "minCozy": 250
+   },
+   {
+    "lv": 8,
+    "minCozy": 280
+   },
+   {
+    "lv": 9,
+    "minCozy": 330
+   },
+   {
+    "lv": 10,
+    "minCozy": 400
+   }
+  ],
+  "beyondLv10": "+80 per level",
+  "targets": {
+   "lv5": "활성 유저 10–14일차",
+   "lv8": "25–30일차"
+  },
+  "simulation": "activeUser(광고 8회/일, 뽑기 4회/일, 하루 최대 3개 구매) 중앙값: Lv5 12일차, Lv8 28일차"
+ },
+ "shop": {
+  "tierPriceRange": {
+   "small": [
+    80,
+    150
+   ],
+   "normal": [
+    200,
+    400
+   ],
+   "large": [
+    500,
+    900
+   ],
+   "wall": [
+    100,
+    250
+   ],
+   "tile": [
+    200,
+    400
+   ],
+   "legend": [
+    1500,
+    null
+   ]
+  },
+  "tilesBuyOnce": true,
+  "tilesPaintUnlimited": true,
+  "legendItemsRequire": "레전드 카드 보유 (requireCards 목록) — 현재 카탈로그엔 해당 아이템 없음",
+  "prices": "prices.json"
+ },
+ "rooms": [
+  {
+   "id": "moon_bedroom",
+   "nameKo": "달밤 침실",
+   "unlock": {
+    "type": "default"
+   }
+  },
+  {
+   "id": "cat_cafe",
+   "nameKo": "고양이 카페",
+   "unlock": {
+    "paw": 1500,
+    "cozyLevel": 5
+   },
+   "grantItems": [
+    "cafe_table",
+    "heart_chair",
+    "chalk_stand",
+    "menu_board"
+   ],
+   "grantDefaultTiles": true
+  },
+  {
+   "id": "sakura_greenhouse",
+   "nameKo": "벚꽃 온실 정원",
+   "unlock": {
+    "paw": 3000,
+    "cozyLevel": 8
+   },
+   "grantItems": [
+    "tea_table_white",
+    "tulip_planter",
+    "watering_can",
+    "hanging_basket"
+   ],
+   "grantDefaultTiles": true
+  },
+  {
+   "id": "_future",
+   "unlock": {
+    "paw": 5000,
+    "cozyLevel": 10,
+    "_proposal": true
+   },
+   "grantItemsCount": [
+    3,
+    4
+   ]
+  }
+ ],
+ "events": {
+  "weekendDoublePaw": {
+   "enabled": true,
+   "days": [
+    "SAT",
+    "SUN"
+   ],
+   "multiplier": 2,
+   "appliesTo": [
+    "rewardedAd"
+   ],
+   "note": "광고 포인트만 2배 (토스 지급·중복 전환은 제외)"
+  },
+  "monthlyCardPack": {
+   "enabled": false,
+   "_proposal": true,
+   "note": "매달 신규 카드 세트 추가 시 도감·totalCards·tossPayout 재계산 필요"
+  },
+  "seasonalRooms": {
+   "enabled": false,
+   "unlockPaw": 5000
+  },
+  "limitedItems": {
+   "items": {
+    "xmastree": "seasonal:winter",
+    "gifts": "seasonal:winter"
+   },
+   "window": "시즌 기간에만 상점 노출, 보유자는 계속 사용"
+  },
+  "friendInvite": {
+   "enabled": false,
+   "_proposal": true,
+   "inviterPaw": 100,
+   "inviteePaw": 100,
+   "maxPerMonth": 10,
+   "grantOn": "초대받은 친구의 첫 뽑기 완료"
+  }
+ },
+ "antiAbuse": {
+  "toss1wonOncePerAccount": true,
+  "serverSideOnly": true,
+  "adRewardOnlyAfterCompleteCallback": true,
+  "drawResultServerDecided": true,
+  "rateLimit": "동일 계정 뽑기/광고 보상 요청 1초 1회",
+  "deviceChange": "계정 기준 지급 (기기 무관)"
+ },
+ "files": {
+  "prices": "prices.json",
+  "starter": "starter.json",
+  "tutorial": "tutorial.json"
+ }
+}

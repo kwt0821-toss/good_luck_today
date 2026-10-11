@@ -10,9 +10,17 @@ type DexDetailSheetProps = {
   owned: DexOwnedMap;
   onClose: () => void;
   onChangeCard: (card: DexCard) => void;
+  onConvertDuplicate?: (card: DexCard) => void;
 };
 
-export function DexDetailSheet({ card, group, owned, onClose, onChangeCard }: DexDetailSheetProps) {
+export function DexDetailSheet({
+  card,
+  group,
+  owned,
+  onClose,
+  onChangeCard,
+  onConvertDuplicate,
+}: DexDetailSheetProps) {
   const [flipped, setFlipped] = useState(false);
   const [closing, setClosing] = useState(false);
   const [armed, setArmed] = useState(false);
@@ -208,6 +216,17 @@ export function DexDetailSheet({ card, group, owned, onClose, onChangeCard }: De
             />
           ))}
         </div>
+
+        {(record?.count ?? 0) > 1 && onConvertDuplicate ? (
+          <button
+            type="button"
+            id="dex-dup-convert"
+            className="dex-convert-btn"
+            onClick={() => onConvertDuplicate(card)}
+          >
+            겹친 카드 포인트로 바꾸기
+          </button>
+        ) : null}
       </div>
     </div>,
     host,

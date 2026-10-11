@@ -15,18 +15,30 @@ const ASSETS = {
 
 type HomeScreenProps = {
   remainingDraws: number;
+  remainingRateUp: number;
+  remainingPawAds: number;
+  pawBalance: number;
   onDraw: () => void;
+  onRateUpDraw: () => void;
+  onPawAd: () => void;
   onOpenMenu: () => void;
   onOpenCollection: () => void;
   onOpenRoom: () => void;
+  onOpenRates: () => void;
 };
 
 export function HomeScreen({
   remainingDraws,
+  remainingRateUp,
+  remainingPawAds,
+  pawBalance,
   onDraw,
+  onRateUpDraw,
+  onPawAd,
   onOpenMenu,
   onOpenCollection,
   onOpenRoom,
+  onOpenRates,
 }: HomeScreenProps) {
   const [waking, setWaking] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -113,6 +125,7 @@ export function HomeScreen({
 
       <button
         type="button"
+        id="chip-draws"
         className={`main-chip ${drawsDone ? "is-done" : ""}`}
         aria-label={drawsDone ? "오늘 뽑기 완료" : `오늘 남은 뽑기 ${remainingDraws}`}
         onClick={() => {
@@ -132,6 +145,7 @@ export function HomeScreen({
 
       <button
         type="button"
+        id="stage-cat"
         className={`main-stage ${waking ? "is-waking" : ""}`}
         aria-label={drawsDone ? "오늘은 이미 뽑았어요" : "고양이 톡해서 오늘의 카드 받기"}
         onClick={handleDrawTap}
@@ -157,8 +171,54 @@ export function HomeScreen({
       </p>
       <p className="main-cta-en">TAP THE CAT TO DRAW</p>
 
+      <div className="main-ops-row">
+        <button
+          type="button"
+          id="btn-rateup"
+          className="main-ops-btn"
+          disabled={remainingRateUp <= 0}
+          onClick={() => {
+            if (remainingRateUp <= 0) {
+              showNotice("오늘 확률업을 모두 썼어요");
+              return;
+            }
+            onRateUpDraw();
+          }}
+        >
+          확률업 뽑기
+          <em>{remainingRateUp}회</em>
+        </button>
+        <button
+          type="button"
+          id="btn-paw-ad"
+          className="main-ops-btn"
+          disabled={remainingPawAds <= 0}
+          onClick={() => {
+            if (remainingPawAds <= 0) {
+              showNotice("오늘 포인트 광고를 모두 봤어요");
+              return;
+            }
+            onPawAd();
+          }}
+        >
+          포인트 받기
+          <em>
+            {pawBalance}P · {remainingPawAds}회
+          </em>
+        </button>
+        <button type="button" className="main-ops-btn is-ghost" onClick={onOpenRates}>
+          확률 안내
+        </button>
+      </div>
+
       <nav className="main-bottom">
-        <button type="button" className="main-nav-btn" aria-label="도감" onClick={popThen(onOpenCollection)}>
+        <button
+          type="button"
+          id="icon-dex"
+          className="main-nav-btn"
+          aria-label="도감"
+          onClick={popThen(onOpenCollection)}
+        >
           <img src={ASSETS.dex} alt="" width={28} height={28} />
           <span>도감</span>
         </button>
