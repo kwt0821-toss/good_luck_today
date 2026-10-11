@@ -1,0 +1,163 @@
+{
+ "grid": {
+  "cols": 8,
+  "rows": 8,
+  "projection": "2:1 isometric diamond",
+  "colAxis": "→ down-right on screen",
+  "rowAxis": "→ down-left on screen",
+  "tileWorldPx": {
+   "w": 156,
+   "h": 78
+  },
+  "tileWorldUnits": {
+   "w": 52,
+   "h": 26
+  }
+ },
+ "world": {
+  "sizePx": [
+   3840,
+   2160
+  ],
+  "units": "world px (3x of the 1280×720 design units)",
+  "isoOriginWorldPx": {
+   "x": 1920,
+   "y": 900,
+   "note": "top (back) corner of tile (0,0)"
+  },
+  "tileToWorld": "x = 1920 + (col-row)*78 ;  y = 900 + (col+row)*39   (top corner of tile col,row)",
+  "footprintCentre": "P(col + w/2, row + d/2) using the formula above with fractional col/row",
+  "wallHeightUnits": 150,
+  "floorSlabUnits": 12
+ },
+ "screens": {
+  "a": {
+   "name": "view (room-screen-a-v3)",
+   "ptPerWorldPx": 0.24667,
+   "worldLayerPt": {
+    "left": -282.33,
+    "top": 142.0,
+    "width": 947.2,
+    "height": 532.8,
+    "note": "screen pt incl. status bar; content-relative top = top-103"
+   },
+   "tilePt": {
+    "w": 38.48,
+    "h": 19.24
+   },
+   "isoOriginPt": {
+    "x": 191.27,
+    "y": 364.0,
+    "yContent": 261.0
+   },
+   "tileToScreen": "x = 191.27 + (col-row)*19.24;  y = 364.00 + (col+row)*9.62   (tile TOP corner, screen pt)"
+  },
+  "b": {
+   "name": "edit (room-screen-b-v3)",
+   "ptPerWorldPx": 0.28,
+   "worldLayerPt": {
+    "left": -342.67,
+    "top": 39.67,
+    "width": 1075.2,
+    "height": 604.8,
+    "note": "screen pt incl. status bar; content-relative top = top-103"
+   },
+   "tilePt": {
+    "w": 43.68,
+    "h": 21.84
+   },
+   "isoOriginPt": {
+    "x": 194.93,
+    "y": 291.67,
+    "yContent": 188.67
+   },
+   "tileToScreen": "x = 194.93 + (col-row)*21.84;  y = 291.67 + (col+row)*10.92   (tile TOP corner, screen pt)"
+  }
+ },
+ "depthSort": "Draw order: base-bg → walls → floor → edit tiles → rug decals → contact shadows → wall items → string lights → floor items sorted by key=(col+w-1)+(row+d-1) ascending (front-most tile), tie → smaller (col-row) first (left first), then smaller footprint area first → lamp glow (additive) → front puffs → selection UI.",
+ "collision": "Floor items (except decals like rug) occupy footprint tiles exclusively; footprint must stay within 0..7. Rug may overlap anything.",
+ "wallSlots": {
+  "L": {
+   "axis": "row (tile 0..7 from back corner toward left end)",
+   "slots": 8
+  },
+  "R": {
+   "axis": "col (0..7 from back corner toward right end)",
+   "slots": 8
+  },
+  "note": "PLACEHOLDER: wall items use wallPosWorldPx from the layout; slot/span is approximate for future snapping. Wall items are not draggable in v1 (suggested)."
+ },
+ "contactShadow": "per floor item: ellipse at footprint centre +2 units down, rx = 26*0.62*(w+d), ry = 13*0.62*(w+d) units (lamp 15×6, yarn 9×4), fill #2A1530 @ .32, blur 3 units (=9 world px). Generate in code so it follows moves; world/contact-shadows.svg is the default layout baked.",
+ "selectedLift": "selected item sprite lifts 4 units (12 world px); footprint outline drawn on top",
+ "defaultLayout": [
+  {
+   "id": "cabinet",
+   "col": 3,
+   "row": 0,
+   "rot": 0,
+   "flip": false
+  },
+  {
+   "id": "cattower",
+   "col": 0,
+   "row": 4,
+   "rot": 0,
+   "flip": false
+  },
+  {
+   "id": "floorlamp",
+   "col": 6,
+   "row": 0,
+   "rot": 0,
+   "flip": false
+  },
+  {
+   "id": "plant",
+   "col": 0,
+   "row": 7,
+   "rot": 0,
+   "flip": false
+  },
+  {
+   "id": "catbed",
+   "col": 3,
+   "row": 3,
+   "rot": 0,
+   "flip": false
+  },
+  {
+   "id": "yarn",
+   "col": 5,
+   "row": 5,
+   "rot": 0,
+   "flip": false
+  },
+  {
+   "id": "rug",
+   "col": 3,
+   "row": 3,
+   "rot": 0,
+   "flip": false
+  },
+  {
+   "id": "window",
+   "wall": "L",
+   "slot": 0,
+   "span": 3,
+   "worldPx": [
+    1699,
+    549
+   ]
+  },
+  {
+   "id": "frames",
+   "wall": "R",
+   "slot": 1,
+   "span": 3,
+   "worldPx": [
+    1968,
+    594
+   ]
+  }
+ ]
+}
