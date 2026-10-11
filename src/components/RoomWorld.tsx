@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore, type PointerEvent } from "react";
+import { useEffect, useRef, type PointerEvent } from "react";
 
 import { roomAsset } from "../lib/roomCatalog";
 import { catAsset, catDepthKey, furnitureDepthKey } from "../lib/roomCat";
@@ -153,20 +153,6 @@ function FloorSprite({
   );
 }
 
-function subscribeReducedMotion(onStoreChange: () => void) {
-  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mq.addEventListener("change", onStoreChange);
-  return () => mq.removeEventListener("change", onStoreChange);
-}
-
-function getReducedMotion() {
-  try {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  } catch {
-    return false;
-  }
-}
-
 function RoamingCatShadow({
   view,
   motionRef,
@@ -184,11 +170,12 @@ function RoamingCatShadow({
       const motion = motionRef.current;
       const loafish = motion.anim === "loaf" || motion.anim === "sleep";
       const scale = loafish ? 0.8 : 1;
-      el.style.left = `${motion.worldX - shadow.anchor[0] * scale}px`;
-      el.style.top = `${motion.worldY - shadow.anchor[1] * scale}px`;
+      const x = motion.worldX - shadow.anchor[0] * scale;
+      const y = motion.worldY - shadow.anchor[1] * scale;
       el.style.width = `${shadow.size[0] * scale}px`;
       el.style.height = `${shadow.size[1] * scale}px`;
       el.style.opacity = String(motion.opacity);
+      el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
     };
     apply();
     return motionRef.subscribe(apply);
@@ -219,12 +206,14 @@ function RoamingCatBody({
       const motion = motionRef.current;
       const frame = sheet.frames[motion.frameName] ?? sheet.frames.sit;
       if (!frame) return;
-      btn.style.left = `${motion.worldX - sheet.anchor.x}px`;
-      btn.style.top = `${motion.worldY - sheet.anchor.y}px`;
+      const x = motion.worldX - sheet.anchor.x;
+      const y = motion.worldY - sheet.anchor.y;
       btn.style.width = `${fw}px`;
       btn.style.height = `${fh}px`;
       btn.style.opacity = String(motion.opacity);
+      btn.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       btn.classList.toggle("is-sleeping", motion.anim === "sleep");
+      btn.dataset.catAnim = motion.anim;
       frameEl.style.backgroundPosition = `-${frame.x}px -${frame.y}px`;
     };
     apply();
@@ -239,7 +228,7 @@ function RoamingCatBody({
       type="button"
       className={`lucky-sprite lucky-roam-cat ${view.sleeping ? "is-sleeping" : ""}`}
       aria-label="돌아다니는 고양이"
-      style={{ width: fw, height: fh, opacity: view.opacity }}
+      style={{ width: fw, height: fh, opacity: view.opacity, left: 0, top: 0 }}
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => {
         event.stopPropagation();
@@ -280,7 +269,8 @@ export function RoomWorld({
   onItemPointerDown,
   onFloorPointerDown,
 }: RoomWorldProps) {
-  const reducedMotion = useSyncExternalStore(subscribeReducedMotion, getReducedMotion, () => false);
+  // Roaming is the room's main delight — keep walking even when the OS asks to
+  // reduce motion (CSS breathing/float still respect prefers-reduced-motion).
   const { view: catView, motionRef: catMotionRef, tap: tapCat } = useRoomCat({
     roomId,
     breedId: roamingCatId,
@@ -288,7 +278,7 @@ export function RoomWorld({
     itemsById,
     mode,
     active: roamingActive,
-    reducedMotion,
+    reducedMotion: false,
   });
   const selected = [...layout.floor, ...layout.walls].find((item) => item.instanceId === selectedId);
   const selectedItem = selected ? itemsById.get(selected.id) : undefined;

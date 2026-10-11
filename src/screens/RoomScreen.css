@@ -497,14 +497,20 @@
 .lucky-contact-shadow,
 .lucky-roam-shadow {
   position: absolute;
+  left: 0;
+  top: 0;
   z-index: 2;
   pointer-events: none;
   user-select: none;
+  will-change: transform;
 }
 
 .lucky-roam-cat {
+  left: 0;
+  top: 0;
   z-index: 5;
   overflow: visible;
+  will-change: transform;
 }
 
 .lucky-roam-frame {

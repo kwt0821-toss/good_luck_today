@@ -160,6 +160,7 @@ export function useRoomCat({
   const modeRef = useRef(mode);
   const activeRef = useRef(active);
   const reduceRef = useRef(reducedMotion);
+  const roomIdRef = useRef(roomId);
   const sheetRef = useRef<CatSpriteSheet | null>(null);
   const depthRef = useRef({ col: 4, row: 5 });
   const sleepRef = useRef(false);
@@ -170,6 +171,7 @@ export function useRoomCat({
   modeRef.current = mode;
   activeRef.current = active;
   reduceRef.current = reducedMotion;
+  roomIdRef.current = roomId;
 
   useEffect(() => {
     let cancelled = false;
@@ -372,6 +374,28 @@ export function useRoomCat({
       motion.anim = anim;
       motion.opacity = isEdit ? 0.5 : 1;
       notify();
+
+      if (isActive) {
+        const phaseKind =
+          live.kind === "walk"
+            ? `walk:${live.index}/${live.path.length - 1}`
+            : live.kind === "tap"
+              ? `tap:${live.step}`
+              : `idle:${live.anim}`;
+        (window as Window & { __luckyCat?: unknown }).__luckyCat = {
+          roomId: roomIdRef.current,
+          phase: phaseKind,
+          tile: { ...tileRef.current },
+          anim,
+          worldX: Math.round(motion.worldX),
+          worldY: Math.round(motion.worldY),
+          listeners: listeners.size,
+          walkable: walkable.length,
+          active: isActive,
+          edit: isEdit,
+          reduce,
+        };
+      }
 
       const nextOpacity = isEdit ? 0.5 : 1;
       const nextSleeping = anim === "sleep";
