@@ -1,0 +1,1282 @@
+{
+ "_version": "themes-v1",
+ "_placeholders": "unlock rules, prices, order, names are PLACEHOLDERS",
+ "grid": "all rooms 8×8, identical world geometry (v5-tiles grid.json); only tiles/layout differ",
+ "switcher": {
+  "ui": "view mode: chip “‹ {room name} ›” top-centre under the header + page dots (one per room) + locked “+ 새 방” pill; swipe left/right on the room or tap ‹ › to switch; edit mode edits the current room only",
+  "order": [
+   "moon_bedroom",
+   "cat_cafe",
+   "sakura_greenhouse"
+  ]
+ },
+ "catRoaming": {
+  "note": "one collected cat per room (from 도감); it may walk on walkableTiles (free tiles of the default layout — recompute after edits). PLACEHOLDER for the roaming feature, no cat art in this package.",
+  "perRoom": 1
+ },
+ "rooms": [
+  {
+   "id": "moon_bedroom",
+   "nameKo": "달밤 침실",
+   "isDefault": true,
+   "unlock": {
+    "type": "default"
+   },
+   "defaultFloor": "wood_honey",
+   "defaultWall": {
+    "L": "plum_sparkle",
+    "R": "plum_sparkle"
+   },
+   "layoutRef": "room-assets-v5-tiles/grid.json → defaultLayout (+ tileMaps.defaults)",
+   "themeItems": "room-assets-v5 items.json (all v5 items)"
+  },
+  {
+   "id": "cat_cafe",
+   "nameKo": "고양이 카페",
+   "isDefault": false,
+   "unlock": {
+    "type": "PLACEHOLDER",
+    "example": "COZY Lv.5 또는 1,500 PAW"
+   },
+   "defaultFloor": "latte_herring",
+   "defaultWall": {
+    "L": "latte_stripe",
+    "R": "pink_brick"
+   },
+   "floorTiles": [
+    [
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring"
+    ],
+    [
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring"
+    ],
+    [
+     "latte_herring",
+     "latte_herring",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "latte_herring"
+    ],
+    [
+     "latte_herring",
+     "latte_herring",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "latte_herring"
+    ],
+    [
+     "latte_herring",
+     "latte_herring",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "latte_herring"
+    ],
+    [
+     "latte_herring",
+     "latte_herring",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "cocoa_check",
+     "latte_herring"
+    ],
+    [
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring"
+    ],
+    [
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring",
+     "latte_herring"
+    ]
+   ],
+   "wallTiles": {
+    "L": [
+     "latte_stripe",
+     "latte_stripe",
+     "latte_stripe",
+     "latte_stripe",
+     "latte_stripe",
+     "latte_stripe",
+     "latte_stripe",
+     "latte_stripe"
+    ],
+    "R": [
+     "pink_brick",
+     "pink_brick",
+     "pink_brick",
+     "pink_brick",
+     "pink_brick",
+     "pink_brick",
+     "pink_brick",
+     "pink_brick"
+    ]
+   },
+   "defaultLayout": [
+    {
+     "id": "olive_tree",
+     "c": 0,
+     "r": 0,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1920.0,
+      939.0
+     ]
+    },
+    {
+     "id": "espresso_counter",
+     "c": 1,
+     "r": 0,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1998.0,
+      978.0
+     ]
+    },
+    {
+     "id": "counter_register",
+     "c": 2,
+     "r": 0,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2076.0,
+      1017.0
+     ]
+    },
+    {
+     "id": "cake_showcase",
+     "c": 3,
+     "r": 0,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2154.0,
+      1056.0
+     ]
+    },
+    {
+     "id": "bread_rack",
+     "c": 4,
+     "r": 0,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2232.0,
+      1095.0
+     ]
+    },
+    {
+     "id": "food_vending",
+     "c": 6,
+     "r": 0,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2388.0,
+      1173.0
+     ]
+    },
+    {
+     "id": "mug_cart",
+     "c": 7,
+     "r": 0,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2466.0,
+      1212.0
+     ]
+    },
+    {
+     "id": "window_bench",
+     "c": 0,
+     "r": 2,
+     "w": 1,
+     "d": 2,
+     "orientation": "mirrored",
+     "worldPxFootprintCenter": [
+      1725.0,
+      1036.5
+     ]
+    },
+    {
+     "id": "catface_lamp",
+     "c": 0,
+     "r": 4,
+     "w": 1,
+     "d": 1,
+     "orientation": "mirrored",
+     "worldPxFootprintCenter": [
+      1608.0,
+      1095.0
+     ]
+    },
+    {
+     "id": "cup_cattower",
+     "c": 0,
+     "r": 5,
+     "w": 1,
+     "d": 1,
+     "orientation": "mirrored",
+     "worldPxFootprintCenter": [
+      1530.0,
+      1134.0
+     ]
+    },
+    {
+     "id": "bean_sack",
+     "c": 1,
+     "r": 6,
+     "w": 1,
+     "d": 1,
+     "orientation": "mirrored",
+     "worldPxFootprintCenter": [
+      1530.0,
+      1212.0
+     ]
+    },
+    {
+     "id": "bar_stool",
+     "c": 2,
+     "r": 1,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1998.0,
+      1056.0
+     ]
+    },
+    {
+     "id": "bar_stool",
+     "c": 3,
+     "r": 1,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2076.0,
+      1095.0
+     ]
+    },
+    {
+     "id": "cafe_table",
+     "c": 3,
+     "r": 3,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1920.0,
+      1173.0
+     ]
+    },
+    {
+     "id": "heart_chair",
+     "c": 3,
+     "r": 2,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1998.0,
+      1134.0
+     ]
+    },
+    {
+     "id": "heart_chair",
+     "c": 2,
+     "r": 3,
+     "w": 1,
+     "d": 1,
+     "orientation": "mirrored",
+     "worldPxFootprintCenter": [
+      1842.0,
+      1134.0
+     ]
+    },
+    {
+     "id": "cafe_table",
+     "c": 5,
+     "r": 4,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1998.0,
+      1290.0
+     ]
+    },
+    {
+     "id": "heart_chair",
+     "c": 5,
+     "r": 3,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2076.0,
+      1251.0
+     ]
+    },
+    {
+     "id": "heart_chair",
+     "c": 4,
+     "r": 4,
+     "w": 1,
+     "d": 1,
+     "orientation": "mirrored",
+     "worldPxFootprintCenter": [
+      1920.0,
+      1251.0
+     ]
+    },
+    {
+     "id": "chalk_stand",
+     "c": 6,
+     "r": 2,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2232.0,
+      1251.0
+     ]
+    },
+    {
+     "id": "cookie_jar",
+     "c": 7,
+     "r": 1,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2388.0,
+      1251.0
+     ]
+    },
+    {
+     "id": "mug_shelf",
+     "wall": "L",
+     "t": 1.3,
+     "heightUnits": 96,
+     "worldPxBase": [
+      1818.6,
+      950.7
+     ],
+     "image": "mug_shelf_L.png"
+    },
+    {
+     "id": "latte_art_frame",
+     "wall": "L",
+     "t": 3.0,
+     "heightUnits": 100,
+     "worldPxBase": [
+      1686.0,
+      1017.0
+     ],
+     "image": "latte_art_frame_L.png"
+    },
+    {
+     "id": "cat_clock_cafe",
+     "wall": "L",
+     "t": 4.6,
+     "heightUnits": 110,
+     "worldPxBase": [
+      1561.2,
+      1079.4
+     ],
+     "image": "cat_clock_cafe_L.png"
+    },
+    {
+     "id": "cup_neon",
+     "wall": "L",
+     "t": 6.2,
+     "heightUnits": 98,
+     "worldPxBase": [
+      1436.4,
+      1141.8
+     ],
+     "image": "cup_neon_L.png"
+    },
+    {
+     "id": "menu_board",
+     "wall": "R",
+     "t": 2.5,
+     "heightUnits": 108,
+     "worldPxBase": [
+      2115.0,
+      997.5
+     ],
+     "image": "menu_board_R.png"
+    },
+    {
+     "id": "pendant_lamps",
+     "wall": "R",
+     "t": 4.6,
+     "heightUnits": 124,
+     "worldPxBase": [
+      2278.8,
+      1079.4
+     ],
+     "image": "pendant_lamps_R.png"
+    },
+    {
+     "id": "awning",
+     "wall": "R",
+     "t": 6.5,
+     "heightUnits": 100,
+     "worldPxBase": [
+      2427.0,
+      1153.5
+     ],
+     "image": "awning_R.png"
+    }
+   ],
+   "walkableTiles": [
+    [
+     5,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     4,
+     1
+    ],
+    [
+     5,
+     1
+    ],
+    [
+     6,
+     1
+    ],
+    [
+     1,
+     2
+    ],
+    [
+     2,
+     2
+    ],
+    [
+     4,
+     2
+    ],
+    [
+     5,
+     2
+    ],
+    [
+     7,
+     2
+    ],
+    [
+     1,
+     3
+    ],
+    [
+     4,
+     3
+    ],
+    [
+     6,
+     3
+    ],
+    [
+     7,
+     3
+    ],
+    [
+     1,
+     4
+    ],
+    [
+     2,
+     4
+    ],
+    [
+     3,
+     4
+    ],
+    [
+     6,
+     4
+    ],
+    [
+     7,
+     4
+    ],
+    [
+     1,
+     5
+    ],
+    [
+     2,
+     5
+    ],
+    [
+     3,
+     5
+    ],
+    [
+     4,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     6,
+     5
+    ],
+    [
+     7,
+     5
+    ],
+    [
+     0,
+     6
+    ],
+    [
+     2,
+     6
+    ],
+    [
+     3,
+     6
+    ],
+    [
+     4,
+     6
+    ],
+    [
+     5,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     7,
+     6
+    ],
+    [
+     0,
+     7
+    ],
+    [
+     1,
+     7
+    ],
+    [
+     2,
+     7
+    ],
+    [
+     3,
+     7
+    ],
+    [
+     4,
+     7
+    ],
+    [
+     5,
+     7
+    ],
+    [
+     6,
+     7
+    ],
+    [
+     7,
+     7
+    ]
+   ],
+   "themeItems": [
+    "counter_register",
+    "espresso_counter",
+    "cake_showcase",
+    "cafe_table",
+    "heart_chair",
+    "bar_stool",
+    "chalk_stand",
+    "bread_rack",
+    "bean_sack",
+    "olive_tree",
+    "cup_cattower",
+    "window_bench",
+    "mug_cart",
+    "cookie_jar",
+    "catface_lamp",
+    "food_vending",
+    "menu_board",
+    "cat_clock_cafe",
+    "mug_shelf",
+    "pendant_lamps",
+    "cup_neon",
+    "awning",
+    "latte_art_frame",
+    "paw_garland"
+   ],
+   "themeTiles": [
+    "latte_herring",
+    "cocoa_check",
+    "terracotta_hex",
+    "cream_terrazzo",
+    "mint_tile",
+    "cocoa_plank",
+    "pink_brick",
+    "latte_stripe",
+    "mint_wainscot",
+    "coffee_bean",
+    "tiny_cups",
+    "chalk_cream"
+   ],
+   "mockup": "mockups/room-cafe-a.png"
+  },
+  {
+   "id": "sakura_greenhouse",
+   "nameKo": "벚꽃 온실 정원",
+   "isDefault": false,
+   "unlock": {
+    "type": "PLACEHOLDER",
+    "example": "COZY Lv.8 또는 2,500 PAW"
+   },
+   "defaultFloor": "grass",
+   "defaultWall": {
+    "L": "glass_pane",
+    "R": "glass_pane"
+   },
+   "floorTiles": [
+    [
+     "grass",
+     "grass",
+     "light_deck",
+     "light_deck",
+     "light_deck",
+     "light_deck",
+     "light_deck",
+     "light_deck"
+    ],
+    [
+     "grass",
+     "grass",
+     "light_deck",
+     "light_deck",
+     "light_deck",
+     "light_deck",
+     "light_deck",
+     "light_deck"
+    ],
+    [
+     "petal_grass",
+     "petal_grass",
+     "grass",
+     "grass",
+     "stone_path",
+     "stone_path",
+     "grass",
+     "grass"
+    ],
+    [
+     "petal_grass",
+     "petal_grass",
+     "grass",
+     "stone_path",
+     "grass",
+     "grass",
+     "grass",
+     "grass"
+    ],
+    [
+     "petal_grass",
+     "petal_grass",
+     "grass",
+     "stone_path",
+     "grass",
+     "grass",
+     "grass",
+     "grass"
+    ],
+    [
+     "petal_grass",
+     "petal_grass",
+     "grass",
+     "stone_path",
+     "grass",
+     "grass",
+     "grass",
+     "grass"
+    ],
+    [
+     "petal_grass",
+     "petal_grass",
+     "grass",
+     "stone_path",
+     "grass",
+     "grass",
+     "grass",
+     "grass"
+    ],
+    [
+     "petal_grass",
+     "petal_grass",
+     "grass",
+     "stone_path",
+     "grass",
+     "grass",
+     "grass",
+     "grass"
+    ]
+   ],
+   "wallTiles": {
+    "L": [
+     "glass_pane",
+     "glass_pane",
+     "glass_pane",
+     "glass_pane",
+     "glass_pane",
+     "glass_pane",
+     "glass_pane",
+     "glass_pane"
+    ],
+    "R": [
+     "glass_pane",
+     "glass_pane",
+     "glass_pane",
+     "glass_pane",
+     "glass_pane",
+     "glass_pane",
+     "glass_pane",
+     "glass_pane"
+    ]
+   },
+   "defaultLayout": [
+    {
+     "id": "sakura_tree",
+     "c": 0,
+     "r": 0,
+     "w": 2,
+     "d": 2,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1920.0,
+      978.0
+     ]
+    },
+    {
+     "id": "tulip_planter",
+     "c": 2,
+     "r": 0,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2076.0,
+      1017.0
+     ]
+    },
+    {
+     "id": "garden_swing",
+     "c": 3,
+     "r": 0,
+     "w": 2,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2193.0,
+      1075.5
+     ]
+    },
+    {
+     "id": "hydrangea",
+     "c": 5,
+     "r": 0,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2310.0,
+      1134.0
+     ]
+    },
+    {
+     "id": "cat_hammock",
+     "c": 6,
+     "r": 0,
+     "w": 2,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2427.0,
+      1192.5
+     ]
+    },
+    {
+     "id": "stone_lantern",
+     "c": 0,
+     "r": 2,
+     "w": 1,
+     "d": 1,
+     "orientation": "mirrored",
+     "worldPxFootprintCenter": [
+      1764.0,
+      1017.0
+     ]
+    },
+    {
+     "id": "garden_bench",
+     "c": 0,
+     "r": 3,
+     "w": 1,
+     "d": 2,
+     "orientation": "mirrored",
+     "worldPxFootprintCenter": [
+      1647.0,
+      1075.5
+     ]
+    },
+    {
+     "id": "flower_wheelbarrow",
+     "c": 0,
+     "r": 5,
+     "w": 1,
+     "d": 1,
+     "orientation": "mirrored",
+     "worldPxFootprintCenter": [
+      1530.0,
+      1134.0
+     ]
+    },
+    {
+     "id": "bird_bath",
+     "c": 0,
+     "r": 6,
+     "w": 1,
+     "d": 1,
+     "orientation": "mirrored",
+     "worldPxFootprintCenter": [
+      1452.0,
+      1173.0
+     ]
+    },
+    {
+     "id": "flower_arch",
+     "c": 2,
+     "r": 2,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1920.0,
+      1095.0
+     ]
+    },
+    {
+     "id": "watering_can",
+     "c": 3,
+     "r": 2,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1998.0,
+      1134.0
+     ]
+    },
+    {
+     "id": "picnic_blanket",
+     "c": 1,
+     "r": 4,
+     "w": 2,
+     "d": 2,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1686.0,
+      1173.0
+     ]
+    },
+    {
+     "id": "koi_pond",
+     "c": 4,
+     "r": 3,
+     "w": 2,
+     "d": 2,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1998.0,
+      1251.0
+     ]
+    },
+    {
+     "id": "mini_bridge",
+     "c": 5,
+     "r": 6,
+     "w": 2,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1881.0,
+      1387.5
+     ]
+    },
+    {
+     "id": "hydrangea",
+     "c": 6,
+     "r": 2,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2232.0,
+      1251.0
+     ]
+    },
+    {
+     "id": "succulent_stand",
+     "c": 7,
+     "r": 2,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2310.0,
+      1290.0
+     ]
+    },
+    {
+     "id": "tea_table_white",
+     "c": 7,
+     "r": 4,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      2154.0,
+      1368.0
+     ]
+    },
+    {
+     "id": "tulip_planter",
+     "c": 2,
+     "r": 6,
+     "w": 1,
+     "d": 1,
+     "orientation": "default",
+     "worldPxFootprintCenter": [
+      1608.0,
+      1251.0
+     ]
+    },
+    {
+     "id": "ivy_garland",
+     "wall": "L",
+     "t": 1.5,
+     "heightUnits": 122,
+     "worldPxBase": [
+      1803.0,
+      958.5
+     ],
+     "image": "ivy_garland_L.png"
+    },
+    {
+     "id": "flower_wreath",
+     "wall": "L",
+     "t": 2.8,
+     "heightUnits": 96,
+     "worldPxBase": [
+      1701.6,
+      1009.2
+     ],
+     "image": "flower_wreath_L.png"
+    },
+    {
+     "id": "greenhouse_window",
+     "wall": "L",
+     "t": 4.0,
+     "heightUnits": 98,
+     "worldPxBase": [
+      1608.0,
+      1056.0
+     ],
+     "image": "greenhouse_window_L.png"
+    },
+    {
+     "id": "bird_house",
+     "wall": "L",
+     "t": 6.0,
+     "heightUnits": 104,
+     "worldPxBase": [
+      1452.0,
+      1134.0
+     ],
+     "image": "bird_house_L.png"
+    },
+    {
+     "id": "sakura_branch",
+     "wall": "R",
+     "t": 2.6,
+     "heightUnits": 120,
+     "worldPxBase": [
+      2122.8,
+      1001.4
+     ],
+     "image": "sakura_branch_R.png"
+    },
+    {
+     "id": "butterflies",
+     "wall": "R",
+     "t": 4.4,
+     "heightUnits": 118,
+     "worldPxBase": [
+      2263.2,
+      1071.6
+     ],
+     "image": "butterflies_R.png"
+    },
+    {
+     "id": "hanging_basket",
+     "wall": "R",
+     "t": 5.4,
+     "heightUnits": 104,
+     "worldPxBase": [
+      2341.2,
+      1110.6
+     ],
+     "image": "hanging_basket_R.png"
+    }
+   ],
+   "walkableTiles": [
+    [
+     2,
+     1
+    ],
+    [
+     3,
+     1
+    ],
+    [
+     4,
+     1
+    ],
+    [
+     5,
+     1
+    ],
+    [
+     6,
+     1
+    ],
+    [
+     7,
+     1
+    ],
+    [
+     1,
+     2
+    ],
+    [
+     4,
+     2
+    ],
+    [
+     5,
+     2
+    ],
+    [
+     1,
+     3
+    ],
+    [
+     2,
+     3
+    ],
+    [
+     3,
+     3
+    ],
+    [
+     6,
+     3
+    ],
+    [
+     7,
+     3
+    ],
+    [
+     3,
+     4
+    ],
+    [
+     6,
+     4
+    ],
+    [
+     3,
+     5
+    ],
+    [
+     4,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     6,
+     5
+    ],
+    [
+     7,
+     5
+    ],
+    [
+     1,
+     6
+    ],
+    [
+     3,
+     6
+    ],
+    [
+     4,
+     6
+    ],
+    [
+     7,
+     6
+    ],
+    [
+     0,
+     7
+    ],
+    [
+     1,
+     7
+    ],
+    [
+     2,
+     7
+    ],
+    [
+     3,
+     7
+    ],
+    [
+     4,
+     7
+    ],
+    [
+     5,
+     7
+    ],
+    [
+     6,
+     7
+    ],
+    [
+     7,
+     7
+    ]
+   ],
+   "themeItems": [
+    "sakura_tree",
+    "garden_bench",
+    "koi_pond",
+    "tulip_planter",
+    "tea_table_white",
+    "garden_swing",
+    "watering_can",
+    "stone_lantern",
+    "flower_wheelbarrow",
+    "hydrangea",
+    "bird_bath",
+    "picnic_blanket",
+    "mini_bridge",
+    "flower_arch",
+    "cat_hammock",
+    "succulent_stand",
+    "greenhouse_window",
+    "hanging_basket",
+    "ivy_garland",
+    "bird_house",
+    "sakura_branch",
+    "tool_rack",
+    "butterflies",
+    "flower_wreath"
+   ],
+   "themeTiles": [
+    "grass",
+    "stone_path",
+    "light_deck",
+    "petal_grass",
+    "pebble_mosaic",
+    "moss_tile",
+    "glass_pane",
+    "sakura_branch_wall",
+    "ivy_trellis",
+    "sky_cloud",
+    "sage_panel",
+    "white_lattice"
+   ],
+   "mockup": "mockups/room-greenhouse-a.png"
+  }
+ ]
+}
