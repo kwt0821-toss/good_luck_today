@@ -99,14 +99,14 @@
   "rates_proposal": {
    "_proposal": true,
    "normal": {
-    "b1": 0.32,
-    "b2": 0.26,
+    "b1": 0.345,
+    "b2": 0.285,
     "b3": 0.17,
     "b4": 0.1,
-    "b5": 0.05,
-    "special": 0.06,
-    "character": 0.025,
-    "legend": 0.015
+    "b5": 0.035,
+    "special": 0.04,
+    "character": 0.015,
+    "legend": 0.01
    },
    "rateUp": {
     "b1": 0.15,
