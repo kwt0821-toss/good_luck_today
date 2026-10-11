@@ -187,6 +187,50 @@ export function nearestWalkable(from: CatTile, walkable: CatTile[]): CatTile | n
   return best;
 }
 
+const NEIGHBOR_DIRS = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+] as const;
+
+/** Connected walkable tiles reachable from `from` (4-way). */
+export function reachableTiles(from: CatTile, walkable: CatTile[]): CatTile[] {
+  const allowed = new Set(walkable.map(tileKey));
+  const start = tileKey(from);
+  if (!allowed.has(start)) return [];
+  const out: CatTile[] = [];
+  const seen = new Set<string>([start]);
+  const queue: CatTile[] = [from];
+  while (queue.length) {
+    const cur = queue.shift()!;
+    out.push(cur);
+    for (const [dc, dr] of NEIGHBOR_DIRS) {
+      const next = { col: cur.col + dc, row: cur.row + dr };
+      const key = tileKey(next);
+      if (!allowed.has(key) || seen.has(key)) continue;
+      seen.add(key);
+      queue.push(next);
+    }
+  }
+  return out;
+}
+
+/** Largest 4-way connected walkable region (cats must seed here or they never path). */
+export function largestWalkableComponent(walkable: CatTile[]): CatTile[] {
+  if (walkable.length <= 1) return walkable;
+  const seen = new Set<string>();
+  let best: CatTile[] = [];
+  for (const tile of walkable) {
+    const key = tileKey(tile);
+    if (seen.has(key)) continue;
+    const component = reachableTiles(tile, walkable);
+    for (const part of component) seen.add(tileKey(part));
+    if (component.length > best.length) best = component;
+  }
+  return best.length ? best : walkable;
+}
+
 export function randomWalkable(walkable: CatTile[], exclude?: CatTile | null): CatTile | null {
   const pool = exclude
     ? walkable.filter((tile) => tile.col !== exclude.col || tile.row !== exclude.row)

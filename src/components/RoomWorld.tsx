@@ -1,4 +1,4 @@
-import { useEffect, useRef, type PointerEvent } from "react";
+import { useEffect, useRef, useSyncExternalStore, type PointerEvent } from "react";
 
 import { roomAsset } from "../lib/roomCatalog";
 import { catAsset, catDepthKey, furnitureDepthKey } from "../lib/roomCat";
@@ -153,6 +153,20 @@ function FloorSprite({
   );
 }
 
+function subscribeReducedMotion(onStoreChange: () => void) {
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mq.addEventListener("change", onStoreChange);
+  return () => mq.removeEventListener("change", onStoreChange);
+}
+
+function getReducedMotion() {
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+}
+
 function RoamingCatShadow({
   view,
   motionRef,
@@ -177,7 +191,7 @@ function RoamingCatShadow({
       el.style.opacity = String(motion.opacity);
     };
     apply();
-    return motionRef.subscribe?.(apply);
+    return motionRef.subscribe(apply);
   }, [view.sheet, motionRef]);
   if (!view.sheet || !view.ready) return null;
   return <img ref={imgRef} className="lucky-roam-shadow" src={catAsset(view.sheet.shadow.image)} alt="" draggable={false} />;
@@ -214,7 +228,7 @@ function RoamingCatBody({
       frameEl.style.backgroundPosition = `-${frame.x}px -${frame.y}px`;
     };
     apply();
-    return motionRef.subscribe?.(apply);
+    return motionRef.subscribe(apply);
   }, [view.sheet, motionRef]);
   if (!view.sheet || !view.ready) return null;
   const [fw, fh] = view.sheet.frameSize;
@@ -266,6 +280,7 @@ export function RoomWorld({
   onItemPointerDown,
   onFloorPointerDown,
 }: RoomWorldProps) {
+  const reducedMotion = useSyncExternalStore(subscribeReducedMotion, getReducedMotion, () => false);
   const { view: catView, motionRef: catMotionRef, tap: tapCat } = useRoomCat({
     roomId,
     breedId: roamingCatId,
@@ -273,7 +288,7 @@ export function RoomWorld({
     itemsById,
     mode,
     active: roamingActive,
-    reducedMotion: false,
+    reducedMotion,
   });
   const selected = [...layout.floor, ...layout.walls].find((item) => item.instanceId === selectedId);
   const selectedItem = selected ? itemsById.get(selected.id) : undefined;
