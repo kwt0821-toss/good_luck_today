@@ -700,7 +700,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
           <p className="lucky-eyebrow">방꾸미기</p>
           <img className="lucky-logo" src={roomAsset("ui/logo-myroom.svg")} alt="MY ROOM." />
           <div className="lucky-meta">
-            <strong>COZY Lv.{state.cozyLevel}</strong>
+            <strong id="cozy-meter">COZY Lv.{state.cozyLevel}</strong>
             <span>ITEMS {String(placedCount).padStart(2, "0")}</span>
           </div>
         </header>
