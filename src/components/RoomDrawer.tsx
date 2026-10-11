@@ -68,7 +68,13 @@ export function RoomDrawer({
   onUndo,
   onExchange,
 }: RoomDrawerProps) {
-  const visible = items.filter((item) => itemMatchesTab(item, tab) && itemMatchesTheme(item, themeFilter));
+  const visible = items.filter(
+    (item) =>
+      itemMatchesTab(item, tab) &&
+      itemMatchesTheme(item, themeFilter) &&
+      // Attendance-only items are excluded from the shop list until granted.
+      !(item.attendanceOnly && (owned[item.id] ?? 0) < 1),
+  );
   const paintTab = tab === "벽지" || tab === "바닥";
 
   return (
@@ -166,7 +172,10 @@ export function RoomDrawer({
                 ) : null}
                 {state.locked ? <img className="lucky-cell-lock" src={roomAsset("ui/icon-lock.svg")} alt="" /> : null}
               </span>
-              <strong>{item.nameKo}</strong>
+              <strong>
+                {item.nameKo}
+                {item.attendanceOnly ? <span className="lucky-attend-tag">출석 한정</span> : null}
+              </strong>
               {state.locked ? (
                 <em>
                   <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />

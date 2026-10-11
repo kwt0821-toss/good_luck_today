@@ -86,10 +86,35 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         typeof parsed.tutorialInterruptions === "number" ? parsed.tutorialInterruptions : 0,
       installDateKey:
         typeof parsed.installDateKey === "string" ? parsed.installDateKey : fallback.installDateKey,
+      attendanceDays:
+        typeof parsed.attendanceDays === "number"
+          ? parsed.attendanceDays
+          : typeof parsed.attendanceClaimed === "number"
+            ? parsed.attendanceClaimed
+            : 0,
+      lastAttendDateKST:
+        typeof parsed.lastAttendDateKST === "string"
+          ? parsed.lastAttendDateKST
+          : typeof parsed.lastAttendanceDateKey === "string"
+            ? parsed.lastAttendanceDateKey
+            : "",
       attendanceClaimed:
-        typeof parsed.attendanceClaimed === "number" ? parsed.attendanceClaimed : 0,
+        typeof parsed.attendanceDays === "number"
+          ? Math.min(parsed.attendanceDays, 7)
+          : typeof parsed.attendanceClaimed === "number"
+            ? parsed.attendanceClaimed
+            : 0,
       lastAttendanceDateKey:
-        typeof parsed.lastAttendanceDateKey === "string" ? parsed.lastAttendanceDateKey : "",
+        typeof parsed.lastAttendDateKST === "string"
+          ? parsed.lastAttendDateKST
+          : typeof parsed.lastAttendanceDateKey === "string"
+            ? parsed.lastAttendanceDateKey
+            : "",
+      rateUpTickets: typeof parsed.rateUpTickets === "number" ? parsed.rateUpTickets : 0,
+      attendanceBadges: parseStringArray(parsed.attendanceBadges),
+      claimedMilestoneDays: Array.isArray(parsed.claimedMilestoneDays)
+        ? parsed.claimedMilestoneDays.filter((n): n is number => typeof n === "number")
+        : [],
       featureIntrosSeen: parseStringArray(parsed.featureIntrosSeen),
       grantedTossRewardIds: parseStringArray(parsed.grantedTossRewardIds),
       grantedSetRewardIds: parseStringArray(parsed.grantedSetRewardIds),

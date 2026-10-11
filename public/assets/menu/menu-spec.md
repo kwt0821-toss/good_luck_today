@@ -67,3 +67,17 @@ radius `28 28 0 0`, padding `10 24 0`, 그랩바 40×4. eyebrow Poppins 800 11px
 
 ## 5. 파일
 icon-attendance / points / exchange / rewards / rates / notice / invite / settings (행 아이콘 26×26 viewBox, 24pt로 표시), icon-close, icon-chevron, icon-paw-mini, icon-dex-mini, icon-room-mini, icon-stamp, icon-lock, panel-bg.png, gift-*.png(192px, 출석 썸네일), menu.json, menu-spec.md, menu-screen-a/b/c.png.
+
+
+## 6. 출석 시트 상태 (attendance-1.1)
+서버 필드 `attendanceDays` / `lastAttendDateKST` / `phase`(`firstWeek`|`weeklyCycle`) / `cycleNo` / `cycleDay` / `canClaimToday`.
+
+| 상태 | 조건 | 시안 | UI |
+|---|---|---|---|
+| firstWeek | phase=firstWeek (누적 1–7일 구간) | `menu-screen-b.png` | 기존 4열 그리드, DAY7=2칸, gift 썸네일, 오늘 칸 amber+글로우+"오늘" 태그 |
+| weeklyCycle | phase=weeklyCycle (8일째~) | `menu-screen-b2.png` | 누적 일수 카드 + "{기념}까지 N일" + 배지 + 이번 주 7칸(cycleDay) |
+
+- 메뉴 행 빨간 점: `canClaimToday` (menu.json `rows.attendance.badge`).
+- `item.attendanceOnly` 이면 서랍 카드·아이템 상세·출석 시트에 **출석 한정** 태그 (`menu.json attendanceOnlyTag`).
+- 보상·티켓·마일스톤 숫자는 `starter.json` / `economy.json` / `prices.json` 만 읽음 (하드코딩 금지).
+- 출석 한정 아이템(`prices.attendanceOnly.ids` / `source==attendance`)은 상점·구매·서랍 기본지급·방 해금 선물·기타 보상 풀에서 제외. 지급은 출석 API만.

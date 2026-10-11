@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import { menuAsset } from "../lib/menuConfig";
-import { buildMenuViewModel, type MenuViewModel } from "../lib/menuModel";
+import {
+  attendanceSheetState,
+  buildMenuViewModel,
+  daysToMilestone,
+  type MenuViewModel,
+} from "../lib/menuModel";
 import {
   loadMenuSettings,
   saveMenuSettings,
@@ -147,18 +152,27 @@ export function MenuPanel({
 
   const claimAttendance = async () => {
     const result = await claimAttendanceGift(ops);
-    if (result.error || !result.itemId) {
-      showToast(result.error ?? "받을 선물이 없어요");
+    if (result.error) {
+      showToast(result.error);
       return;
     }
-    const day = result.state.attendanceClaimed;
+    const day =
+      result.response?.phase === "firstWeek"
+        ? result.state.attendanceDays
+        : (result.response?.cycleDay ?? result.state.attendanceDays);
     setPopDay(day);
     setStampDay(day);
     onOpsChange(result.state);
     void haptic("success");
+    const itemReward = result.response?.rewards.find((reward) => reward.kind === "item");
+    const pawReward = result.response?.rewards.find((reward) => reward.kind === "paw");
+    const ticketReward = result.response?.rewards.find((reward) => reward.kind === "rateUpTicket");
     window.setTimeout(() => {
       setPopDay(null);
-      showToast("서랍에 쏙 넣었어요");
+      if (itemReward) showToast("서랍에 쏙 넣었어요");
+      else if (ticketReward) showToast("확률업 이용권을 받았어요");
+      else if (pawReward) showToast(`포인트 +${pawReward.paw}`);
+      else showToast("출석 완료!");
     }, 320);
   };
 
@@ -233,12 +247,17 @@ export function MenuPanel({
 
   if (!open && !closing) return null;
 
-  const todayGift = model?.attendance.gifts.find((gift) => gift.isToday);
+  const attState = model ? attendanceSheetState(model.attendance) : "firstWeek";
+  const attCopy = model?.menu.sheets.attendance.states?.[attState];
   const attCta = model
-    ? model.attendance.canClaimToday && todayGift
-      ? model.menu.sheets.attendance.cta.replace("{todayItem.nameKo}", todayGift.nameKo)
-      : model.menu.sheets.attendance.ctaDone
+    ? model.attendance.canClaimToday
+      ? (attCopy?.cta ?? model.menu.sheets.attendance.cta ?? "오늘 출석하기").replace(
+          "{todayRewardLabel}",
+          model.attendance.todayRewardLabel,
+        )
+      : (attCopy?.ctaDone ?? model.menu.sheets.attendance.ctaDone ?? "오늘 출석했어요")
     : "";
+  const milestoneDaysLeft = model ? daysToMilestone(model.attendance) : null;
 
   return (
     <div
@@ -359,7 +378,15 @@ export function MenuPanel({
               onPointerUp={onSheetPointerUp}
               style={{
                 minHeight:
-                  sheet === "attendance" ? 560 : sheet === "rates" ? 640 : sheet === "settings" ? 520 : 420,
+                  sheet === "attendance"
+                    ? attState === "weeklyCycle"
+                      ? 520
+                      : 560
+                    : sheet === "rates"
+                      ? 640
+                      : sheet === "settings"
+                        ? 520
+                        : 420,
               }}
             >
               <div className="menu-grab" />
@@ -392,9 +419,9 @@ export function MenuPanel({
                 </h3>
                 <p className="menu-sheet-desc">
                   {sheet === "attendance"
-                    ? model.menu.sheets.attendance.desc.replace(
+                    ? (attCopy?.desc ?? model.menu.sheets.attendance.desc ?? "").replace(
                         "{day7.nameKo}",
-                        model.attendance.gifts[6]?.nameKo ?? "캣타워",
+                        model.attendance.firstWeekGifts[6]?.nameKo ?? "캣타워",
                       )
                     : sheet === "rates"
                       ? model.menu.sheets.rates.desc
@@ -417,10 +444,10 @@ export function MenuPanel({
               </div>
 
               <div className="menu-sheet-body">
-                {sheet === "attendance" ? (
+                {sheet === "attendance" && attState === "firstWeek" ? (
                   <>
                     <div className="att-grid">
-                      {model.attendance.gifts.map((gift) => (
+                      {model.attendance.firstWeekGifts.map((gift) => (
                         <div
                           key={gift.day}
                           className={`att-cell ${gift.day === 7 ? "is-day7" : ""} ${gift.claimed ? "is-claimed" : ""} ${gift.isToday ? "is-today" : ""} ${!gift.claimed && !gift.isToday ? "is-locked" : ""} ${stampDay === gift.day ? "is-stamping" : ""} ${popDay === gift.day ? "is-pop" : ""}`}
@@ -428,6 +455,11 @@ export function MenuPanel({
                           <span className="att-day">DAY {gift.day}</span>
                           <img className="att-thumb" src={gift.thumb} alt="" />
                           <span className="att-name">{gift.nameKo}</span>
+                          {gift.attendanceOnly ? (
+                            <span className="att-only-tag">
+                              {model.menu.attendanceOnlyTag?.label ?? "출석 한정"}
+                            </span>
+                          ) : null}
                           {gift.day === 7 ? <span className="att-day7-note">마지막 날 큰 선물</span> : null}
                           {gift.claimed || stampDay === gift.day ? (
                             <img className="att-stamp" src={menuAsset("icon-stamp.svg")} alt="" />
@@ -443,12 +475,71 @@ export function MenuPanel({
                     </div>
                     <div className="att-progress">
                       <span>출석 진행</span>
-                      <b>
-                        {model.attendance.claimedDays} / 7일
-                      </b>
+                      <b>{Math.min(model.attendance.attendanceDays, 7)} / 7일</b>
                     </div>
                     <div className="att-bar">
-                      <i style={{ width: `${(model.attendance.claimedDays / 7) * 100}%` }} />
+                      <i
+                        style={{
+                          width: `${(Math.min(model.attendance.attendanceDays, 7) / 7) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </>
+                ) : null}
+
+                {sheet === "attendance" && attState === "weeklyCycle" ? (
+                  <>
+                    <div className="att-cycle-card">
+                      <div>
+                        <p className="att-cycle-label">
+                          {attCopy && "summaryCard" in attCopy
+                            ? attCopy.summaryCard?.title ?? "누적 출석"
+                            : "누적 출석"}
+                        </p>
+                        <p className="att-cycle-value">{model.attendance.attendanceDays}일</p>
+                      </div>
+                      <div className="att-cycle-meta">
+                        {model.attendance.nextMilestone && milestoneDaysLeft != null ? (
+                          <p>
+                            {(attCopy && "summaryCard" in attCopy
+                              ? attCopy.summaryCard?.milestone
+                              : "{milestoneLabel}까지 {daysToMilestone}일")
+                              ?.replace(
+                                "{milestoneLabel}",
+                                model.attendance.nextMilestone.labelKo ??
+                                  `${model.attendance.nextMilestone.days}일`,
+                              )
+                              .replace("{daysToMilestone}", String(milestoneDaysLeft))}
+                          </p>
+                        ) : (
+                          <p>다음 기념일을 기다려 주세요</p>
+                        )}
+                        {model.attendance.nextMilestone?.badgeId || model.attendance.badges[0] ? (
+                          <span className="att-badge-pill">
+                            {model.attendance.nextMilestone?.labelKo ?? "출석 배지"}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                    <p className="att-week-label">
+                      {model.attendance.cycleNo != null
+                        ? `${model.attendance.cycleNo}번째 주`
+                        : "이번 주"}
+                    </p>
+                    <div className="att-week-grid">
+                      {model.attendance.weekCells.map((cell) => (
+                        <div
+                          key={cell.day}
+                          className={`att-week-cell ${cell.claimed ? "is-claimed" : ""} ${cell.isToday ? "is-today" : ""} ${stampDay === cell.day ? "is-stamping" : ""} ${popDay === cell.day ? "is-pop" : ""}`}
+                        >
+                          <span className="att-day">{cell.label}</span>
+                          <strong>{cell.rewardLabel}</strong>
+                          {cell.claimed || stampDay === cell.day ? (
+                            <img className="att-stamp" src={menuAsset("icon-stamp.svg")} alt="" />
+                          ) : null}
+                          {cell.isToday ? <span className="att-today-tag">오늘</span> : null}
+                        </div>
+                      ))}
                     </div>
                   </>
                 ) : null}
@@ -619,7 +710,9 @@ export function MenuPanel({
                   >
                     {attCta}
                   </button>
-                  <p className="menu-sheet-note">{model.menu.sheets.attendance.note}</p>
+                  <p className="menu-sheet-note">
+                    {attCopy?.note ?? model.menu.sheets.attendance.note ?? ""}
+                  </p>
                 </>
               ) : null}
 

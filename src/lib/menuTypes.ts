@@ -60,15 +60,46 @@ export type MenuConfig = {
   sections: Array<{ id: string; label: string; rows: string[] }>;
   rows: Record<string, MenuRowDef>;
   menuIconBadge: { type: string; on: string; when: string };
+  attendanceOnlyTag?: {
+    label: string;
+    style?: Record<string, string | number>;
+  };
   sheets: {
     attendance: {
       title: string;
       eyebrow: string;
-      desc: string;
-      cta: string;
-      ctaDone: string;
-      note: string;
-      thumbs: string;
+      desc?: string;
+      cta?: string;
+      ctaDone?: string;
+      note?: string;
+      thumbs?: string;
+      states?: {
+        firstWeek: {
+          when?: string;
+          mockup?: string;
+          desc: string;
+          cta: string;
+          ctaDone: string;
+          note: string;
+          thumbs?: string;
+          grid?: string;
+        };
+        weeklyCycle: {
+          when?: string;
+          mockup?: string;
+          desc: string;
+          cta: string;
+          ctaDone: string;
+          note: string;
+          summaryCard?: {
+            title: string;
+            value: string;
+            milestone: string;
+            badge: string;
+          };
+          weekGrid?: string;
+        };
+      };
     };
     rates: {
       title: string;

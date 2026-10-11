@@ -33,7 +33,7 @@
     1
    ],
    "price": 300,
-   "ownedDefault": true,
+   "ownedDefault": false,
    "placedDefault": true,
    "image": "items/furniture/cattower.png",
    "imageSizePx": [
@@ -82,7 +82,8 @@
     }
    },
    "sheetTileScale": 1.2,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true
   },
   {
    "id": "catbed",
@@ -1263,7 +1264,7 @@
     1
    ],
    "price": 120,
-   "ownedDefault": true,
+   "ownedDefault": false,
    "placedDefault": true,
    "image": "items/decor/fishbowl.png",
    "imageSizePx": [
@@ -1273,7 +1274,8 @@
    "tileImage": "tiles/fishbowl.png",
    "displayWidthTiles": 0.27,
    "canSitOnSurface": true,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true
   },
   {
    "id": "moonlamp",
@@ -1531,7 +1533,8 @@
    "tileImage": "tiles/globe.png",
    "displayWidthTiles": 0.45,
    "canSitOnSurface": true,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true
   },
   {
    "id": "catcactus",
@@ -1543,7 +1546,7 @@
     1
    ],
    "price": 120,
-   "ownedDefault": true,
+   "ownedDefault": false,
    "placedDefault": true,
    "image": "items/decor/catcactus.png",
    "imageSizePx": [
@@ -1553,7 +1556,8 @@
    "tileImage": "tiles/catcactus.png",
    "displayWidthTiles": 0.234,
    "canSitOnSurface": true,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true
   },
   {
    "id": "archmirror",
@@ -1643,7 +1647,8 @@
    "tileImage": "tiles/starlight.png",
    "displayWidthTiles": 0.45,
    "canSitOnSurface": true,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true
   },
   {
    "id": "gifts",
@@ -1863,7 +1868,7 @@
    "placement": "wall",
    "footprint": null,
    "price": 150,
-   "ownedDefault": true,
+   "ownedDefault": false,
    "placedDefault": true,
    "image": "items/wall/bunting.png",
    "imageSizePx": [
@@ -1877,7 +1882,8 @@
     "front": "items/wall/bunting.png",
     "leftWall": "items/wall/bunting_L.png",
     "rightWall": "items/wall/bunting_R.png"
-   }
+   },
+   "attendanceOnly": true
   },
   {
    "id": "starlamp",
@@ -2073,7 +2079,8 @@
    "angleFixV6": {
     "frontDeskewDeg": -5.92,
     "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
-   }
+   },
+   "attendanceOnly": true
   },
   {
    "id": "floor_wood_honey",

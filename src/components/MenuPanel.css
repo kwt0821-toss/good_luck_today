@@ -612,6 +612,124 @@
   line-height: 1.2;
 }
 
+.att-only-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #1e1a2b;
+  background: #ffc48a;
+  border-radius: 6px;
+  padding: 1px 6px;
+  line-height: 1.2;
+}
+
+.att-cycle-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(243, 233, 215, 0.16);
+  background: rgba(243, 233, 215, 0.05);
+  margin-bottom: 14px;
+}
+
+.att-cycle-label {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(243, 233, 215, 0.55);
+}
+
+.att-cycle-value {
+  margin: 4px 0 0;
+  font-family: Poppins, sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--menu-cream);
+  line-height: 1;
+}
+
+.att-cycle-meta {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+}
+
+.att-cycle-meta p {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(243, 233, 215, 0.7);
+  line-height: 1.35;
+  max-width: 140px;
+}
+
+.att-badge-pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1e1a2b;
+  background: var(--menu-amber);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.att-week-label {
+  margin: 0 0 8px 2px;
+  font-family: Poppins, sans-serif;
+  font-weight: 500;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(243, 233, 215, 0.45);
+}
+
+.att-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.att-week-cell {
+  position: relative;
+  min-height: 88px;
+  border-radius: 12px;
+  border: 1px solid rgba(243, 233, 215, 0.12);
+  background: rgba(243, 233, 215, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 2px 18px;
+}
+
+.att-week-cell strong {
+  font-family: Poppins, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--menu-amber);
+  text-align: center;
+}
+
+.att-week-cell.is-today {
+  border: 1.5px solid var(--menu-amber);
+  box-shadow: 0 0 14px rgba(255, 196, 138, 0.28);
+}
+
+.att-week-cell.is-claimed {
+  opacity: 0.7;
+}
+
+.att-week-cell .att-stamp {
+  width: 28px;
+  height: 28px;
+}
+
+.att-week-cell .att-today-tag {
+  bottom: 4px;
+  font-size: 8px;
+}
+
 /* rates */
 .rates-tabs {
   display: grid;

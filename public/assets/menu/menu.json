@@ -68,13 +68,12 @@
    "icon": "icon-attendance.svg",
    "enabled": true,
    "open": "sheet:attendance",
-   "meta": "'{attendance.claimedDays+1}일째 · 선물 도착' if canClaimToday else '{attendance.claimedDays}/7 · 내일 또 만나요'",
-   "data": "starter.json → attendance7, attendanceRule",
+   "meta": "'{n}일째 · 선물 도착' if canClaimToday else '누적 {attendanceDays}일 · 내일 또 만나요'",
+   "data": "starter.json → attendance (firstWeek / weeklyCycle / milestones)",
    "badge": {
     "type": "dot",
-    "when": "attendance.canClaimToday && attendance.claimedDays < 7"
-   },
-   "hideWhen": "attendance.claimedDays >= 7 && !events.seasonAttendance"
+    "when": "attendance.canClaimToday"
+   }
   },
   "points": {
    "label": "포인트 받기",
@@ -221,10 +220,34 @@
   "attendance": {
    "title": "출석 체크",
    "eyebrow": "DAILY GIFT",
-   "desc": "7일 출석하면 {day7.nameKo}가 방으로 와요.\n하루 빠져도 괜찮아요, 출석한 날만큼 이어서 받아요.",
-   "cta": "오늘 선물 받기 · {todayItem.nameKo}",
+   "states": {
+    "firstWeek": {
+     "when": "attendanceDays < 7 || (attendanceDays==7 && !canClaimToday && phase==firstWeek) || phase==firstWeek",
+     "mockup": "menu-screen-b.png",
+     "desc": "7일 출석하면 {day7.nameKo}가 방으로 와요.\n하루 빠져도 괜찮아요, 출석한 날만큼 이어서 받아요.",
+     "cta": "오늘 선물 받기 · {todayRewardLabel}",
+     "ctaDone": "오늘 선물 받았어요",
+     "note": "받은 아이템은 방꾸미기 서랍에 들어가요",
+     "thumbs": "gift-{itemId}.png",
+     "grid": "4col day7=span2"
+    },
+    "weeklyCycle": {
+     "when": "attendanceDays >= 7 && phase==weeklyCycle",
+     "mockup": "menu-screen-b2.png",
+     "desc": "매일 출석하면 포인트·이용권·한정 선물이 쌓여요.",
+     "cta": "오늘 출석하기 · {todayRewardLabel}",
+     "ctaDone": "오늘 출석했어요",
+     "note": "누적 출석은 빠지더라도 리셋되지 않아요",
+     "summaryCard": {
+      "title": "누적 출석",
+      "value": "{attendanceDays}일",
+      "milestone": "{milestoneLabel}까지 {daysToMilestone}일",
+      "badge": "{nextBadgeId}"
+     },
+     "weekGrid": "7 cells · cycleDay highlight"
+    }
+   },
    "ctaDone": "오늘 선물 받았어요",
-   "note": "받은 아이템은 방꾸미기 서랍에 들어가요",
    "thumbs": "gift-{itemId}.png"
   },
   "rates": {
@@ -297,6 +320,17 @@
    "eyebrow": "REWARDS",
    "desc": "도감을 채우면 토스 포인트와 발바닥 포인트가 와요.",
    "cta": "모두 받기"
+  }
+ },
+ "attendanceOnlyTag": {
+  "label": "출석 한정",
+  "style": {
+   "fontSize": 9.5,
+   "fontWeight": 700,
+   "color": "#1E1A2B",
+   "background": "#FFC48A",
+   "radius": 6,
+   "padding": "1px 6px"
   }
  }
 }

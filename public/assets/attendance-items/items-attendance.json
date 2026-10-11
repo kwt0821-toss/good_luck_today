@@ -1,0 +1,227 @@
+{
+ "_version": "attendance-items-1.0",
+ "_note": "출석 한정 아이템. room-assets-v6/items.json 과 같은 스키마. 이미지 경로는 basePath 기준. (zip 미제공 시 룸 에셋 경로 재사용)",
+ "basePath": "/assets/room",
+ "items": [
+  {
+   "id": "cattower",
+   "nameKo": "캣타워",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 300,
+   "ownedDefault": false,
+   "placedDefault": true,
+   "image": "items/furniture/cattower.png",
+   "imageSizePx": [
+    130,
+    159
+   ],
+   "tileImage": "tiles/cattower.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/cattower.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      66.0,
+      129.0
+     ],
+     "anchorBackCornerPx": [
+      66,
+      90
+     ],
+     "size": [
+      130,
+      159
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/cattower_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      63.0,
+      129.0
+     ],
+     "anchorBackCornerPx": [
+      63,
+      90
+     ],
+     "size": [
+      130,
+      159
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "source": "attendance",
+   "basePath": "/assets/room"
+  },
+  {
+   "id": "fishbowl",
+   "nameKo": "금붕어 어항",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": false,
+   "placedDefault": true,
+   "image": "items/decor/fishbowl.png",
+   "imageSizePx": [
+    122,
+    135
+   ],
+   "tileImage": "tiles/fishbowl.png",
+   "displayWidthTiles": 0.27,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "source": "attendance",
+   "basePath": "/assets/room"
+  },
+  {
+   "id": "globe",
+   "nameKo": "지구본",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 220,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/decor/globe.png",
+   "imageSizePx": [
+    106,
+    145
+   ],
+   "tileImage": "tiles/globe.png",
+   "displayWidthTiles": 0.45,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "source": "attendance",
+   "basePath": "/assets/room"
+  },
+  {
+   "id": "catcactus",
+   "nameKo": "냥이 선인장",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": false,
+   "placedDefault": true,
+   "image": "items/decor/catcactus.png",
+   "imageSizePx": [
+    97,
+    142
+   ],
+   "tileImage": "tiles/catcactus.png",
+   "displayWidthTiles": 0.234,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "source": "attendance",
+   "basePath": "/assets/room"
+  },
+  {
+   "id": "starlight",
+   "nameKo": "별 수면등",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 180,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/decor/starlight.png",
+   "imageSizePx": [
+    115,
+    141
+   ],
+   "tileImage": "tiles/starlight.png",
+   "displayWidthTiles": 0.45,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "source": "attendance",
+   "basePath": "/assets/room"
+  },
+  {
+   "id": "bunting",
+   "nameKo": "발바닥 가랜드",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 150,
+   "ownedDefault": false,
+   "placedDefault": true,
+   "image": "items/wall/bunting.png",
+   "imageSizePx": [
+    233,
+    107
+   ],
+   "tileImage": "tiles/bunting.png",
+   "displayWidthTiles": 1.5,
+   "wallSpanTiles": 1.5,
+   "orientations": {
+    "front": "items/wall/bunting.png",
+    "leftWall": "items/wall/bunting_L.png",
+    "rightWall": "items/wall/bunting_R.png"
+   },
+   "attendanceOnly": true,
+   "source": "attendance",
+   "basePath": "/assets/room"
+  },
+  {
+   "id": "calendar",
+   "nameKo": "발바닥 달력",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 120,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/wall/calendar.png",
+   "imageSizePx": [
+    122,
+    140
+   ],
+   "tileImage": "tiles/calendar.png",
+   "displayWidthTiles": 0.55,
+   "wallSpanTiles": 0.55,
+   "orientations": {
+    "front": "items/wall/calendar.png",
+    "leftWall": "items/wall/calendar_L.png",
+    "rightWall": "items/wall/calendar_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -5.92,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
+   },
+   "attendanceOnly": true,
+   "source": "attendance",
+   "basePath": "/assets/room"
+  }
+ ]
+}

@@ -1157,6 +1157,19 @@
   font-weight: 700;
 }
 
+.lucky-attend-tag {
+  display: inline-block;
+  margin-left: 4px;
+  vertical-align: middle;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #1e1a2b;
+  background: #ffc48a;
+  border-radius: 6px;
+  padding: 1px 6px;
+  line-height: 1.2;
+}
+
 .lucky-cell.is-locked strong {
   color: rgba(243, 233, 215, 0.45);
 }
