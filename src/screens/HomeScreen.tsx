@@ -11,6 +11,7 @@ const ASSETS = {
   tail: "/assets/main/cat-tail.png",
   card: "/assets/main/card-facedown.png",
   cat: "/assets/main/cat-body.png",
+  paw: "/assets/room/ui/icon-paw-point.svg",
 } as const;
 
 type HomeScreenProps = {
@@ -24,7 +25,6 @@ type HomeScreenProps = {
   onOpenMenu: () => void;
   onOpenCollection: () => void;
   onOpenRoom: () => void;
-  onOpenRates: () => void;
 };
 
 export function HomeScreen({
@@ -38,7 +38,6 @@ export function HomeScreen({
   onOpenMenu,
   onOpenCollection,
   onOpenRoom,
-  onOpenRates,
 }: HomeScreenProps) {
   const [waking, setWaking] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -186,7 +185,8 @@ export function HomeScreen({
             onRateUpDraw();
           }}
         >
-          확률업 뽑기
+          <span className="main-ops-hint">(30초 광고보고)</span>
+          <span className="main-ops-label">확률업 뽑기</span>
           <em>{remainingRateUp}회</em>
         </button>
         <button
@@ -202,13 +202,14 @@ export function HomeScreen({
             onPawAd();
           }}
         >
-          포인트 받기
+          <span className="main-ops-hint">(짧은 광고 보고)</span>
+          <span className="main-ops-label main-ops-paw">
+            <img src={ASSETS.paw} alt="" width={16} height={16} />
+            받기
+          </span>
           <em>
-            {pawBalance}P · {remainingPawAds}회
+            {pawBalance.toLocaleString("en-US")} · {remainingPawAds}회
           </em>
-        </button>
-        <button type="button" className="main-ops-btn is-ghost" onClick={onOpenRates}>
-          확률 안내
         </button>
       </div>
 

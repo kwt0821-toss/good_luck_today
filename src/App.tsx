@@ -345,7 +345,6 @@ export default function App() {
           onOpenMenu={() => setScreen({ name: "menu" })}
           onOpenCollection={() => setScreen({ name: "collection" })}
           onOpenRoom={() => setScreen({ name: "room" })}
-          onOpenRates={() => setScreen({ name: "rates" })}
         />
       ) : null}
 
