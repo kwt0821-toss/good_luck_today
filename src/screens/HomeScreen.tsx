@@ -166,6 +166,7 @@ export function HomeScreen({
         </div>
       </button>
 
+      <p className="main-cta-ad">(짧은 광고가 나온 뒤 카드를 뽑아요)</p>
       <p className="main-cta">
         <span className="main-cta-accent">톡,</span> 깨워서 오늘의 카드 받기
       </p>
