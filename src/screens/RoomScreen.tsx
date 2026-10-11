@@ -6,13 +6,14 @@ import { RoomWorld } from "../components/RoomWorld";
 import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
 import { loadDexOwned } from "../lib/dexCollection";
 import { haptic, isInTossApp } from "../lib/native";
-import { itemMap, loadRoomCatalog, loadRoomGrid, roomAsset, type RoomGridFile } from "../lib/roomCatalog";
+import { isPaintItem, itemMap, loadRoomCatalog, loadRoomGrid, roomAsset, type RoomGridFile } from "../lib/roomCatalog";
 import {
   canPlace,
   canPlaceWall,
   cloneLayout,
   firstFreeTile,
   firstFreeOnWall,
+  hitTestPaint,
   hitTestTile,
   hitTestWall,
   inGrid,
@@ -30,9 +31,19 @@ import {
   resolvedWallSlot,
 } from "../lib/roomLayout";
 import { defaultLayout, loadRoomState, newInstanceId, saveRoomState } from "../lib/roomStore";
+import {
+  applyPaint,
+  cloneFloorTiles,
+  cloneWallTiles,
+  getTileRules,
+  paintTargetAnchor,
+  paintTargetLabel,
+} from "../lib/roomTiles";
 import type { DexCard } from "../lib/dexTypes";
 import type {
   FloorPlacement,
+  PaintFillMode,
+  PaintTarget,
   RoomDrag,
   RoomItem,
   RoomLayoutState,
@@ -70,12 +81,29 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   const [dragging, setDragging] = useState<RoomDrag | null>(null);
   const [shakeId, setShakeId] = useState<string | null>(null);
   const [activeWall, setActiveWall] = useState<"L" | "R">("L");
+  const [brushId, setBrushId] = useState<string | null>(null);
+  const [fillMode, setFillMode] = useState<PaintFillMode>("cell");
+  const [eraser, setEraser] = useState(false);
+  const [paintHover, setPaintHover] = useState<PaintTarget | null>(null);
+  const [undoStack, setUndoStack] = useState<
+    { floorTiles: RoomLayoutState["floorTiles"]; wallTiles: RoomLayoutState["wallTiles"] }[]
+  >([]);
   const [stars] = useState(() => makeStars());
   const toastTimer = useRef(0);
   const longPress = useRef(0);
   const dragOrigin = useRef<FloorPlacement | WallPlacement | null>(null);
+  const paintStroke = useRef<{
+    dirty: boolean;
+    before: { floorTiles: RoomLayoutState["floorTiles"]; wallTiles: RoomLayoutState["wallTiles"] };
+    painted: Set<string>;
+  } | null>(null);
+  const tilesRef = useRef<{
+    floorTiles: RoomLayoutState["floorTiles"];
+    wallTiles: RoomLayoutState["wallTiles"];
+  } | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const itemsById = useMemo(() => itemMap(items), [items]);
+  const paintTab = tab === "벽지" || tab === "바닥";
 
   useEffect(() => {
     void Promise.all([loadRoomCatalog(), loadRoomGrid()]).then(async ([catalog, gridFile]) => {
@@ -113,6 +141,9 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   }
 
   const layout = state.layout;
+  if (!paintStroke.current) {
+    tilesRef.current = { floorTiles: layout.floorTiles, wallTiles: layout.wallTiles };
+  }
   const placedCount = layout.floor.length + layout.walls.length;
   const selected =
     layout.floor.find((item) => item.instanceId === selectedId) ??
@@ -129,6 +160,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     setSnapshot(cloneLayout(layout));
     setMode("edit");
     setSelectedId(null);
+    setUndoStack([]);
     void haptic("tap");
   };
 
@@ -137,6 +169,9 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     setSelectedId(null);
     setDragging(null);
     setSnapshot(null);
+    setPaintHover(null);
+    setUndoStack([]);
+    paintStroke.current = null;
     if (saved) showToast("방을 저장했어요");
   };
 
@@ -152,14 +187,100 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     if (instanceId) void haptic("tap");
   };
 
+  const paintPrefer = (): "floor" | "wall" | "any" => {
+    if (eraser) return "any";
+    if (tab === "벽지") return "wall";
+    if (tab === "바닥") return "floor";
+    return "any";
+  };
+
+  const paintBrushId = () => {
+    const rules = getTileRules();
+    if (eraser) {
+      if (tab === "벽지") return rules.defaultWall;
+      if (tab === "바닥") return rules.defaultFloor;
+      return null;
+    }
+    return brushId;
+  };
+
+  const beginPaintStroke = (layoutNow: RoomLayoutState) => {
+    paintStroke.current = {
+      dirty: false,
+      before: {
+        floorTiles: cloneFloorTiles(layoutNow.floorTiles),
+        wallTiles: cloneWallTiles(layoutNow.wallTiles),
+      },
+      painted: new Set(),
+    };
+  };
+
+  const paintAt = (target: PaintTarget) => {
+    const id = paintBrushId();
+    if (!id || !state) return;
+    const key = target.kind === "floor" ? `f:${target.col},${target.row}` : `w:${target.wall}:${target.index}`;
+    const stroke = paintStroke.current;
+    if (stroke?.painted.has(key) && fillMode === "cell") return;
+    const current = tilesRef.current ?? { floorTiles: state.layout.floorTiles, wallTiles: state.layout.wallTiles };
+    const next = applyPaint(current.floorTiles, current.wallTiles, target, id, fillMode === "fill");
+    if (!next.changed) return;
+    tilesRef.current = { floorTiles: next.floor, wallTiles: next.walls };
+    if (stroke) {
+      stroke.dirty = true;
+      stroke.painted.add(key);
+    }
+    persist({
+      ...state,
+      layout: { ...state.layout, floorTiles: next.floor, wallTiles: next.walls },
+    });
+    void haptic("tap");
+  };
+
+  const endPaintStroke = () => {
+    const stroke = paintStroke.current;
+    paintStroke.current = null;
+    if (!stroke?.dirty) return;
+    setUndoStack((stack) => [...stack.slice(-19), stroke.before]);
+  };
+
+  const undoPaint = () => {
+    const prev = undoStack[undoStack.length - 1];
+    if (!prev || !state) return;
+    setUndoStack((stack) => stack.slice(0, -1));
+    persist({
+      ...state,
+      layout: {
+        ...state.layout,
+        floorTiles: cloneFloorTiles(prev.floorTiles),
+        wallTiles: cloneWallTiles(prev.wallTiles),
+      },
+    });
+  };
+
   const onFloorPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (mode !== "edit") return;
-    if ((event.target as HTMLElement).closest(".lucky-sprite")) return;
-    setSelectedId(null);
+    if (!paintTab) {
+      if ((event.target as HTMLElement).closest(".lucky-sprite")) return;
+      setSelectedId(null);
+      return;
+    }
+    event.preventDefault();
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const target = hitTestPaint(event.clientX - rect.left, event.clientY - rect.top, mode, paintPrefer());
+    setPaintHover(target);
+    if (!target) return;
+    beginPaintStroke(layout);
+    paintAt(target);
+    try {
+      stageRef.current?.setPointerCapture(event.pointerId);
+    } catch {
+      // ignore
+    }
   };
 
   const onItemPointerDown = (event: PointerEvent<HTMLButtonElement>, instanceId: string) => {
-    if (mode !== "edit") return;
+    if (mode !== "edit" || paintTab) return;
     event.stopPropagation();
     setSelectedId(instanceId);
     const floorPlace = layout.floor.find((item) => item.instanceId === instanceId);
@@ -182,6 +303,12 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   };
 
   const onStagePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (mode === "edit" && paintTab && stageRef.current) {
+      const rect = stageRef.current.getBoundingClientRect();
+      const target = hitTestPaint(event.clientX - rect.left, event.clientY - rect.top, mode, paintPrefer());
+      setPaintHover(target);
+      if (paintStroke.current && target) paintAt(target);
+    }
     if (!dragging || !stageRef.current) return;
     const rect = stageRef.current.getBoundingClientRect();
     const localX = event.clientX - rect.left;
@@ -207,6 +334,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
 
   const onStagePointerUp = () => {
     window.clearTimeout(longPress.current);
+    if (paintStroke.current) endPaintStroke();
     if (!dragging) return;
     if (dragging.kind === "floor") {
       const place = layout.floor.find((item) => item.instanceId === dragging.instanceId);
@@ -357,12 +485,10 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       setBuyItem(item);
       return;
     }
-    if (item.placement === "wallpaper") {
-      patchLayout({ ...layout, wallpaper: item.id });
-      return;
-    }
-    if (item.placement === "floor-skin") {
-      patchLayout({ ...layout, floorSkin: item.id });
+    if (isPaintItem(item)) {
+      setBrushId(item.id);
+      setEraser(false);
+      setSelectedId(null);
       return;
     }
     const existing =
@@ -536,12 +662,14 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
             mode={mode}
             itemsById={itemsById}
             layout={layout}
-            selectedId={selectedId}
-            dragging={dragging}
-            hints={hints}
+            selectedId={paintTab ? null : selectedId}
+            dragging={paintTab ? null : dragging}
+            hints={paintTab ? null : hints}
             frameThumbs={frameThumbs}
             shakeId={shakeId}
             shadowsEnabled={state.shadowsEnabled}
+            painting={paintTab}
+            paintHover={paintTab ? paintHover : null}
             onSelect={onSelect}
             onItemPointerDown={onItemPointerDown}
             onFloorPointerDown={onFloorPointerDown}
@@ -549,7 +677,22 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
         </div>
       </div>
 
-      {mode === "edit" && hud && selectedItem && selected ? (
+      {mode === "edit" && paintTab && paintHover ? (
+        <div
+          className="lucky-paint-hud"
+          style={{
+            left: screen.left + paintTargetAnchor(paintHover).x * screen.scale,
+            top: screen.top + paintTargetAnchor(paintHover).y * screen.scale,
+          }}
+        >
+          <span>{paintTargetLabel(paintHover, brushId ? itemsById.get(brushId) : null)}</span>
+          <i className="lucky-paint-pencil" aria-hidden="true">
+            <img src={roomAsset("ui/icon-brush.svg")} alt="" />
+          </i>
+        </div>
+      ) : null}
+
+      {mode === "edit" && hud && selectedItem && selected && !paintTab ? (
         <div
           className="lucky-select-hud"
           style={{ left: hud.left, top: hud.top, width: hud.width, height: hud.height }}
@@ -621,13 +764,41 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       ) : (
         <RoomDrawer
           tab={tab}
-          onTab={setTab}
+          onTab={(next) => {
+            setTab(next);
+            if (next === "벽지" || next === "바닥") {
+              setSelectedId(null);
+              setDragging(null);
+              const ownedPaint = items.find(
+                (item) =>
+                  (next === "벽지"
+                    ? item.category === "벽지" || item.placement === "wallpaper"
+                    : item.category === "바닥" || item.placement === "floor-skin") && (state.owned[item.id] ?? 0) > 0,
+              );
+              if (ownedPaint && (!brushId || itemsById.get(brushId)?.category !== next)) {
+                setBrushId(ownedPaint.id);
+              }
+              setEraser(false);
+            } else {
+              setPaintHover(null);
+            }
+          }}
           items={items}
           layout={layout}
           owned={state.owned}
           points={state.points}
           selectedId={selectedId}
+          brushId={brushId}
+          fillMode={fillMode}
+          eraser={eraser}
+          canUndo={undoStack.length > 0}
           onPick={pickDrawerItem}
+          onFillMode={(next) => {
+            setFillMode(next);
+            setEraser(false);
+          }}
+          onEraser={() => setEraser((value) => !value)}
+          onUndo={undoPaint}
           onExchange={() => void openExchange()}
         />
       )}

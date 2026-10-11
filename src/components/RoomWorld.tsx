@@ -22,7 +22,17 @@ import {
   wallPlaceFromSlot,
   wallSpriteRect,
 } from "../lib/roomLayout";
-import type { FloorPlacement, RoomDrag, RoomItem, RoomLayoutState, RoomMode, SpriteRect, WallPlacement } from "../lib/roomTypes";
+import { floorTileRect, floorTileSrc, wallStripPoints, wallStripRect, wallStripSrc } from "../lib/roomTiles";
+import type {
+  FloorPlacement,
+  PaintTarget,
+  RoomDrag,
+  RoomItem,
+  RoomLayoutState,
+  RoomMode,
+  SpriteRect,
+  WallPlacement,
+} from "../lib/roomTypes";
 
 type RoomWorldProps = {
   mode: RoomMode;
@@ -34,6 +44,8 @@ type RoomWorldProps = {
   frameThumbs: string[];
   shakeId: string | null;
   shadowsEnabled: boolean;
+  painting: boolean;
+  paintHover: PaintTarget | null;
   onSelect: (instanceId: string | null, kind: "floor" | "wall") => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, instanceId: string) => void;
   onFloorPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
@@ -50,7 +62,7 @@ function TilePoly({
 }: {
   col: number;
   row: number;
-  tone: "selected" | "valid" | "invalid" | "hint";
+  tone: "selected" | "valid" | "invalid" | "hint" | "paint";
 }) {
   return <polygon className={`lucky-tile is-${tone}`} points={diamondPoints(col, row)} />;
 }
@@ -146,6 +158,8 @@ export function RoomWorld({
   frameThumbs,
   shakeId,
   shadowsEnabled,
+  painting,
+  paintHover,
   onSelect,
   onItemPointerDown,
   onFloorPointerDown,
@@ -233,10 +247,43 @@ export function RoomWorld({
       : { x: 0, y: 0 };
 
   return (
-    <div className="lucky-world" onPointerDown={onFloorPointerDown}>
+    <div className={`lucky-world ${painting ? "is-painting" : ""}`} onPointerDown={onFloorPointerDown}>
       <Layer src="world/base-bg.webp" />
-      <Layer src="world/room-walls.svg" />
-      <Layer src={mode === "edit" ? "world/room-floor-edit-grid.svg" : "world/room-floor.svg"} />
+      <div className="lucky-world-layer lucky-floor-tiles" aria-hidden="true">
+        {layout.floorTiles.map((row, r) =>
+          row.map((id, c) => {
+            const rect = floorTileRect(c, r);
+            return (
+              <img
+                key={`ft-${c}-${r}`}
+                className="lucky-floor-tile"
+                src={roomAsset(floorTileSrc(id, c, r))}
+                alt=""
+                draggable={false}
+                style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
+              />
+            );
+          }),
+        )}
+      </div>
+      <div className="lucky-world-layer lucky-wall-tiles" aria-hidden="true">
+        {(["L", "R"] as const).flatMap((wall) =>
+          layout.wallTiles[wall].map((id, index) => {
+            const rect = wallStripRect(wall, index);
+            return (
+              <img
+                key={`wt-${wall}-${index}`}
+                className={`lucky-wall-tile is-${wall}`}
+                src={roomAsset(wallStripSrc(id, wall, index))}
+                alt=""
+                draggable={false}
+                style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
+              />
+            );
+          }),
+        )}
+      </div>
+      <Layer src={mode === "edit" ? "world/room-frame-edit.svg" : "world/room-frame-view.svg"} className="is-frame" />
 
       {mode === "edit" ? (
         <svg className="lucky-world-layer lucky-tile-layer" viewBox={`0 0 ${WORLD_W} ${WORLD_H}`}>
@@ -254,6 +301,9 @@ export function RoomWorld({
               tone={tile.valid ? "valid" : "invalid"}
             />
           ))}
+          {paintHover?.kind === "floor" ? (
+            <TilePoly key="paint-floor" col={paintHover.col} row={paintHover.row} tone="paint" />
+          ) : null}
         </svg>
       ) : null}
 
@@ -273,6 +323,12 @@ export function RoomWorld({
               tone={wallPreviewOk ? "valid" : "invalid"}
             />
           ))}
+        </svg>
+      ) : null}
+
+      {mode === "edit" && paintHover?.kind === "wall" ? (
+        <svg className="lucky-world-layer lucky-paint-layer" viewBox={`0 0 ${WORLD_W} ${WORLD_H}`}>
+          <polygon className="lucky-tile is-paint is-wall" points={wallStripPoints(paintHover.wall, paintHover.index)} />
         </svg>
       ) : null}
 
@@ -335,7 +391,7 @@ export function RoomWorld({
         />
       ))}
 
-      <Layer src="world/string-lights.svg" className="is-lights" />
+      {/* string lights are baked into world/room-frame-* */}
 
       {furnitureDrawn.map((place) => {
         const item = itemsById.get(place.id);

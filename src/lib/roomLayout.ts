@@ -1,6 +1,7 @@
 import type {
   FloorPlacement,
   FurnitureOrientation,
+  PaintTarget,
   RoomItem,
   RoomMode,
   RoomOrientation,
@@ -495,6 +496,38 @@ export function isoFromScreen(localX: number, localY: number, mode: RoomMode) {
   const col = ((u - 640) / 26 + (v - 300) / 13) / 2;
   const row = ((v - 300) / 13 - (u - 640) / 26) / 2;
   return { u, v, col, row };
+}
+
+export function hitTestPaint(
+  localX: number,
+  localY: number,
+  mode: RoomMode,
+  prefer: "floor" | "wall" | "any",
+): PaintTarget | null {
+  const { col, row } = isoFromScreen(localX, localY, mode);
+  const floorCol = Math.floor(col);
+  const floorRow = Math.floor(row);
+  const onFloor = floorCol >= 0 && floorCol < GRID && floorRow >= 0 && floorRow < GRID;
+  const wall = hitTestWall(localX, localY, mode);
+  const onWall = Boolean(wall && wall.heightUnits >= 18 && wall.t >= 0 && wall.t < WALL_SLOTS);
+  if (prefer === "wall") {
+    if (onWall && wall) {
+      return { kind: "wall", wall: wall.wall, index: clamp(Math.floor(wall.t), 0, WALL_SLOTS - 1) };
+    }
+    return null;
+  }
+  if (prefer === "floor") {
+    if (onFloor) return { kind: "floor", col: floorCol, row: floorRow };
+    return null;
+  }
+  if (onWall && wall && wall.heightUnits > 36) {
+    return { kind: "wall", wall: wall.wall, index: clamp(Math.floor(wall.t), 0, WALL_SLOTS - 1) };
+  }
+  if (onFloor) return { kind: "floor", col: floorCol, row: floorRow };
+  if (onWall && wall) {
+    return { kind: "wall", wall: wall.wall, index: clamp(Math.floor(wall.t), 0, WALL_SLOTS - 1) };
+  }
+  return null;
 }
 
 export function hitTestWall(localX: number, localY: number, mode: RoomMode): {

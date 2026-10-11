@@ -3,9 +3,16 @@ import { Storage } from "@apps-in-toss/web-framework";
 import { isInTossApp } from "./native";
 import type { GridLayoutEntry, RoomGridFile } from "./roomCatalog";
 import { wallCoordsFromT } from "./roomLayout";
+import {
+  defaultFloorTiles,
+  defaultWallTiles,
+  getTileRules,
+  normalizeFloorTiles,
+  normalizeWallTiles,
+} from "./roomTiles";
 import type { FloorPlacement, RoomItem, RoomLayoutState, RoomOrientation, RoomSaveState, WallPlacement } from "./roomTypes";
 
-const ROOM_KEY = "lucky-cat.my-room.v5";
+const ROOM_KEY = "lucky-cat.my-room.v5.tiles";
 export const MOCK_POINTS = 1240;
 export const MOCK_COZY = 3;
 
@@ -54,11 +61,14 @@ export function layoutFromGrid(grid: RoomGridFile | undefined): RoomLayoutState 
       orientation: orientationOf(entry.orientation),
     });
   }
+  const rules = getTileRules();
   return {
     floor,
     walls,
-    wallpaper: "",
-    floorSkin: "",
+    wallpaper: rules.defaultWall,
+    floorSkin: rules.defaultFloor,
+    floorTiles: defaultFloorTiles(rules.defaultFloor),
+    wallTiles: defaultWallTiles(rules.defaultWall),
   };
 }
 
@@ -146,8 +156,10 @@ function parseState(raw: string | null): RoomSaveState | null {
       layout: {
         floor: parseFloor(layout.floor),
         walls: parseWalls(layout.walls),
-        wallpaper: typeof layout.wallpaper === "string" ? layout.wallpaper : "",
-        floorSkin: typeof layout.floorSkin === "string" ? layout.floorSkin : "",
+        wallpaper: typeof layout.wallpaper === "string" ? layout.wallpaper : getTileRules().defaultWall,
+        floorSkin: typeof layout.floorSkin === "string" ? layout.floorSkin : getTileRules().defaultFloor,
+        floorTiles: normalizeFloorTiles(layout.floorTiles),
+        wallTiles: normalizeWallTiles(layout.wallTiles),
       },
     };
   } catch {
@@ -187,7 +199,7 @@ async function writeKey(key: string, value: string): Promise<void> {
 }
 
 export async function loadRoomState(items: RoomItem[], grid?: RoomGridFile): Promise<RoomSaveState> {
-  const stored = parseState(await readKey(ROOM_KEY));
+  const stored = parseState(await readKey(ROOM_KEY)) ?? parseState(await readKey("lucky-cat.my-room.v5"));
   if (stored && stored.layout.floor.length + stored.layout.walls.length > 0) {
     return {
       ...stored,

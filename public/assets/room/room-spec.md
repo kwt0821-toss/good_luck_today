@@ -30,13 +30,13 @@ Feather the container edges into the page bg (CSS mask, ~37 pt linear fade). Add
 
 Layer order (bottom → top):
 1. `world/base-bg.webp` — cloud island
-2. `world/room-walls.svg`
-3. `world/room-floor.svg` (view) / `world/room-floor-edit-grid.svg` (edit)
-4. edit-tile overlays — draw in code with the `world/tile-*.svg` styles
-5. rug decal `items/decor/pawrug` — see §3.4
-6. **contact shadows** — `shadows/shadow-{w}x{d}.png`, one per floor item (§3.5)
-7. wall items `items/wall/{id}_L.png` (left wall) / `{id}_R.png` (right wall) (§3.6)
-8. `world/string-lights.svg`
+2. floor tiles — `floor/iso/{id}_{c%2}{r%2}.png` per cell (§10)
+3. wall tiles — `wall/L/{id}_{i}.png` / `wall/R/{id}_{i}.png`, 8 strips (§10)
+4. `world/room-frame-view.svg` / `room-frame-edit.svg` — wooden trim + grout + string lights
+5. edit-tile overlays — draw in code with the `world/tile-*.svg` styles
+6. rug decal `items/decor/pawrug` — see §3.4
+7. **contact shadows** — `shadows/shadow-{w}x{d}.png`, one per floor item (§3.5)
+8. wall items `items/wall/{id}_L.png` (left wall) / `{id}_R.png` (right wall) (§3.6)
 9. floor items, depth-sorted (§3.3); on-top items drawn right after their host
 10. `world/lamp-glow-additive.webp` — `mix-blend-mode: screen` (or plus-lighter); baked for the lamp at (0,0) — move or re-render if the lamp moves
 11. `world/front-puffs-view.svg` / `front-puffs-edit.svg`
@@ -153,4 +153,16 @@ Tile states: **owned** (plain, "보유") · **placed** (`ui/badge-check.svg` 14 
 - `world/` — base-bg, room-floor, room-floor-edit-grid, room-walls, string-lights, front-puffs-view/edit (svg + webp), lamp-glow-additive.webp, tile-*.svg styles, `_reference/`
 - `ui/` — logo, icons, check badge, selection-box reference
 - `items.json` (48 items + heroCat, both orientations, anchors, shadow, tile), `grid.json` (grid, screens, contactShadow, layerOrder, defaultLayout)
-- `mockups/` — room-screen-a-v5, room-screen-b-v5, room-v5-catalog
+- `mockups/` — room-screen-a-v5, room-screen-b-v5, room-screen-c-v5 (floor paint), room-screen-d-v5 (wallpaper paint), room-v5-catalog, room-tiles-catalog
+- `floor/iso/{id}_{c%2}{r%2}.png`, `wall/L/{id}_{i}.png`, `wall/R/{id}_{i}.png`, `world/room-frame-view|edit`
+
+## 10. Tile paint (wallpaper + floor)
+Per-cell wallpaper and floor. Spec files: `items.json → tileRules`, `grid.json → tileMaps`. Mockups C (floor) and D (wallpaper).
+
+- **floorTiles[row][col]** = skin id. Cell `(c, r)` draws `floor/iso/{id}_{c%2}{r%2}.png` (160×82 world px, 2 px pad around the 156×78 diamond).
+- **wallTiles** = `{ L: [8], R: [8] }`. Strip `i` uses `wall/L/{id}_{i}.png` / `wall/R/{id}_{i}.png` (82×493). Left strip on `P(0,i)→P(0,i+1)` raised 450 px; right on `P(i,0)→P(i+1,0)`.
+- Defaults: every floor cell `wood_honey`, every wall strip `plum_sparkle`.
+- Drawer tabs: 가구 · 소품 · 벽 꾸미기 · 벽지 · 바닥 · 카드액자. 벽지 / 바닥 tabs list those categories. Toolbar: **한 칸씩 · 전체 칠하기** + **지우개**.
+- Cell paint: tap or drag. Fill-all: 64 floor cells, or 8 strips on the tapped wall. Eraser writes the default id. Furniture stays visible and does not block paint. Locked skins open the buy sheet.
+- HUD: highlight the cell; floor tag `(c, r) 이름`; wall tag `왼쪽/오른쪽 벽 n번째 줄`.
+- Save `floorTiles` and `wallTiles` with the layout. 완료 saves, 취소 restores the edit snapshot, 초기화 restores defaults. Undo reverts one paint stroke.

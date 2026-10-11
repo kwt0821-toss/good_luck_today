@@ -228,6 +228,42 @@
   z-index: 7;
 }
 
+.lucky-world-layer.is-frame {
+  z-index: 3;
+}
+
+.lucky-floor-tiles {
+  z-index: 1;
+}
+
+.lucky-wall-tiles {
+  z-index: 2;
+}
+
+.lucky-floor-tile,
+.lucky-wall-tile {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  display: block;
+}
+
+.lucky-paint-layer {
+  z-index: 4;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.lucky-tile.is-paint {
+  fill: rgba(255, 196, 138, 0.32);
+  stroke: #ffc48a;
+  stroke-width: 6;
+}
+
+.lucky-world.is-painting .lucky-sprite {
+  pointer-events: none;
+}
+
 .lucky-lamp-glow {
   z-index: 6;
   mix-blend-mode: screen;
@@ -237,6 +273,7 @@
 .lucky-tile-layer,
 .lucky-shadow-layer {
   overflow: visible;
+  z-index: 4;
 }
 
 .lucky-tile {
@@ -363,6 +400,10 @@
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.lucky-room.is-edit {
+  touch-action: none;
 }
 
 .lucky-room.is-edit .lucky-shadow-toggle {
@@ -631,6 +672,42 @@
   font-weight: 700;
 }
 
+.lucky-paint-hud {
+  position: absolute;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transform: translate(-20%, -50%);
+  pointer-events: none;
+}
+
+.lucky-paint-hud span {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--amber);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+}
+
+.lucky-paint-pencil {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--amber);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+}
+
+.lucky-paint-pencil img {
+  width: 14px;
+  height: 14px;
+}
+
 .lucky-drawer {
   position: absolute;
   left: 0;
@@ -715,11 +792,86 @@
 
 .lucky-drawer-tabs {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   margin-top: 14px;
   padding-bottom: 10px;
   border-bottom: 1px solid rgba(243, 233, 215, 0.12);
   overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lucky-drawer-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.lucky-paint-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.lucky-paint-toggle {
+  display: flex;
+  flex: 1;
+  height: 32px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(20, 16, 36, 0.45);
+}
+
+.lucky-paint-toggle button,
+.lucky-paint-eraser,
+.lucky-paint-undo {
+  border: 0;
+  background: transparent;
+  color: rgba(243, 233, 215, 0.55);
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lucky-paint-toggle button {
+  flex: 1;
+  border-radius: 999px;
+}
+
+.lucky-paint-toggle button.is-active {
+  background: rgba(243, 233, 215, 0.94);
+  color: #2a2038;
+}
+
+.lucky-paint-eraser,
+.lucky-paint-undo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(243, 233, 215, 0.2);
+  white-space: nowrap;
+}
+
+.lucky-paint-eraser.is-active {
+  background: rgba(243, 233, 215, 0.94);
+  color: #2a2038;
+}
+
+.lucky-paint-eraser img {
+  width: 13px;
+  height: 13px;
+}
+
+.lucky-paint-undo:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.lucky-drawer.is-paint .lucky-drawer-grid {
+  margin-top: 10px;
+  max-height: 168px;
 }
 
 .lucky-drawer-tabs button {
@@ -728,7 +880,7 @@
   background: transparent;
   color: rgba(243, 233, 215, 0.42);
   font-weight: 700;
-  font-size: 13.5px;
+  font-size: 12.5px;
   white-space: nowrap;
   cursor: pointer;
 }

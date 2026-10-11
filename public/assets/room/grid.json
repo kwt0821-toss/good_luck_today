@@ -541,16 +541,28 @@
  "rotation": "2-direction: rotate = swap image default <-> mirrored (_m, horizontal flip) and swap footprint [w,d]. True 4-direction rotation would need back-view art, which is NOT included.",
  "layerOrder": [
   "world/base-bg",
-  "world/room-walls",
-  "world/room-floor | room-floor-edit-grid",
-  "edit tile overlays (tile-*.svg styles)",
-  "rug decal (items/decor/pawrug, iso-projected)",
-  "contact shadows (shadows/*, per floor item)",
-  "wall items (items/wall/*_L|_R)",
-  "world/string-lights",
-  "floor items depth-sorted (+ onTop items right after their host)",
-  "world/lamp-glow-additive (screen/plus-lighter)",
+  "floor tiles (floor/iso/{id}_{c%2}{r%2}.png)",
+  "wall tiles (wall/L|R/{id}_{i}.png, 8 strips)",
+  "world/room-frame-view | room-frame-edit",
+  "edit tile overlays",
+  "rug decal",
+  "contact shadows",
+  "wall items",
+  "floor items depth-sorted",
+  "world/lamp-glow-additive",
   "world/front-puffs-view | edit",
-  "selection UI (DOM)"
- ]
+  "selection UI"
+ ],
+ "tileMaps": {
+  "floorTiles": "8x8 array of floor skin ids; cell (c,r) draws floor/iso/{id}_{c%2}{r%2}.png",
+  "wallTiles": {
+   "L": 8,
+   "R": 8
+  },
+  "floorFile": "floor/iso/{id}_{c%2}{r%2}.png",
+  "wallLeftFile": "wall/L/{id}_{i}.png",
+  "wallRightFile": "wall/R/{id}_{i}.png",
+  "defaultFloor": "wood_honey",
+  "defaultWall": "plum_sparkle"
+ }
 }

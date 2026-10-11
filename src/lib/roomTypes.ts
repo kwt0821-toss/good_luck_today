@@ -1,4 +1,4 @@
-export type RoomCategory = "가구" | "소품" | "벽 꾸미기" | "바닥" | "카드액자";
+export type RoomCategory = "가구" | "소품" | "벽 꾸미기" | "벽지" | "바닥" | "카드액자";
 export type RoomPlacementKind = "floor" | "floor-decal" | "wall" | "wallpaper" | "floor-skin";
 export type RoomMode = "view" | "edit";
 export type RoomTab = RoomCategory;
@@ -71,11 +71,29 @@ export type RoomDrag =
   | { kind: "floor"; instanceId: string; col: number; row: number }
   | { kind: "wall"; instanceId: string; wall: "L" | "R"; slot: number; band: number };
 
+export type FloorTiles = string[][];
+export type WallTiles = { L: string[]; R: string[] };
+
+export type PaintFillMode = "cell" | "fill";
+export type PaintTarget =
+  | { kind: "floor"; col: number; row: number }
+  | { kind: "wall"; wall: "L" | "R"; index: number };
+
+export type RoomTileRules = {
+  floorFile: string;
+  wallLeftFile: string;
+  wallRightFile: string;
+  defaultFloor: string;
+  defaultWall: string;
+};
+
 export type RoomLayoutState = {
   floor: FloorPlacement[];
   walls: WallPlacement[];
   wallpaper: string;
   floorSkin: string;
+  floorTiles: FloorTiles;
+  wallTiles: WallTiles;
 };
 
 export type RoomSaveState = {

@@ -4,6 +4,7 @@
   "가구",
   "소품",
   "벽 꾸미기",
+  "벽지",
   "바닥",
   "카드액자"
  ],
@@ -1710,11 +1711,322 @@
     "leftWall": "items/wall/calendar_L.png",
     "rightWall": "items/wall/calendar_R.png"
    }
+  },
+  {
+   "id": "wood_honey",
+   "nameKo": "꿀빛 원목",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 0,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "floor/thumb/wood_honey.png",
+   "tileImage": "floor/thumb/wood_honey.png"
+  },
+  {
+   "id": "wood_oak",
+   "nameKo": "밝은 오크",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 0,
+   "ownedDefault": true,
+   "placedDefault": false,
+   "image": "floor/thumb/wood_oak.png",
+   "tileImage": "floor/thumb/wood_oak.png"
+  },
+  {
+   "id": "check_pink",
+   "nameKo": "핑크 체크",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 0,
+   "ownedDefault": true,
+   "placedDefault": false,
+   "image": "floor/thumb/check_pink.png",
+   "tileImage": "floor/thumb/check_pink.png"
+  },
+  {
+   "id": "check_mint",
+   "nameKo": "민트 체크",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 0,
+   "ownedDefault": true,
+   "placedDefault": false,
+   "image": "floor/thumb/check_mint.png",
+   "tileImage": "floor/thumb/check_mint.png"
+  },
+  {
+   "id": "paw_tile",
+   "nameKo": "발바닥 타일",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 0,
+   "ownedDefault": true,
+   "placedDefault": false,
+   "image": "floor/thumb/paw_tile.png",
+   "tileImage": "floor/thumb/paw_tile.png"
+  },
+  {
+   "id": "cloud",
+   "nameKo": "구름 타일",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 200,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "floor/thumb/cloud.png",
+   "tileImage": "floor/thumb/cloud.png"
+  },
+  {
+   "id": "meadow",
+   "nameKo": "초록 들판",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 220,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "floor/thumb/meadow.png",
+   "tileImage": "floor/thumb/meadow.png"
+  },
+  {
+   "id": "marble_cream",
+   "nameKo": "크림 대리석",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 280,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "floor/thumb/marble_cream.png",
+   "tileImage": "floor/thumb/marble_cream.png"
+  },
+  {
+   "id": "star_navy",
+   "nameKo": "별가루 네이비",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 280,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "floor/thumb/star_navy.png",
+   "tileImage": "floor/thumb/star_navy.png"
+  },
+  {
+   "id": "herring_lav",
+   "nameKo": "라벤더 헤링본",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 300,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "floor/thumb/herring_lav.png",
+   "tileImage": "floor/thumb/herring_lav.png"
+  },
+  {
+   "id": "carpet_pink",
+   "nameKo": "몽글 핑크 카펫",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 300,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "floor/thumb/carpet_pink.png",
+   "tileImage": "floor/thumb/carpet_pink.png"
+  },
+  {
+   "id": "terrazzo",
+   "nameKo": "파스텔 테라조",
+   "category": "바닥",
+   "placement": "floor-skin",
+   "footprint": null,
+   "price": 340,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "floor/thumb/terrazzo.png",
+   "tileImage": "floor/thumb/terrazzo.png"
+  },
+  {
+   "id": "plum_sparkle",
+   "nameKo": "플럼 반짝이",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 0,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "wall/thumb/plum_sparkle.png",
+   "tileImage": "wall/thumb/plum_sparkle.png"
+  },
+  {
+   "id": "lav_stripe",
+   "nameKo": "라벤더 줄무늬",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 0,
+   "ownedDefault": true,
+   "placedDefault": false,
+   "image": "wall/thumb/lav_stripe.png",
+   "tileImage": "wall/thumb/lav_stripe.png"
+  },
+  {
+   "id": "pink_polka",
+   "nameKo": "핑크 도트",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 0,
+   "ownedDefault": true,
+   "placedDefault": false,
+   "image": "wall/thumb/pink_polka.png",
+   "tileImage": "wall/thumb/pink_polka.png"
+  },
+  {
+   "id": "mint_gingham",
+   "nameKo": "민트 깅엄",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 0,
+   "ownedDefault": true,
+   "placedDefault": false,
+   "image": "wall/thumb/mint_gingham.png",
+   "tileImage": "wall/thumb/mint_gingham.png"
+  },
+  {
+   "id": "paw_wall",
+   "nameKo": "발바닥 벽지",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 0,
+   "ownedDefault": true,
+   "placedDefault": false,
+   "image": "wall/thumb/paw_wall.png",
+   "tileImage": "wall/thumb/paw_wall.png"
+  },
+  {
+   "id": "peach_hearts",
+   "nameKo": "피치 하트",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 180,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "wall/thumb/peach_hearts.png",
+   "tileImage": "wall/thumb/peach_hearts.png"
+  },
+  {
+   "id": "cream_cats",
+   "nameKo": "크림 냥이",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 220,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "wall/thumb/cream_cats.png",
+   "tileImage": "wall/thumb/cream_cats.png"
+  },
+  {
+   "id": "cloud_wall",
+   "nameKo": "몽실 구름",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 220,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "wall/thumb/cloud_wall.png",
+   "tileImage": "wall/thumb/cloud_wall.png"
+  },
+  {
+   "id": "sage_leaf",
+   "nameKo": "세이지 잎사귀",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 220,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "wall/thumb/sage_leaf.png",
+   "tileImage": "wall/thumb/sage_leaf.png"
+  },
+  {
+   "id": "night_sky",
+   "nameKo": "밤하늘 별빛",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 280,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "wall/thumb/night_sky.png",
+   "tileImage": "wall/thumb/night_sky.png"
+  },
+  {
+   "id": "moon_navy",
+   "nameKo": "달과 별",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 280,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "wall/thumb/moon_navy.png",
+   "tileImage": "wall/thumb/moon_navy.png"
+  },
+  {
+   "id": "wainscot",
+   "nameKo": "원목 웨인스코팅",
+   "category": "벽지",
+   "placement": "wallpaper",
+   "footprint": null,
+   "price": 340,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "wall/thumb/wainscot.png",
+   "tileImage": "wall/thumb/wainscot.png"
   }
  ],
  "_version": "v5 package — pure item sprites (no floor tile, no baked shadow) on transparent bg",
  "orientationNote": "Sheet default faces +row (down-left) with its back to the RIGHT wall (row 0). The mirrored image (_m) faces +col (down-right), back to the LEFT wall (col 0). Rotate = swap default/mirrored and swap footprint [w,d]. Round decor is angle-neutral; flip it freely.",
  "rotation": "2-direction: rotate = swap image default <-> mirrored (_m, horizontal flip) and swap footprint [w,d]. True 4-direction rotation would need back-view art, which is NOT included.",
  "shadowRule": "Shadows are not baked. The app draws shadows/shadow-{w}x{d}.png centred on the footprint centre under each floor item (decor: same sprite at 80% scale; rug/decals: none). Toggle freely.",
- "formats": "every image ships as .png and .webp (same name)."
+ "formats": "every image ships as .png and .webp (same name).",
+ "tileRules": {
+  "floor": {
+   "file": "floor/iso/{id}_{c%2}{r%2}.png",
+   "sizeWorldPx": [
+    160,
+    82
+   ],
+   "place": "left = tileTop.x - 80, top = tileTop.y - 2"
+  },
+  "wall": {
+   "leftFile": "wall/L/{id}_{i}.png",
+   "rightFile": "wall/R/{id}_{i}.png",
+   "strips": 8,
+   "sizeWorldPx": [
+    82,
+    493
+   ]
+  },
+  "defaults": {
+   "floor": "wood_honey",
+   "wall": "plum_sparkle"
+  }
+ }
 }
