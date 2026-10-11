@@ -4,17 +4,18 @@ import { roomAsset } from "../lib/roomCatalog";
 import {
   WORLD_H,
   WORLD_W,
-  contactShadow,
   diamondPoints,
+  hostOf,
   isDecal,
   itemSize,
   occupancy,
   previewTiles,
+  shadowRect,
   sortFloor,
-  spriteWorldPos,
-  wallSpritePos,
+  spriteRect,
+  wallSpriteRect,
 } from "../lib/roomLayout";
-import type { FloorPlacement, RoomItem, RoomLayoutState, RoomMode, WallPlacement } from "../lib/roomTypes";
+import type { FloorPlacement, RoomItem, RoomLayoutState, RoomMode, SpriteRect, WallPlacement } from "../lib/roomTypes";
 
 type RoomWorldProps = {
   mode: RoomMode;
@@ -24,6 +25,8 @@ type RoomWorldProps = {
   dragging: { instanceId: string; col: number; row: number } | null;
   hints: { col: number; row: number }[] | null;
   frameThumbs: string[];
+  shakeId: string | null;
+  shadowsEnabled: boolean;
   onSelect: (instanceId: string | null, kind: "floor" | "wall") => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, instanceId: string) => void;
   onFloorPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
@@ -48,45 +51,59 @@ function TilePoly({
 function FloorSprite({
   place,
   item,
+  rect,
   selected,
   lifted,
+  shaking,
+  flipped,
   thumbs,
   onSelect,
   onItemPointerDown,
 }: {
   place: FloorPlacement;
   item: RoomItem;
+  rect: SpriteRect;
   selected: boolean;
   lifted: boolean;
+  shaking: boolean;
+  flipped: boolean;
   thumbs: string[];
   onSelect: (id: string) => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, id: string) => void;
 }) {
-  const pos = spriteWorldPos(item, place.col, place.row, place.rot);
-  const size = item.spriteWorldPx ?? [156, 156];
-  const src = item.image ? roomAsset(item.image) : item.tileImage ? roomAsset(item.tileImage) : "";
-  const flip = place.flip || place.rot === 1;
+  const frames = item.id === "cardframe" || item.id === "squareframe";
   return (
     <button
       type="button"
-      className={`lucky-sprite ${selected ? "is-selected" : ""} ${lifted ? "is-lifted" : ""} ${item.id === "catbed" ? "is-catbed" : ""}`}
+      className={[
+        "lucky-sprite",
+        selected ? "is-selected" : "",
+        lifted ? "is-lifted" : "",
+        shaking ? "is-shake" : "",
+        item.hero || item.id === "catbed_cat" ? "is-catbed" : "",
+        isDecal(item) ? "is-rug" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       style={{
-        left: pos.x,
-        top: pos.y,
-        width: size[0],
-        height: size[1],
-        transform: `${flip ? "scaleX(-1) " : ""}${lifted ? "translateY(-12px)" : ""}`,
+        left: rect.x,
+        top: rect.y,
+        width: rect.w,
+        height: rect.h,
+        transform: `${flipped ? "scaleX(-1) " : ""}${lifted ? "translateY(-12px)" : ""}`.trim(),
       }}
       aria-label={item.nameKo}
       onPointerDown={(event) => onItemPointerDown(event, place.instanceId)}
       onClick={() => onSelect(place.instanceId)}
     >
-      {src ? <img src={src} alt="" draggable={false} /> : <span className="lucky-sprite-fallback">{item.nameKo}</span>}
-      {item.id === "frames" ? (
-        <span className="lucky-frame-arts" aria-hidden="true">
-          {thumbs.slice(0, 3).map((thumb) => (
-            <img key={thumb} src={thumb} alt="" />
-          ))}
+      {rect.src ? (
+        <img src={roomAsset(rect.src)} alt="" draggable={false} />
+      ) : (
+        <span className="lucky-sprite-fallback">{item.nameKo}</span>
+      )}
+      {frames && thumbs[0] ? (
+        <span className={`lucky-frame-art is-${item.id}`} aria-hidden="true">
+          <img src={thumbs[0]} alt="" />
         </span>
       ) : null}
     </button>
@@ -101,6 +118,8 @@ export function RoomWorld({
   dragging,
   hints,
   frameThumbs,
+  shakeId,
+  shadowsEnabled,
   onSelect,
   onItemPointerDown,
   onFloorPointerDown,
@@ -108,24 +127,62 @@ export function RoomWorld({
   const selected = [...layout.floor, ...layout.walls].find((item) => item.instanceId === selectedId);
   const selectedItem = selected ? itemsById.get(selected.id) : undefined;
   const used = occupancy(layout.floor, itemsById, dragging?.instanceId ?? selectedId ?? undefined);
-  const dragItem = dragging ? itemsById.get(layout.floor.find((p) => p.instanceId === dragging.instanceId)?.id ?? "") : undefined;
+  const dragPlace = dragging ? layout.floor.find((place) => place.instanceId === dragging.instanceId) : undefined;
+  const dragItem = dragPlace ? itemsById.get(dragPlace.id) : undefined;
   const dragTiles =
-    dragging && dragItem
-      ? previewTiles(dragItem, dragging.col, dragging.row, layout.floor.find((p) => p.instanceId === dragging.instanceId)?.rot ?? 0, used)
+    dragging && dragItem && dragPlace && !dragPlace.onTopOf
+      ? previewTiles(dragItem, dragging.col, dragging.row, dragPlace.orientation, used)
       : [];
   const selectedFloor = selected && "col" in selected ? (selected as FloorPlacement) : null;
   const selectedTiles =
-    mode === "edit" && selectedFloor && selectedItem && selectedItem.placement === "floor" && !dragging
+    mode === "edit" && selectedFloor && selectedItem && selectedItem.placement !== "wall" && !selectedFloor.onTopOf && !dragging
       ? footprintTilesSafe(selectedFloor, selectedItem)
       : [];
-  const floorSorted = sortFloor(layout.floor, itemsById);
+
+  const shownFloor = layout.floor.map((place) => {
+    if (dragging && place.instanceId === dragging.instanceId && !place.onTopOf) {
+      return { ...place, col: dragging.col, row: dragging.row };
+    }
+    return place;
+  });
+
+  const floorSorted = sortFloor(shownFloor, itemsById);
   const decals = floorSorted.filter((place) => isDecal(itemsById.get(place.id)));
   const furniture = floorSorted.filter((place) => !isDecal(itemsById.get(place.id)));
-  const lamp = layout.floor.find((place) => place.id === "floorlamp");
+  const liftedHost = selectedFloor && mode === "edit" ? selectedFloor : null;
+  const liftedIds = new Set<string>();
+  if (liftedHost) {
+    liftedIds.add(liftedHost.instanceId);
+    for (const child of shownFloor) {
+      if (child.onTopOf === liftedHost.id || child.onTopOf === liftedHost.instanceId) {
+        liftedIds.add(child.instanceId);
+      }
+    }
+    const parent = hostOf(liftedHost, shownFloor);
+    if (parent && liftedHost.onTopOf) liftedIds.add(liftedHost.instanceId);
+  }
+  const furnitureDrawn = [
+    ...furniture.filter((place) => !liftedIds.has(place.instanceId)),
+    ...furniture.filter((place) => liftedIds.has(place.instanceId)),
+  ];
+
+  const lamp = shownFloor.find((place) => place.id === "floorlamp");
   const lampItem = itemsById.get("floorlamp");
-  const lampPos = lamp && lampItem ? spriteWorldPos(lampItem, lamp.col, lamp.row, lamp.rot) : null;
-  const defaultLamp = spriteWorldPos(lampItem ?? ({ id: "floorlamp", footprint: [1, 1], placement: "floor" } as RoomItem), 6, 0, 0);
-  const glowShift = lampPos ? { x: lampPos.x - defaultLamp.x, y: lampPos.y - defaultLamp.y } : { x: 0, y: 0 };
+  const lampRect =
+    lamp && lampItem ? spriteRect(lampItem, lamp, shownFloor, itemsById) : null;
+  const defaultLampRect =
+    lampItem
+      ? spriteRect(
+          lampItem,
+          { instanceId: "p-floorlamp", id: "floorlamp", col: 0, row: 0, orientation: "default" },
+          shownFloor,
+          itemsById,
+        )
+      : null;
+  const glowShift =
+    lampRect && defaultLampRect
+      ? { x: lampRect.x - defaultLampRect.x, y: lampRect.y - defaultLampRect.y }
+      : { x: 0, y: 0 };
 
   return (
     <div className="lucky-world" onPointerDown={onFloorPointerDown}>
@@ -155,13 +212,17 @@ export function RoomWorld({
       {decals.map((place) => {
         const item = itemsById.get(place.id);
         if (!item) return null;
+        const rect = spriteRect(item, place, shownFloor, itemsById);
         return (
           <FloorSprite
             key={place.instanceId}
-            place={dragging?.instanceId === place.instanceId ? { ...place, col: dragging.col, row: dragging.row } : place}
+            place={place}
             item={item}
+            rect={rect}
             selected={place.instanceId === selectedId}
-            lifted={place.instanceId === selectedId && mode === "edit"}
+            lifted={liftedIds.has(place.instanceId)}
+            shaking={place.instanceId === shakeId}
+            flipped={place.orientation === "mirrored"}
             thumbs={frameThumbs}
             onSelect={(id) => onSelect(id, "floor")}
             onItemPointerDown={onItemPointerDown}
@@ -169,26 +230,29 @@ export function RoomWorld({
         );
       })}
 
-      <svg className="lucky-world-layer lucky-shadow-layer" viewBox={`0 0 ${WORLD_W} ${WORLD_H}`}>
-        {furniture.map((place) => {
-          const item = itemsById.get(place.id);
-          if (!item) return null;
-          const shown = dragging?.instanceId === place.instanceId ? { ...place, col: dragging.col, row: dragging.row } : place;
-          const shadow = contactShadow(item, shown.col, shown.row, shown.rot);
-          return (
-            <ellipse
-              key={place.instanceId}
-              cx={shadow.cx}
-              cy={shadow.cy}
-              rx={shadow.rx}
-              ry={shadow.ry}
-              fill="#2A1530"
-              fillOpacity="0.32"
-              style={{ filter: "blur(9px)" }}
-            />
-          );
-        })}
-      </svg>
+      {shadowsEnabled
+        ? furniture.map((place) => {
+            const item = itemsById.get(place.id);
+            if (!item) return null;
+            const shadow = shadowRect(item, place);
+            if (!shadow) return null;
+            return (
+              <img
+                key={`sh-${place.instanceId}`}
+                className="lucky-contact-shadow"
+                src={roomAsset(shadow.src)}
+                alt=""
+                draggable={false}
+                style={{
+                  left: shadow.x,
+                  top: shadow.y,
+                  width: shadow.w,
+                  height: shadow.h,
+                }}
+              />
+            );
+          })
+        : null}
 
       {layout.walls.map((place) => (
         <WallSprite
@@ -196,6 +260,7 @@ export function RoomWorld({
           place={place}
           item={itemsById.get(place.id)}
           selected={place.instanceId === selectedId}
+          shaking={place.instanceId === shakeId}
           thumbs={frameThumbs}
           onSelect={(id) => onSelect(id, "wall")}
           onItemPointerDown={onItemPointerDown}
@@ -204,16 +269,20 @@ export function RoomWorld({
 
       <Layer src="world/string-lights.svg" className="is-lights" />
 
-      {furniture.map((place) => {
+      {furnitureDrawn.map((place) => {
         const item = itemsById.get(place.id);
         if (!item) return null;
+        const rect = spriteRect(item, place, shownFloor, itemsById);
         return (
           <FloorSprite
             key={place.instanceId}
-            place={dragging?.instanceId === place.instanceId ? { ...place, col: dragging.col, row: dragging.row } : place}
+            place={place}
             item={item}
+            rect={rect}
             selected={place.instanceId === selectedId}
-            lifted={place.instanceId === selectedId && mode === "edit"}
+            lifted={liftedIds.has(place.instanceId)}
+            shaking={place.instanceId === shakeId}
+            flipped={!item.furniture && place.orientation === "mirrored"}
             thumbs={frameThumbs}
             onSelect={(id) => onSelect(id, "floor")}
             onItemPointerDown={onItemPointerDown}
@@ -237,7 +306,7 @@ export function RoomWorld({
 }
 
 function footprintTilesSafe(place: FloorPlacement, item: RoomItem) {
-  const [w, d] = itemSize(item, place.rot);
+  const [w, d] = itemSize(item, place.orientation);
   const tiles: { col: number; row: number }[] = [];
   for (let dc = 0; dc < w; dc += 1) {
     for (let dr = 0; dr < d; dr += 1) {
@@ -251,6 +320,7 @@ function WallSprite({
   place,
   item,
   selected,
+  shaking,
   thumbs,
   onSelect,
   onItemPointerDown,
@@ -258,29 +328,27 @@ function WallSprite({
   place: WallPlacement;
   item?: RoomItem;
   selected: boolean;
+  shaking: boolean;
   thumbs: string[];
   onSelect: (id: string) => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, id: string) => void;
 }) {
   if (!item) return null;
-  const pos = wallSpritePos(item, place);
-  const size = item.spriteWorldPx ?? [230, 341];
-  const src = item.image ? roomAsset(item.image) : "";
+  const rect = wallSpriteRect(item, place);
+  const frames = item.id === "cardframe" || item.id === "squareframe";
   return (
     <button
       type="button"
-      className={`lucky-sprite is-wall ${selected ? "is-selected" : ""}`}
-      style={{ left: pos.x, top: pos.y, width: size[0], height: size[1] }}
+      className={`lucky-sprite is-wall is-wall-${place.wall} ${selected ? "is-selected" : ""} ${shaking ? "is-shake" : ""}`}
+      style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
       aria-label={item.nameKo}
       onPointerDown={(event) => onItemPointerDown(event, place.instanceId)}
       onClick={() => onSelect(place.instanceId)}
     >
-      {src ? <img src={src} alt="" draggable={false} /> : null}
-      {item.id === "frames" ? (
-        <span className="lucky-frame-arts" aria-hidden="true">
-          {thumbs.slice(0, 3).map((thumb) => (
-            <img key={thumb} src={thumb} alt="" />
-          ))}
+      {rect.src ? <img src={roomAsset(rect.src)} alt="" draggable={false} /> : null}
+      {frames && thumbs[0] ? (
+        <span className={`lucky-frame-art is-${item.id} is-wall-${place.wall}`} aria-hidden="true">
+          <img src={thumbs[0]} alt="" />
         </span>
       ) : null}
     </button>

@@ -6,22 +6,26 @@ import { RoomWorld } from "../components/RoomWorld";
 import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
 import { loadDexOwned } from "../lib/dexCollection";
 import { haptic, isInTossApp } from "../lib/native";
-import { itemMap, loadRoomCatalog, roomAsset } from "../lib/roomCatalog";
+import { itemMap, loadRoomCatalog, loadRoomGrid, roomAsset, type RoomGridFile } from "../lib/roomCatalog";
 import {
   canPlace,
   cloneLayout,
   firstFreeTile,
   hitTestTile,
+  inGrid,
+  isDecal,
   itemSize,
   nearestHints,
+  nextWallSlot,
   occupancy,
   screenOf,
-  spriteWorldPos,
-  wallSpritePos,
+  spriteRect,
+  toggledOrientation,
+  wallSpriteRect,
 } from "../lib/roomLayout";
 import { defaultLayout, loadRoomState, newInstanceId, saveRoomState } from "../lib/roomStore";
 import type { DexCard } from "../lib/dexTypes";
-import type { FloorPlacement, RoomItem, RoomLayoutState, RoomMode, RoomSaveState, RoomTab } from "../lib/roomTypes";
+import type { FloorPlacement, RoomItem, RoomLayoutState, RoomMode, RoomSaveState, RoomTab, WallPlacement } from "../lib/roomTypes";
 import "./RoomScreen.css";
 
 type RoomScreenProps = {
@@ -34,6 +38,7 @@ function formatPoints(value: number) {
 
 export function RoomScreen({ onBack }: RoomScreenProps) {
   const [items, setItems] = useState<RoomItem[]>([]);
+  const [grid, setGrid] = useState<RoomGridFile | null>(null);
   const [state, setState] = useState<RoomSaveState | null>(null);
   const [frameThumbs, setFrameThumbs] = useState<string[]>([]);
   const [mode, setMode] = useState<RoomMode>(() =>
@@ -57,9 +62,10 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   const itemsById = useMemo(() => itemMap(items), [items]);
 
   useEffect(() => {
-    void loadRoomCatalog().then(async (catalog) => {
+    void Promise.all([loadRoomCatalog(), loadRoomGrid()]).then(async ([catalog, gridFile]) => {
       setItems(catalog.items);
-      setState(await loadRoomState(catalog.items));
+      setGrid(gridFile);
+      setState(await loadRoomState(catalog.items, gridFile));
     });
     void Promise.all([loadDexCatalog(), loadDexOwned()]).then(([catalog, owned]) => {
       const thumbs = catalog.cards
@@ -81,6 +87,11 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     void saveRoomState(next);
   };
 
+  const shake = (instanceId: string) => {
+    setShakeId(instanceId);
+    window.setTimeout(() => setShakeId(null), 300);
+  };
+
   if (!state) {
     return <div className="lucky-room is-loading">방을 불러오는 중이에요.</div>;
   }
@@ -93,8 +104,8 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   const selectedItem = selected ? itemsById.get(selected.id) : undefined;
   const selectedFloor = selected && "col" in selected ? selected : null;
   const hints =
-    mode === "edit" && selectedFloor && selectedItem && selectedItem.placement === "floor"
-      ? nearestHints(selectedItem, selectedFloor.rot, layout.floor, itemsById, selectedId ?? undefined)
+    mode === "edit" && selectedFloor && selectedItem && !selectedFloor.onTopOf && selectedItem.placement !== "wall"
+      ? nearestHints(selectedItem, selectedFloor.orientation, layout.floor, itemsById, selectedId ?? undefined)
       : null;
 
   const enterEdit = () => {
@@ -133,12 +144,11 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     event.stopPropagation();
     const place = layout.floor.find((item) => item.instanceId === instanceId);
     setSelectedId(instanceId);
-    if (!place) return;
+    if (!place || place.onTopOf) return;
     window.clearTimeout(longPress.current);
     longPress.current = window.setTimeout(() => {
       dragOrigin.current = { ...place };
       setDragging({ instanceId, col: place.col, row: place.row });
-      event.currentTarget.setPointerCapture(event.pointerId);
     }, 200);
   };
 
@@ -155,12 +165,9 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     const place = layout.floor.find((item) => item.instanceId === dragging.instanceId);
     const item = place ? itemsById.get(place.id) : undefined;
     if (place && item) {
-      const [w, d] = itemSize(item, place.rot);
+      const [w, d] = itemSize(item, place.orientation);
       const used = occupancy(layout.floor, itemsById, place.instanceId);
-      const ok =
-        item.layer === "decal"
-          ? dragging.col >= 0 && dragging.row >= 0 && dragging.col + w <= 8 && dragging.row + d <= 8
-          : canPlace(dragging.col, dragging.row, w, d, used);
+      const ok = isDecal(item) ? inGrid(dragging.col, dragging.row, w, d) : canPlace(dragging.col, dragging.row, w, d, used);
       if (ok) {
         patchLayout({
           ...layout,
@@ -176,45 +183,57 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   };
 
   const rotateSelected = () => {
-    if (!selectedFloor || !selectedItem || selectedItem.placement !== "floor") return;
-    const nextRot: 0 | 1 = selectedFloor.rot === 0 ? 1 : 0;
-    const [w, d] = itemSize(selectedItem, nextRot);
+    if (!selectedFloor || !selectedItem || selectedItem.placement === "wall") return;
+    const next = toggledOrientation(selectedFloor.orientation);
+    const [w, d] = itemSize(selectedItem, next);
     const used = occupancy(layout.floor, itemsById, selectedFloor.instanceId);
-    if (!canPlace(selectedFloor.col, selectedFloor.row, w, d, used) && selectedItem.layer !== "decal") {
-      setShakeId(selectedFloor.instanceId);
-      window.setTimeout(() => setShakeId(null), 300);
+    if (!selectedFloor.onTopOf && !isDecal(selectedItem) && !canPlace(selectedFloor.col, selectedFloor.row, w, d, used)) {
+      shake(selectedFloor.instanceId);
       return;
     }
     patchLayout({
       ...layout,
-      floor: layout.floor.map((entry) =>
-        entry.instanceId === selectedFloor.instanceId ? { ...entry, rot: nextRot, flip: !entry.flip } : entry,
-      ),
-    });
-  };
-
-  const flipSelected = () => {
-    if (!selectedFloor) return;
-    patchLayout({
-      ...layout,
-      floor: layout.floor.map((entry) =>
-        entry.instanceId === selectedFloor.instanceId ? { ...entry, flip: !entry.flip } : entry,
-      ),
+      floor: layout.floor.map((entry) => {
+        if (entry.instanceId === selectedFloor.instanceId) {
+          return { ...entry, orientation: next };
+        }
+        if (entry.onTopOf === selectedFloor.id || entry.onTopOf === selectedFloor.instanceId) {
+          return { ...entry, fx: 1 - (entry.fx ?? 0.5) };
+        }
+        return entry;
+      }),
     });
   };
 
   const deleteSelected = () => {
     if (!selected) return;
+    const hostId = selected.instanceId;
+    const hostItemId = selected.id;
     patchLayout({
       ...layout,
-      floor: layout.floor.filter((entry) => entry.instanceId !== selected.instanceId),
+      floor: layout.floor
+        .filter((entry) => entry.instanceId !== hostId)
+        .map((entry) => {
+          if (entry.onTopOf === hostId || entry.onTopOf === hostItemId) {
+            const host = selectedFloor;
+            return {
+              ...entry,
+              onTopOf: undefined,
+              fx: undefined,
+              fy: undefined,
+              col: host?.col ?? entry.col,
+              row: host?.row ?? entry.row,
+            };
+          }
+          return entry;
+        }),
       walls: layout.walls.filter((entry) => entry.instanceId !== selected.instanceId),
     });
     setSelectedId(null);
   };
 
   const startMove = () => {
-    if (!selectedFloor) return;
+    if (!selectedFloor || selectedFloor.onTopOf) return;
     dragOrigin.current = { ...selectedFloor };
     setDragging({ instanceId: selectedFloor.instanceId, col: selectedFloor.col, row: selectedFloor.row });
   };
@@ -234,31 +253,29 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     }
     const existing =
       layout.floor.find((place) => place.id === item.id) ?? layout.walls.find((place) => place.id === item.id);
-    if (existing && !item.stackable) {
+    if (existing) {
       setSelectedId(existing.instanceId);
       return;
     }
     if (item.placement === "wall") {
-      const wall = item.wall ?? "L";
+      const slot = nextWallSlot(layout.walls, "L");
       const instanceId = newInstanceId(item.id);
+      const draft: WallPlacement = {
+        instanceId,
+        id: item.id,
+        wall: slot.wall,
+        t: slot.t,
+        heightUnits: slot.heightUnits,
+      };
+      const rect = wallSpriteRect(item, draft);
       patchLayout({
         ...layout,
-        walls: [
-          ...layout.walls,
-          {
-            instanceId,
-            id: item.id,
-            wall,
-            slot: 0,
-            span: item.footprint?.[0] ?? 3,
-            worldPx: item.wallPosWorldPx ?? [1699, 549],
-          },
-        ],
+        walls: [...layout.walls, { ...draft, worldPx: [rect.x, rect.y] }],
       });
       setSelectedId(instanceId);
       return;
     }
-    const spot = firstFreeTile(item, 0, layout.floor, itemsById);
+    const spot = firstFreeTile(item, "default", layout.floor, itemsById);
     if (!spot) {
       showToast("놓을 칸이 없어요");
       return;
@@ -266,7 +283,10 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     const instanceId = newInstanceId(item.id);
     patchLayout({
       ...layout,
-      floor: [...layout.floor, { instanceId, id: item.id, col: spot.col, row: spot.row, rot: 0, flip: false }],
+      floor: [
+        ...layout.floor,
+        { instanceId, id: item.id, col: spot.col, row: spot.row, orientation: "default" },
+      ],
     });
     setSelectedId(instanceId);
     void haptic("tap");
@@ -296,7 +316,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   };
 
   const screen = screenOf(mode);
-  const hud = selectedItem && selected ? selectionHud(selectedItem, selected, screen) : null;
+  const hud = selectedItem && selected ? selectionHud(selectedItem, selected, layout, itemsById, screen) : null;
 
   return (
     <div
@@ -364,6 +384,15 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
         </div>
       )}
 
+      <button
+        type="button"
+        className={`lucky-shadow-toggle ${state.shadowsEnabled ? "is-on" : ""}`}
+        aria-pressed={state.shadowsEnabled}
+        onClick={() => persist({ ...state, shadowsEnabled: !state.shadowsEnabled })}
+      >
+        그림자 {state.shadowsEnabled ? "켜짐" : "꺼짐"}
+      </button>
+
       <div
         className={`lucky-island ${mode === "view" ? "is-float" : ""}`}
         style={{
@@ -382,6 +411,8 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
             dragging={dragging}
             hints={hints}
             frameThumbs={frameThumbs}
+            shakeId={shakeId}
+            shadowsEnabled={state.shadowsEnabled}
             onSelect={onSelect}
             onItemPointerDown={onItemPointerDown}
             onFloorPointerDown={onFloorPointerDown}
@@ -408,7 +439,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
               <button type="button" aria-label="회전" onClick={rotateSelected}>
                 <img src={roomAsset("ui/icon-rotate.svg")} alt="" />
               </button>
-              <button type="button" aria-label="뒤집기" onClick={flipSelected}>
+              <button type="button" aria-label="뒤집기" onClick={rotateSelected}>
                 <img src={roomAsset("ui/icon-flip.svg")} alt="" />
               </button>
               <button type="button" className="is-delete" aria-label="삭제" onClick={deleteSelected}>
@@ -417,7 +448,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
             </div>
           ) : null}
           <span className="lucky-select-tag">
-            {selectedItem.nameKo} · {selectedFloor ? itemSize(selectedItem, selectedFloor.rot).join("×") : "벽"}
+            {selectedItem.nameKo} · {selectedFloor ? itemSize(selectedItem, selectedFloor.orientation).join("×") : "벽"}
           </span>
         </div>
       ) : null}
@@ -476,7 +507,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
           danger
           onCancel={() => setConfirm(null)}
           onConfirm={() => {
-            persist({ ...state, layout: defaultLayout() });
+            persist({ ...state, layout: defaultLayout(grid ?? undefined) });
             setConfirm(null);
             showToast("기본 배치로 돌아갔어요");
           }}
@@ -521,7 +552,14 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
           onConfirm={(picks) => {
             const gained = dupes.reduce((sum, row) => {
               const n = picks[row.card.id] ?? 0;
-              const rate = row.card.type === "legend" ? 150 : row.card.type === "special" || row.card.type === "character" ? 60 : (row.card.stars ?? 0) >= 4 ? 30 : 10;
+              const rate =
+                row.card.type === "legend"
+                  ? 150
+                  : row.card.type === "special" || row.card.type === "character"
+                    ? 60
+                    : (row.card.stars ?? 0) >= 4
+                      ? 30
+                      : 10;
               return sum + n * rate;
             }, 0);
             persist({ ...state, points: state.points + gained });
@@ -542,35 +580,19 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
 
 function selectionHud(
   item: RoomItem,
-  place: FloorPlacement | { instanceId: string; id: string },
+  place: FloorPlacement | WallPlacement,
+  layout: RoomLayoutState,
+  byId: Map<string, RoomItem>,
   screen: { scale: number; left: number; top: number },
 ) {
   const pad = 6;
-  if ("col" in place) {
-    const pos = spriteWorldPos(item, place.col, place.row, place.rot);
-    const size = item.spriteWorldPx ?? [120, 160];
-    return {
-      left: screen.left + pos.x * screen.scale - pad,
-      top: screen.top + pos.y * screen.scale - pad,
-      width: size[0] * screen.scale + pad * 2,
-      height: size[1] * screen.scale + pad * 2,
-    };
-  }
-  const wall = place as { worldPx?: [number, number] };
-  const pos = wallSpritePos(item, {
-    instanceId: place.instanceId,
-    id: item.id,
-    wall: item.wall ?? "L",
-    slot: 0,
-    span: 3,
-    worldPx: "worldPx" in wall && wall.worldPx ? wall.worldPx : (item.wallPosWorldPx ?? [1699, 549]),
-  });
-  const size = item.spriteWorldPx ?? [230, 341];
+  const rect =
+    "col" in place ? spriteRect(item, place, layout.floor, byId) : wallSpriteRect(item, place);
   return {
-    left: screen.left + pos.x * screen.scale - pad,
-    top: screen.top + pos.y * screen.scale - pad,
-    width: size[0] * screen.scale + pad * 2,
-    height: size[1] * screen.scale + pad * 2,
+    left: screen.left + rect.x * screen.scale - pad,
+    top: screen.top + rect.y * screen.scale - pad,
+    width: rect.w * screen.scale + pad * 2,
+    height: rect.h * screen.scale + pad * 2,
   };
 }
 

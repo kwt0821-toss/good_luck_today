@@ -84,10 +84,8 @@ export function RoomDrawer({
               onClick={() => onPick(item)}
             >
               <span className="lucky-cell-tile">
-                {item.tileImage ? (
-                  <img src={roomAsset(item.tileImage)} alt="" />
-                ) : item.image ? (
-                  <img src={roomAsset(item.image)} alt="" />
+                {item.tileImage || item.id ? (
+                  <img src={roomAsset(item.tileImage ?? `tiles/${item.id}.png`)} alt="" />
                 ) : (
                   <span className="lucky-cell-empty" />
                 )}

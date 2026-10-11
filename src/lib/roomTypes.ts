@@ -1,7 +1,16 @@
-export type RoomCategory = "가구" | "소품" | "벽지" | "바닥" | "카드액자";
-export type RoomPlacementKind = "floor" | "wall" | "wallpaper" | "floor-skin";
+export type RoomCategory = "가구" | "소품" | "벽 꾸미기" | "바닥" | "카드액자";
+export type RoomPlacementKind = "floor" | "floor-decal" | "wall" | "wallpaper" | "floor-skin";
 export type RoomMode = "view" | "edit";
 export type RoomTab = RoomCategory;
+export type RoomOrientation = "default" | "mirrored";
+
+export type FurnitureOrientation = {
+  image: string;
+  footprint: [number, number];
+  anchorFootprintCenterPx: [number, number];
+  anchorBackCornerPx?: [number, number];
+  size: [number, number];
+};
 
 export type RoomItem = {
   id: string;
@@ -9,18 +18,27 @@ export type RoomItem = {
   category: RoomCategory;
   footprint: [number, number] | null;
   placement: RoomPlacementKind;
-  wall?: "L" | "R";
   price: number;
   ownedDefault: boolean;
+  placedDefault?: boolean;
   image: string | null;
-  imagePng?: string | null;
+  imageSizePx?: [number, number];
   tileImage: string | null;
-  spriteWorldPx?: [number, number];
-  anchorOffsetWorldPx?: [number, number];
-  wallPosWorldPx?: [number, number];
-  glow?: string;
-  layer?: "decal";
-  stackable?: boolean;
+  furniture?: {
+    default: FurnitureOrientation;
+    mirrored: FurnitureOrientation;
+  };
+  wallImages?: {
+    front: string;
+    left: string;
+    right: string;
+  };
+  displayWidthTiles?: number;
+  wallSpanTiles?: number;
+  canSitOnSurface?: boolean;
+  decal?: boolean;
+  shadow?: string | null;
+  hero?: boolean;
 };
 
 export type RoomCatalog = {
@@ -32,17 +50,19 @@ export type FloorPlacement = {
   id: string;
   col: number;
   row: number;
-  rot: 0 | 1;
-  flip: boolean;
+  orientation: RoomOrientation;
+  onTopOf?: string;
+  fx?: number;
+  fy?: number;
 };
 
 export type WallPlacement = {
   instanceId: string;
   id: string;
   wall: "L" | "R";
-  slot: number;
-  span: number;
-  worldPx: [number, number];
+  t: number;
+  heightUnits: number;
+  worldPx?: [number, number];
 };
 
 export type RoomLayoutState = {
@@ -57,11 +77,13 @@ export type RoomSaveState = {
   owned: Record<string, number>;
   layout: RoomLayoutState;
   cozyLevel: number;
+  shadowsEnabled: boolean;
 };
 
-export type DragPreview = {
-  instanceId: string;
-  col: number;
-  row: number;
-  valid: boolean;
+export type SpriteRect = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  src: string;
 };
