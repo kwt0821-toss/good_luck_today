@@ -2,162 +2,555 @@
  "grid": {
   "cols": 8,
   "rows": 8,
-  "projection": "2:1 isometric diamond",
-  "colAxis": "→ down-right on screen",
-  "rowAxis": "→ down-left on screen",
-  "tileWorldPx": {
-   "w": 156,
-   "h": 78
-  },
-  "tileWorldUnits": {
-   "w": 52,
-   "h": 26
-  }
- },
- "world": {
-  "sizePx": [
-   3840,
-   2160
+  "projection": "2:1 isometric",
+  "tileWorldUnits": [
+   52,
+   26
   ],
-  "units": "world px (3x of the 1280×720 design units)",
-  "isoOriginWorldPx": {
-   "x": 1920,
-   "y": 900,
-   "note": "top (back) corner of tile (0,0)"
-  },
-  "tileToWorld": "x = 1920 + (col-row)*78 ;  y = 900 + (col+row)*39   (top corner of tile col,row)",
-  "footprintCentre": "P(col + w/2, row + d/2) using the formula above with fractional col/row",
-  "wallHeightUnits": 150,
-  "floorSlabUnits": 12
+  "tileWorldPx": [
+   156,
+   78
+  ],
+  "originWorldPx": [
+   1920,
+   900
+  ],
+  "tileToWorld": "x = 1920 + (col-row)*78 ; y = 900 + (col+row)*39 (tile top corner, world px)",
+  "colAxis": "down-right, along the RIGHT wall (row 0 = right wall)",
+  "rowAxis": "down-left, along the LEFT wall (col 0 = left wall)"
  },
  "screens": {
   "a": {
-   "name": "view (room-screen-a-v3)",
    "ptPerWorldPx": 0.24667,
    "worldLayerPt": {
     "left": -282.33,
     "top": 142.0,
     "width": 947.2,
-    "height": 532.8,
-    "note": "screen pt incl. status bar; content-relative top = top-103"
+    "height": 532.8
    },
    "tilePt": {
     "w": 38.48,
     "h": 19.24
    },
-   "isoOriginPt": {
-    "x": 191.27,
-    "y": 364.0,
-    "yContent": 261.0
-   },
-   "tileToScreen": "x = 191.27 + (col-row)*19.24;  y = 364.00 + (col+row)*9.62   (tile TOP corner, screen pt)"
+   "tileToScreen": "x = 191.27 + (col-row)*19.24;  y = 364.00 + (col+row)*9.62  (tile top corner, screen pt incl. status bar; content y = y-103)"
   },
   "b": {
-   "name": "edit (room-screen-b-v3)",
    "ptPerWorldPx": 0.28,
    "worldLayerPt": {
     "left": -342.67,
     "top": 39.67,
     "width": 1075.2,
-    "height": 604.8,
-    "note": "screen pt incl. status bar; content-relative top = top-103"
+    "height": 604.8
    },
    "tilePt": {
     "w": 43.68,
     "h": 21.84
    },
-   "isoOriginPt": {
-    "x": 194.93,
-    "y": 291.67,
-    "yContent": 188.67
-   },
-   "tileToScreen": "x = 194.93 + (col-row)*21.84;  y = 291.67 + (col+row)*10.92   (tile TOP corner, screen pt)"
+   "tileToScreen": "x = 194.93 + (col-row)*21.84;  y = 291.67 + (col+row)*10.92  (tile top corner, screen pt incl. status bar; content y = y-103)"
   }
  },
- "depthSort": "Draw order: base-bg → walls → floor → edit tiles → rug decals → contact shadows → wall items → string lights → floor items sorted by key=(col+w-1)+(row+d-1) ascending (front-most tile), tie → smaller (col-row) first (left first), then smaller footprint area first → lamp glow (additive) → front puffs → selection UI.",
- "collision": "Floor items (except decals like rug) occupy footprint tiles exclusively; footprint must stay within 0..7. Rug may overlap anything.",
- "wallSlots": {
-  "L": {
-   "axis": "row (tile 0..7 from back corner toward left end)",
-   "slots": 8
-  },
-  "R": {
-   "axis": "col (0..7 from back corner toward right end)",
-   "slots": 8
-  },
-  "note": "PLACEHOLDER: wall items use wallPosWorldPx from the layout; slot/span is approximate for future snapping. Wall items are not draggable in v1 (suggested)."
+ "spriteAnchor": {
+  "furniture": "registered: place anchorFootprintCenterPx (from items.json orientations) on the footprint centre P(c+w/2, r+d/2). The sheet floor tile was removed; its 2:1 diamond defines the affine.",
+  "decor": "floor: sprite bottom-centre at footprint centre + 0.55 × (centre→front-corner distance) i.e. y_bottom = cy + 0.55*(w+d)/2*39 world px; decals (rug) centred on footprint centre. onTop: x = host.x + host.w*fx − w/2, y_bottom = host.y + host.h*fy.",
+  "onTop": "x = host.x + host.w*fx − w/2, y_bottom = host.y + host.h*fy (fx mirrored when host is mirrored)"
  },
- "contactShadow": "per floor item: ellipse at footprint centre +2 units down, rx = 26*0.62*(w+d), ry = 13*0.62*(w+d) units (lamp 15×6, yarn 9×4), fill #2A1530 @ .32, blur 3 units (=9 world px). Generate in code so it follows moves; world/contact-shadows.svg is the default layout baked.",
- "selectedLift": "selected item sprite lifts 4 units (12 world px); footprint outline drawn on top",
+ "wallPlacement": "wall items use pre-sheared images: _L for the left wall (col 0), _R for the right wall (row 0). Shear: x′=0.894·x, y′=y ∓ 0.5·x′. Position: base P(0,t) (left) / P(t,0) (right), raised by heightUnits×3 px, image centred there.",
+ "facing": "default image faces +row (back to right wall, row 0); mirrored (_m) faces +col (back to left wall, col 0). Rotate swaps image + footprint.",
+ "depthSort": "floor items by (col+w-1)+(row+d-1) ascending, tie (col-row) then area; decals first; selected item drawn last (lifted 12 world px) in edit mode; onTop items right after their host.",
+ "contactShadow": {
+  "images": {
+   "shadow-1x1.png": {
+    "size": [
+     250,
+     126
+    ],
+    "anchor": [
+     125.0,
+     63.0
+    ],
+    "anchorIs": "image centre = footprint centre"
+   },
+   "shadow-2x1.png": {
+    "size": [
+     328,
+     164
+    ],
+    "anchor": [
+     164.0,
+     82.0
+    ],
+    "anchorIs": "image centre = footprint centre"
+   },
+   "shadow-1x2.png": {
+    "size": [
+     328,
+     164
+    ],
+    "anchor": [
+     164.0,
+     82.0
+    ],
+    "anchorIs": "image centre = footprint centre"
+   },
+   "shadow-2x2.png": {
+    "size": [
+     406,
+     204
+    ],
+    "anchor": [
+     203.0,
+     102.0
+    ],
+    "anchorIs": "image centre = footprint centre"
+   }
+  },
+  "rule": "draw under the item (after rug/decals, before any floor item in depth order), centred at P(c+w/2, r+d/2) in world px; decor uses 80% scale; colour #2A1530, peak alpha .38 baked into the PNG; optional toggle."
+ },
  "defaultLayout": [
   {
-   "id": "cabinet",
-   "col": 3,
-   "row": 0,
-   "rot": 0,
-   "flip": false
+   "id": "pawrug",
+   "c": 3,
+   "r": 3,
+   "w": 2,
+   "d": 2,
+   "orientation": "default",
+   "worldPx": [
+    1770,
+    1137
+   ]
   },
   {
-   "id": "cattower",
-   "col": 0,
-   "row": 4,
-   "rot": 0,
-   "flip": false
+   "id": "archwindow",
+   "wall": "L",
+   "t": 2.6,
+   "heightUnits": 92,
+   "worldPx": [
+    1616,
+    558
+   ]
+  },
+  {
+   "id": "starlamp",
+   "wall": "L",
+   "t": 4.1,
+   "heightUnits": 104,
+   "worldPx": [
+    1565,
+    690
+   ]
+  },
+  {
+   "id": "catsteps",
+   "wall": "L",
+   "t": 5.5,
+   "heightUnits": 74,
+   "worldPx": [
+    1421,
+    795
+   ]
+  },
+  {
+   "id": "cardframe",
+   "wall": "R",
+   "t": 1.0,
+   "heightUnits": 98,
+   "worldPx": [
+    1963,
+    572
+   ]
+  },
+  {
+   "id": "squareframe",
+   "wall": "R",
+   "t": 1.85,
+   "heightUnits": 92,
+   "worldPx": [
+    2022,
+    622
+   ]
+  },
+  {
+   "id": "catclock",
+   "wall": "R",
+   "t": 4.5,
+   "heightUnits": 98,
+   "worldPx": [
+    2234,
+    710
+   ]
+  },
+  {
+   "id": "bunting",
+   "wall": "R",
+   "t": 6.6,
+   "heightUnits": 118,
+   "worldPx": [
+    2330,
+    697
+   ]
   },
   {
    "id": "floorlamp",
-   "col": 6,
-   "row": 0,
-   "rot": 0,
-   "flip": false
+   "c": 0,
+   "r": 0,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "default",
+   "worldPx": [
+    1882,
+    803
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "bookshelf",
+   "c": 0,
+   "r": 2,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "mirrored",
+   "worldPx": [
+    1698,
+    911
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "fishbowl",
+   "onTop": "bookshelf",
+   "fx": 0.44999999999999996,
+   "fy": 0.1,
+   "worldPx": [
+    1742,
+    893
+   ]
+  },
+  {
+   "id": "bed",
+   "c": 1,
+   "r": 0,
+   "w": 1,
+   "d": 2,
+   "kind": "f",
+   "orientation": "default",
+   "worldPx": [
+    1809,
+    841
+   ],
+   "shadow": "shadows/shadow-1x2.png"
   },
   {
    "id": "plant",
-   "col": 0,
-   "row": 7,
-   "rot": 0,
-   "flip": false
-  },
-  {
-   "id": "catbed",
-   "col": 3,
-   "row": 3,
-   "rot": 0,
-   "flip": false
-  },
-  {
-   "id": "yarn",
-   "col": 5,
-   "row": 5,
-   "rot": 0,
-   "flip": false
-  },
-  {
-   "id": "rug",
-   "col": 3,
-   "row": 3,
-   "rot": 0,
-   "flip": false
-  },
-  {
-   "id": "window",
-   "wall": "L",
-   "slot": 0,
-   "span": 3,
+   "c": 2,
+   "r": 0,
+   "w": 1,
+   "d": 1,
+   "kind": "d",
+   "orientation": "default",
    "worldPx": [
-    1699,
-    549
+    2040,
+    940
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "catchair",
+   "c": 0,
+   "r": 3,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "mirrored",
+   "worldPx": [
+    1622,
+    956
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "cabinet",
+   "c": 3,
+   "r": 0,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "default",
+   "worldPx": [
+    2088,
+    953
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "moonlamp",
+   "onTop": "cabinet",
+   "fx": 0.42,
+   "fy": 0.3,
+   "worldPx": [
+    2133,
+    956
    ]
   },
   {
-   "id": "frames",
-   "wall": "R",
-   "slot": 1,
-   "span": 3,
+   "id": "scratcher",
+   "c": 0,
+   "r": 4,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "mirrored",
    "worldPx": [
-    1968,
-    594
-   ]
+    1544,
+    1012
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "radioclock",
+   "c": 4,
+   "r": 0,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "default",
+   "worldPx": [
+    2177,
+    1005
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "cattower",
+   "c": 0,
+   "r": 5,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "mirrored",
+   "worldPx": [
+    1467,
+    1005
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "desk",
+   "c": 5,
+   "r": 0,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "default",
+   "worldPx": [
+    2238,
+    1038
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "tent",
+   "c": 0,
+   "r": 6,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "mirrored",
+   "worldPx": [
+    1388,
+    1079
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "yarnbasket",
+   "c": 1,
+   "r": 5,
+   "w": 1,
+   "d": 1,
+   "kind": "d",
+   "orientation": "default",
+   "worldPx": [
+    1566,
+    1121
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "sofa",
+   "c": 3,
+   "r": 2,
+   "w": 2,
+   "d": 1,
+   "kind": "f",
+   "orientation": "default",
+   "worldPx": [
+    1910,
+    1006
+   ],
+   "shadow": "shadows/shadow-2x1.png"
+  },
+  {
+   "id": "beanbag",
+   "c": 5,
+   "r": 1,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "default",
+   "worldPx": [
+    2164,
+    1089
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "gifts",
+   "c": 6,
+   "r": 0,
+   "w": 1,
+   "d": 1,
+   "kind": "d",
+   "orientation": "default",
+   "worldPx": [
+    2342,
+    1105
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "catcactus",
+   "c": 0,
+   "r": 7,
+   "w": 1,
+   "d": 1,
+   "kind": "d",
+   "orientation": "default",
+   "worldPx": [
+    1356,
+    1179
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "catbed_cat",
+   "c": 3,
+   "r": 4,
+   "w": 1,
+   "d": 1,
+   "kind": "d",
+   "orientation": "default",
+   "worldPx": [
+    1778,
+    1128
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "teatable",
+   "c": 4,
+   "r": 3,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "default",
+   "worldPx": [
+    1939,
+    1120
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "monstera",
+   "c": 7,
+   "r": 0,
+   "w": 1,
+   "d": 1,
+   "kind": "d",
+   "orientation": "default",
+   "worldPx": [
+    2416,
+    1115
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "feeder",
+   "c": 1,
+   "r": 7,
+   "w": 1,
+   "d": 1,
+   "kind": "f",
+   "orientation": "mirrored",
+   "worldPx": [
+    1377,
+    1176
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "cushions",
+   "c": 5,
+   "r": 4,
+   "w": 1,
+   "d": 1,
+   "kind": "d",
+   "orientation": "default",
+   "worldPx": [
+    1956,
+    1229
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "aquarium",
+   "c": 7,
+   "r": 3,
+   "w": 1,
+   "d": 1,
+   "kind": "d",
+   "orientation": "default",
+   "worldPx": [
+    2182,
+    1236
+   ],
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "xmastree",
+   "c": 7,
+   "r": 5,
+   "w": 1,
+   "d": 1,
+   "kind": "d",
+   "orientation": "default",
+   "worldPx": [
+    2034,
+    1298
+   ],
+   "shadow": "shadows/shadow-1x1.png"
   }
+ ],
+ "counts": {
+  "floor": 24,
+  "wall": 7,
+  "onTop": 2
+ },
+ "_version": "v5 package",
+ "rotation": "2-direction: rotate = swap image default <-> mirrored (_m, horizontal flip) and swap footprint [w,d]. True 4-direction rotation would need back-view art, which is NOT included.",
+ "layerOrder": [
+  "world/base-bg",
+  "world/room-walls",
+  "world/room-floor | room-floor-edit-grid",
+  "edit tile overlays (tile-*.svg styles)",
+  "rug decal (items/decor/pawrug, iso-projected)",
+  "contact shadows (shadows/*, per floor item)",
+  "wall items (items/wall/*_L|_R)",
+  "world/string-lights",
+  "floor items depth-sorted (+ onTop items right after their host)",
+  "world/lamp-glow-additive (screen/plus-lighter)",
+  "world/front-puffs-view | edit",
+  "selection UI (DOM)"
  ]
 }
