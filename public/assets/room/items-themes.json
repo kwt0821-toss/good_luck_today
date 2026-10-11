@@ -295,7 +295,7 @@
    "image": "themes/cat_cafe/items/heart_chair.png",
    "thumb": "themes/cat_cafe/thumbs/heart_chair.png",
    "imageSizePx": [
-    86,
+    87,
     137
    ],
    "orientations": {
@@ -306,15 +306,15 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      42.1,
-      109.5
+      45.4,
+      112.4
      ],
      "anchorBackCornerPx": [
-      42.1,
-      70.5
+      45.4,
+      73.4
      ],
      "size": [
-      86,
+      87,
       137
      ]
     },
@@ -325,23 +325,45 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      43.9,
-      109.5
+      41.6,
+      112.4
      ],
      "anchorBackCornerPx": [
-      43.9,
-      70.5
+      41.6,
+      73.4
      ],
      "size": [
-      86,
+      87,
       137
      ]
     }
    },
    "shadow": "shadows/shadow-1x1.png (v5 package)",
    "shadowScale": 1.0,
-   "angleFit": "sheet-average correction (edges too short to measure)",
-   "flag": "frontal backrest art; edges too short to measure — sheet-average correction only"
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      1.0,
+      0.0
+     ],
+     [
+      0.0,
+      1.0
+     ]
+    ],
+    "scaleToPreviousHeight": 0.901,
+    "edgesBeforeDeg": [
+     26.6,
+     -24.6
+    ],
+    "edgesAfterDeg": [
+     null,
+     -29.1
+    ],
+    "note": "registration only (organic/round silhouette)"
+   }
   },
   {
    "id": "bar_stool",
@@ -420,7 +442,7 @@
    "image": "themes/cat_cafe/items/chalk_stand.png",
    "thumb": "themes/cat_cafe/thumbs/chalk_stand.png",
    "imageSizePx": [
-    89,
+    82,
     136
    ],
    "orientations": {
@@ -431,15 +453,15 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      43.9,
-      103.3
+      38.4,
+      102.7
      ],
      "anchorBackCornerPx": [
-      43.9,
-      64.3
+      38.4,
+      63.7
      ],
      "size": [
-      89,
+      82,
       136
      ]
     },
@@ -450,26 +472,45 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      45.1,
-      103.3
+      43.6,
+      102.7
      ],
      "anchorBackCornerPx": [
-      45.1,
-      64.3
+      43.6,
+      63.7
      ],
      "size": [
-      89,
+      82,
       136
      ]
     }
    },
    "shadow": "shadows/shadow-1x1.png (v5 package)",
    "shadowScale": 0.8,
-   "angleFit": {
-    "iterations": 5,
-    "residualDeg": 0.4
-   },
-   "flag": "A-frame drawn near-frontal; only one edge family measurable"
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.866,
+      0.0
+     ],
+     [
+      0.1443,
+      1.1547
+     ]
+    ],
+    "scaleToPreviousHeight": 0.845,
+    "edgesBeforeDeg": [
+     14.0,
+     null
+    ],
+    "edgesAfterDeg": [
+     25.1,
+     null
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
   },
   {
    "id": "bread_rack",
@@ -1119,7 +1160,7 @@
    "image": "themes/sakura_greenhouse/items/garden_bench.png",
    "thumb": "themes/sakura_greenhouse/thumbs/garden_bench.png",
    "imageSizePx": [
-    176,
+    185,
     209
    ],
    "orientations": {
@@ -1130,15 +1171,15 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      87.8,
-      155.3
+      92.3,
+      156.6
      ],
      "anchorBackCornerPx": [
-      48.8,
-      96.8
+      53.3,
+      98.1
      ],
      "size": [
-      176,
+      185,
       209
      ]
     },
@@ -1149,26 +1190,45 @@
       2
      ],
      "anchorFootprintCenterPx": [
-      88.2,
-      155.3
+      92.7,
+      156.6
      ],
      "anchorBackCornerPx": [
-      127.2,
-      96.8
+      131.7,
+      98.1
      ],
      "size": [
-      176,
+      185,
       209
      ]
     }
    },
    "shadow": "shadows/shadow-2x1.png (v5 package)",
    "shadowScale": 1.0,
-   "angleFit": {
-    "iterations": 4,
-    "residualDeg": 0.0
-   },
-   "flag": "frontal ornate backrest; white-on-white frame edges slightly ragged after cut"
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.9515,
+      0.0
+     ],
+     [
+      0.1425,
+      1.051
+     ]
+    ],
+    "scaleToPreviousHeight": 1.384,
+    "edgesBeforeDeg": [
+     17.6,
+     -30.5
+    ],
+    "edgesAfterDeg": [
+     27.0,
+     -23.0
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
   },
   {
    "id": "koi_pond",
@@ -1824,7 +1884,7 @@
    "image": "themes/sakura_greenhouse/items/mini_bridge.png",
    "thumb": "themes/sakura_greenhouse/thumbs/mini_bridge.png",
    "imageSizePx": [
-    194,
+    177,
     188
    ],
    "orientations": {
@@ -1835,15 +1895,15 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      100.1,
-      128.9
+      86.2,
+      124.0
      ],
      "anchorBackCornerPx": [
-      61.1,
-      70.4
+      47.2,
+      65.5
      ],
      "size": [
-      194,
+      177,
       188
      ]
     },
@@ -1854,26 +1914,45 @@
       2
      ],
      "anchorFootprintCenterPx": [
-      93.9,
-      128.9
+      90.8,
+      124.0
      ],
      "anchorBackCornerPx": [
-      132.9,
-      70.4
+      129.8,
+      65.5
      ],
      "size": [
-      194,
+      177,
       188
      ]
     }
    },
    "shadow": "shadows/shadow-2x1.png (v5 package)",
    "shadowScale": 1.0,
-   "angleFit": {
-    "iterations": 10,
-    "residualDeg": 1.13
-   },
-   "flag": "residual 1.13° after fitting — best regenerated at true 2:1"
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.8694,
+      0.0
+     ],
+     [
+      -0.0793,
+      1.1503
+     ]
+    ],
+    "scaleToPreviousHeight": 1.324,
+    "edgesBeforeDeg": [
+     23.7,
+     -21.4
+    ],
+    "edgesAfterDeg": [
+     26.2,
+     -24.0
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
   },
   {
    "id": "flower_arch",
@@ -1890,7 +1969,7 @@
    "image": "themes/sakura_greenhouse/items/flower_arch.png",
    "thumb": "themes/sakura_greenhouse/thumbs/flower_arch.png",
    "imageSizePx": [
-    120,
+    131,
     150
    ],
    "orientations": {
@@ -1901,15 +1980,15 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      62.0,
-      112.6
+      65.8,
+      122.6
      ],
      "anchorBackCornerPx": [
-      62.0,
-      73.6
+      65.8,
+      83.6
      ],
      "size": [
-      120,
+      131,
       150
      ]
     },
@@ -1920,23 +1999,45 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      58.0,
-      112.6
+      65.2,
+      122.6
      ],
      "anchorBackCornerPx": [
-      58.0,
-      73.6
+      65.2,
+      83.6
      ],
      "size": [
-      120,
+      131,
       150
      ]
     }
    },
    "shadow": "shadows/shadow-1x1.png (v5 package)",
    "shadowScale": 1.0,
-   "angleFit": "sheet-average correction (edges too short to measure)",
-   "flag": "frontal arch art; sheet-average correction only (measured fit squashed it)"
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      1.0,
+      0.0
+     ],
+     [
+      0.0,
+      1.0
+     ]
+    ],
+    "scaleToPreviousHeight": 1.007,
+    "edgesBeforeDeg": [
+     25.6,
+     -32.3
+    ],
+    "edgesAfterDeg": [
+     25.0,
+     -20.2
+    ],
+    "note": "registration only (organic/round silhouette)"
+   }
   },
   {
    "id": "cat_hammock",

@@ -54,7 +54,7 @@
   "decor": "floor: sprite bottom-centre at footprint centre + 0.55 × (centre→front-corner distance) i.e. y_bottom = cy + 0.55*(w+d)/2*39 world px; decals (rug) centred on footprint centre. onTop: x = host.x + host.w*fx − w/2, y_bottom = host.y + host.h*fy.",
   "onTop": "x = host.x + host.w*fx − w/2, y_bottom = host.y + host.h*fy (fx mirrored when host is mirrored)"
  },
- "wallPlacement": "wall items use pre-sheared images: _L for the left wall (col 0), _R for the right wall (row 0). Shear: x′=0.894·x, y′=y ∓ 0.5·x′. Position: base P(0,t) (left) / P(t,0) (right), raised by heightUnits×3 px, image centred there.",
+ "wallPlacement": "wall items use pre-sheared images: _L for the left wall (col 0), _R for the right wall (row 0). Shear: x′=0.894·x, y′=y ∓ 0.5·x′ (exact 2:1). Scale the _L/_R image by s = displayWidthTiles·156 / frontImageWidth (front = items/wall/{id}.png). Position: base P(0,t) (left) / P(t,0) (right), raised by heightUnits×3 px; the scaled image centre sits there.",
  "facing": "default image faces +row (back to right wall, row 0); mirrored (_m) faces +col (back to left wall, col 0). Rotate swaps image + footprint.",
  "depthSort": "floor items by (col+w-1)+(row+d-1) ascending, tie (col-row) then area; decals first; selected item drawn last (lifted 12 world px) in edit mode; onTop items right after their host.",
  "contactShadow": {
@@ -126,7 +126,7 @@
    "heightUnits": 92,
    "worldPx": [
     1616,
-    558
+    571
    ]
   },
   {
@@ -146,7 +146,7 @@
    "heightUnits": 74,
    "worldPx": [
     1421,
-    795
+    843
    ]
   },
   {
@@ -156,7 +156,7 @@
    "heightUnits": 98,
    "worldPx": [
     1963,
-    572
+    579
    ]
   },
   {
@@ -166,7 +166,7 @@
    "heightUnits": 92,
    "worldPx": [
     2022,
-    622
+    629
    ]
   },
   {
@@ -212,19 +212,19 @@
    "kind": "f",
    "orientation": "mirrored",
    "worldPx": [
-    1698,
-    911
+    1710,
+    898
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
   {
    "id": "fishbowl",
    "onTop": "bookshelf",
-   "fx": 0.44999999999999996,
-   "fy": 0.1,
+   "fx": 0.45,
+   "fy": 0.127,
    "worldPx": [
     1742,
-    893
+    888
    ]
   },
   {
@@ -236,7 +236,7 @@
    "kind": "f",
    "orientation": "default",
    "worldPx": [
-    1809,
+    1819,
     841
    ],
    "shadow": "shadows/shadow-1x2.png"
@@ -264,8 +264,8 @@
    "kind": "f",
    "orientation": "mirrored",
    "worldPx": [
-    1622,
-    956
+    1627,
+    947
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -278,8 +278,8 @@
    "kind": "f",
    "orientation": "default",
    "worldPx": [
-    2088,
-    953
+    2093,
+    942
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -287,10 +287,10 @@
    "id": "moonlamp",
    "onTop": "cabinet",
    "fx": 0.42,
-   "fy": 0.3,
+   "fy": 0.302,
    "worldPx": [
-    2133,
-    956
+    2135,
+    951
    ]
   },
   {
@@ -302,8 +302,8 @@
    "kind": "f",
    "orientation": "mirrored",
    "worldPx": [
-    1544,
-    1012
+    1545,
+    1009
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -316,8 +316,8 @@
    "kind": "f",
    "orientation": "default",
    "worldPx": [
-    2177,
-    1005
+    2176,
+    1004
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -344,8 +344,8 @@
    "kind": "f",
    "orientation": "default",
    "worldPx": [
-    2238,
-    1038
+    2246,
+    1029
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -358,8 +358,8 @@
    "kind": "f",
    "orientation": "mirrored",
    "worldPx": [
-    1388,
-    1079
+    1396,
+    1080
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -386,8 +386,8 @@
    "kind": "f",
    "orientation": "default",
    "worldPx": [
-    1910,
-    1006
+    1924,
+    986
    ],
    "shadow": "shadows/shadow-2x1.png"
   },
@@ -414,8 +414,8 @@
    "kind": "d",
    "orientation": "default",
    "worldPx": [
-    2342,
-    1105
+    2346,
+    1092
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -429,7 +429,7 @@
    "orientation": "default",
    "worldPx": [
     1356,
-    1179
+    1180
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -443,7 +443,7 @@
    "orientation": "default",
    "worldPx": [
     1778,
-    1128
+    1127
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -484,8 +484,8 @@
    "kind": "f",
    "orientation": "mirrored",
    "worldPx": [
-    1377,
-    1176
+    1385,
+    1167
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -498,8 +498,8 @@
    "kind": "d",
    "orientation": "default",
    "worldPx": [
-    1956,
-    1229
+    1958,
+    1220
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -512,8 +512,8 @@
    "kind": "d",
    "orientation": "default",
    "worldPx": [
-    2182,
-    1236
+    2186,
+    1220
    ],
    "shadow": "shadows/shadow-1x1.png"
   },
@@ -527,7 +527,7 @@
    "orientation": "default",
    "worldPx": [
     2034,
-    1298
+    1297
    ],
    "shadow": "shadows/shadow-1x1.png"
   }
@@ -537,32 +537,695 @@
   "wall": 7,
   "onTop": 2
  },
- "_version": "v5 package",
+ "_version": "v6 — v5 + floor/wallpaper tiles + angle fix (all straight edges exact 2:1)",
  "rotation": "2-direction: rotate = swap image default <-> mirrored (_m, horizontal flip) and swap footprint [w,d]. True 4-direction rotation would need back-view art, which is NOT included.",
  "layerOrder": [
   "world/base-bg",
-  "floor tiles (floor/iso/{id}_{c%2}{r%2}.png)",
-  "wall tiles (wall/L|R/{id}_{i}.png, 8 strips)",
-  "world/room-frame-view | room-frame-edit",
-  "edit tile overlays",
+  "world/room-walls",
+  "world/room-floor | room-floor-edit-grid",
+  "edit tile overlays (tile-*.svg styles)",
+  "rug decal (items/decor/pawrug, iso-projected)",
+  "contact shadows (shadows/*, per floor item)",
+  "wall items (items/wall/*_L|_R)",
+  "world/string-lights",
+  "floor items depth-sorted (+ onTop items right after their host)",
+  "world/lamp-glow-additive (screen/plus-lighter)",
+  "world/front-puffs-view | edit",
+  "selection UI (DOM)"
+ ],
+ "tileMaps": {
+  "shape": {
+   "floorTiles": "string[8][8] — floorTiles[row][col] = texture id",
+   "wallTiles": "{L: string[8], R: string[8]} — index = column from the back corner"
+  },
+  "defaults": {
+   "floorTiles": [
+    [
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey"
+    ],
+    [
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey"
+    ],
+    [
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey"
+    ],
+    [
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey"
+    ],
+    [
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey"
+    ],
+    [
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey"
+    ],
+    [
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey"
+    ],
+    [
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey",
+     "wood_honey"
+    ]
+   ],
+   "wallTiles": {
+    "L": [
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle"
+    ],
+    "R": [
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle",
+     "plum_sparkle"
+    ]
+   }
+  },
+  "floorTileWorldPx": "x = 1920+(c-r)*78-80, y = 900+(c+r)*39-2 (image top-left, incl. 2 px bleed)",
+  "wallColumnWorldPx": {
+   "L": "x = 1920-(i+1)*78-2, y = 450+i*39-2",
+   "R": "x = 1920+i*78-2, y = 450+i*39-2"
+  },
+  "wallHeightWorldPx": 450,
+  "columnWidthWorldPx": 78
+ },
+ "layerOrderTiles": [
+  "world/base-bg",
+  "wall column strips L+R (wallTiles)",
+  "floor iso tiles (floorTiles)",
+  "world/room-frame-{view|edit} (replaces room-walls + room-floor)",
+  "edit overlays / brush highlight",
   "rug decal",
   "contact shadows",
   "wall items",
-  "floor items depth-sorted",
-  "world/lamp-glow-additive",
-  "world/front-puffs-view | edit",
+  "floor items (depth sorted)",
+  "lamp glow",
+  "front puffs",
   "selection UI"
  ],
- "tileMaps": {
-  "floorTiles": "8x8 array of floor skin ids; cell (c,r) draws floor/iso/{id}_{c%2}{r%2}.png",
+ "screenshotLayoutV6": {
+  "note": "layout used for mockups/room-screen-b-v6.png (cabinet on the rug, selected)",
+  "items": [
+   {
+    "id": "pawrug",
+    "c": 3,
+    "r": 3,
+    "w": 2,
+    "d": 2,
+    "orientation": "default",
+    "worldPx": [
+     1770,
+     1137
+    ]
+   },
+   {
+    "id": "archwindow",
+    "wall": "L",
+    "t": 2.6,
+    "heightUnits": 92,
+    "worldPx": [
+     1616,
+     558
+    ]
+   },
+   {
+    "id": "starlamp",
+    "wall": "L",
+    "t": 4.1,
+    "heightUnits": 104,
+    "worldPx": [
+     1565,
+     690
+    ]
+   },
+   {
+    "id": "catsteps",
+    "wall": "L",
+    "t": 5.5,
+    "heightUnits": 74,
+    "worldPx": [
+     1421,
+     795
+    ]
+   },
+   {
+    "id": "cardframe",
+    "wall": "L",
+    "t": 1.2,
+    "heightUnits": 96,
+    "worldPx": [
+     1963,
+     572
+    ]
+   },
+   {
+    "id": "squareframe",
+    "wall": "R",
+    "t": 1.4,
+    "heightUnits": 94,
+    "worldPx": [
+     2022,
+     622
+    ]
+   },
+   {
+    "id": "catclock",
+    "wall": "R",
+    "t": 4.5,
+    "heightUnits": 98,
+    "worldPx": [
+     2234,
+     710
+    ]
+   },
+   {
+    "id": "bunting",
+    "wall": "R",
+    "t": 6.6,
+    "heightUnits": 118,
+    "worldPx": [
+     2330,
+     697
+    ]
+   },
+   {
+    "id": "floorlamp",
+    "c": 0,
+    "r": 0,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "default",
+    "worldPx": [
+     1882,
+     803
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "bookshelf",
+    "c": 0,
+    "r": 2,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "mirrored",
+    "worldPx": [
+     1698,
+     911
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "fishbowl",
+    "onTop": "bookshelf",
+    "fx": 0.4502983050847458,
+    "fy": 0.12731674846625768,
+    "worldPx": [
+     1742,
+     893
+    ]
+   },
+   {
+    "id": "bed",
+    "c": 1,
+    "r": 0,
+    "w": 1,
+    "d": 2,
+    "kind": "f",
+    "orientation": "default",
+    "worldPx": [
+     1809,
+     841
+    ],
+    "shadow": "shadows/shadow-1x2.png"
+   },
+   {
+    "id": "plant",
+    "c": 2,
+    "r": 4,
+    "w": 1,
+    "d": 1,
+    "kind": "d",
+    "orientation": "default",
+    "worldPx": [
+     2040,
+     940
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "catchair",
+    "c": 0,
+    "r": 3,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "mirrored",
+    "worldPx": [
+     1622,
+     956
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "cabinet",
+    "c": 3,
+    "r": 3,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "default",
+    "worldPx": [
+     2088,
+     953
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "moonlamp",
+    "onTop": "cabinet",
+    "fx": 0.41985100000000003,
+    "fy": 0.3022875541401274,
+    "worldPx": [
+     2133,
+     956
+    ]
+   },
+   {
+    "id": "scratcher",
+    "c": 0,
+    "r": 4,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "mirrored",
+    "worldPx": [
+     1544,
+     1012
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "radioclock",
+    "c": 3,
+    "r": 6,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "default",
+    "worldPx": [
+     2177,
+     1005
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "cattower",
+    "c": 0,
+    "r": 5,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "mirrored",
+    "worldPx": [
+     1467,
+     1005
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "desk",
+    "c": 5,
+    "r": 0,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "default",
+    "worldPx": [
+     2238,
+     1038
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "tent",
+    "c": 0,
+    "r": 6,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "mirrored",
+    "worldPx": [
+     1388,
+     1079
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "yarnbasket",
+    "c": 1,
+    "r": 5,
+    "w": 1,
+    "d": 1,
+    "kind": "d",
+    "orientation": "default",
+    "worldPx": [
+     1566,
+     1121
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "sofa",
+    "c": 3,
+    "r": 2,
+    "w": 2,
+    "d": 1,
+    "kind": "f",
+    "orientation": "default",
+    "worldPx": [
+     1910,
+     1006
+    ],
+    "shadow": "shadows/shadow-2x1.png"
+   },
+   {
+    "id": "beanbag",
+    "c": 5,
+    "r": 1,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "default",
+    "worldPx": [
+     2164,
+     1089
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "gifts",
+    "c": 6,
+    "r": 0,
+    "w": 1,
+    "d": 1,
+    "kind": "d",
+    "orientation": "default",
+    "worldPx": [
+     2342,
+     1105
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "catcactus",
+    "c": 0,
+    "r": 7,
+    "w": 1,
+    "d": 1,
+    "kind": "d",
+    "orientation": "default",
+    "worldPx": [
+     1356,
+     1179
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "catbed_cat",
+    "c": 4,
+    "r": 4,
+    "w": 1,
+    "d": 1,
+    "kind": "d",
+    "orientation": "default",
+    "worldPx": [
+     1778,
+     1128
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "teatable",
+    "c": 2,
+    "r": 5,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "default",
+    "worldPx": [
+     1939,
+     1120
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "monstera",
+    "c": 7,
+    "r": 0,
+    "w": 1,
+    "d": 1,
+    "kind": "d",
+    "orientation": "default",
+    "worldPx": [
+     2416,
+     1115
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "feeder",
+    "c": 1,
+    "r": 7,
+    "w": 1,
+    "d": 1,
+    "kind": "f",
+    "orientation": "mirrored",
+    "worldPx": [
+     1377,
+     1176
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "cushions",
+    "c": 5,
+    "r": 4,
+    "w": 1,
+    "d": 1,
+    "kind": "d",
+    "orientation": "default",
+    "worldPx": [
+     1956,
+     1229
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "aquarium",
+    "c": 7,
+    "r": 4,
+    "w": 1,
+    "d": 1,
+    "kind": "d",
+    "orientation": "default",
+    "worldPx": [
+     2182,
+     1236
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "xmastree",
+    "c": 5,
+    "r": 6,
+    "w": 1,
+    "d": 1,
+    "kind": "d",
+    "orientation": "default",
+    "worldPx": [
+     2034,
+     1298
+    ],
+    "shadow": "shadows/shadow-1x1.png"
+   },
+   {
+    "id": "archmirror",
+    "c": 2,
+    "r": 0,
+    "w": 1,
+    "d": 1,
+    "kind": "d",
+    "orientation": "default"
+   }
+  ],
+  "floorTiles": [
+   [
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink"
+   ],
+   [
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink"
+   ],
+   [
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink"
+   ],
+   [
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink"
+   ],
+   [
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink"
+   ],
+   [
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink"
+   ],
+   [
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink"
+   ],
+   [
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink",
+    "check_pink"
+   ]
+  ],
   "wallTiles": {
-   "L": 8,
-   "R": 8
-  },
-  "floorFile": "floor/iso/{id}_{c%2}{r%2}.png",
-  "wallLeftFile": "wall/L/{id}_{i}.png",
-  "wallRightFile": "wall/R/{id}_{i}.png",
-  "defaultFloor": "wood_honey",
-  "defaultWall": "plum_sparkle"
+   "L": [
+    "mint_gingham",
+    "mint_gingham",
+    "mint_gingham",
+    "mint_gingham",
+    "mint_gingham",
+    "mint_gingham",
+    "mint_gingham",
+    "mint_gingham"
+   ],
+   "R": [
+    "paw_wall",
+    "paw_wall",
+    "paw_wall",
+    "paw_wall",
+    "paw_wall",
+    "paw_wall",
+    "paw_wall",
+    "paw_wall"
+   ]
+  }
  }
 }

@@ -1,8 +1,8 @@
-# 방꾸미기 (MY ROOM.) — dev spec v5
+# 방꾸미기 (MY ROOM.) — dev spec v6 (v5 + floor/wallpaper tiles + angle fix)
 
 Toss in-app mini app (앱인토스). Frame 390×844 pt, assets at 3x.
 Status bar 47 pt + Toss nav 56 pt (title "방꾸미기"). **Content top = 103 pt**; all `y` below are content-relative unless marked *screen*.
-Mockups: `mockups/room-screen-a-v5.png` (view), `mockups/room-screen-b-v5.png` (edit), `mockups/room-v5-catalog.png` (48 items).
+Mockups: `mockups/room-screen-a-v5.webp` (view), `mockups/room-screen-b-v5.webp` (edit), `mockups/room-v5-catalog.webp` (48 items).
 Values marked **(PH)** are placeholders.
 
 **What changed from v3/v4:** every furniture sprite is now true 2:1 isometric and registered to its footprint tiles. All sprites are *pure item* on transparent bg (no floor tile, no baked shadow). Shadows are separate sprites drawn by the app. Wall items ship pre-slanted for each wall (`_L` / `_R`).
@@ -30,13 +30,13 @@ Feather the container edges into the page bg (CSS mask, ~37 pt linear fade). Add
 
 Layer order (bottom → top):
 1. `world/base-bg.webp` — cloud island
-2. floor tiles — `floor/iso/{id}_{c%2}{r%2}.png` per cell (§10)
-3. wall tiles — `wall/L/{id}_{i}.png` / `wall/R/{id}_{i}.png`, 8 strips (§10)
-4. `world/room-frame-view.svg` / `room-frame-edit.svg` — wooden trim + grout + string lights
-5. edit-tile overlays — draw in code with the `world/tile-*.svg` styles
-6. rug decal `items/decor/pawrug` — see §3.4
-7. **contact shadows** — `shadows/shadow-{w}x{d}.png`, one per floor item (§3.5)
-8. wall items `items/wall/{id}_L.png` (left wall) / `{id}_R.png` (right wall) (§3.6)
+2. `world/room-walls.svg`
+3. `world/room-floor.svg` (view) / `world/room-floor-edit-grid.svg` (edit)
+4. edit-tile overlays — draw in code with the `world/tile-*.svg` styles
+5. rug decal `items/decor/pawrug` — see §3.4
+6. **contact shadows** — `shadows/shadow-{w}x{d}.png`, one per floor item (§3.5)
+7. wall items `items/wall/{id}_L.png` (left wall) / `{id}_R.png` (right wall) (§3.6)
+8. `world/string-lights.svg`
 9. floor items, depth-sorted (§3.3); on-top items drawn right after their host
 10. `world/lamp-glow-additive.webp` — `mix-blend-mode: screen` (or plus-lighter); baked for the lamp at (0,0) — move or re-render if the lamp moves
 11. `world/front-puffs-view.svg` / `front-puffs-edit.svg`
@@ -110,7 +110,7 @@ Furniture: all 1×1 except **sofa 2×1** and **bed 1×2**. Decor 1×1, rug 2×2.
 | · handle | top 9, 38×4 | cream .3 |
 | · header | left 24, top 24 | "ITEMS" Poppins 800 22 ls −.5 + "꾸미기 서랍" Noto 11 cream .55; right: points chip (paw 14 + "1,240" Poppins 700 12, 1px amber .45 border, pill) |
 | · hint row | top 58 | Gamja 16.5 cream .78 "중복 카드를 발바닥 포인트로 바꿔 가구를 사요" + link "바꾸기 ›" Noto 700 10 amber |
-| · tabs | top 92, gap 17 | 가구 · 소품 · 벽지 · 바닥 · 카드액자 — Noto 700 13.5; off cream .42; on cream + 2 pt amber underline (glow) 10 pt below; 1px divider cream .12 |
+| · tabs | top 92, gap 15, horizontal scroll (fits 390 pt without scrolling; keep scroll for future tabs) | 가구 · 소품 · 벽 꾸미기 · 벽지 · 바닥 · 카드액자 — Noto 700 13.5; off cream .42; on cream + 2 pt amber underline (glow) 10 pt below; 1px divider cream .12 |
 | · grid | top 134, left 24, 4 columns × 75 pt, gap 12 (row) / 14 (col) | tile 75×75 radius 16, bg cream .06, 1px cream .1; icon `tiles/{id}.png` (192×192 px = 64 pt @3x, transparent; draw at 56–64 pt) |
 | · tile label | 5 below tile | Noto 700 10.5 cream (locked: cream .45) |
 | · tile sub | below label | owned: "보유" / placed: "배치 중" Poppins 500 8 ls 1.2 cream .4; locked: paw 11 + price Poppins 700 10.5 amber |
@@ -126,10 +126,10 @@ Tile states: **owned** (plain, "보유") · **placed** (`ui/badge-check.svg` 14 
 - **Flip:** in v5 flip = rotate (an iso horizontal mirror always swaps the axes). Keep one button (rotate) or make flip an alias.
 - **Delete:** the sprite shrinks and fades (180 ms) and flies toward the drawer; the item returns to the drawer as **보유** (no refund).
 - **Drawer tap:** owned/unplaced → place on the first free tile that fits (scan by depth key from the back corner, row-major) and auto-select it; placed → select it in the room; locked → purchase sheet (price in paw points; confirm → points −price, state becomes owned) **(PH flow)**.
-- **Tabs:** 벽지 / 바닥 swap the wall/floor skin immediately (preview) and apply on 완료.
-- **완료:** saves the layout (items: id, col, row, rot, flip; wall item slots; skins) → toast "방을 저장했어요" → back to view mode. **취소:** discards all changes since entering edit mode (keep a snapshot) → view mode; if changes exist, confirm "변경사항을 버릴까요?" [계속 꾸미기] [버리기] **(PH copy)**.
+- **Tabs:** 벽 꾸미기 = wall items (frames, clock, window…). 벽지 / 바닥 = paint mode, see §10.
+- **완료:** saves the layout (items: id, col, row, rot, flip; wall item slots; `floorTiles`, `wallTiles` — §10) → toast "방을 저장했어요" → back to view mode. **취소:** discards all changes since entering edit mode (keep a snapshot) → view mode; if changes exist, confirm "변경사항을 버릴까요?" [계속 꾸미기] [버리기] **(PH copy)**.
 - **저장 (A):** saves the current room as an image to the gallery / share sheet **(PH)**.
-- **초기화 (A):** confirm dialog "방을 처음 상태로 되돌릴까요?" / "배치한 가구는 서랍으로 돌아가요. 산 아이템은 그대로 있어요." [취소] [초기화] → resets to `grid.json → defaultLayout` **(PH copy)**.
+- **초기화 (A):** confirm dialog "방을 처음 상태로 되돌릴까요?" / "배치한 가구는 서랍으로 돌아가요. 산 아이템은 그대로 있어요." [취소] [초기화] → resets to `grid.json → defaultLayout` and `grid.json → tileMaps.defaults` **(PH copy)**.
 
 ## 7. Suggested ambient animation animation (view mode; reduce/stop in edit mode except lamp and cat)
 - **Island float:** whole world container translateY 0 → −4 pt → 0, 6 s ease-in-out infinite.
@@ -153,16 +153,126 @@ Tile states: **owned** (plain, "보유") · **placed** (`ui/badge-check.svg` 14 
 - `world/` — base-bg, room-floor, room-floor-edit-grid, room-walls, string-lights, front-puffs-view/edit (svg + webp), lamp-glow-additive.webp, tile-*.svg styles, `_reference/`
 - `ui/` — logo, icons, check badge, selection-box reference
 - `items.json` (48 items + heroCat, both orientations, anchors, shadow, tile), `grid.json` (grid, screens, contactShadow, layerOrder, defaultLayout)
-- `mockups/` — room-screen-a-v5, room-screen-b-v5, room-screen-c-v5 (floor paint), room-screen-d-v5 (wallpaper paint), room-v5-catalog, room-tiles-catalog
-- `floor/iso/{id}_{c%2}{r%2}.png`, `wall/L/{id}_{i}.png`, `wall/R/{id}_{i}.png`, `world/room-frame-view|edit`
+- `mockups/` — room-screen-a/b/c/d-v5, room-screen-b-v6, room-angle-fix-proof, room-v5-catalog, room-tiles-catalog (WebP q92 inside the package; full-res PNGs live next to the zip)
 
-## 10. Tile paint (wallpaper + floor)
-Per-cell wallpaper and floor. Spec files: `items.json → tileRules`, `grid.json → tileMaps`. Mockups C (floor) and D (wallpaper).
 
-- **floorTiles[row][col]** = skin id. Cell `(c, r)` draws `floor/iso/{id}_{c%2}{r%2}.png` (160×82 world px, 2 px pad around the 156×78 diamond).
-- **wallTiles** = `{ L: [8], R: [8] }`. Strip `i` uses `wall/L/{id}_{i}.png` / `wall/R/{id}_{i}.png` (82×493). Left strip on `P(0,i)→P(0,i+1)` raised 450 px; right on `P(i,0)→P(i+1,0)`.
-- Defaults: every floor cell `wood_honey`, every wall strip `plum_sparkle`.
-- Drawer tabs: 가구 · 소품 · 벽 꾸미기 · 벽지 · 바닥 · 카드액자. 벽지 / 바닥 tabs list those categories. Toolbar: **한 칸씩 · 전체 칠하기** + **지우개**.
-- Cell paint: tap or drag. Fill-all: 64 floor cells, or 8 strips on the tapped wall. Eraser writes the default id. Furniture stays visible and does not block paint. Locked skins open the buy sheet.
-- HUD: highlight the cell; floor tag `(c, r) 이름`; wall tag `왼쪽/오른쪽 벽 n번째 줄`.
-- Save `floorTiles` and `wallTiles` with the layout. 완료 saves, 취소 restores the edit snapshot, 초기화 restores defaults. Undo reverts one paint stroke.
+## 10. Floor & wallpaper tiles (바닥 · 벽지 paint mode)
+Mockups: `mockups/room-screen-c-v5.webp` (바닥 tab, painting a floor tile), `mockups/room-screen-d-v5.webp` (벽지 tab, painting a wall column), `mockups/room-tiles-catalog.webp`.
+
+### 10.1 Data
+```js
+room.floorTiles = string[8][8]        // floorTiles[row][col] = textureId, e.g. "wood_honey"
+room.wallTiles  = { L: string[8], R: string[8] }   // index i = column counted from the back corner
+// defaults (grid.json → tileMaps.defaults): all "wood_honey" / all "plum_sparkle"
+```
+Saved with the item layout on 완료; restored on 취소 from the edit snapshot; reset by 초기화. items.json entries: `id = floor_<textureId>` / `wall_<textureId>`, `category` 바닥 / 벽지, `placement` floorTile / wallColumn, `price`, `ownedDefault`, `isDefault`, `texture`, `thumb`, `isoTiles` (+`isoTilesGrout`) or `columnsL` / `columnsR`.
+
+### 10.2 Drawing (world px, 3840×2160 container — same as §2)
+Layer order with tiles: base-bg → **wall strips** → **floor tiles** → `world/room-frame-view|edit` (svg/webp; = room-walls + room-floor **without** the wall/floor fills: slab, caps, corner line, edit grid, string lights) → edit overlays → rug → shadows → wall items → floor items → glow → puffs → UI. (`room-walls` / `room-floor` from the v5 package are not used when tile maps are on.)
+- **Floor tile** (c,r): image `floor/iso/<id>_<c%2><r%2>.png` (160×82 = the 156×78 diamond + 2 px bleed) at top-left `x = 1920+(c−r)·78−80`, `y = 900+(c+r)·39−2`. Draw in any order.
+- **Sampling rule:** every floor texture repeats exactly every **2 tiles** in both axes, so each texture ships 4 variants `00 01 10 11` (= col parity, row parity). Picking the variant by parity makes planks, herringbone, checkers, clouds etc. continue seamlessly across neighbouring tiles of the same texture; different textures just meet at the tile edge.
+- **Grout variant:** `floor/iso-grout/` — same tiles with a thin (~1–1.5 world px) line in the texture's grout colour on the tile edges (use for tile-like floors if you want visible tiles; off by default).
+- **Wall column** i: left wall (along col 0) `wall/L/<id>_<i>.png` at `(1920−(i+1)·78−2, 450+i·39−2)`; right wall (along row 0) `wall/R/<id>_<i>.png` at `(1920+i·78−2, 450+i·39−2)`. Strip 82×493 = 78 px column × 450 px wall height on the 2:1 slope + 2 px bleed. Right-wall strips are pre-shaded ×0.88 (right wall is darker, as in the default room). Each strip is cut from one continuous 8-column texture, so equal neighbours join seamlessly; the baseboard is part of every wallpaper.
+- **Thumbnails:** `floor/thumb/<id>.png`, `wall/thumb/<id>.png` 256×256 (85 pt @3x) — square, seamless; drawer shows them full-bleed in the 75 pt tile (radius 15). `floor/flat/` 512 px = 2×2-tile period texture, `wall/flat/` 624×450 = all 8 columns flat (for custom renderers).
+
+### 10.3 Interaction (바닥 / 벽지 tabs)
+- Under the tabs: segmented toggle **한 칸씩 · 전체 칠하기** (pill, active = amber gradient) and a **지우개** chip (right).
+- Pick a texture in the grid (state "칠하는 중", amber ring). A brush cursor (34 pt amber circle + brush icon) follows the finger with a dashed ring at the tip and a tag "(c, r) 이름" / "오른쪽 벽 N번째 줄".
+- **한 칸씩:** tap paints one floor tile (or one wall column on the 벽지 tab: hit test the wall strip quads). Drag paints every tile the finger crosses (stroke). The tile/column under the brush is highlighted (amber fill .38 + 2.2 cream stroke; walls dashed).
+- **전체 칠하기 (bucket):** one tap fills the whole floor (바닥) or the whole wall that was tapped (벽지; long-press → both walls) **(PH: whole floor vs. connected same-texture region — recommend whole floor for simplicity)**.
+- **지우개:** paints the default texture (`wood_honey` / `plum_sparkle`) — same 한 칸씩/전체 rules.
+- Furniture always stays on top and is never moved by painting; tiles under furniture can be painted (only visible gaps change). Optional: dim furniture to 60% while painting **(PH)**.
+- Locked textures: tapping opens the purchase sheet instead of painting **(PH flow)**; preview-paint before purchase is optional.
+- Undo: keep the edit snapshot (취소); a per-stroke undo button is a possible extension **(PH)**.
+- Light haptic per painted tile; 120 ms fade-in of the new tile.
+
+### 10.4 Texture list (price = paw points, **PH**)
+**바닥 (12)**
+| id | 이름 | price | owned |
+|---|---|---|---|
+| `wood_honey` | 꿀빛 원목 | 기본 | ✓ |
+| `wood_oak` | 밝은 오크 | 180 | ✓ |
+| `check_pink` | 핑크 체크 | 150 | ✓ |
+| `check_mint` | 민트 체크 | 150 | ✓ |
+| `herring_lav` | 라벤더 헤링본 | 300 | — |
+| `marble_cream` | 크림 대리석 | 260 | — |
+| `paw_tile` | 발바닥 타일 | 200 | ✓ |
+| `star_navy` | 별가루 네이비 | 280 | — |
+| `carpet_pink` | 몽글 핑크 카펫 | 240 | — |
+| `meadow` | 초록 들판 | 220 | — |
+| `cloud` | 구름 타일 | 260 | — |
+| `terrazzo` | 파스텔 테라조 | 240 | — |
+
+**벽지 (12)**
+| id | 이름 | price | owned |
+|---|---|---|---|
+| `plum_sparkle` | 플럼 반짝이 | 기본 | ✓ |
+| `lav_stripe` | 라벤더 줄무늬 | 150 | ✓ |
+| `pink_polka` | 핑크 도트 | 150 | ✓ |
+| `mint_gingham` | 민트 깅엄 | 180 | ✓ |
+| `cream_cats` | 크림 냥이 | 220 | — |
+| `night_sky` | 밤하늘 별빛 | 260 | — |
+| `peach_hearts` | 피치 하트 | 180 | — |
+| `wainscot` | 원목 웨인스코팅 | 300 | — |
+| `cloud_wall` | 몽실 구름 | 220 | — |
+| `paw_wall` | 발바닥 벽지 | 200 | ✓ |
+| `sage_leaf` | 세이지 잎사귀 | 220 | — |
+| `moon_navy` | 달과 별 | 280 | — |
+
+### 10.5 Files (this package)
+- `floor/thumb|flat|iso|iso-grout/`, `wall/thumb|flat|L|R/`
+- `world/room-frame-view|edit.svg|webp`, `world/_reference/composite-*.webp` (default tiles, floor paint, wall paint)
+- `items.json` (v5 48 items + hero + 24 tile textures, `tileRules`), `grid.json` (+ `tileMaps`, `layerOrderTiles`)
+- Everything from `room-assets-v5` (items, shadows, base-bg, ui…) stays valid; this package only adds to it.
+
+
+## 11. v6 angle fix
+Ideal: every straight floor-plane edge runs at **±26.57°** (2:1); verticals at 90°. P = edges parallel to the right wall / col axis (+26.57° in image coords, y down), N = parallel to the left wall / row axis (−26.57°).
+Measured with Canny + probabilistic Hough on each sprite; value = length-weighted median of segments within ±16° (before) / ±10° (after) of the ideal.
+
+**Floor sprites fixed** (the source art was drawn with a flatter front face, ~15–18° instead of 26.57°). Per sprite affine `x′ = a·x`, `y′ = c·x + d·y` (verticals stay vertical; area kept: a·d = 1), solved so both edge families hit ±26.57° exactly, refined iteratively. `_m` = mirror of the corrected default. New `size`, `anchorFootprintCenterPx`, `anchorBackCornerPx` in items.json; matrices in `items[].angleFixV6`. Decor: `displayWidthTiles` scaled with the new image width. On-top offsets (`fx`,`fy`) remapped; `defaultLayout.worldPx` recomputed.
+
+| item | before P / N | after P / N |
+|---|---|---|
+| bed | 24.2° / -28.1° | 26.8° / -26.6° |
+| bookshelf | 15.5° / -27.4° | 26.6° / -26.6° |
+| cabinet | 15.4° / -25.9° | 26.3° / -24.6° |
+| catchair | 18.4° / -25.8° | 26.1° / -26.6° |
+| desk | 17.8° / -27.3° | 27.1° / -26.2° |
+| feeder | 18.4° / -20.6° | 26.6° / -30.6° |
+| fridge | 17.2° / -26.0° | 26.1° / -25.9° |
+| scratcher | 21.8° / -27.2° | 24.8° / -25.8° |
+| sofa | 15.8° / -28.2° | 26.1° / -26.2° |
+| aquarium | 18.1° / -27.1° | 26.0° / -26.6° |
+| archmirror | 16.3° / -31.8° | 27.0° / -25.9° |
+| cushions | 16.4° / -30.7° | 26.1° / -26.6° |
+| gifts | 18.8° / -27.3° | 26.0° / -27.9° |
+| gramophone | 16.6° / -31.4° | 26.0° / – |
+
+**Wall items fixed:** the flat front art had horizontals tilted 4.5–7.3° (drawn slightly angled), so the slanted copies were ~20°/32° instead of 26.57°. The front art is de-skewed first, then `_L`/`_R` are re-sheared (x′ = 0.894·x, y′ = y ∓ 0.5·x′). Verticals = 90.0°.
+
+| item | front tilt | L before → after | R before → after |
+|---|---|---|---|
+| archwindow | 6.6° | -20.2° → -26.6° | 32.2° → 26.9° |
+| calendar | 5.9° | -20.6° → -25.9° | 32.5° → 26.9° |
+| cardframe | 4.7° | -22.1° → -26.2° | 30.7° → 26.8° |
+| catsteps | 6.5° | -20.0° → -25.4° | 33.7° → 32.3° |
+| corkboard | 4.5° | -22.2° → -26.1° | 30.6° → 26.7° |
+| squareframe | 5.8° | -20.9° → -26.6° | 31.9° → 26.6° |
+| wallshelf | 7.3° | -20.1° → -27.4° | 32.1° → 26.2° |
+
+Wall draw scale: `s = displayWidthTiles·156 / frontWidth` applied to `_L`/`_R` (see grid.json → wallPlacement).
+
+**Unchanged:** round/organic items (beanbag, catbed, cattower, floorlamp, teatable, plant, monstera, fishbowl, moonlamp, yarnbasket, xmastree, globe, catcactus, starlight, hero cat) have no straight floor edges; their ellipses are left symmetric. Pawrug was projected exactly in v5. Other wall items (bunting, catclock, dreamcatcher, earmirror, fairylights, heartneon, moonmobile, porthole, starlamp) measured within ~1.5° or have no straight edges.
+
+**Redrawn in v6.1 (new 3/4 art):** `radioclock`, `maneki`, `tent` were re-cut from a new sheet. Pipeline: measured the cream sheet tile (L/B/R corners) → affine onto the exact 2:1 diamond ×1.2 with verticals kept vertical → tile, tile outline and soft contact shadow removed (no halo) → edge angles measured and the v6 affine correction applied → scaled uniformly about the footprint centre to the previous on-screen height → `_m` = mirror. All three now have `orientations` with anchors (maneki too: draw 1:1 at `anchorFootprintCenterPx`; `displayWidthTiles` kept for the on-top rule). Old files: `../room-assets-v6_old/`.
+
+| item | after tile registration P / N | final P / N | size px |
+|---|---|---|---|
+| radioclock | 18.4° / -26.6° | 26.6° / -27.9° | 101×119 |
+| maneki | 25.2° / -25.8° | 28.1° / -27.3° | 98×100 |
+| tent | 15.3° / -27.5° | 26.0° / -23.2° | 115×122 |
+
+(Tent is a dome: its P edges are the door trim / base rim; the base N edge is short, ±3–4° measurement noise.)
+
+**Optional new art:** `catsteps` / `wallshelf` (3D shelves: wall-direction edges are exact, the depth direction comes from the shear).

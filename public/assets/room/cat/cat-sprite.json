@@ -1,0 +1,283 @@
+{
+ "_version": "cat-roam 1.0 (2026-10-11)",
+ "breed": "cheese tabby (default)",
+ "image": "cat-sprite.png",
+ "frameSize": [
+  174,
+  137
+ ],
+ "anchor": {
+  "x": 87,
+  "y": 132,
+  "meaning": "bottom-centre foot point; place at the tile centre world px P(c+0.5,r+0.5)"
+ },
+ "units": "world px (3x of 1280x720 world); cat body ≈125 px ≈0.8 tile wide",
+ "shadow": {
+  "image": "cat-shadow.png",
+  "size": [
+   120,
+   44
+  ],
+  "anchor": [
+   60,
+   22
+  ],
+  "note": "draw under the cat at the foot anchor; same image for all breeds/poses (scale 0.8 for loaf/sleep optional)"
+ },
+ "directions": {
+  "walk_dl": "+row (down-left)",
+  "walk_ul": "-col (up-left)",
+  "walk_dr": "+col (down-right, mirror of dl)",
+  "walk_ur": "-row (up-right, mirror of ul)"
+ },
+ "frames": {
+  "walk_dl_0": {
+   "x": 0,
+   "y": 0,
+   "w": 174,
+   "h": 137
+  },
+  "walk_dl_1": {
+   "x": 174,
+   "y": 0,
+   "w": 174,
+   "h": 137
+  },
+  "walk_dl_2": {
+   "x": 348,
+   "y": 0,
+   "w": 174,
+   "h": 137
+  },
+  "walk_dl_3": {
+   "x": 522,
+   "y": 0,
+   "w": 174,
+   "h": 137
+  },
+  "walk_ul_0": {
+   "x": 696,
+   "y": 0,
+   "w": 174,
+   "h": 137
+  },
+  "walk_ul_1": {
+   "x": 870,
+   "y": 0,
+   "w": 174,
+   "h": 137
+  },
+  "walk_ul_2": {
+   "x": 1044,
+   "y": 0,
+   "w": 174,
+   "h": 137
+  },
+  "walk_ul_3": {
+   "x": 1218,
+   "y": 0,
+   "w": 174,
+   "h": 137
+  },
+  "walk_dr_0": {
+   "x": 0,
+   "y": 137,
+   "w": 174,
+   "h": 137
+  },
+  "walk_dr_1": {
+   "x": 174,
+   "y": 137,
+   "w": 174,
+   "h": 137
+  },
+  "walk_dr_2": {
+   "x": 348,
+   "y": 137,
+   "w": 174,
+   "h": 137
+  },
+  "walk_dr_3": {
+   "x": 522,
+   "y": 137,
+   "w": 174,
+   "h": 137
+  },
+  "walk_ur_0": {
+   "x": 696,
+   "y": 137,
+   "w": 174,
+   "h": 137
+  },
+  "walk_ur_1": {
+   "x": 870,
+   "y": 137,
+   "w": 174,
+   "h": 137
+  },
+  "walk_ur_2": {
+   "x": 1044,
+   "y": 137,
+   "w": 174,
+   "h": 137
+  },
+  "walk_ur_3": {
+   "x": 1218,
+   "y": 137,
+   "w": 174,
+   "h": 137
+  },
+  "sit": {
+   "x": 0,
+   "y": 274,
+   "w": 174,
+   "h": 137
+  },
+  "groom": {
+   "x": 174,
+   "y": 274,
+   "w": 174,
+   "h": 137
+  },
+  "loaf": {
+   "x": 348,
+   "y": 274,
+   "w": 174,
+   "h": 137
+  },
+  "sleep": {
+   "x": 522,
+   "y": 274,
+   "w": 174,
+   "h": 137
+  },
+  "stretch": {
+   "x": 696,
+   "y": 274,
+   "w": 174,
+   "h": 137
+  },
+  "happy": {
+   "x": 870,
+   "y": 274,
+   "w": 174,
+   "h": 137
+  },
+  "tapped": {
+   "x": 1044,
+   "y": 274,
+   "w": 174,
+   "h": 137
+  },
+  "yawn": {
+   "x": 1218,
+   "y": 274,
+   "w": 174,
+   "h": 137
+  }
+ },
+ "animations": {
+  "walk_dl": {
+   "frames": [
+    "walk_dl_0",
+    "walk_dl_1",
+    "walk_dl_2",
+    "walk_dl_3"
+   ],
+   "fps": 8,
+   "loop": true
+  },
+  "walk_ul": {
+   "frames": [
+    "walk_ul_0",
+    "walk_ul_1",
+    "walk_ul_2",
+    "walk_ul_3"
+   ],
+   "fps": 8,
+   "loop": true
+  },
+  "walk_dr": {
+   "frames": [
+    "walk_dr_0",
+    "walk_dr_1",
+    "walk_dr_2",
+    "walk_dr_3"
+   ],
+   "fps": 8,
+   "loop": true
+  },
+  "walk_ur": {
+   "frames": [
+    "walk_ur_0",
+    "walk_ur_1",
+    "walk_ur_2",
+    "walk_ur_3"
+   ],
+   "fps": 8,
+   "loop": true
+  },
+  "idle_sit": {
+   "frames": [
+    "sit"
+   ],
+   "fps": 1,
+   "loop": true
+  },
+  "groom": {
+   "frames": [
+    "groom"
+   ],
+   "fps": 1,
+   "loop": true,
+   "note": "single frame; app may add a 2px bob at 4 fps"
+  },
+  "loaf": {
+   "frames": [
+    "loaf"
+   ],
+   "fps": 1,
+   "loop": true
+  },
+  "sleep": {
+   "frames": [
+    "sleep"
+   ],
+   "fps": 1,
+   "loop": true,
+   "note": "single frame; app may add slow 1.0→1.03 vertical breathe, 2 s period"
+  },
+  "stretch": {
+   "frames": [
+    "stretch"
+   ],
+   "fps": 1,
+   "loop": false,
+   "holdMs": 900
+  },
+  "happy": {
+   "frames": [
+    "happy"
+   ],
+   "fps": 1,
+   "loop": false,
+   "holdMs": 700
+  },
+  "tapped": {
+   "frames": [
+    "tapped"
+   ],
+   "fps": 1,
+   "loop": false,
+   "holdMs": 600
+  },
+  "yawn": {
+   "frames": [
+    "yawn"
+   ],
+   "fps": 1,
+   "loop": false,
+   "holdMs": 900
+  }
+ }
+}

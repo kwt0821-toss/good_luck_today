@@ -1,5 +1,5 @@
 {
- "_placeholders": "price (all), ownedDefault (locked = has price list entry), Korean names, wall categories (suggest renaming tab 벽지 → 벽 꾸미기 or adding a tab) are PLACEHOLDERS",
+ "_placeholders": "price (all), ownedDefault (locked = has price list entry), Korean names, wall categories are PLACEHOLDERS; tile prices/ownedDefault and tile Korean names are PLACEHOLDERS too",
  "categories": [
   "가구",
   "소품",
@@ -220,8 +220,8 @@
    "placedDefault": true,
    "image": "items/furniture/cabinet.png",
    "imageSizePx": [
-    141,
-    132
+    122,
+    157
    ],
    "tileImage": "tiles/cabinet.png",
    "orientations": {
@@ -232,16 +232,16 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      66.0,
-      103.0
+      61.4,
+      113.8
      ],
      "anchorBackCornerPx": [
-      66,
-      64
+      61.4,
+      74.8
      ],
      "size": [
-      141,
-      132
+      122,
+      157
      ]
     },
     "mirrored": {
@@ -251,21 +251,45 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      74.0,
-      103.0
+      60.6,
+      113.8
      ],
      "anchorBackCornerPx": [
-      74,
-      64
+      60.6,
+      74.8
      ],
      "size": [
-      141,
-      132
+      122,
+      157
      ]
     }
    },
    "sheetTileScale": 1.2,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.8931,
+      0.0
+     ],
+     [
+      0.1247,
+      1.1197
+     ]
+    ],
+    "scaleToPreviousHeight": 1.047,
+    "edgesBeforeDeg": [
+     15.7,
+     -27.8
+    ],
+    "edgesAfterDeg": [
+     26.2,
+     -26.6
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
   },
   {
    "id": "sofa",
@@ -281,8 +305,8 @@
    "placedDefault": true,
    "image": "items/furniture/sofa.png",
    "imageSizePx": [
-    264,
-    199
+    224,
+    235
    ],
    "tileImage": "tiles/sofa.png",
    "orientations": {
@@ -293,16 +317,16 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      127.0,
-      147.5
+      113.0,
+      167.4
      ],
      "anchorBackCornerPx": [
-      88,
-      89
+      74.0,
+      108.9
      ],
      "size": [
-      264,
-      199
+      224,
+      235
      ]
     },
     "mirrored": {
@@ -312,21 +336,45 @@
       2
      ],
      "anchorFootprintCenterPx": [
-      135.0,
-      147.5
+      111.0,
+      167.4
      ],
      "anchorBackCornerPx": [
-      174,
-      89
+      150.0,
+      108.9
      ],
      "size": [
-      264,
-      199
+      224,
+      235
      ]
     }
    },
    "sheetTileScale": 2,
-   "shadow": "shadows/shadow-2x1.png"
+   "shadow": "shadows/shadow-2x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.889,
+      0.0
+     ],
+     [
+      0.1462,
+      1.1249
+     ]
+    ],
+    "scaleToPreviousHeight": 1.599,
+    "edgesBeforeDeg": [
+     14.2,
+     -28.7
+    ],
+    "edgesAfterDeg": [
+     27.0,
+     -28.6
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
   },
   {
    "id": "scratcher",
@@ -342,8 +390,8 @@
    "placedDefault": true,
    "image": "items/furniture/scratcher.png",
    "imageSizePx": [
-    135,
-    116
+    130,
+    121
    ],
    "tileImage": "tiles/scratcher.png",
    "orientations": {
@@ -354,16 +402,16 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      70.0,
-      83.0
+      66.9,
+      86.0
      ],
      "anchorBackCornerPx": [
-      70,
-      44
+      66.9,
+      45.2
      ],
      "size": [
-      135,
-      116
+      130,
+      121
      ]
     },
     "mirrored": {
@@ -373,21 +421,34 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      64.0,
-      83.0
+      63.1,
+      86.0
      ],
      "anchorBackCornerPx": [
-      64,
-      44
+      63.1,
+      45.2
      ],
      "size": [
-      135,
-      116
+      130,
+      121
      ]
     }
    },
    "sheetTileScale": 1.2,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9562,
+      0.0
+     ],
+     [
+      0.0598,
+      1.0458
+     ]
+    ],
+    "note": "x′=a·x, y′=c·x+d·y applied to the v5 default sprite; _m = horizontal mirror of the corrected default"
+   }
   },
   {
    "id": "bookshelf",
@@ -403,8 +464,8 @@
    "placedDefault": true,
    "image": "items/furniture/bookshelf.png",
    "imageSizePx": [
-    130,
-    141
+    111,
+    163
    ],
    "tileImage": "tiles/bookshelf.png",
    "orientations": {
@@ -415,16 +476,16 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      62.0,
-      106.0
+      56.9,
+      118.7
      ],
      "anchorBackCornerPx": [
-      62,
-      67
+      56.9,
+      79.7
      ],
      "size": [
-      130,
-      141
+      111,
+      163
      ]
     },
     "mirrored": {
@@ -434,21 +495,45 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      66.0,
-      106.0
+      54.1,
+      118.7
      ],
      "anchorBackCornerPx": [
-      66,
-      67
+      54.1,
+      79.7
      ],
      "size": [
-      129,
-      141
+      111,
+      163
      ]
     }
    },
    "sheetTileScale": 1.2,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.876,
+      0.0
+     ],
+     [
+      0.1075,
+      1.1415
+     ]
+    ],
+    "scaleToPreviousHeight": 1.0,
+    "edgesBeforeDeg": [
+     16.6,
+     -27.3
+    ],
+    "edgesAfterDeg": [
+     27.0,
+     -27.8
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
   },
   {
    "id": "tent",
@@ -464,7 +549,7 @@
    "placedDefault": true,
    "image": "items/furniture/tent.png",
    "imageSizePx": [
-    130,
+    115,
     122
    ],
    "tileImage": "tiles/tent.png",
@@ -476,15 +561,15 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      65.0,
-      94.0
+      58.5,
+      92.8
      ],
      "anchorBackCornerPx": [
-      65,
-      55
+      58.5,
+      49.2
      ],
      "size": [
-      130,
+      115,
       122
      ]
     },
@@ -495,21 +580,37 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      64.0,
-      94.0
+      56.5,
+      92.8
      ],
      "anchorBackCornerPx": [
-      64,
-      55
+      56.5,
+      49.2
      ],
      "size": [
-      130,
+      115,
       122
      ]
     }
    },
-   "sheetTileScale": 1.2,
-   "shadow": "shadows/shadow-1x1.png"
+   "sheetTileScale": 1.118,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "new art sheet 595aff65…jpg (v6.1)",
+    "registration": "cream sheet tile L/B/R → 2:1 diamond ×1.2 (verticals kept vertical, least squares)",
+    "affine": [
+     [
+      0.945,
+      0.0
+     ],
+     [
+      0.2028,
+      1.0582
+     ]
+    ],
+    "scaleToPreviousSize": 0.931,
+    "note": "then uniformly scaled about the footprint centre so the on-screen height matches the previous sprite"
+   }
   },
   {
    "id": "teatable",
@@ -586,8 +687,8 @@
    "placedDefault": true,
    "image": "items/furniture/desk.png",
    "imageSizePx": [
-    145,
-    129
+    129,
+    147
    ],
    "tileImage": "tiles/desk.png",
    "orientations": {
@@ -598,16 +699,16 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      72.0,
-      96.0
+      64.4,
+      105.2
      ],
      "anchorBackCornerPx": [
-      72,
-      57
+      64.4,
+      66.2
      ],
      "size": [
-      145,
-      129
+      129,
+      147
      ]
     },
     "mirrored": {
@@ -617,21 +718,45 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      72.0,
-      96.0
+      64.6,
+      105.2
      ],
      "anchorBackCornerPx": [
-      72,
-      57
+      64.6,
+      66.2
      ],
      "size": [
-      145,
-      129
+      129,
+      147
      ]
     }
    },
    "sheetTileScale": 1.2,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.9118,
+      0.0
+     ],
+     [
+      0.1185,
+      1.0967
+     ]
+    ],
+    "scaleToPreviousHeight": 0.993,
+    "edgesBeforeDeg": [
+     17.4,
+     -27.9
+    ],
+    "edgesAfterDeg": [
+     27.1,
+     -26.1
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
   },
   {
    "id": "beanbag",
@@ -708,7 +833,7 @@
    "placedDefault": true,
    "image": "items/furniture/radioclock.png",
    "imageSizePx": [
-    115,
+    112,
     119
    ],
    "tileImage": "tiles/radioclock.png",
@@ -720,15 +845,15 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      55.0,
-      90.0
+      55.6,
+      90.5
      ],
      "anchorBackCornerPx": [
-      55,
-      51
+      55.6,
+      51.5
      ],
      "size": [
-      115,
+      112,
       119
      ]
     },
@@ -739,21 +864,45 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      58.0,
-      90.0
+      56.4,
+      90.5
      ],
      "anchorBackCornerPx": [
-      58,
-      51
+      56.4,
+      51.5
      ],
      "size": [
-      114,
+      112,
       119
      ]
     }
    },
-   "sheetTileScale": 1.2,
-   "shadow": "shadows/shadow-1x1.png"
+   "sheetTileScale": 1.058,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      1.0,
+      0.0
+     ],
+     [
+      0.0,
+      1.0
+     ]
+    ],
+    "scaleToPreviousHeight": 1.026,
+    "edgesBeforeDeg": [
+     31.0,
+     -32.6
+    ],
+    "edgesAfterDeg": [
+     29.2,
+     -35.8
+    ],
+    "note": "registration only (organic/round silhouette)"
+   }
   },
   {
    "id": "bed",
@@ -769,8 +918,8 @@
    "placedDefault": true,
    "image": "items/furniture/bed.png",
    "imageSizePx": [
-    286,
-    227
+    269,
+    225
    ],
    "tileImage": "tiles/bed.png",
    "orientations": {
@@ -781,16 +930,16 @@
       2
      ],
      "anchorFootprintCenterPx": [
-      150.0,
-      156.5
+      139.7,
+      156.1
      ],
      "anchorBackCornerPx": [
-      189,
-      98
+      178.4,
+      98.8
      ],
      "size": [
-      286,
-      227
+      269,
+      225
      ]
     },
     "mirrored": {
@@ -800,21 +949,34 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      134.0,
-      156.5
+      129.3,
+      156.1
      ],
      "anchorBackCornerPx": [
-      95,
-      98
+      90.6,
+      98.8
      ],
      "size": [
-      285,
-      227
+      269,
+      225
      ]
     }
    },
    "sheetTileScale": 2,
-   "shadow": "shadows/shadow-1x2.png"
+   "shadow": "shadows/shadow-1x2.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9916,
+      0.0
+     ],
+     [
+      0.042,
+      1.0084
+     ]
+    ],
+    "note": "x′=a·x, y′=c·x+d·y applied to the v5 default sprite; _m = horizontal mirror of the corrected default"
+   }
   },
   {
    "id": "fridge",
@@ -830,8 +992,8 @@
    "placedDefault": false,
    "image": "items/furniture/fridge.png",
    "imageSizePx": [
-    107,
-    135
+    97,
+    154
    ],
    "tileImage": "tiles/fridge.png",
    "orientations": {
@@ -842,16 +1004,16 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      55.0,
-      105.0
+      49.7,
+      118.8
      ],
      "anchorBackCornerPx": [
-      55,
-      66
+      49.7,
+      75.6
      ],
      "size": [
-      107,
-      135
+      97,
+      154
      ]
     },
     "mirrored": {
@@ -861,21 +1023,34 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      51.0,
-      105.0
+      47.3,
+      118.8
      ],
      "anchorBackCornerPx": [
-      51,
-      66
+      47.3,
+      75.6
      ],
      "size": [
-      107,
-      135
+      97,
+      154
      ]
     }
    },
    "sheetTileScale": 1.2,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9035,
+      0.0
+     ],
+     [
+      0.1006,
+      1.1068
+     ]
+    ],
+    "note": "x′=a·x, y′=c·x+d·y applied to the v5 default sprite; _m = horizontal mirror of the corrected default"
+   }
   },
   {
    "id": "feeder",
@@ -891,8 +1066,8 @@
    "placedDefault": true,
    "image": "items/furniture/feeder.png",
    "imageSizePx": [
-    148,
-    107
+    131,
+    121
    ],
    "tileImage": "tiles/feeder.png",
    "orientations": {
@@ -903,16 +1078,16 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      72.0,
-      75.0
+      63.7,
+      83.7
      ],
      "anchorBackCornerPx": [
-      72,
-      36
+      63.7,
+      41.0
      ],
      "size": [
-      148,
-      107
+      131,
+      121
      ]
     },
     "mirrored": {
@@ -922,21 +1097,34 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      75.0,
-      75.0
+      67.3,
+      83.7
      ],
      "anchorBackCornerPx": [
-      75,
-      36
+      67.3,
+      41.0
      ],
      "size": [
-      148,
-      107
+      131,
+      121
      ]
     }
    },
    "sheetTileScale": 1.2,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9129,
+      0.0
+     ],
+     [
+      0.0913,
+      1.0954
+     ]
+    ],
+    "note": "x′=a·x, y′=c·x+d·y applied to the v5 default sprite; _m = horizontal mirror of the corrected default"
+   }
   },
   {
    "id": "catchair",
@@ -952,8 +1140,8 @@
    "placedDefault": true,
    "image": "items/furniture/catchair.png",
    "imageSizePx": [
-    144,
-    133
+    126,
+    150
    ],
    "tileImage": "tiles/catchair.png",
    "orientations": {
@@ -964,16 +1152,16 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      79.0,
-      100.0
+      67.2,
+      108.6
      ],
      "anchorBackCornerPx": [
-      79,
-      61
+      67.2,
+      69.6
      ],
      "size": [
-      144,
-      133
+      126,
+      150
      ]
     },
     "mirrored": {
@@ -983,21 +1171,45 @@
       1
      ],
      "anchorFootprintCenterPx": [
-      64.0,
-      100.0
+      58.8,
+      108.6
      ],
      "anchorBackCornerPx": [
-      64,
-      61
+      58.8,
+      69.6
      ],
      "size": [
-      144,
-      133
+      126,
+      150
      ]
     }
    },
    "sheetTileScale": 1.2,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.9217,
+      0.0
+     ],
+     [
+      0.0871,
+      1.085
+     ]
+    ],
+    "scaleToPreviousHeight": 1.007,
+    "edgesBeforeDeg": [
+     18.0,
+     -26.6
+    ],
+    "edgesAfterDeg": [
+     25.3,
+     -26.6
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
   },
   {
    "id": "plant",
@@ -1120,12 +1332,25 @@
    "placedDefault": true,
    "image": "items/decor/cushions.png",
    "imageSizePx": [
-    134,
-    131
+    127,
+    145
    ],
    "tileImage": "tiles/cushions.png",
-   "displayWidthTiles": 0.54,
-   "shadow": "shadows/shadow-1x1.png"
+   "displayWidthTiles": 0.512,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9469,
+      0.0
+     ],
+     [
+      0.1303,
+      1.0561
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   }
   },
   {
    "id": "pawrug",
@@ -1185,13 +1410,71 @@
    "placedDefault": false,
    "image": "items/decor/maneki.png",
    "imageSizePx": [
-    100,
-    143
+    98,
+    100
    ],
    "tileImage": "tiles/maneki.png",
-   "displayWidthTiles": 0.45,
+   "displayWidthTiles": 0.628,
    "canSitOnSurface": true,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "orientations": {
+    "default": {
+     "image": "items/decor/maneki.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      48.4,
+      71.2
+     ],
+     "anchorBackCornerPx": [
+      48.4,
+      41.3
+     ],
+     "size": [
+      98,
+      100
+     ]
+    },
+    "mirrored": {
+     "image": "items/decor/maneki_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      49.6,
+      71.2
+     ],
+     "anchorBackCornerPx": [
+      49.6,
+      41.3
+     ],
+     "size": [
+      98,
+      100
+     ]
+    }
+   },
+   "sheetTileScale": 0.767,
+   "angleFixV6": {
+    "source": "new art sheet 595aff65…jpg (v6.1)",
+    "registration": "cream sheet tile L/B/R → 2:1 diamond ×1.2 (verticals kept vertical, least squares)",
+    "affine": [
+     [
+      0.9762,
+      0.0
+     ],
+     [
+      0.007,
+      1.0243
+     ]
+    ],
+    "scaleToPreviousSize": 0.639,
+    "note": "then uniformly scaled about the footprint centre so the on-screen height matches the previous sprite"
+   },
+   "note": "Registered like furniture (has orientations + anchors; draw 1:1 at the footprint-centre anchor). displayWidthTiles kept for the decor/onTop rule."
   },
   {
    "id": "gramophone",
@@ -1207,13 +1490,26 @@
    "placedDefault": false,
    "image": "items/decor/gramophone.png",
    "imageSizePx": [
-    104,
-    154
+    93,
+    180
    ],
    "tileImage": "tiles/gramophone.png",
-   "displayWidthTiles": 0.522,
+   "displayWidthTiles": 0.467,
    "canSitOnSurface": true,
-   "shadow": "shadows/shadow-1x1.png"
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.8936,
+      0.0
+     ],
+     [
+      0.1127,
+      1.1191
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   }
   },
   {
    "id": "globe",
@@ -1273,12 +1569,25 @@
    "placedDefault": false,
    "image": "items/decor/archmirror.png",
    "imageSizePx": [
-    113,
-    144
+    109,
+    159
    ],
    "tileImage": "tiles/archmirror.png",
-   "displayWidthTiles": 0.54,
-   "shadow": "shadows/shadow-1x1.png"
+   "displayWidthTiles": 0.521,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9559,
+      0.0
+     ],
+     [
+      0.1713,
+      1.0461
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   }
   },
   {
    "id": "aquarium",
@@ -1294,12 +1603,25 @@
    "placedDefault": true,
    "image": "items/decor/aquarium.png",
    "imageSizePx": [
-    128,
-    145
+    118,
+    165
    ],
    "tileImage": "tiles/aquarium.png",
-   "displayWidthTiles": 0.648,
-   "shadow": "shadows/shadow-1x1.png"
+   "displayWidthTiles": 0.597,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9198,
+      0.0
+     ],
+     [
+      0.1102,
+      1.0872
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   }
   },
   {
    "id": "starlight",
@@ -1337,12 +1659,25 @@
    "placedDefault": true,
    "image": "items/decor/gifts.png",
    "imageSizePx": [
-    162,
-    155
+    148,
+    178
    ],
    "tileImage": "tiles/gifts.png",
-   "displayWidthTiles": 0.594,
-   "shadow": "shadows/shadow-1x1.png"
+   "displayWidthTiles": 0.543,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9124,
+      0.0
+     ],
+     [
+      0.1107,
+      1.096
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   }
   },
   {
    "id": "archwindow",
@@ -1356,7 +1691,7 @@
    "image": "items/wall/archwindow.png",
    "imageSizePx": [
     147,
-    151
+    144
    ],
    "tileImage": "tiles/archwindow.png",
    "displayWidthTiles": 1.45,
@@ -1365,6 +1700,10 @@
     "front": "items/wall/archwindow.png",
     "leftWall": "items/wall/archwindow_L.png",
     "rightWall": "items/wall/archwindow_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -6.61,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
    }
   },
   {
@@ -1402,7 +1741,7 @@
    "image": "items/wall/squareframe.png",
    "imageSizePx": [
     126,
-    141
+    138
    ],
    "tileImage": "tiles/squareframe.png",
    "displayWidthTiles": 0.6,
@@ -1411,6 +1750,10 @@
     "front": "items/wall/squareframe.png",
     "leftWall": "items/wall/squareframe_L.png",
     "rightWall": "items/wall/squareframe_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -5.83,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
    }
   },
   {
@@ -1425,7 +1768,7 @@
    "image": "items/wall/cardframe.png",
    "imageSizePx": [
     128,
-    180
+    179
    ],
    "tileImage": "tiles/cardframe.png",
    "displayWidthTiles": 0.5,
@@ -1434,6 +1777,10 @@
     "front": "items/wall/cardframe.png",
     "leftWall": "items/wall/cardframe_L.png",
     "rightWall": "items/wall/cardframe_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -4.69,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
    }
   },
   {
@@ -1494,7 +1841,7 @@
    "image": "items/wall/wallshelf.png",
    "imageSizePx": [
     172,
-    142
+    139
    ],
    "tileImage": "tiles/wallshelf.png",
    "displayWidthTiles": 0.85,
@@ -1503,6 +1850,10 @@
     "front": "items/wall/wallshelf.png",
     "leftWall": "items/wall/wallshelf_L.png",
     "rightWall": "items/wall/wallshelf_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -7.28,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
    }
   },
   {
@@ -1609,7 +1960,7 @@
    "image": "items/wall/corkboard.png",
    "imageSizePx": [
     184,
-    148
+    143
    ],
    "tileImage": "tiles/corkboard.png",
    "displayWidthTiles": 0.95,
@@ -1618,6 +1969,10 @@
     "front": "items/wall/corkboard.png",
     "leftWall": "items/wall/corkboard_L.png",
     "rightWall": "items/wall/corkboard_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -4.48,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
    }
   },
   {
@@ -1632,7 +1987,7 @@
    "image": "items/wall/catsteps.png",
    "imageSizePx": [
     171,
-    137
+    131
    ],
    "tileImage": "tiles/catsteps.png",
    "displayWidthTiles": 1.0,
@@ -1641,6 +1996,10 @@
     "front": "items/wall/catsteps.png",
     "leftWall": "items/wall/catsteps_L.png",
     "rightWall": "items/wall/catsteps_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -6.52,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
    }
   },
   {
@@ -1701,7 +2060,7 @@
    "image": "items/wall/calendar.png",
    "imageSizePx": [
     122,
-    139
+    140
    ],
    "tileImage": "tiles/calendar.png",
    "displayWidthTiles": 0.55,
@@ -1710,323 +2069,717 @@
     "front": "items/wall/calendar.png",
     "leftWall": "items/wall/calendar_L.png",
     "rightWall": "items/wall/calendar_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -5.92,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
    }
   },
   {
-   "id": "wood_honey",
+   "id": "floor_wood_honey",
+   "textureId": "wood_honey",
    "nameKo": "꿀빛 원목",
    "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
+   "placement": "floorTile",
    "price": 0,
    "ownedDefault": true,
-   "placedDefault": true,
-   "image": "floor/thumb/wood_honey.png",
-   "tileImage": "floor/thumb/wood_honey.png"
+   "isDefault": true,
+   "texture": "floor/flat/wood_honey.png",
+   "thumb": "floor/thumb/wood_honey.png",
+   "isoTiles": {
+    "00": "floor/iso/wood_honey_00.png",
+    "01": "floor/iso/wood_honey_01.png",
+    "10": "floor/iso/wood_honey_10.png",
+    "11": "floor/iso/wood_honey_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/wood_honey_00.png",
+    "01": "floor/iso-grout/wood_honey_01.png",
+    "10": "floor/iso-grout/wood_honey_10.png",
+    "11": "floor/iso-grout/wood_honey_11.png"
+   },
+   "groutColor": "#8E603F",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
   },
   {
-   "id": "wood_oak",
+   "id": "floor_wood_oak",
+   "textureId": "wood_oak",
    "nameKo": "밝은 오크",
    "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
-   "price": 0,
+   "placement": "floorTile",
+   "price": 180,
    "ownedDefault": true,
-   "placedDefault": false,
-   "image": "floor/thumb/wood_oak.png",
-   "tileImage": "floor/thumb/wood_oak.png"
+   "isDefault": false,
+   "texture": "floor/flat/wood_oak.png",
+   "thumb": "floor/thumb/wood_oak.png",
+   "isoTiles": {
+    "00": "floor/iso/wood_oak_00.png",
+    "01": "floor/iso/wood_oak_01.png",
+    "10": "floor/iso/wood_oak_10.png",
+    "11": "floor/iso/wood_oak_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/wood_oak_00.png",
+    "01": "floor/iso-grout/wood_oak_01.png",
+    "10": "floor/iso-grout/wood_oak_10.png",
+    "11": "floor/iso-grout/wood_oak_11.png"
+   },
+   "groutColor": "#B38D63",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
   },
   {
-   "id": "check_pink",
+   "id": "floor_check_pink",
+   "textureId": "check_pink",
    "nameKo": "핑크 체크",
    "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
-   "price": 0,
+   "placement": "floorTile",
+   "price": 150,
    "ownedDefault": true,
-   "placedDefault": false,
-   "image": "floor/thumb/check_pink.png",
-   "tileImage": "floor/thumb/check_pink.png"
+   "isDefault": false,
+   "texture": "floor/flat/check_pink.png",
+   "thumb": "floor/thumb/check_pink.png",
+   "isoTiles": {
+    "00": "floor/iso/check_pink_00.png",
+    "01": "floor/iso/check_pink_01.png",
+    "10": "floor/iso/check_pink_10.png",
+    "11": "floor/iso/check_pink_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/check_pink_00.png",
+    "01": "floor/iso-grout/check_pink_01.png",
+    "10": "floor/iso-grout/check_pink_10.png",
+    "11": "floor/iso-grout/check_pink_11.png"
+   },
+   "groutColor": "#D9A0AE",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
   },
   {
-   "id": "check_mint",
+   "id": "floor_check_mint",
+   "textureId": "check_mint",
    "nameKo": "민트 체크",
    "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
-   "price": 0,
+   "placement": "floorTile",
+   "price": 150,
    "ownedDefault": true,
-   "placedDefault": false,
-   "image": "floor/thumb/check_mint.png",
-   "tileImage": "floor/thumb/check_mint.png"
+   "isDefault": false,
+   "texture": "floor/flat/check_mint.png",
+   "thumb": "floor/thumb/check_mint.png",
+   "isoTiles": {
+    "00": "floor/iso/check_mint_00.png",
+    "01": "floor/iso/check_mint_01.png",
+    "10": "floor/iso/check_mint_10.png",
+    "11": "floor/iso/check_mint_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/check_mint_00.png",
+    "01": "floor/iso-grout/check_mint_01.png",
+    "10": "floor/iso-grout/check_mint_10.png",
+    "11": "floor/iso-grout/check_mint_11.png"
+   },
+   "groutColor": "#93C9B3",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
   },
   {
-   "id": "paw_tile",
-   "nameKo": "발바닥 타일",
-   "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
-   "price": 0,
-   "ownedDefault": true,
-   "placedDefault": false,
-   "image": "floor/thumb/paw_tile.png",
-   "tileImage": "floor/thumb/paw_tile.png"
-  },
-  {
-   "id": "cloud",
-   "nameKo": "구름 타일",
-   "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
-   "price": 200,
-   "ownedDefault": false,
-   "placedDefault": false,
-   "image": "floor/thumb/cloud.png",
-   "tileImage": "floor/thumb/cloud.png"
-  },
-  {
-   "id": "meadow",
-   "nameKo": "초록 들판",
-   "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
-   "price": 220,
-   "ownedDefault": false,
-   "placedDefault": false,
-   "image": "floor/thumb/meadow.png",
-   "tileImage": "floor/thumb/meadow.png"
-  },
-  {
-   "id": "marble_cream",
-   "nameKo": "크림 대리석",
-   "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
-   "price": 280,
-   "ownedDefault": false,
-   "placedDefault": false,
-   "image": "floor/thumb/marble_cream.png",
-   "tileImage": "floor/thumb/marble_cream.png"
-  },
-  {
-   "id": "star_navy",
-   "nameKo": "별가루 네이비",
-   "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
-   "price": 280,
-   "ownedDefault": false,
-   "placedDefault": false,
-   "image": "floor/thumb/star_navy.png",
-   "tileImage": "floor/thumb/star_navy.png"
-  },
-  {
-   "id": "herring_lav",
+   "id": "floor_herring_lav",
+   "textureId": "herring_lav",
    "nameKo": "라벤더 헤링본",
    "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
+   "placement": "floorTile",
    "price": 300,
    "ownedDefault": false,
-   "placedDefault": false,
-   "image": "floor/thumb/herring_lav.png",
-   "tileImage": "floor/thumb/herring_lav.png"
+   "isDefault": false,
+   "texture": "floor/flat/herring_lav.png",
+   "thumb": "floor/thumb/herring_lav.png",
+   "isoTiles": {
+    "00": "floor/iso/herring_lav_00.png",
+    "01": "floor/iso/herring_lav_01.png",
+    "10": "floor/iso/herring_lav_10.png",
+    "11": "floor/iso/herring_lav_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/herring_lav_00.png",
+    "01": "floor/iso-grout/herring_lav_01.png",
+    "10": "floor/iso-grout/herring_lav_10.png",
+    "11": "floor/iso-grout/herring_lav_11.png"
+   },
+   "groutColor": "#9A82C2",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
   },
   {
-   "id": "carpet_pink",
+   "id": "floor_marble_cream",
+   "textureId": "marble_cream",
+   "nameKo": "크림 대리석",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 260,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "floor/flat/marble_cream.png",
+   "thumb": "floor/thumb/marble_cream.png",
+   "isoTiles": {
+    "00": "floor/iso/marble_cream_00.png",
+    "01": "floor/iso/marble_cream_01.png",
+    "10": "floor/iso/marble_cream_10.png",
+    "11": "floor/iso/marble_cream_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/marble_cream_00.png",
+    "01": "floor/iso-grout/marble_cream_01.png",
+    "10": "floor/iso-grout/marble_cream_10.png",
+    "11": "floor/iso-grout/marble_cream_11.png"
+   },
+   "groutColor": "#CDB8A3",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_paw_tile",
+   "textureId": "paw_tile",
+   "nameKo": "발바닥 타일",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 200,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "floor/flat/paw_tile.png",
+   "thumb": "floor/thumb/paw_tile.png",
+   "isoTiles": {
+    "00": "floor/iso/paw_tile_00.png",
+    "01": "floor/iso/paw_tile_01.png",
+    "10": "floor/iso/paw_tile_10.png",
+    "11": "floor/iso/paw_tile_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/paw_tile_00.png",
+    "01": "floor/iso-grout/paw_tile_01.png",
+    "10": "floor/iso-grout/paw_tile_10.png",
+    "11": "floor/iso-grout/paw_tile_11.png"
+   },
+   "groutColor": "#E3AE98",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_star_navy",
+   "textureId": "star_navy",
+   "nameKo": "별가루 네이비",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 280,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "floor/flat/star_navy.png",
+   "thumb": "floor/thumb/star_navy.png",
+   "isoTiles": {
+    "00": "floor/iso/star_navy_00.png",
+    "01": "floor/iso/star_navy_01.png",
+    "10": "floor/iso/star_navy_10.png",
+    "11": "floor/iso/star_navy_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/star_navy_00.png",
+    "01": "floor/iso-grout/star_navy_01.png",
+    "10": "floor/iso-grout/star_navy_10.png",
+    "11": "floor/iso-grout/star_navy_11.png"
+   },
+   "groutColor": "#1F2347",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_carpet_pink",
+   "textureId": "carpet_pink",
    "nameKo": "몽글 핑크 카펫",
    "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
-   "price": 300,
+   "placement": "floorTile",
+   "price": 240,
    "ownedDefault": false,
-   "placedDefault": false,
-   "image": "floor/thumb/carpet_pink.png",
-   "tileImage": "floor/thumb/carpet_pink.png"
+   "isDefault": false,
+   "texture": "floor/flat/carpet_pink.png",
+   "thumb": "floor/thumb/carpet_pink.png",
+   "isoTiles": {
+    "00": "floor/iso/carpet_pink_00.png",
+    "01": "floor/iso/carpet_pink_01.png",
+    "10": "floor/iso/carpet_pink_10.png",
+    "11": "floor/iso/carpet_pink_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/carpet_pink_00.png",
+    "01": "floor/iso-grout/carpet_pink_01.png",
+    "10": "floor/iso-grout/carpet_pink_10.png",
+    "11": "floor/iso-grout/carpet_pink_11.png"
+   },
+   "groutColor": "#D894A8",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
   },
   {
-   "id": "terrazzo",
+   "id": "floor_meadow",
+   "textureId": "meadow",
+   "nameKo": "초록 들판",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 220,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "floor/flat/meadow.png",
+   "thumb": "floor/thumb/meadow.png",
+   "isoTiles": {
+    "00": "floor/iso/meadow_00.png",
+    "01": "floor/iso/meadow_01.png",
+    "10": "floor/iso/meadow_10.png",
+    "11": "floor/iso/meadow_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/meadow_00.png",
+    "01": "floor/iso-grout/meadow_01.png",
+    "10": "floor/iso-grout/meadow_10.png",
+    "11": "floor/iso-grout/meadow_11.png"
+   },
+   "groutColor": "#7DAF6E",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_cloud",
+   "textureId": "cloud",
+   "nameKo": "구름 타일",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 260,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "floor/flat/cloud.png",
+   "thumb": "floor/thumb/cloud.png",
+   "isoTiles": {
+    "00": "floor/iso/cloud_00.png",
+    "01": "floor/iso/cloud_01.png",
+    "10": "floor/iso/cloud_10.png",
+    "11": "floor/iso/cloud_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/cloud_00.png",
+    "01": "floor/iso-grout/cloud_01.png",
+    "10": "floor/iso-grout/cloud_10.png",
+    "11": "floor/iso-grout/cloud_11.png"
+   },
+   "groutColor": "#A5C4E4",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_terrazzo",
+   "textureId": "terrazzo",
    "nameKo": "파스텔 테라조",
    "category": "바닥",
-   "placement": "floor-skin",
-   "footprint": null,
-   "price": 340,
+   "placement": "floorTile",
+   "price": 240,
    "ownedDefault": false,
-   "placedDefault": false,
-   "image": "floor/thumb/terrazzo.png",
-   "tileImage": "floor/thumb/terrazzo.png"
+   "isDefault": false,
+   "texture": "floor/flat/terrazzo.png",
+   "thumb": "floor/thumb/terrazzo.png",
+   "isoTiles": {
+    "00": "floor/iso/terrazzo_00.png",
+    "01": "floor/iso/terrazzo_01.png",
+    "10": "floor/iso/terrazzo_10.png",
+    "11": "floor/iso/terrazzo_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/terrazzo_00.png",
+    "01": "floor/iso-grout/terrazzo_01.png",
+    "10": "floor/iso-grout/terrazzo_10.png",
+    "11": "floor/iso-grout/terrazzo_11.png"
+   },
+   "groutColor": "#D6C2AE",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
   },
   {
-   "id": "plum_sparkle",
+   "id": "wall_plum_sparkle",
+   "textureId": "plum_sparkle",
    "nameKo": "플럼 반짝이",
    "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
+   "placement": "wallColumn",
    "price": 0,
    "ownedDefault": true,
-   "placedDefault": true,
-   "image": "wall/thumb/plum_sparkle.png",
-   "tileImage": "wall/thumb/plum_sparkle.png"
+   "isDefault": true,
+   "texture": "wall/flat/plum_sparkle.png",
+   "thumb": "wall/thumb/plum_sparkle.png",
+   "columnsL": [
+    "wall/L/plum_sparkle_0.png",
+    "wall/L/plum_sparkle_1.png",
+    "wall/L/plum_sparkle_2.png",
+    "wall/L/plum_sparkle_3.png",
+    "wall/L/plum_sparkle_4.png",
+    "wall/L/plum_sparkle_5.png",
+    "wall/L/plum_sparkle_6.png",
+    "wall/L/plum_sparkle_7.png"
+   ],
+   "columnsR": [
+    "wall/R/plum_sparkle_0.png",
+    "wall/R/plum_sparkle_1.png",
+    "wall/R/plum_sparkle_2.png",
+    "wall/R/plum_sparkle_3.png",
+    "wall/R/plum_sparkle_4.png",
+    "wall/R/plum_sparkle_5.png",
+    "wall/R/plum_sparkle_6.png",
+    "wall/R/plum_sparkle_7.png"
+   ]
   },
   {
-   "id": "lav_stripe",
+   "id": "wall_lav_stripe",
+   "textureId": "lav_stripe",
    "nameKo": "라벤더 줄무늬",
    "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
-   "price": 0,
+   "placement": "wallColumn",
+   "price": 150,
    "ownedDefault": true,
-   "placedDefault": false,
-   "image": "wall/thumb/lav_stripe.png",
-   "tileImage": "wall/thumb/lav_stripe.png"
+   "isDefault": false,
+   "texture": "wall/flat/lav_stripe.png",
+   "thumb": "wall/thumb/lav_stripe.png",
+   "columnsL": [
+    "wall/L/lav_stripe_0.png",
+    "wall/L/lav_stripe_1.png",
+    "wall/L/lav_stripe_2.png",
+    "wall/L/lav_stripe_3.png",
+    "wall/L/lav_stripe_4.png",
+    "wall/L/lav_stripe_5.png",
+    "wall/L/lav_stripe_6.png",
+    "wall/L/lav_stripe_7.png"
+   ],
+   "columnsR": [
+    "wall/R/lav_stripe_0.png",
+    "wall/R/lav_stripe_1.png",
+    "wall/R/lav_stripe_2.png",
+    "wall/R/lav_stripe_3.png",
+    "wall/R/lav_stripe_4.png",
+    "wall/R/lav_stripe_5.png",
+    "wall/R/lav_stripe_6.png",
+    "wall/R/lav_stripe_7.png"
+   ]
   },
   {
-   "id": "pink_polka",
+   "id": "wall_pink_polka",
+   "textureId": "pink_polka",
    "nameKo": "핑크 도트",
    "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
-   "price": 0,
+   "placement": "wallColumn",
+   "price": 150,
    "ownedDefault": true,
-   "placedDefault": false,
-   "image": "wall/thumb/pink_polka.png",
-   "tileImage": "wall/thumb/pink_polka.png"
+   "isDefault": false,
+   "texture": "wall/flat/pink_polka.png",
+   "thumb": "wall/thumb/pink_polka.png",
+   "columnsL": [
+    "wall/L/pink_polka_0.png",
+    "wall/L/pink_polka_1.png",
+    "wall/L/pink_polka_2.png",
+    "wall/L/pink_polka_3.png",
+    "wall/L/pink_polka_4.png",
+    "wall/L/pink_polka_5.png",
+    "wall/L/pink_polka_6.png",
+    "wall/L/pink_polka_7.png"
+   ],
+   "columnsR": [
+    "wall/R/pink_polka_0.png",
+    "wall/R/pink_polka_1.png",
+    "wall/R/pink_polka_2.png",
+    "wall/R/pink_polka_3.png",
+    "wall/R/pink_polka_4.png",
+    "wall/R/pink_polka_5.png",
+    "wall/R/pink_polka_6.png",
+    "wall/R/pink_polka_7.png"
+   ]
   },
   {
-   "id": "mint_gingham",
+   "id": "wall_mint_gingham",
+   "textureId": "mint_gingham",
    "nameKo": "민트 깅엄",
    "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
-   "price": 0,
-   "ownedDefault": true,
-   "placedDefault": false,
-   "image": "wall/thumb/mint_gingham.png",
-   "tileImage": "wall/thumb/mint_gingham.png"
-  },
-  {
-   "id": "paw_wall",
-   "nameKo": "발바닥 벽지",
-   "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
-   "price": 0,
-   "ownedDefault": true,
-   "placedDefault": false,
-   "image": "wall/thumb/paw_wall.png",
-   "tileImage": "wall/thumb/paw_wall.png"
-  },
-  {
-   "id": "peach_hearts",
-   "nameKo": "피치 하트",
-   "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
+   "placement": "wallColumn",
    "price": 180,
-   "ownedDefault": false,
-   "placedDefault": false,
-   "image": "wall/thumb/peach_hearts.png",
-   "tileImage": "wall/thumb/peach_hearts.png"
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "wall/flat/mint_gingham.png",
+   "thumb": "wall/thumb/mint_gingham.png",
+   "columnsL": [
+    "wall/L/mint_gingham_0.png",
+    "wall/L/mint_gingham_1.png",
+    "wall/L/mint_gingham_2.png",
+    "wall/L/mint_gingham_3.png",
+    "wall/L/mint_gingham_4.png",
+    "wall/L/mint_gingham_5.png",
+    "wall/L/mint_gingham_6.png",
+    "wall/L/mint_gingham_7.png"
+   ],
+   "columnsR": [
+    "wall/R/mint_gingham_0.png",
+    "wall/R/mint_gingham_1.png",
+    "wall/R/mint_gingham_2.png",
+    "wall/R/mint_gingham_3.png",
+    "wall/R/mint_gingham_4.png",
+    "wall/R/mint_gingham_5.png",
+    "wall/R/mint_gingham_6.png",
+    "wall/R/mint_gingham_7.png"
+   ]
   },
   {
-   "id": "cream_cats",
+   "id": "wall_cream_cats",
+   "textureId": "cream_cats",
    "nameKo": "크림 냥이",
    "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
+   "placement": "wallColumn",
    "price": 220,
    "ownedDefault": false,
-   "placedDefault": false,
-   "image": "wall/thumb/cream_cats.png",
-   "tileImage": "wall/thumb/cream_cats.png"
+   "isDefault": false,
+   "texture": "wall/flat/cream_cats.png",
+   "thumb": "wall/thumb/cream_cats.png",
+   "columnsL": [
+    "wall/L/cream_cats_0.png",
+    "wall/L/cream_cats_1.png",
+    "wall/L/cream_cats_2.png",
+    "wall/L/cream_cats_3.png",
+    "wall/L/cream_cats_4.png",
+    "wall/L/cream_cats_5.png",
+    "wall/L/cream_cats_6.png",
+    "wall/L/cream_cats_7.png"
+   ],
+   "columnsR": [
+    "wall/R/cream_cats_0.png",
+    "wall/R/cream_cats_1.png",
+    "wall/R/cream_cats_2.png",
+    "wall/R/cream_cats_3.png",
+    "wall/R/cream_cats_4.png",
+    "wall/R/cream_cats_5.png",
+    "wall/R/cream_cats_6.png",
+    "wall/R/cream_cats_7.png"
+   ]
   },
   {
-   "id": "cloud_wall",
-   "nameKo": "몽실 구름",
-   "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
-   "price": 220,
-   "ownedDefault": false,
-   "placedDefault": false,
-   "image": "wall/thumb/cloud_wall.png",
-   "tileImage": "wall/thumb/cloud_wall.png"
-  },
-  {
-   "id": "sage_leaf",
-   "nameKo": "세이지 잎사귀",
-   "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
-   "price": 220,
-   "ownedDefault": false,
-   "placedDefault": false,
-   "image": "wall/thumb/sage_leaf.png",
-   "tileImage": "wall/thumb/sage_leaf.png"
-  },
-  {
-   "id": "night_sky",
+   "id": "wall_night_sky",
+   "textureId": "night_sky",
    "nameKo": "밤하늘 별빛",
    "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
-   "price": 280,
+   "placement": "wallColumn",
+   "price": 260,
    "ownedDefault": false,
-   "placedDefault": false,
-   "image": "wall/thumb/night_sky.png",
-   "tileImage": "wall/thumb/night_sky.png"
+   "isDefault": false,
+   "texture": "wall/flat/night_sky.png",
+   "thumb": "wall/thumb/night_sky.png",
+   "columnsL": [
+    "wall/L/night_sky_0.png",
+    "wall/L/night_sky_1.png",
+    "wall/L/night_sky_2.png",
+    "wall/L/night_sky_3.png",
+    "wall/L/night_sky_4.png",
+    "wall/L/night_sky_5.png",
+    "wall/L/night_sky_6.png",
+    "wall/L/night_sky_7.png"
+   ],
+   "columnsR": [
+    "wall/R/night_sky_0.png",
+    "wall/R/night_sky_1.png",
+    "wall/R/night_sky_2.png",
+    "wall/R/night_sky_3.png",
+    "wall/R/night_sky_4.png",
+    "wall/R/night_sky_5.png",
+    "wall/R/night_sky_6.png",
+    "wall/R/night_sky_7.png"
+   ]
   },
   {
-   "id": "moon_navy",
-   "nameKo": "달과 별",
+   "id": "wall_peach_hearts",
+   "textureId": "peach_hearts",
+   "nameKo": "피치 하트",
    "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
-   "price": 280,
+   "placement": "wallColumn",
+   "price": 180,
    "ownedDefault": false,
-   "placedDefault": false,
-   "image": "wall/thumb/moon_navy.png",
-   "tileImage": "wall/thumb/moon_navy.png"
+   "isDefault": false,
+   "texture": "wall/flat/peach_hearts.png",
+   "thumb": "wall/thumb/peach_hearts.png",
+   "columnsL": [
+    "wall/L/peach_hearts_0.png",
+    "wall/L/peach_hearts_1.png",
+    "wall/L/peach_hearts_2.png",
+    "wall/L/peach_hearts_3.png",
+    "wall/L/peach_hearts_4.png",
+    "wall/L/peach_hearts_5.png",
+    "wall/L/peach_hearts_6.png",
+    "wall/L/peach_hearts_7.png"
+   ],
+   "columnsR": [
+    "wall/R/peach_hearts_0.png",
+    "wall/R/peach_hearts_1.png",
+    "wall/R/peach_hearts_2.png",
+    "wall/R/peach_hearts_3.png",
+    "wall/R/peach_hearts_4.png",
+    "wall/R/peach_hearts_5.png",
+    "wall/R/peach_hearts_6.png",
+    "wall/R/peach_hearts_7.png"
+   ]
   },
   {
-   "id": "wainscot",
+   "id": "wall_wainscot",
+   "textureId": "wainscot",
    "nameKo": "원목 웨인스코팅",
    "category": "벽지",
-   "placement": "wallpaper",
-   "footprint": null,
-   "price": 340,
+   "placement": "wallColumn",
+   "price": 300,
    "ownedDefault": false,
-   "placedDefault": false,
-   "image": "wall/thumb/wainscot.png",
-   "tileImage": "wall/thumb/wainscot.png"
+   "isDefault": false,
+   "texture": "wall/flat/wainscot.png",
+   "thumb": "wall/thumb/wainscot.png",
+   "columnsL": [
+    "wall/L/wainscot_0.png",
+    "wall/L/wainscot_1.png",
+    "wall/L/wainscot_2.png",
+    "wall/L/wainscot_3.png",
+    "wall/L/wainscot_4.png",
+    "wall/L/wainscot_5.png",
+    "wall/L/wainscot_6.png",
+    "wall/L/wainscot_7.png"
+   ],
+   "columnsR": [
+    "wall/R/wainscot_0.png",
+    "wall/R/wainscot_1.png",
+    "wall/R/wainscot_2.png",
+    "wall/R/wainscot_3.png",
+    "wall/R/wainscot_4.png",
+    "wall/R/wainscot_5.png",
+    "wall/R/wainscot_6.png",
+    "wall/R/wainscot_7.png"
+   ]
+  },
+  {
+   "id": "wall_cloud_wall",
+   "textureId": "cloud_wall",
+   "nameKo": "몽실 구름",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 220,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "wall/flat/cloud_wall.png",
+   "thumb": "wall/thumb/cloud_wall.png",
+   "columnsL": [
+    "wall/L/cloud_wall_0.png",
+    "wall/L/cloud_wall_1.png",
+    "wall/L/cloud_wall_2.png",
+    "wall/L/cloud_wall_3.png",
+    "wall/L/cloud_wall_4.png",
+    "wall/L/cloud_wall_5.png",
+    "wall/L/cloud_wall_6.png",
+    "wall/L/cloud_wall_7.png"
+   ],
+   "columnsR": [
+    "wall/R/cloud_wall_0.png",
+    "wall/R/cloud_wall_1.png",
+    "wall/R/cloud_wall_2.png",
+    "wall/R/cloud_wall_3.png",
+    "wall/R/cloud_wall_4.png",
+    "wall/R/cloud_wall_5.png",
+    "wall/R/cloud_wall_6.png",
+    "wall/R/cloud_wall_7.png"
+   ]
+  },
+  {
+   "id": "wall_paw_wall",
+   "textureId": "paw_wall",
+   "nameKo": "발바닥 벽지",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 200,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "wall/flat/paw_wall.png",
+   "thumb": "wall/thumb/paw_wall.png",
+   "columnsL": [
+    "wall/L/paw_wall_0.png",
+    "wall/L/paw_wall_1.png",
+    "wall/L/paw_wall_2.png",
+    "wall/L/paw_wall_3.png",
+    "wall/L/paw_wall_4.png",
+    "wall/L/paw_wall_5.png",
+    "wall/L/paw_wall_6.png",
+    "wall/L/paw_wall_7.png"
+   ],
+   "columnsR": [
+    "wall/R/paw_wall_0.png",
+    "wall/R/paw_wall_1.png",
+    "wall/R/paw_wall_2.png",
+    "wall/R/paw_wall_3.png",
+    "wall/R/paw_wall_4.png",
+    "wall/R/paw_wall_5.png",
+    "wall/R/paw_wall_6.png",
+    "wall/R/paw_wall_7.png"
+   ]
+  },
+  {
+   "id": "wall_sage_leaf",
+   "textureId": "sage_leaf",
+   "nameKo": "세이지 잎사귀",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 220,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "wall/flat/sage_leaf.png",
+   "thumb": "wall/thumb/sage_leaf.png",
+   "columnsL": [
+    "wall/L/sage_leaf_0.png",
+    "wall/L/sage_leaf_1.png",
+    "wall/L/sage_leaf_2.png",
+    "wall/L/sage_leaf_3.png",
+    "wall/L/sage_leaf_4.png",
+    "wall/L/sage_leaf_5.png",
+    "wall/L/sage_leaf_6.png",
+    "wall/L/sage_leaf_7.png"
+   ],
+   "columnsR": [
+    "wall/R/sage_leaf_0.png",
+    "wall/R/sage_leaf_1.png",
+    "wall/R/sage_leaf_2.png",
+    "wall/R/sage_leaf_3.png",
+    "wall/R/sage_leaf_4.png",
+    "wall/R/sage_leaf_5.png",
+    "wall/R/sage_leaf_6.png",
+    "wall/R/sage_leaf_7.png"
+   ]
+  },
+  {
+   "id": "wall_moon_navy",
+   "textureId": "moon_navy",
+   "nameKo": "달과 별",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 280,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "wall/flat/moon_navy.png",
+   "thumb": "wall/thumb/moon_navy.png",
+   "columnsL": [
+    "wall/L/moon_navy_0.png",
+    "wall/L/moon_navy_1.png",
+    "wall/L/moon_navy_2.png",
+    "wall/L/moon_navy_3.png",
+    "wall/L/moon_navy_4.png",
+    "wall/L/moon_navy_5.png",
+    "wall/L/moon_navy_6.png",
+    "wall/L/moon_navy_7.png"
+   ],
+   "columnsR": [
+    "wall/R/moon_navy_0.png",
+    "wall/R/moon_navy_1.png",
+    "wall/R/moon_navy_2.png",
+    "wall/R/moon_navy_3.png",
+    "wall/R/moon_navy_4.png",
+    "wall/R/moon_navy_5.png",
+    "wall/R/moon_navy_6.png",
+    "wall/R/moon_navy_7.png"
+   ]
   }
  ],
- "_version": "v5 package — pure item sprites (no floor tile, no baked shadow) on transparent bg",
+ "_version": "v6 — v5 items (angle-fixed) + 24 tile textures",
  "orientationNote": "Sheet default faces +row (down-left) with its back to the RIGHT wall (row 0). The mirrored image (_m) faces +col (down-right), back to the LEFT wall (col 0). Rotate = swap default/mirrored and swap footprint [w,d]. Round decor is angle-neutral; flip it freely.",
  "rotation": "2-direction: rotate = swap image default <-> mirrored (_m, horizontal flip) and swap footprint [w,d]. True 4-direction rotation would need back-view art, which is NOT included.",
  "shadowRule": "Shadows are not baked. The app draws shadows/shadow-{w}x{d}.png centred on the footprint centre under each floor item (decor: same sprite at 80% scale; rug/decals: none). Toggle freely.",
  "formats": "every image ships as .png and .webp (same name).",
  "tileRules": {
-  "floor": {
-   "file": "floor/iso/{id}_{c%2}{r%2}.png",
-   "sizeWorldPx": [
-    160,
-    82
-   ],
-   "place": "left = tileTop.x - 80, top = tileTop.y - 2"
-  },
-  "wall": {
-   "leftFile": "wall/L/{id}_{i}.png",
-   "rightFile": "wall/R/{id}_{i}.png",
-   "strips": 8,
-   "sizeWorldPx": [
-    82,
-    493
-   ]
-  },
-  "defaults": {
-   "floor": "wood_honey",
-   "wall": "plum_sparkle"
-  }
+  "floor": "per tile (col,row): draw isoTiles[(col%2)(row%2)] with its top-left at world px (1920+(col-row)*78-80, 900+(col+row)*39-2). Image 160×82 = 156×78 diamond + 2 px bleed each side. Every texture repeats every 2 tiles, so the parity variant keeps planks/herringbone/checker continuous across neighbours; all 4 variants are always shipped.",
+  "wall": "left wall column i (i=0 at back corner, along col 0 / rows): draw columnsL[i] at (1920-(i+1)*78-2, 450+i*39-2). Right wall column i (along row 0 / cols): columnsR[i] at (1920+i*78-2, 450+i*39-2). Strip 82×493 = 78-px column × 450-px wall (+39 px slope) + 2 px bleed. Right-wall strips are pre-shaded ×0.88 like the default room.",
+  "drawOrder": "draw floor tiles row-major in any order (no overlap except 2 px bleed, same texture under bleed); then room-frame-{view|edit}; then items as before."
  }
 }
