@@ -980,7 +980,14 @@
 }
 
 .main-menu-btn {
-  padding-top: 6px;
+  padding-top: 2px;
+  gap: 2px;
+}
+
+.main-menu-btn span {
+  /* Keep the label clear of the draw-status chip border below. */
+  margin-top: -2px;
+  transform: translateY(-3px);
 }
 
 .main-chip {
