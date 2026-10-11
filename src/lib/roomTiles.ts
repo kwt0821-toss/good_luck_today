@@ -21,8 +21,28 @@ export const FALLBACK_TILE_RULES: RoomTileRules = {
 
 let activeRules: RoomTileRules = FALLBACK_TILE_RULES;
 
+type ThemeTilePack = {
+  floor?: string;
+  wallL?: string;
+  wallR?: string;
+};
+
+const themeTiles = new Map<string, ThemeTilePack>();
+
 export function setTileRules(rules: Partial<RoomTileRules> | null | undefined) {
   activeRules = { ...FALLBACK_TILE_RULES, ...rules };
+}
+
+export function registerThemeTile(id: string, pack: ThemeTilePack) {
+  const prev = themeTiles.get(id) ?? {};
+  themeTiles.set(id, { ...prev, ...pack });
+}
+
+export function wallTilesFromSides(left: string, right: string): WallTiles {
+  return {
+    L: Array.from({ length: WALL_STRIPS }, () => left),
+    R: Array.from({ length: WALL_STRIPS }, () => right),
+  };
 }
 
 export function getTileRules() {
@@ -55,11 +75,14 @@ function fillTemplate(template: string, values: Record<string, string | number>)
 export function floorTileSrc(id: string, col: number, row: number, rules = activeRules) {
   const pc = ((col % 2) + 2) % 2;
   const pr = ((row % 2) + 2) % 2;
-  return fillTemplate(rules.floorFile, { id, "c%2": pc, "r%2": pr, c: col, r: row });
+  const template = themeTiles.get(id)?.floor ?? rules.floorFile;
+  return fillTemplate(template, { id, "c%2": pc, "r%2": pr, c: col, r: row });
 }
 
 export function wallStripSrc(id: string, wall: "L" | "R", index: number, rules = activeRules) {
-  const template = wall === "L" ? rules.wallLeftFile : rules.wallRightFile;
+  const pack = themeTiles.get(id);
+  const template =
+    (wall === "L" ? pack?.wallL : pack?.wallR) ?? (wall === "L" ? rules.wallLeftFile : rules.wallRightFile);
   return fillTemplate(template, { id, i: index, "i%2": index % 2, wall });
 }
 
@@ -166,8 +189,12 @@ export function normalizeFloorTiles(raw: unknown, fallbackId = activeRules.defau
   });
 }
 
-export function normalizeWallTiles(raw: unknown, fallbackId = activeRules.defaultWall): WallTiles {
-  const fallback = defaultWallTiles(fallbackId);
+export function normalizeWallTiles(
+  raw: unknown,
+  fallbackLeft = activeRules.defaultWall,
+  fallbackRight = fallbackLeft,
+): WallTiles {
+  const fallback = wallTilesFromSides(fallbackLeft, fallbackRight);
   if (!raw || typeof raw !== "object") return fallback;
   const rec = raw as { L?: unknown; R?: unknown };
   const side = (value: unknown, key: "L" | "R") => {

@@ -13,6 +13,8 @@ export const GRID = 8;
 export const WALL_SLOTS = 8;
 export const WALL_BANDS = 3;
 export const WALL_BAND_EDGES = [32, 76, 118, 160] as const;
+export const WALL_TOP_BAND = WALL_BANDS - 1;
+export const WALL_TOP_HEIGHT = 124;
 export const WORLD_W = 3840;
 export const WORLD_H = 2160;
 export const ISO_OX = 1920;
@@ -69,7 +71,15 @@ export function isFurniture(item: RoomItem | undefined): item is RoomItem & {
 }
 
 export function isDecal(item: RoomItem | undefined) {
-  return Boolean(item?.decal || item?.placement === "floor-decal" || item?.id === "pawrug");
+  return Boolean(item?.decal || item?.placement === "floor-decal" || item?.id === "pawrug" || item?.id === "picnic_blanket");
+}
+
+export function isWallDecor(item: RoomItem | undefined) {
+  return item?.placement === "wall" || item?.placement === "wallTop";
+}
+
+export function isWallTop(item: RoomItem | undefined) {
+  return item?.placement === "wallTop";
 }
 
 export function isOnTop(place: FloorPlacement) {
@@ -397,13 +407,13 @@ export function wallPlaceFromSlot(
 ): Pick<WallPlacement, "wall" | "slot" | "band" | "t" | "heightUnits"> {
   const span = wallSpanOf(item);
   const nextSlot = clamp(slot, 0, WALL_SLOTS - span);
-  const nextBand = clamp(band, 0, WALL_BANDS - 1);
+  const nextBand = isWallTop(item) ? WALL_TOP_BAND : clamp(band, 0, WALL_BANDS - 1);
   return {
     wall,
     slot: nextSlot,
     band: nextBand,
     t: nextSlot + span / 2,
-    heightUnits: wallBandCenter(nextBand),
+    heightUnits: isWallTop(item) ? WALL_TOP_HEIGHT : wallBandCenter(nextBand),
   };
 }
 
@@ -449,6 +459,7 @@ export function canPlaceWall(
 ) {
   const span = wallSpanOf(item);
   if (slot < 0 || band < 0 || band >= WALL_BANDS || slot + span > WALL_SLOTS) return false;
+  if (isWallTop(item) && band !== WALL_TOP_BAND) return false;
   for (let i = 0; i < span; i += 1) {
     if (used.has(`${wall}:${slot + i}:${band}`)) return false;
   }
@@ -462,7 +473,8 @@ export function firstFreeOnWall(
   wall: "L" | "R",
 ) {
   const used = wallOccupancy(walls, byId);
-  for (const band of [1, 0, 2]) {
+  const bands = isWallTop(item) ? [WALL_TOP_BAND] : [1, 0, 2];
+  for (const band of bands) {
     for (let slot = 0; slot < WALL_SLOTS; slot += 1) {
       if (canPlaceWall(item, wall, slot, band, used)) {
         return wallPlaceFromSlot(item, wall, slot, band);
@@ -565,7 +577,7 @@ export function hitTestWall(localX: number, localY: number, mode: RoomMode): {
 export function snapWallHit(item: RoomItem, hit: { wall: "L" | "R"; t: number; heightUnits: number }) {
   const span = wallSpanOf(item);
   const slot = clamp(Math.floor(hit.t - (span - 1) / 2), 0, WALL_SLOTS - span);
-  const band = wallBandFromHeight(hit.heightUnits);
+  const band = isWallTop(item) ? WALL_TOP_BAND : wallBandFromHeight(hit.heightUnits);
   return wallPlaceFromSlot(item, hit.wall, slot, band);
 }
 

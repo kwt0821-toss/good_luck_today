@@ -1,4 +1,5 @@
 import { roomAsset } from "../lib/roomCatalog";
+import type { RoomDefinition } from "../lib/roomCatalog";
 import type { DexCard } from "../lib/dexTypes";
 import { EXCHANGE_RATES } from "../lib/roomStore";
 import type { RoomItem } from "../lib/roomTypes";
@@ -79,6 +80,33 @@ export function RoomBuySheet({
             </div>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+export function RoomUnlockSheet({
+  room,
+  onClose,
+}: {
+  room: RoomDefinition | null;
+  onClose: () => void;
+}) {
+  const title = room ? `${room.nameKo} 열기` : "새 방 열기";
+  const body = room?.unlock.example
+    ? `지금은 임시예요. 열기 조건: ${room.unlock.example}`
+    : "지금은 임시예요. COZY 레벨이나 발바닥 포인트로 새 방을 열 수 있게 될 거예요.";
+  return (
+    <div className="lucky-modal">
+      <button type="button" className="lucky-modal-back" aria-label="닫기" onClick={onClose} />
+      <div className="lucky-modal-card" role="dialog" aria-label={title}>
+        <h3>{title}</h3>
+        <p>{body}</p>
+        <div className="lucky-modal-actions">
+          <button type="button" className="is-amber" onClick={onClose}>
+            확인
+          </button>
+        </div>
       </div>
     </div>
   );

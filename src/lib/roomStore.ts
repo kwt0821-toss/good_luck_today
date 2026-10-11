@@ -1,18 +1,28 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
 import { isInTossApp } from "./native";
-import type { GridLayoutEntry, RoomGridFile } from "./roomCatalog";
+import type { GridLayoutEntry, RoomDefinition, RoomGridFile, RoomsFile } from "./roomCatalog";
+import { defaultRoomId } from "./roomCatalog";
 import { wallCoordsFromT } from "./roomLayout";
 import {
   defaultFloorTiles,
-  defaultWallTiles,
   getTileRules,
   normalizeFloorTiles,
   normalizeWallTiles,
+  wallTilesFromSides,
 } from "./roomTiles";
-import type { FloorPlacement, RoomItem, RoomLayoutState, RoomOrientation, RoomSaveState, WallPlacement } from "./roomTypes";
+import type {
+  FloorPlacement,
+  RoomItem,
+  RoomLayoutState,
+  RoomOrientation,
+  RoomRecord,
+  RoomSaveState,
+  WallPlacement,
+} from "./roomTypes";
 
-const ROOM_KEY = "lucky-cat.my-room.v5.tiles";
+const ROOM_KEY = "lucky-cat.my-room.v6.rooms";
+const LEGACY_KEYS = ["lucky-cat.my-room.v5.tiles", "lucky-cat.my-room.v5"];
 export const MOCK_POINTS = 1240;
 export const MOCK_COZY = 3;
 
@@ -20,29 +30,45 @@ function orientationOf(value: unknown): RoomOrientation {
   return value === "mirrored" ? "mirrored" : "default";
 }
 
-export function layoutFromGrid(grid: RoomGridFile | undefined): RoomLayoutState {
+function asRecord(layout: RoomLayoutState, roamingCatId: string | null = null): RoomRecord {
+  return { ...layout, roamingCatId };
+}
+
+export function layoutFromEntries(
+  entries: GridLayoutEntry[] | undefined,
+  roomId: string,
+  floorId: string,
+  wallLeft: string,
+  wallRight: string,
+  floorTilesRaw?: unknown,
+  wallTilesRaw?: unknown,
+): RoomLayoutState {
   const floor: FloorPlacement[] = [];
   const walls: WallPlacement[] = [];
-  for (const entry of grid?.defaultLayout ?? []) {
+  const seen: Record<string, number> = {};
+  for (const entry of entries ?? []) {
+    seen[entry.id] = (seen[entry.id] ?? 0) + 1;
+    const n = seen[entry.id];
+    const instanceId = n === 1 ? `p-${roomId}-${entry.id}` : `p-${roomId}-${entry.id}-${n}`;
     if (entry.wall) {
       const t = entry.t ?? 2;
       const heightUnits = entry.heightUnits ?? 90;
       const coords = wallCoordsFromT({ wallSpanTiles: 1 } as RoomItem, t, heightUnits);
       walls.push({
-        instanceId: `p-${entry.id}`,
+        instanceId,
         id: entry.id,
         wall: entry.wall,
         t,
         heightUnits,
         slot: coords.slot,
         band: coords.band,
-        worldPx: entry.worldPx,
+        worldPx: entry.worldPxBase ?? entry.worldPx,
       });
       continue;
     }
     if (entry.onTop) {
       floor.push({
-        instanceId: `p-${entry.id}`,
+        instanceId,
         id: entry.id,
         col: 0,
         row: 0,
@@ -54,21 +80,55 @@ export function layoutFromGrid(grid: RoomGridFile | undefined): RoomLayoutState 
       continue;
     }
     floor.push({
-      instanceId: `p-${entry.id}`,
+      instanceId,
       id: entry.id,
       col: entry.c ?? 0,
       row: entry.r ?? 0,
       orientation: orientationOf(entry.orientation),
     });
   }
-  const rules = getTileRules();
   return {
     floor,
     walls,
-    wallpaper: rules.defaultWall,
-    floorSkin: rules.defaultFloor,
-    floorTiles: defaultFloorTiles(rules.defaultFloor),
-    wallTiles: defaultWallTiles(rules.defaultWall),
+    wallpaper: wallLeft,
+    floorSkin: floorId,
+    floorTiles: normalizeFloorTiles(floorTilesRaw, floorId),
+    wallTiles: normalizeWallTiles(wallTilesRaw, wallLeft, wallRight),
+  };
+}
+
+export function layoutFromGrid(grid: RoomGridFile | undefined, roomId = "moon_bedroom"): RoomLayoutState {
+  const rules = getTileRules();
+  return layoutFromEntries(
+    grid?.defaultLayout,
+    roomId,
+    rules.defaultFloor,
+    rules.defaultWall,
+    rules.defaultWall,
+  );
+}
+
+export function layoutFromRoom(def: RoomDefinition, grid?: RoomGridFile): RoomLayoutState {
+  if (def.defaultLayout?.length) {
+    return layoutFromEntries(
+      def.defaultLayout,
+      def.id,
+      def.defaultFloor,
+      def.defaultWall.L,
+      def.defaultWall.R,
+      def.floorTiles,
+      def.wallTiles,
+    );
+  }
+  const base = layoutFromGrid(grid, def.id);
+  return {
+    ...base,
+    wallpaper: def.defaultWall.L,
+    floorSkin: def.defaultFloor,
+    floorTiles: def.floorTiles ? normalizeFloorTiles(def.floorTiles, def.defaultFloor) : defaultFloorTiles(def.defaultFloor),
+    wallTiles: def.wallTiles
+      ? normalizeWallTiles(def.wallTiles, def.defaultWall.L, def.defaultWall.R)
+      : wallTilesFromSides(def.defaultWall.L, def.defaultWall.R),
   };
 }
 
@@ -76,21 +136,70 @@ export function defaultLayout(grid?: RoomGridFile): RoomLayoutState {
   return layoutFromGrid(grid);
 }
 
-export function mockOwned(items: RoomItem[]): Record<string, number> {
+export function defaultRecord(def: RoomDefinition, grid?: RoomGridFile): RoomRecord {
+  return asRecord(layoutFromRoom(def, grid), null);
+}
+
+function countDefaultPlacements(def: RoomDefinition, grid?: RoomGridFile) {
+  const entries =
+    def.defaultLayout ?? (def.isDefault || def.id === "moon_bedroom" ? grid?.defaultLayout : undefined) ?? [];
+  const counts: Record<string, number> = {};
+  for (const entry of entries) {
+    counts[entry.id] = (counts[entry.id] ?? 0) + 1;
+  }
+  const grantTile = (id: string | undefined) => {
+    if (!id) return;
+    counts[id] = Math.max(counts[id] ?? 0, 1);
+  };
+  if (def.floorTiles) {
+    for (const row of def.floorTiles) for (const id of row) grantTile(id);
+  } else {
+    grantTile(def.defaultFloor);
+  }
+  if (def.wallTiles) {
+    for (const id of def.wallTiles.L) grantTile(id);
+    for (const id of def.wallTiles.R) grantTile(id);
+  } else {
+    grantTile(def.defaultWall.L);
+    grantTile(def.defaultWall.R);
+  }
+  return counts;
+}
+
+export function mockOwned(items: RoomItem[], roomsFile?: RoomsFile, grid?: RoomGridFile): Record<string, number> {
   const owned: Record<string, number> = {};
   for (const item of items) {
-    if (item.ownedDefault) owned[item.id] = 1;
+    if (item.ownedDefault) owned[item.id] = Math.max(owned[item.id] ?? 0, 1);
+  }
+  for (const def of roomsFile?.rooms ?? []) {
+    const counts = countDefaultPlacements(def, grid);
+    for (const [id, count] of Object.entries(counts)) {
+      owned[id] = Math.max(owned[id] ?? 0, count);
+    }
   }
   return owned;
 }
 
-export function mockState(items: RoomItem[], grid?: RoomGridFile): RoomSaveState {
+export function mockUnlocked(roomsFile: RoomsFile) {
+  return roomsFile.rooms.map((room) => room.id);
+}
+
+export function mockState(items: RoomItem[], roomsFile: RoomsFile, grid?: RoomGridFile): RoomSaveState {
+  const rooms: Record<string, RoomRecord> = {};
+  for (const def of roomsFile.rooms) {
+    rooms[def.id] = defaultRecord(def, grid);
+  }
+  const requested = new URLSearchParams(window.location.search).get("room");
+  const startId =
+    requested && rooms[requested] ? requested : defaultRoomId(roomsFile);
   return {
     points: MOCK_POINTS,
-    owned: mockOwned(items),
-    layout: defaultLayout(grid),
+    owned: mockOwned(items, roomsFile, grid),
     cozyLevel: MOCK_COZY,
     shadowsEnabled: true,
+    currentRoomId: startId,
+    unlocked: mockUnlocked(roomsFile),
+    rooms,
   };
 }
 
@@ -139,28 +248,64 @@ function parseWalls(raw: unknown): WallPlacement[] {
   return out;
 }
 
-function parseState(raw: string | null): RoomSaveState | null {
+function parseLayout(raw: unknown, floorId: string, wallLeft: string, wallRight: string): RoomLayoutState | null {
+  if (!isRecord(raw) || !Array.isArray(raw.floor) || !Array.isArray(raw.walls)) return null;
+  return {
+    floor: parseFloor(raw.floor),
+    walls: parseWalls(raw.walls),
+    wallpaper: typeof raw.wallpaper === "string" ? raw.wallpaper : wallLeft,
+    floorSkin: typeof raw.floorSkin === "string" ? raw.floorSkin : floorId,
+    floorTiles: normalizeFloorTiles(raw.floorTiles, floorId),
+    wallTiles: normalizeWallTiles(raw.wallTiles, wallLeft, wallRight),
+  };
+}
+
+function parseRoomRecord(raw: unknown, def: RoomDefinition, grid?: RoomGridFile): RoomRecord {
+  const fallback = defaultRecord(def, grid);
+  if (!isRecord(raw)) return fallback;
+  const layout = parseLayout(raw, def.defaultFloor, def.defaultWall.L, def.defaultWall.R);
+  if (!layout) return fallback;
+  return {
+    ...layout,
+    roamingCatId: typeof raw.roamingCatId === "string" ? raw.roamingCatId : null,
+  };
+}
+
+function parseState(raw: string | null, roomsFile: RoomsFile, grid?: RoomGridFile): RoomSaveState | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as unknown;
-    if (!isRecord(parsed) || typeof parsed.points !== "number" || !isRecord(parsed.owned) || !isRecord(parsed.layout)) {
-      return null;
+    if (!isRecord(parsed) || typeof parsed.points !== "number" || !isRecord(parsed.owned)) return null;
+    const rooms: Record<string, RoomRecord> = {};
+    const storedRooms = isRecord(parsed.rooms) ? parsed.rooms : null;
+    const legacyLayout = !storedRooms && isRecord(parsed.layout) ? parsed.layout : null;
+    for (const def of roomsFile.rooms) {
+      if (storedRooms && isRecord(storedRooms[def.id])) {
+        rooms[def.id] = parseRoomRecord(storedRooms[def.id], def, grid);
+      } else if (legacyLayout && (def.isDefault || def.id === "moon_bedroom")) {
+        const migrated = parseLayout(legacyLayout, def.defaultFloor, def.defaultWall.L, def.defaultWall.R);
+        rooms[def.id] = migrated ? asRecord(migrated, null) : defaultRecord(def, grid);
+      } else {
+        rooms[def.id] = defaultRecord(def, grid);
+      }
     }
-    const layout = parsed.layout;
-    if (!Array.isArray(layout.floor) || !Array.isArray(layout.walls)) return null;
+    const unlockedRaw = Array.isArray(parsed.unlocked)
+      ? parsed.unlocked.filter((id): id is string => typeof id === "string" && Boolean(rooms[id]))
+      : [];
+    const current =
+      typeof parsed.currentRoomId === "string" && rooms[parsed.currentRoomId]
+        ? parsed.currentRoomId
+        : defaultRoomId(roomsFile);
+    const hasPlacements = Object.values(rooms).some((room) => room.floor.length + room.walls.length > 0);
+    if (!hasPlacements) return null;
     return {
       points: parsed.points,
       owned: parsed.owned as Record<string, number>,
       cozyLevel: typeof parsed.cozyLevel === "number" ? parsed.cozyLevel : MOCK_COZY,
       shadowsEnabled: parsed.shadowsEnabled !== false,
-      layout: {
-        floor: parseFloor(layout.floor),
-        walls: parseWalls(layout.walls),
-        wallpaper: typeof layout.wallpaper === "string" ? layout.wallpaper : getTileRules().defaultWall,
-        floorSkin: typeof layout.floorSkin === "string" ? layout.floorSkin : getTileRules().defaultFloor,
-        floorTiles: normalizeFloorTiles(layout.floorTiles),
-        wallTiles: normalizeWallTiles(layout.wallTiles),
-      },
+      currentRoomId: current,
+      unlocked: unlockedRaw.length ? unlockedRaw : mockUnlocked(roomsFile),
+      rooms,
     };
   } catch {
     return null;
@@ -198,15 +343,26 @@ async function writeKey(key: string, value: string): Promise<void> {
   }
 }
 
-export async function loadRoomState(items: RoomItem[], grid?: RoomGridFile): Promise<RoomSaveState> {
-  const stored = parseState(await readKey(ROOM_KEY)) ?? parseState(await readKey("lucky-cat.my-room.v5"));
-  if (stored && stored.layout.floor.length + stored.layout.walls.length > 0) {
+export async function loadRoomState(
+  items: RoomItem[],
+  roomsFile: RoomsFile,
+  grid?: RoomGridFile,
+): Promise<RoomSaveState> {
+  let stored: RoomSaveState | null = parseState(await readKey(ROOM_KEY), roomsFile, grid);
+  if (!stored) {
+    for (const key of LEGACY_KEYS) {
+      stored = parseState(await readKey(key), roomsFile, grid);
+      if (stored) break;
+    }
+  }
+  if (stored) {
     return {
       ...stored,
-      owned: { ...mockOwned(items), ...stored.owned },
+      owned: { ...mockOwned(items, roomsFile, grid), ...stored.owned },
+      unlocked: stored.unlocked.length ? stored.unlocked : mockUnlocked(roomsFile),
     };
   }
-  const mock = mockState(items, grid);
+  const mock = mockState(items, roomsFile, grid);
   await writeKey(ROOM_KEY, JSON.stringify(mock));
   return mock;
 }
@@ -217,6 +373,40 @@ export async function saveRoomState(state: RoomSaveState): Promise<void> {
 
 export function newInstanceId(id: string) {
   return `p-${id}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function currentRoom(state: RoomSaveState): RoomRecord {
+  return state.rooms[state.currentRoomId] ?? Object.values(state.rooms)[0];
+}
+
+export function patchCurrentRoom(state: RoomSaveState, layout: RoomLayoutState): RoomSaveState {
+  const prev = currentRoom(state);
+  return {
+    ...state,
+    rooms: {
+      ...state.rooms,
+      [state.currentRoomId]: { ...prev, ...layout, roamingCatId: prev?.roamingCatId ?? null },
+    },
+  };
+}
+
+export function placedCountAll(state: RoomSaveState, itemId: string) {
+  let count = 0;
+  for (const room of Object.values(state.rooms)) {
+    count += room.floor.filter((place) => place.id === itemId).length;
+    count += room.walls.filter((place) => place.id === itemId).length;
+  }
+  return count;
+}
+
+export function placedInOtherRoom(state: RoomSaveState, itemId: string, roomId = state.currentRoomId) {
+  for (const [id, room] of Object.entries(state.rooms)) {
+    if (id === roomId) continue;
+    if (room.floor.some((place) => place.id === itemId) || room.walls.some((place) => place.id === itemId)) {
+      return id;
+    }
+  }
+  return null;
 }
 
 export const EXCHANGE_RATES = {

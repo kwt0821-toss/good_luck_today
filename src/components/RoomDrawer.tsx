@@ -1,9 +1,11 @@
-import { itemMatchesTab, roomAsset, ROOM_TABS } from "../lib/roomCatalog";
-import type { PaintFillMode, RoomItem, RoomLayoutState, RoomTab } from "../lib/roomTypes";
+import { itemMatchesTab, itemMatchesTheme, roomAsset, ROOM_TABS, ROOM_THEME_FILTERS } from "../lib/roomCatalog";
+import type { PaintFillMode, RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib/roomTypes";
 
 type RoomDrawerProps = {
   tab: RoomTab;
   onTab: (tab: RoomTab) => void;
+  themeFilter: RoomThemeFilter;
+  onThemeFilter: (filter: RoomThemeFilter) => void;
   items: RoomItem[];
   layout: RoomLayoutState;
   owned: Record<string, number>;
@@ -13,6 +15,7 @@ type RoomDrawerProps = {
   fillMode: PaintFillMode;
   eraser: boolean;
   canUndo: boolean;
+  otherRoomIds: Record<string, string | null>;
   onPick: (item: RoomItem) => void;
   onFillMode: (mode: PaintFillMode) => void;
   onEraser: () => void;
@@ -26,11 +29,12 @@ function tileState(
   owned: Record<string, number>,
   selectedId: string | null,
   brushId: string | null,
+  otherRoomId: string | null,
 ) {
   const locked = (owned[item.id] ?? 0) < 1;
   const usedOnFloor = layout.floorTiles?.some((row) => row.includes(item.id)) ?? false;
   const usedOnWall = Boolean(layout.wallTiles?.L.includes(item.id) || layout.wallTiles?.R.includes(item.id));
-  const placed =
+  const placedHere =
     layout.floor.some((place) => place.id === item.id) ||
     layout.walls.some((place) => place.id === item.id) ||
     usedOnFloor ||
@@ -40,12 +44,14 @@ function tileState(
     brushing ||
     layout.floor.some((place) => place.instanceId === selectedId && place.id === item.id) ||
     layout.walls.some((place) => place.instanceId === selectedId && place.id === item.id);
-  return { locked, placed, selected, brushing };
+  return { locked, placedHere, otherRoom: Boolean(otherRoomId) && !placedHere, selected, brushing };
 }
 
 export function RoomDrawer({
   tab,
   onTab,
+  themeFilter,
+  onThemeFilter,
   items,
   layout,
   owned,
@@ -55,13 +61,14 @@ export function RoomDrawer({
   fillMode,
   eraser,
   canUndo,
+  otherRoomIds,
   onPick,
   onFillMode,
   onEraser,
   onUndo,
   onExchange,
 }: RoomDrawerProps) {
-  const visible = items.filter((item) => itemMatchesTab(item, tab));
+  const visible = items.filter((item) => itemMatchesTab(item, tab) && itemMatchesTheme(item, themeFilter));
   const paintTab = tab === "벽지" || tab === "바닥";
 
   return (
@@ -98,6 +105,18 @@ export function RoomDrawer({
           </button>
         ))}
       </div>
+      <div className="lucky-theme-filters" role="tablist" aria-label="테마 필터">
+        {ROOM_THEME_FILTERS.map((filter) => (
+          <button
+            key={filter.id}
+            type="button"
+            className={themeFilter === filter.id ? "is-active" : ""}
+            onClick={() => onThemeFilter(filter.id)}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
       {paintTab ? (
         <div className="lucky-paint-toolbar" role="toolbar" aria-label="칠하기 도구">
           <div className="lucky-paint-toggle">
@@ -127,12 +146,12 @@ export function RoomDrawer({
       ) : null}
       <div className="lucky-drawer-grid">
         {visible.map((item) => {
-          const state = tileState(item, layout, owned, selectedId, brushId);
+          const state = tileState(item, layout, owned, selectedId, brushId, otherRoomIds[item.id] ?? null);
           return (
             <button
               key={item.id}
               type="button"
-              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placed ? "is-placed" : ""} ${state.selected ? "is-selected" : ""}`}
+              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom ? "is-other" : ""} ${state.selected ? "is-selected" : ""}`}
               onClick={() => onPick(item)}
             >
               <span className="lucky-cell-tile">
@@ -141,7 +160,7 @@ export function RoomDrawer({
                 ) : (
                   <span className="lucky-cell-empty" />
                 )}
-                {state.placed && !state.locked ? (
+                {state.placedHere && !state.locked ? (
                   <img className="lucky-cell-check" src={roomAsset("ui/badge-check.svg")} alt="" />
                 ) : null}
                 {state.locked ? <img className="lucky-cell-lock" src={roomAsset("ui/icon-lock.svg")} alt="" /> : null}
@@ -153,7 +172,15 @@ export function RoomDrawer({
                   {item.price}
                 </em>
               ) : (
-                <small>{state.brushing ? "칠하는 중" : state.placed ? "사용 중" : "보유"}</small>
+                <small className={state.otherRoom ? "is-other" : ""}>
+                  {state.brushing
+                    ? "칠하는 중"
+                    : state.otherRoom
+                      ? "다른 방에 배치 중"
+                      : state.placedHere
+                        ? "사용 중"
+                        : "보유"}
+                </small>
               )}
             </button>
           );

@@ -1,8 +1,10 @@
 export type RoomCategory = "가구" | "소품" | "벽 꾸미기" | "벽지" | "바닥" | "카드액자";
-export type RoomPlacementKind = "floor" | "floor-decal" | "wall" | "wallpaper" | "floor-skin";
+export type RoomPlacementKind = "floor" | "floor-decal" | "wall" | "wallTop" | "wallpaper" | "floor-skin";
 export type RoomMode = "view" | "edit";
 export type RoomTab = RoomCategory;
 export type RoomOrientation = "default" | "mirrored";
+export type RoomThemeId = "moon_bedroom" | "cat_cafe" | "sakura_greenhouse";
+export type RoomThemeFilter = "all" | RoomThemeId;
 
 export type FurnitureOrientation = {
   image: string;
@@ -39,6 +41,7 @@ export type RoomItem = {
   decal?: boolean;
   shadow?: string | null;
   hero?: boolean;
+  theme?: RoomThemeId | string;
 };
 
 export type RoomCatalog = {
@@ -96,12 +99,23 @@ export type RoomLayoutState = {
   wallTiles: WallTiles;
 };
 
+export type RoomRecord = RoomLayoutState & {
+  roamingCatId: string | null;
+};
+
+export type RoomUnlock = {
+  type: string;
+  example?: string;
+};
+
 export type RoomSaveState = {
   points: number;
   owned: Record<string, number>;
-  layout: RoomLayoutState;
   cozyLevel: number;
   shadowsEnabled: boolean;
+  currentRoomId: string;
+  unlocked: string[];
+  rooms: Record<string, RoomRecord>;
 };
 
 export type SpriteRect = {

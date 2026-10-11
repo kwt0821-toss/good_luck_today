@@ -1,12 +1,24 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
-import { RoomBuySheet, RoomConfirm, RoomExchangeSheet } from "../components/RoomDialogs";
+import { RoomBuySheet, RoomConfirm, RoomExchangeSheet, RoomUnlockSheet } from "../components/RoomDialogs";
 import { RoomDrawer } from "../components/RoomDrawer";
 import { RoomWorld } from "../components/RoomWorld";
 import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
 import { loadDexOwned } from "../lib/dexCollection";
 import { haptic, isInTossApp } from "../lib/native";
-import { isPaintItem, itemMap, loadRoomCatalog, loadRoomGrid, roomAsset, type RoomGridFile } from "../lib/roomCatalog";
+import {
+  isPaintItem,
+  itemMap,
+  loadRoomCatalog,
+  loadRoomGrid,
+  loadRoomsFile,
+  ROOM_HINTS,
+  roomAsset,
+  roomById,
+  type RoomDefinition,
+  type RoomGridFile,
+  type RoomsFile,
+} from "../lib/roomCatalog";
 import {
   canPlace,
   canPlaceWall,
@@ -18,6 +30,7 @@ import {
   hitTestWall,
   inGrid,
   isDecal,
+  isWallDecor,
   itemSize,
   nearestHints,
   occupancy,
@@ -30,12 +43,20 @@ import {
   wallSpriteRect,
   resolvedWallSlot,
 } from "../lib/roomLayout";
-import { defaultLayout, loadRoomState, newInstanceId, saveRoomState } from "../lib/roomStore";
+import {
+  currentRoom,
+  defaultRecord,
+  loadRoomState,
+  newInstanceId,
+  patchCurrentRoom,
+  placedCountAll,
+  placedInOtherRoom,
+  saveRoomState,
+} from "../lib/roomStore";
 import {
   applyPaint,
   cloneFloorTiles,
   cloneWallTiles,
-  getTileRules,
   paintTargetAnchor,
   paintTargetLabel,
 } from "../lib/roomTiles";
@@ -50,8 +71,12 @@ import type {
   RoomMode,
   RoomSaveState,
   RoomTab,
+  RoomThemeFilter,
   WallPlacement,
 } from "../lib/roomTypes";
+
+const VIEW_W = 390;
+const SWIPE_THRESHOLD = 56;
 import "./RoomScreen.css";
 
 type RoomScreenProps = {
@@ -65,7 +90,11 @@ function formatPoints(value: number) {
 export function RoomScreen({ onBack }: RoomScreenProps) {
   const [items, setItems] = useState<RoomItem[]>([]);
   const [grid, setGrid] = useState<RoomGridFile | null>(null);
+  const [roomsFile, setRoomsFile] = useState<RoomsFile | null>(null);
   const [state, setState] = useState<RoomSaveState | null>(null);
+  const [themeFilter, setThemeFilter] = useState<RoomThemeFilter>("all");
+  const [unlockRoom, setUnlockRoom] = useState<RoomDefinition | null | "soon">(null);
+  const [dragX, setDragX] = useState(0);
   const [frameThumbs, setFrameThumbs] = useState<string[]>([]);
   const [mode, setMode] = useState<RoomMode>(() =>
     new URLSearchParams(window.location.search).get("edit") ? "edit" : "view",
@@ -102,14 +131,16 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     wallTiles: RoomLayoutState["wallTiles"];
   } | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const swipe = useRef({ x: 0, y: 0, dx: 0, active: false });
   const itemsById = useMemo(() => itemMap(items), [items]);
   const paintTab = tab === "벽지" || tab === "바닥";
 
   useEffect(() => {
-    void Promise.all([loadRoomCatalog(), loadRoomGrid()]).then(async ([catalog, gridFile]) => {
+    void Promise.all([loadRoomCatalog(), loadRoomGrid(), loadRoomsFile()]).then(async ([catalog, gridFile, rooms]) => {
       setItems(catalog.items);
       setGrid(gridFile);
-      setState(await loadRoomState(catalog.items, gridFile));
+      setRoomsFile(rooms);
+      setState(await loadRoomState(catalog.items, rooms, gridFile));
     });
     void Promise.all([loadDexCatalog(), loadDexOwned()]).then(([catalog, owned]) => {
       const thumbs = catalog.cards
@@ -136,11 +167,16 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     window.setTimeout(() => setShakeId(null), 300);
   };
 
-  if (!state) {
+  if (!state || !roomsFile) {
     return <div className="lucky-room is-loading">방을 불러오는 중이에요.</div>;
   }
 
-  const layout = state.layout;
+  const layout = currentRoom(state);
+  const roomDef = roomById(roomsFile.rooms, state.currentRoomId) ?? roomsFile.rooms[0];
+  const unlockedIds = roomsFile.switcher.order.filter((id) => state.unlocked.includes(id) && state.rooms[id]);
+  const lockedRooms = roomsFile.rooms.filter((room) => !state.unlocked.includes(room.id));
+  const currentIndex = Math.max(0, unlockedIds.indexOf(state.currentRoomId));
+  const otherRoomIds = Object.fromEntries(items.map((item) => [item.id, placedInOtherRoom(state, item.id)]));
   if (!paintStroke.current) {
     tilesRef.current = { floorTiles: layout.floorTiles, wallTiles: layout.wallTiles };
   }
@@ -152,7 +188,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   const selectedFloor = selected && "col" in selected ? selected : null;
   const selectedWall = selected && "wall" in selected && !("col" in selected) ? (selected as WallPlacement) : null;
   const hints =
-    mode === "edit" && selectedFloor && selectedItem && !selectedFloor.onTopOf && selectedItem.placement !== "wall"
+    mode === "edit" && selectedFloor && selectedItem && !selectedFloor.onTopOf && !isWallDecor(selectedItem)
       ? nearestHints(selectedItem, selectedFloor.orientation, layout.floor, itemsById, selectedId ?? undefined)
       : null;
 
@@ -176,7 +212,49 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   };
 
   const patchLayout = (nextLayout: RoomLayoutState) => {
-    persist({ ...state, layout: nextLayout });
+    persist(patchCurrentRoom(state, nextLayout));
+  };
+
+  const goToUnlocked = (index: number) => {
+    if (index < 0) return;
+    if (index >= unlockedIds.length) {
+      setUnlockRoom(lockedRooms[0] ?? "soon");
+      return;
+    }
+    const nextId = unlockedIds[index];
+    if (!nextId || nextId === state.currentRoomId) return;
+    persist({ ...state, currentRoomId: nextId });
+    void haptic("tap");
+  };
+
+  const rubberX = (dx: number) => {
+    if (currentIndex <= 0 && dx > 0) return dx * 0.32;
+    if (currentIndex >= unlockedIds.length - 1 && dx < 0) return dx * 0.32;
+    return dx;
+  };
+
+  const onSwipeDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (mode !== "view") return;
+    swipe.current = { x: event.clientX, y: event.clientY, dx: 0, active: true };
+  };
+
+  const onSwipeMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (!swipe.current.active) return;
+    const dx = event.clientX - swipe.current.x;
+    const dy = event.clientY - swipe.current.y;
+    if (Math.abs(dx) < 8 && Math.abs(dragX) === 0) return;
+    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dragX) === 0) return;
+    swipe.current.dx = dx;
+    setDragX(rubberX(dx));
+  };
+
+  const onSwipeUp = () => {
+    if (!swipe.current.active) return;
+    const dx = swipe.current.dx;
+    swipe.current.active = false;
+    setDragX(0);
+    if (dx <= -SWIPE_THRESHOLD) goToUnlocked(currentIndex + 1);
+    else if (dx >= SWIPE_THRESHOLD) goToUnlocked(currentIndex - 1);
   };
 
   const onSelect = (instanceId: string | null) => {
@@ -194,11 +272,12 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     return "any";
   };
 
-  const paintBrushId = () => {
-    const rules = getTileRules();
+  const paintBrushId = (target?: PaintTarget | null) => {
     if (eraser) {
-      if (tab === "벽지") return rules.defaultWall;
-      if (tab === "바닥") return rules.defaultFloor;
+      if (target?.kind === "floor") return roomDef.defaultFloor;
+      if (target?.kind === "wall") return roomDef.defaultWall[target.wall];
+      if (tab === "벽지") return roomDef.defaultWall.L;
+      if (tab === "바닥") return roomDef.defaultFloor;
       return null;
     }
     return brushId;
@@ -216,12 +295,12 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   };
 
   const paintAt = (target: PaintTarget) => {
-    const id = paintBrushId();
+    const id = paintBrushId(target);
     if (!id || !state) return;
     const key = target.kind === "floor" ? `f:${target.col},${target.row}` : `w:${target.wall}:${target.index}`;
     const stroke = paintStroke.current;
     if (stroke?.painted.has(key) && fillMode === "cell") return;
-    const current = tilesRef.current ?? { floorTiles: state.layout.floorTiles, wallTiles: state.layout.wallTiles };
+    const current = tilesRef.current ?? { floorTiles: layout.floorTiles, wallTiles: layout.wallTiles };
     const next = applyPaint(current.floorTiles, current.wallTiles, target, id, fillMode === "fill");
     if (!next.changed) return;
     tilesRef.current = { floorTiles: next.floor, wallTiles: next.walls };
@@ -229,10 +308,9 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       stroke.dirty = true;
       stroke.painted.add(key);
     }
-    persist({
-      ...state,
-      layout: { ...state.layout, floorTiles: next.floor, wallTiles: next.walls },
-    });
+    persist(
+      patchCurrentRoom(state, { ...state.rooms[state.currentRoomId], floorTiles: next.floor, wallTiles: next.walls }),
+    );
     void haptic("tap");
   };
 
@@ -247,14 +325,13 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     const prev = undoStack[undoStack.length - 1];
     if (!prev || !state) return;
     setUndoStack((stack) => stack.slice(0, -1));
-    persist({
-      ...state,
-      layout: {
-        ...state.layout,
+    persist(
+      patchCurrentRoom(state, {
+        ...currentRoom(state),
         floorTiles: cloneFloorTiles(prev.floorTiles),
         wallTiles: cloneWallTiles(prev.wallTiles),
-      },
-    });
+      }),
+    );
   };
 
   const onFloorPointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -381,7 +458,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   };
 
   const rotateSelected = () => {
-    if (!selectedFloor || !selectedItem || selectedItem.placement === "wall") return;
+    if (!selectedFloor || !selectedItem || isWallDecor(selectedItem)) return;
     const next = toggledOrientation(selectedFloor.orientation);
     const [w, d] = itemSize(selectedItem, next);
     const used = occupancy(layout.floor, itemsById, selectedFloor.instanceId);
@@ -491,13 +568,18 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       setSelectedId(null);
       return;
     }
-    const existing =
+    const remaining = (state.owned[item.id] ?? 0) - placedCountAll(state, item.id);
+    const existingHere =
       layout.floor.find((place) => place.id === item.id) ?? layout.walls.find((place) => place.id === item.id);
-    if (existing) {
-      setSelectedId(existing.instanceId);
+    if (remaining <= 0) {
+      if (existingHere) {
+        setSelectedId(existingHere.instanceId);
+        return;
+      }
+      showToast("다른 방에 배치 중");
       return;
     }
-    if (item.placement === "wall") {
+    if (isWallDecor(item)) {
       const slot = firstFreeOnWall(item, layout.walls, itemsById, activeWall);
       if (!slot) {
         showToast("걸 자리가 없어요");
@@ -543,7 +625,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
     persist({
       ...state,
       points: state.points - item.price,
-      owned: { ...state.owned, [item.id]: 1 },
+      owned: { ...state.owned, [item.id]: (state.owned[item.id] ?? 0) + 1 },
     });
     setBuyItem(null);
     showToast(`${item.nameKo}를 샀어요`);
@@ -648,32 +730,95 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
         그림자 {state.shadowsEnabled ? "켜짐" : "꺼짐"}
       </button>
 
-      <div
-        className={`lucky-island ${mode === "view" ? "is-float" : ""}`}
-        style={{
-          left: screen.left,
-          top: screen.top,
-          width: screen.width,
-          height: screen.height,
-        }}
-      >
-        <div className="lucky-island-scale" style={{ transform: `scale(${screen.scale})` }}>
-          <RoomWorld
-            mode={mode}
-            itemsById={itemsById}
-            layout={layout}
-            selectedId={paintTab ? null : selectedId}
-            dragging={paintTab ? null : dragging}
-            hints={paintTab ? null : hints}
-            frameThumbs={frameThumbs}
-            shakeId={shakeId}
-            shadowsEnabled={state.shadowsEnabled}
-            painting={paintTab}
-            paintHover={paintTab ? paintHover : null}
-            onSelect={onSelect}
-            onItemPointerDown={onItemPointerDown}
-            onFloorPointerDown={onFloorPointerDown}
+      {mode === "view" ? (
+        <div
+          className="lucky-switcher"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <div className="lucky-room-chip">
+            <button type="button" aria-label="이전 방" onClick={() => goToUnlocked(currentIndex - 1)}>
+              ‹
+            </button>
+            <span>{roomDef.nameKo}</span>
+            <button type="button" aria-label="다음 방" onClick={() => goToUnlocked(currentIndex + 1)}>
+              ›
+            </button>
+          </div>
+          <div className="lucky-room-pager">
+            {unlockedIds.map((id, index) => (
+              <button
+                key={id}
+                type="button"
+                className={`lucky-room-dot ${index === currentIndex ? "is-on" : ""}`}
+                aria-label={roomById(roomsFile.rooms, id)?.nameKo ?? id}
+                onClick={() => goToUnlocked(index)}
+              />
+            ))}
+            <button
+              type="button"
+              className="lucky-new-room"
+              onClick={() => setUnlockRoom(lockedRooms[0] ?? "soon")}
+            >
+              <img src={roomAsset("ui/icon-lock.svg")} alt="" />
+              + 새 방
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="lucky-island-port">
+        {mode === "view" ? (
+          <div
+            className="lucky-swipe-catch"
+            onPointerDown={onSwipeDown}
+            onPointerMove={onSwipeMove}
+            onPointerUp={onSwipeUp}
+            onPointerCancel={onSwipeUp}
           />
+        ) : null}
+        <div
+          className={`lucky-island-slider ${dragX ? "is-dragging" : ""}`}
+          style={{
+            transform: `translate3d(${mode === "view" ? -currentIndex * VIEW_W + dragX : 0}px, 0, 0)`,
+          }}
+        >
+          {(mode === "edit" ? [state.currentRoomId] : unlockedIds).map((roomId, index) => {
+            const roomLayout = state.rooms[roomId];
+            if (!roomLayout) return null;
+            const active = roomId === state.currentRoomId;
+            return (
+              <div
+                key={roomId}
+                className={`lucky-island ${mode === "view" ? "is-float" : ""}`}
+                style={{
+                  left: screen.left + (mode === "view" ? index * VIEW_W : 0),
+                  top: screen.top,
+                  width: screen.width,
+                  height: screen.height,
+                  pointerEvents: active ? "auto" : "none",
+                }}
+              >
+                <div className="lucky-island-scale" style={{ transform: `scale(${screen.scale})` }}>
+                  <RoomWorld
+                    mode={active ? mode : "view"}
+                    itemsById={itemsById}
+                    layout={roomLayout}
+                    selectedId={active && !paintTab ? selectedId : null}
+                    dragging={active && !paintTab ? dragging : null}
+                    hints={active && !paintTab ? hints : null}
+                    frameThumbs={frameThumbs}
+                    shakeId={active ? shakeId : null}
+                    shadowsEnabled={state.shadowsEnabled}
+                    painting={active && paintTab}
+                    paintHover={active && paintTab ? paintHover : null}
+                    onSelect={onSelect}
+                    onItemPointerDown={onItemPointerDown}
+                    onFloorPointerDown={onFloorPointerDown}
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -737,7 +882,8 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       {mode === "view" ? (
         <>
           <p className="lucky-hint">
-            <span>쉿,</span> 냥이가 자는 동안 방을 꾸며 봐요
+            {ROOM_HINTS[roomDef.id]?.lead ? <span>{ROOM_HINTS[roomDef.id].lead}</span> : null}
+            {ROOM_HINTS[roomDef.id]?.rest ?? roomDef.hint}
           </p>
           <div className="lucky-bar">
             <div className="lucky-bar-points">
@@ -783,6 +929,8 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
               setPaintHover(null);
             }
           }}
+          themeFilter={themeFilter}
+          onThemeFilter={setThemeFilter}
           items={items}
           layout={layout}
           owned={state.owned}
@@ -792,6 +940,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
           fillMode={fillMode}
           eraser={eraser}
           canUndo={undoStack.length > 0}
+          otherRoomIds={otherRoomIds}
           onPick={pickDrawerItem}
           onFillMode={(next) => {
             setFillMode(next);
@@ -809,14 +958,14 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
 
       {confirm === "reset" ? (
         <RoomConfirm
-          title="방을 처음 상태로 되돌릴까요?"
-          body="배치한 가구는 서랍으로 돌아가요. 산 아이템은 그대로 있어요."
+          title="이 방을 처음 상태로 되돌릴까요?"
+          body="지금 보고 있는 방만 기본 배치로 돌아가요. 산 아이템은 그대로 있어요."
           cancel="취소"
           confirm="초기화"
           danger
           onCancel={() => setConfirm(null)}
           onConfirm={() => {
-            persist({ ...state, layout: defaultLayout(grid ?? undefined) });
+            persist(patchCurrentRoom(state, defaultRecord(roomDef, grid ?? undefined)));
             setConfirm(null);
             showToast("기본 배치로 돌아갔어요");
           }}
@@ -832,7 +981,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
           danger
           onCancel={() => setConfirm(null)}
           onConfirm={() => {
-            if (snapshot) persist({ ...state, layout: snapshot });
+            if (snapshot) persist(patchCurrentRoom(state, snapshot));
             setConfirm(null);
             leaveEdit(false);
           }}
@@ -851,6 +1000,13 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
             setConfirm(null);
             showToast("방을 기억해 두었어요");
           }}
+        />
+      ) : null}
+
+      {unlockRoom ? (
+        <RoomUnlockSheet
+          room={unlockRoom === "soon" ? null : unlockRoom}
+          onClose={() => setUnlockRoom(null)}
         />
       ) : null}
 
