@@ -335,8 +335,10 @@
 }
 
 .lucky-room.is-edit .lucky-shadow-toggle {
-  top: 52px;
-  right: 20px;
+  top: auto;
+  right: auto;
+  left: 20px;
+  bottom: 384px;
 }
 
 .lucky-shadow-toggle.is-on {
@@ -579,8 +581,9 @@
 }
 
 .lucky-mini-toolbar img {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .lucky-select-tag {
