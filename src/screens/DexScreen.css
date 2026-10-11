@@ -430,9 +430,14 @@
 }
 
 .dex-slot-legend .dex-slot-img {
-  inset: 2px;
-  width: auto;
-  height: auto;
+  /* Replaced <img> ignores inset stretch when width/height are auto — pin to the gold frame. */
+  top: 2px;
+  left: 2px;
+  right: auto;
+  bottom: auto;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  object-fit: cover;
   z-index: 1;
   border-radius: 10px;
 }
