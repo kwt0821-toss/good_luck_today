@@ -706,9 +706,9 @@
   width: 220px;
   height: 342px;
   margin: 22px auto 0;
-  perspective: 1200px;
   touch-action: pan-y;
   animation: dex-card-in 380ms cubic-bezier(0.2, 0.9, 0.25, 1) 60ms both;
+  transform: rotate(-1.5deg);
 }
 
 .dex-card-glow {
@@ -718,42 +718,151 @@
   pointer-events: none;
 }
 
-.dex-flip {
+/* .card > .card-inner > .face.front / .face.back */
+.card.dex-card {
   position: relative;
   width: 220px;
   height: 342px;
+  perspective: 1200px;
   border: 0;
   padding: 0;
   background: transparent;
-  transform: rotate(-1.5deg);
   cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  user-select: none;
 }
 
-.dex-flip-inner {
+.card-inner.dex-card-inner {
   position: relative;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
+  will-change: transform;
 }
 
-.dex-flip.is-flipped .dex-flip-inner {
-  transform: rotateY(180deg);
-}
-
-.dex-flip-face {
+.face.dex-face {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   border-radius: 15px;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
   box-shadow: 0 24px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(243, 233, 215, 0.15);
+  will-change: opacity, transform;
 }
 
-.dex-flip-face.is-back {
+.face.dex-face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.face.front {
+  transform: rotateY(0deg);
+}
+
+.face.back {
   transform: rotateY(180deg);
+}
+
+.dex-card-depth {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  width: 78%;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  filter: blur(10px);
+  transform: translateX(-50%) scaleX(1) scaleY(1);
+  opacity: 0.42;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform, opacity;
+}
+
+.dex-card-inner {
+  z-index: 1;
+}
+
+.dex-card-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+}
+
+.dex-card-shine.is-active {
+  opacity: 1;
+}
+
+.dex-card-shine::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  left: -55%;
+  width: 46%;
+  height: 160%;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.9) 48%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translate3d(0, 0, 0) rotate(28deg);
+  opacity: 0;
+}
+
+.dex-card-shine.is-legend::before {
+  background: linear-gradient(
+    115deg,
+    rgba(255, 217, 138, 0) 0%,
+    #ffd98a 48%,
+    rgba(255, 217, 138, 0) 100%
+  );
+}
+
+.dex-card-shine.is-active::before {
+  animation: dex-card-shine-sweep 380ms ease-out both;
+}
+
+@keyframes dex-card-shine-sweep {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(28deg);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(280%, 0, 0) rotate(28deg);
+  }
+}
+
+.dex-card.is-reduced .card-inner.dex-card-inner {
+  transform-style: flat;
+  transform: none !important;
+}
+
+.dex-card.is-reduced .face.front,
+.dex-card.is-reduced .face.back {
+  transform: none;
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+
+.dex-card.is-reduced .face.back {
+  opacity: 0;
 }
 
 .dex-flip-btn {
@@ -840,8 +949,17 @@
 .dex-dot {
   width: 5px;
   height: 5px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
   background: rgba(243, 233, 215, 0.22);
+  cursor: pointer;
+}
+
+.dex-dot:disabled,
+.dex-dot.is-locked {
+  cursor: default;
+  opacity: 0.35;
 }
 
 .dex-dot.is-active {
@@ -977,13 +1095,17 @@
   .dex-slot-legend.is-owned .dex-slot-shine,
   .dex-sheet,
   .dex-sheet-backdrop,
-  .dex-flip-stage,
-  .dex-flip-inner {
+  .dex-flip-stage {
     animation: none !important;
     transition: none !important;
   }
 
   .dex-sheet {
     transform: none !important;
+  }
+
+  .dex-card-shine.is-active::before {
+    animation: none !important;
+    opacity: 0 !important;
   }
 }
