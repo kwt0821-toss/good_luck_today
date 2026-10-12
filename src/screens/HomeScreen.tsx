@@ -303,22 +303,27 @@ export function HomeScreen({
               {Array.from({ length: deckCount }, (_, index) => {
                 const fromTop = deckCount - 1 - index;
                 const isTop = fromTop === 0;
-                return (
-                  <div
-                    key={`deck-${index}-${remainingNormal}`}
-                    className={`main-deck-card ${isTop ? "is-top deck-top" : "is-back"} ${isTop && flipping ? "is-flip" : ""}`}
-                    style={{ zIndex: index + 1 }}
-                    data-depth={fromTop}
-                  >
-                    {/* Tail + cat live on the top card so they share its rotate(-2deg). */}
-                    {isTop ? (
+                if (isTop) {
+                  /* .deck-top carries the -2deg tilt; cat/tail sit beside the face
+                     (not inside the flipping 3D card) so breathe/sway keep compositing. */
+                  return (
+                    <div
+                      key={`deck-top-${remainingNormal}`}
+                      className="deck-top"
+                      style={{ zIndex: index + 1 }}
+                    >
                       <img className="main-tail" src={ASSETS.tail} alt="" draggable={false} />
-                    ) : null}
-                    <img className="main-deck-face" src={ASSETS.card} alt="" />
-                    {isTop ? (
+                      <div className={`main-deck-card is-top ${flipping ? "is-flip" : ""}`}>
+                        <img className="main-deck-face" src={ASSETS.card} alt="" />
+                        {showSparkle ? (
+                          <>
+                            <span className="main-deck-dot" />
+                            <span className="main-deck-spark" />
+                          </>
+                        ) : null}
+                      </div>
                       <div className="main-cat">
                         <img className="main-cat-body" src={ASSETS.cat} alt="잠자는 고양이" />
-                        {/* Drool pulses with breathe; hidden while the card reveal flip plays. */}
                         <img
                           className="main-drool"
                           src={ASSETS.drool}
@@ -327,13 +332,17 @@ export function HomeScreen({
                           draggable={false}
                         />
                       </div>
-                    ) : null}
-                    {isTop && showSparkle ? (
-                      <>
-                        <span className="main-deck-dot" />
-                        <span className="main-deck-spark" />
-                      </>
-                    ) : null}
+                    </div>
+                  );
+                }
+                return (
+                  <div
+                    key={`deck-${index}-${remainingNormal}`}
+                    className="main-deck-card is-back"
+                    style={{ zIndex: index + 1 }}
+                    data-depth={fromTop}
+                  >
+                    <img className="main-deck-face" src={ASSETS.card} alt="" />
                   </div>
                 );
               })}

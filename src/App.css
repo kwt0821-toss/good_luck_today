@@ -1276,6 +1276,20 @@
   opacity: 0.48;
 }
 
+/*
+ * Tilt group for the top card + cat + tail. Keep rotate here (not on the
+ * flipping face) so child breathe/sway animations are not trapped under
+ * backface-visibility / transform transitions.
+ */
+.deck-top {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-2deg);
+  transform-origin: 50% 60%;
+  overflow: visible;
+  pointer-events: none;
+}
+
 .main-deck-card {
   position: absolute;
   inset: 0;
@@ -1285,8 +1299,11 @@
     transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
     filter 240ms ease,
     opacity 240ms ease;
-  backface-visibility: hidden;
   overflow: visible;
+}
+
+.main-deck-card.is-back {
+  backface-visibility: hidden;
 }
 
 .main-deck-face {
@@ -1309,17 +1326,15 @@
   filter: brightness(0.48);
 }
 
-/* Top card owns cat + tail so they share rotate(-2deg). */
-.main-deck-card.is-top,
-.main-deck-card.deck-top {
-  transform: rotate(-2deg);
+/* Face only — tilt comes from .deck-top parent. */
+.deck-top .main-deck-card.is-top {
+  transform: none;
   filter: none;
   box-shadow: 0 0 0 1px rgba(255, 196, 138, 0.35);
-  overflow: visible;
+  backface-visibility: hidden;
 }
 
-.main-deck-card.is-top::after,
-.main-deck-card.deck-top::after {
+.deck-top .main-deck-card.is-top::after {
   content: "";
   position: absolute;
   inset: -2px;
@@ -1329,7 +1344,7 @@
   z-index: 2;
 }
 
-.main-deck-card.is-top.is-flip {
+.deck-top .main-deck-card.is-top.is-flip {
   animation: main-deck-flip 180ms ease-in forwards;
 }
 
@@ -1757,12 +1772,13 @@
   }
 }
 
+/* Flip the face only; parent .deck-top already holds the -2deg tilt. */
 @keyframes main-deck-flip {
   0% {
-    transform: rotate(-2deg) rotateY(0deg);
+    transform: rotateY(0deg);
   }
   100% {
-    transform: rotate(-2deg) rotateY(95deg) scale(0.92);
+    transform: rotateY(95deg) scale(0.92);
     opacity: 0.2;
   }
 }
