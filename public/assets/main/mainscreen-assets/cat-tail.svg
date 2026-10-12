@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="80" height="94" viewBox="259 218 80 94">
-  <!-- tail, BEHIND the card. Place at stage (259,218). Pivot = base (269,300) = deck right − 10pt = (10,82) in file. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="94" viewBox="0 0 80 94">
+  <!-- Tail behind the card. Pivot (base) = (10, 82). CSS places that pivot at deck-right − 10pt. -->
   <g id="cat-tail">
-    <path d="M 269 300 Q 319 300 323 262 Q 327 230 303 228" fill="none" stroke="#4A3428" stroke-width="17" stroke-linecap="round"/>
-    <path d="M 269 300 Q 319 300 323 262 Q 327 230 303 228" fill="none" stroke="#FBC895" stroke-width="10" stroke-linecap="round"/>
-    <path d="M 316 243 L 327 249 M 321 272 L 331 271" stroke="#DC884A" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 10 82 Q 60 82 64 44 Q 68 12 44 10" fill="none" stroke="#4A3428" stroke-width="17" stroke-linecap="round"/>
+    <path d="M 10 82 Q 60 82 64 44 Q 68 12 44 10" fill="none" stroke="#FBC895" stroke-width="10" stroke-linecap="round"/>
+    <path d="M 57 25 L 68 31 M 62 54 L 72 53" stroke="#DC884A" stroke-width="4" stroke-linecap="round"/>
   </g>
 </svg>

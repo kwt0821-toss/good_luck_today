@@ -1260,8 +1260,12 @@
 
 .main-tail {
   position: absolute;
-  /* Pivot (file +10, +82) at deck right − 10pt so the base tucks under the card. */
-  left: 259px;
+  /*
+   * Deck is centered (left 50%, width 168 → right = 50% + 84).
+   * Pivot is +10px from the SVG left; tuck that pivot 10pt inside the deck right edge.
+   * left = (50% + 84) - 10 - 10 = 50% + 64. Keeps tuck when the float is narrower than 390.
+   */
+  left: calc(50% + 64px);
   top: 218px;
   width: 80px;
   height: 94px;
