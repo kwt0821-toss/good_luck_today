@@ -2,6 +2,7 @@ import { getAttendanceStatus } from "./attendanceServer";
 import type { AttendanceStatusResponse } from "./attendanceTypes";
 import { loadDexCatalog } from "./dexCatalog";
 import { loadDexOwned } from "./dexCollection";
+import { listClaimableDexRewards } from "./dexRewards";
 import { isWeekendDoublePaw, loadOpsConfig, computeOwnedCozy, cozyLevelFromPoints } from "./opsConfig";
 import { getTicketShopStatus } from "./mockTicketShop";
 import { remainingPawAds } from "./opsState";
@@ -23,7 +24,8 @@ export type MenuViewModel = {
   attendance: AttendanceStatusResponse;
   pawAds: { remaining: number; max: number; weekendDouble: boolean };
   exchange: { duplicateCount: number; totalPaw: number };
-  rewards: { unclaimedCount: number; items: OpsState["rewardInbox"] };
+  /** Dex manual-claim pending count (inbox auto-grant removed). */
+  rewards: { unclaimedCount: number; dexClaimableCount: number; items: [] };
   ticketShop: ReturnType<typeof getTicketShopStatus>;
   ratesMetaPercent: number;
   latestNotice: { id: string; title: string } | null;
@@ -35,12 +37,13 @@ function ratesHighlightSum(menu: MenuConfig, config: OpsConfig): number {
 }
 
 export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> {
-  const [menu, config, catalog, owned, attendancePack] = await Promise.all([
+  const [menu, config, catalog, owned, attendancePack, dexClaimable] = await Promise.all([
     loadMenuConfig(),
     loadOpsConfig(),
     loadDexCatalog(),
     loadDexOwned(),
     getAttendanceStatus(ops),
+    listClaimableDexRewards(ops),
   ]);
   const attendance = attendancePack.status;
   const dexOwned = Object.values(owned).filter((r) => r.count > 0).length;
@@ -64,7 +67,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     exchangeTotal += unit * extras;
   }
 
-  const unclaimed = ops.rewardInbox.filter((item) => !item.collected);
+  const dexClaimableCount = dexClaimable.length;
   const pawRemaining = remainingPawAds(ops, config);
   const pawMax = config.economy.pawSources.rewardedAd.maxPerDay;
   const weekendDouble = isWeekendDoublePaw(config.economy);
@@ -108,8 +111,11 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
       const shop = getTicketShopStatus(ops, config);
       meta = `보유 ${shop.ticketsHeld}장 · 오늘 ${shop.dayBought}/${shop.dayLimit}`;
     } else if (id === "rewards") {
-      meta = `🪙${ops.nyangCoinBalance} 냥코인 · 받을 보상 ${unclaimed.length}`;
-      if (unclaimed.length > 0) badge = { type: "dot" };
+      meta =
+        dexClaimableCount > 0
+          ? `🪙${ops.nyangCoinBalance} 냥코인 · 도감 보상 ${dexClaimableCount}`
+          : `🪙${ops.nyangCoinBalance} 냥코인`;
+      if (dexClaimableCount > 0) badge = { type: "dot" };
     } else if (id === "rates") {
       meta = `5성↑·스페셜 ${highlightPct}%`;
     } else if (id === "notice") {
@@ -173,7 +179,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     attendance,
     pawAds: { remaining: pawRemaining, max: pawMax, weekendDouble },
     exchange: { duplicateCount, totalPaw: exchangeTotal },
-    rewards: { unclaimedCount: unclaimed.length, items: ops.rewardInbox },
+    rewards: { unclaimedCount: dexClaimableCount, dexClaimableCount, items: [] },
     ticketShop,
     ratesMetaPercent: highlightPct,
     latestNotice,

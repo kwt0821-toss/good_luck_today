@@ -27,7 +27,6 @@ import {
 } from "../lib/mockTicketShop";
 import {
   claimAttendanceGift,
-  collectAllRewards,
   convertAllDuplicates,
 } from "../lib/opsRewards";
 import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
@@ -274,17 +273,6 @@ export function MenuPanel({
     showToast(`중복 ${result.converted}장 → +${result.gained}P`);
     AudioManager.playSfx("reward-coin");
     void haptic("success");
-    closeSheet();
-  };
-
-  const doCollectRewards = async () => {
-    const result = await collectAllRewards(ops);
-    onOpsChange(result.state);
-    showToast(result.count ? `보상 ${result.count}개를 받았어요` : "받을 보상이 없어요");
-    if (result.count) {
-      AudioManager.playSfx("reward-coin");
-      void haptic("success");
-    }
     closeSheet();
   };
 
@@ -903,23 +891,24 @@ export function MenuPanel({
                             : `토스포인트로 받기 · ${withdrawAmount}원`}
                         </button>
                       </div>
-                      {model.rewards.items.length ? (
-                        model.rewards.items.map((item) => (
-                          <div
-                            key={item.id}
-                            className={`menu-list-row ${item.collected ? "is-done" : ""}`}
-                          >
-                            <span>{item.label}</span>
-                            <b>
-                              {item.paw ? `+${item.paw}P` : ""}
-                              {item.paw && item.nyangCoin ? " · " : ""}
-                              {item.nyangCoin ? `${item.nyangCoin}냥코인` : ""}
-                              {item.collected ? " · 완료" : ""}
-                            </b>
-                          </div>
-                        ))
+                      {model.rewards.dexClaimableCount > 0 ? (
+                        <button
+                          type="button"
+                          id="btn-dex-rewards-shortcut"
+                          className="menu-list-row is-tap dex-rewards-shortcut"
+                          onClick={() => {
+                            closeSheet();
+                            onClose();
+                            onOpenDex();
+                          }}
+                        >
+                          <span>
+                            도감에서 받을 보상 {model.rewards.dexClaimableCount}개
+                          </span>
+                          <b>도감 가기 ›</b>
+                        </button>
                       ) : (
-                        <p className="rates-note">아직 받을 보상이 없어요.</p>
+                        <p className="rates-note">도감에서 받을 보상이 없어요.</p>
                       )}
                       <button
                         type="button"
@@ -1140,14 +1129,18 @@ export function MenuPanel({
                   >
                     {withdrawBusy ? "처리 중…" : `받기 · ${withdrawAmount}원`}
                   </button>
-                ) : model.rewards.unclaimedCount > 0 ? (
+                ) : model.rewards.dexClaimableCount > 0 ? (
                   <button
                     type="button"
-                    id="btn-claim-all"
-                    className="menu-sheet-cta is-secondary"
-                    onClick={() => void doCollectRewards()}
+                    id="btn-dex-rewards-go"
+                    className="menu-sheet-cta"
+                    onClick={() => {
+                      closeSheet();
+                      onClose();
+                      onOpenDex();
+                    }}
                   >
-                    {model.menu.sheets.rewards.cta}
+                    도감에서 보상 받기
                   </button>
                 ) : null
               ) : null}

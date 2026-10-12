@@ -46,14 +46,27 @@ export function rewardsIntroMark(
   };
 }
 
-export function resolveTutorialTarget(target: string, vars: { cardId?: string | null } = {}): string {
+export function resolveTutorialTarget(
+  target: string,
+  vars: { cardId?: string | null } = {},
+  fallbackTarget?: string,
+): string {
   let next = target;
   if (vars.cardId) {
     next = next.split("{cardId}").join(vars.cardId);
   }
   // Unresolved placeholders are not valid CSS selectors — drop them so querySelector won't throw.
   if (next.includes("{") || next.includes("}")) {
-    return "";
+    next = "";
+  }
+  if (typeof document !== "undefined" && next) {
+    try {
+      if (!document.querySelector(next) && fallbackTarget) {
+        return resolveTutorialTarget(fallbackTarget, vars);
+      }
+    } catch {
+      if (fallbackTarget) return resolveTutorialTarget(fallbackTarget, vars);
+    }
   }
   return next;
 }
@@ -66,7 +79,7 @@ export function mainStepMark(
   if (phase === "then" && step.then && !isNcoinIntroThen(step.then)) {
     return {
       id: `step-${step.step}-then`,
-      target: resolveTutorialTarget(step.then.target, vars),
+      target: resolveTutorialTarget(step.then.target, vars, step.then.fallbackTarget),
       copy: step.then.copy,
       showFinger: true,
       bubble: "above",

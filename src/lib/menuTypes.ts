@@ -133,6 +133,11 @@ export type MenuConfig = {
       eyebrow: string;
       desc: string;
       cta: string;
+      dexShortcut?: {
+        label: string;
+        cta: string;
+        when?: string;
+      };
       wallet?: RewardsWalletSheet;
     };
   };

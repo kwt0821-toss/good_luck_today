@@ -1,5 +1,5 @@
 {
- "_version": "tutorial-1.3",
+ "_version": "tutorial-1.4",
  "maxDurationSec": 60,
  "style": "coach marks (dim + 하이라이트 원/라운드 사각 + 말풍선)",
  "skip": {
@@ -8,7 +8,7 @@
    "label": "건너뛰기",
    "position": "top-right below app bar; if target in top 160pt or overlaps skip, use bubble footer text button"
   },
-  "onSkip": "남은 단계 보상은 그대로 지급 (첫 뽑기 무료·도감 등록·냥코인 1개는 서버에서 처리), tutorialDone=true; contextual rewards-intro skip → tut.rewardsIntro=skipped",
+  "onSkip": "남은 단계 보상은 그대로 지급 (첫 뽑기 무료·도감 등록은 서버에서 처리, 도감 보상은 도감에서 직접 수령), tutorialDone=true; contextual rewards-intro skip → tut.rewardsIntro=skipped",
   "resume": "앱 종료 시 다음 실행 때 현재 단계부터, 2회 이상 중단 시 자동 완료"
  },
  "steps": [
@@ -28,7 +28,7 @@
    "copy": "오늘의 행운 문구가 도착했어요",
    "toast": {
     "id": "dex-toast",
-    "text": "도감에 등록됐어요! 냥코인 1개 + 20포인트 받았어요",
+    "text": "새 고양이를 만났어요\n도감에서 보상을 받아 보세요",
     "autoHideMs": 2800,
     "holdDuringTutorial": true
    },
@@ -42,11 +42,11 @@
       "text": "새 카드를 뽑으면 냥코인을 받아요"
      },
      {
-      "icon": "/assets/menu/icon-rewards.svg",
-      "text": "보상함에 차곡차곡 쌓여요"
+      "icon": "/assets/menu/icon-dex-mini.svg",
+      "text": "도감에서 보상을 직접 받아요"
      },
      {
-      "icon": "/assets/menu/icon-dex-mini.svg",
+      "icon": "/assets/menu/icon-rewards.svg",
       "text": "10개부터 토스포인트로 바꿔요"
      },
      {
@@ -60,10 +60,10 @@
     "dismissToastWithCta": true,
     "next": {
      "target": "#btn-to-dex",
-     "copy": "도감에 넣어 볼까요?"
+     "copy": "도감에서 보상을 받아 볼까요?"
     }
    },
-   "action": "tap #btn-to-dex (도감에 넣기)"
+   "action": "tap #btn-to-dex (도감에서 보상 받기)"
   },
   {
    "step": 3,
@@ -73,8 +73,9 @@
    "copy": "도감에서 모은 카드를 볼 수 있어요",
    "then": {
     "screen": "dex",
-    "target": "#dex-slot-{cardId}",
-    "copy": "방금 뽑은 카드가 여기 들어갔어요"
+    "target": "#dex-claim-{cardId}",
+    "fallbackTarget": "#dex-slot-{cardId}",
+    "copy": "코인을 누르면 보상을 받을 수 있어요"
    },
    "action": "tap"
   },
@@ -156,7 +157,10 @@
  },
  "replay": {
   "from": "settings",
-  "includes": ["steps 1–4", "contextual.rewards-intro from r1"],
+  "includes": [
+   "steps 1–4",
+   "contextual.rewards-intro from r1"
+  ],
   "regrantRewards": false
  },
  "featureIntros": {

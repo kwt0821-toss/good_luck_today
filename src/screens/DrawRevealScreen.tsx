@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
+import { duplicateRevealCopy, newCardRevealCopy } from "../lib/dexRewards";
+import type { DexCard } from "../lib/dexTypes";
 import type { DrawReservation } from "../lib/opsTypes";
 import "./DrawRevealScreen.css";
 
@@ -103,6 +105,8 @@ type Particle = {
 
 type DrawRevealScreenProps = {
   reservation: DrawReservation;
+  /** Resolved catalog card for rarity-aware copy (manual dex claim). */
+  card?: DexCard | null;
   ready: boolean;
   waitFailed: boolean;
   toastText: string | null;
@@ -144,6 +148,7 @@ function prefersReducedMotion() {
 
 export function DrawRevealScreen({
   reservation,
+  card = null,
   ready,
   waitFailed,
   toastText,
@@ -218,6 +223,10 @@ export function DrawRevealScreen({
 
   const theme = RAR[reservation.rarity] ?? RAR.b1;
   const frontSrc = reservation.frontUrl || reservation.thumbUrl;
+  const revealCopy = card
+    ? newCardRevealCopy(card)
+    : { title: "새 고양이를 만났어요", sub: "도감에서 보상을 받아 보세요" };
+  const dupCopy = duplicateRevealCopy(reservation.dupPaw);
 
   useEffect(() => {
     const screen = screenRef.current;
@@ -527,7 +536,7 @@ export function DrawRevealScreen({
               id="dup"
               style={{ display: reservation.isNew ? "none" : undefined }}
             >
-              중복 카드 <b>+{reservation.dupPaw}포인트</b>
+              {dupCopy}
             </div>
             <div ref={innerRef} className="draw-reveal-inner" id="inner">
               <div className="draw-reveal-face" id="reveal-card">
@@ -556,7 +565,15 @@ export function DrawRevealScreen({
           <div className="ic" aria-hidden="true">
             <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={18} height={18} />
           </div>
-          <div>{toastText ?? "도감에 등록됐어요!"}</div>
+          <div>
+            {toastText ?? (
+              <>
+                {revealCopy.title}
+                <br />
+                {revealCopy.sub}
+              </>
+            )}
+          </div>
         </div>
 
         {waitFailed ? (
@@ -581,7 +598,7 @@ export function DrawRevealScreen({
 
           <div ref={btnsRef} className="draw-reveal-btns" id="btns">
             <button type="button" className="draw-reveal-btn is-primary" id="btn-to-dex" onClick={onToDex}>
-              도감에 넣기
+              {reservation.isNew ? "도감에서 보상 받기" : "도감 보기"}
             </button>
             <button
               type="button"

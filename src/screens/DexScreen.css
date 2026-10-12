@@ -1139,6 +1139,284 @@
   height: 18px;
 }
 
+.dex-claim-chip-row {
+  margin-top: 12px;
+}
+
+.dex-claim-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  border: 1px solid rgba(255, 226, 154, 0.35);
+  border-radius: 999px;
+  padding: 7px 10px 7px 12px;
+  background: linear-gradient(180deg, rgba(255, 226, 154, 0.22), rgba(255, 196, 138, 0.12));
+  color: #fff8ea;
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dex-claim-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dex-claim-chip em {
+  flex: 0 0 auto;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 11.5px;
+  color: #221d38;
+  background: #ffe29a;
+  border-radius: 999px;
+  padding: 4px 9px;
+}
+
+.dex-claim-chip:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.dex-tab {
+  position: relative;
+}
+
+.dex-tab-dot {
+  position: absolute;
+  top: -2px;
+  right: -8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff5a5f;
+  box-shadow: 0 0 0 2px rgba(34, 29, 56, 0.85);
+}
+
+.dex-claim-badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  z-index: 4;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #fff6c8, #f5d27a 55%, #c9972e);
+  border: 1.5px solid rgba(255, 248, 234, 0.9);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  animation: dex-claim-pulse 1.6s ease-in-out infinite;
+}
+
+.dex-claim-badge img {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+.dex-claim-badge.is-busy {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.dex-slot.has-claim {
+  outline: 1px solid rgba(255, 226, 154, 0.28);
+}
+
+.dex-set-claim-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+
+.dex-set-claim-row p {
+  margin: 0;
+  font-size: 11.5px;
+  color: rgba(243, 233, 215, 0.72);
+}
+
+.dex-set-claim-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 12px 12px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 226, 154, 0.16), rgba(199, 176, 255, 0.1));
+  border: 1px solid rgba(255, 226, 154, 0.22);
+}
+
+.dex-set-claim-banner.is-full {
+  background: linear-gradient(135deg, rgba(245, 210, 122, 0.22), rgba(255, 158, 196, 0.12));
+}
+
+.dex-set-claim-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff8ea;
+}
+
+.dex-set-claim-meta {
+  margin: 3px 0 0;
+  font-size: 11px;
+  color: rgba(243, 233, 215, 0.7);
+}
+
+.dex-set-claim-btn {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #ffe29a;
+  color: #221d38;
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dex-set-claim-btn.is-inline {
+  padding: 6px 10px;
+  font-size: 11.5px;
+}
+
+.dex-set-claim-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.dex-celebrate {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.dex-celebrate.is-fullscreen,
+.dex-celebrate.is-big {
+  align-items: center;
+}
+
+.dex-celebrate-dim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(10, 8, 22, 0.62);
+  cursor: pointer;
+}
+
+.dex-celebrate.is-fullscreen .dex-celebrate-dim {
+  background: rgba(10, 8, 22, 0.78);
+}
+
+.dex-celebrate-sheet {
+  position: relative;
+  z-index: 1;
+  width: min(340px, calc(100% - 32px));
+  margin: 0 0 max(18px, env(safe-area-inset-bottom, 18px));
+  padding: 22px 20px 18px;
+  border-radius: 22px 22px 18px 18px;
+  background: linear-gradient(180deg, #3a2f55 0%, #221d38 100%);
+  border: 1px solid rgba(243, 233, 215, 0.18);
+  color: #f3e9d7;
+  text-align: center;
+  animation: dex-celebrate-in 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dex-celebrate.is-fullscreen .dex-celebrate-sheet,
+.dex-celebrate.is-big .dex-celebrate-sheet {
+  margin: 0;
+  padding: 28px 22px 22px;
+  border-radius: 24px;
+}
+
+.dex-celebrate-eyebrow {
+  margin: 0 0 8px;
+  font-family: Poppins, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: #ffc48a;
+}
+
+.dex-celebrate-sheet h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff8ea;
+}
+
+.dex-celebrate-sub {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: rgba(243, 233, 215, 0.72);
+}
+
+.dex-celebrate-loot {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 16px 0 18px;
+  flex-wrap: wrap;
+}
+
+.dex-celebrate-loot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(255, 226, 154, 0.14);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dex-celebrate-cta {
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  padding: 13px 14px;
+  background: #ffe29a;
+  color: #221d38;
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@keyframes dex-claim-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes dex-celebrate-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dex-progress-fill,
   .dex-tab-underline,
@@ -1161,5 +1439,10 @@
   .dex-card-shine.is-active::before {
     animation: none !important;
     opacity: 0 !important;
+  }
+
+  .dex-claim-badge,
+  .dex-celebrate-sheet {
+    animation: none !important;
   }
 }

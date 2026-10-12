@@ -33,6 +33,11 @@ export type OpsEconomy = {
     };
     attendance?: string;
   };
+  /** Manual claim from dex (claimMode: manual). Amounts still come from pawSources. */
+  dexRewards?: {
+    claimMode: "manual" | "auto";
+    note?: string;
+  };
   tickets?: {
     rateUpTicket: {
       nameKo: string;
@@ -195,7 +200,7 @@ export type NcoinIntroThen = {
 
 export type TutorialStepThen =
   | NcoinIntroThen
-  | { screen?: string; target: string; copy: string; id?: string };
+  | { screen?: string; target: string; fallbackTarget?: string; copy: string; id?: string };
 
 export type TutorialStep = {
   step: number;
@@ -372,11 +377,24 @@ export type OpsState = {
   featureIntrosSeen: string[];
   /** tossUserKey+rewardId style ids already granted as 냥코인 */
   grantedNyangCoinRewardIds: string[];
+  /** @deprecated set rewards now use claimedDexRewardIds via POST /dex/rewards/claim */
   grantedSetRewardIds: string[];
+  /** Dex reward ids claimed once per account (newCard:*, set:breed:*, set:*, fullDex) */
+  claimedDexRewardIds: string[];
+  /** Idempotent ledger for POST /dex/rewards/claim (tossUserKey + requestId) */
+  dexClaimLedger: Array<{
+    requestId: string;
+    rewardIds: string[];
+    createdAt: number;
+    paw: number;
+    nyangCoin: number;
+    pawBalance: number;
+    nyangCoinBalance: number;
+  }>;
   ownedItemIds: string[];
   unlockedRoomIds: string[];
   pendingDraw: DrawReservation | null;
-  /** Rewards granted to balance but not yet collected from the inbox UI */
+  /** @deprecated inbox auto-grant removed; use claimedDexRewardIds */
   rewardInbox: Array<{
     id: string;
     label: string;

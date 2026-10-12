@@ -58,6 +58,10 @@
   },
   "attendance": "starter.json → attendance"
  },
+ "dexRewards": {
+  "claimMode": "manual",
+  "note": "도감에서 직접 수령. 자동 지급 없음. 금액은 pawSources.newCardFirstGet / setComplete. 보상 id: newCard:{cardId}, set:breed:{id}, set:{special|character|legend}, fullDex. 계정당 1회(tossUserKey+rewardId), POST /dex/rewards/claim 멱등키 tossUserKey+requestId."
+ },
  "draws": {
   "resetTimeKST": "00:00",
   "daily": [
