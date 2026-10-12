@@ -99,3 +99,16 @@ Fonts: **Poppins** ExtraBold 800 / Medium 500 (Latin), **Noto Sans KR** (CJK; mo
 - 조건: 오늘 광고 확률업을 썼고 + 뽑기권 0장 + 이번 주/오늘 구매 한도 남음.
 - 버튼은 흐리지 않고 그대로(amber), 아래 작은 글씨 "200P"(발바닥 아이콘 10pt), 말풍선 "**200P**로 / 광고 없이 확률업". 탭하면 `sheet:ticketShop`(메뉴 스펙 10장, ticket-shop.png).
 - 한도도 다 쓰면 기존 "내일 다시" 흐린 상태, 말풍선 없음. 포인트 부족이면 말풍선 대신 버튼 아래 "포인트 n P 부족"(cream 50 %).
+
+- 확률업 버튼 반짝이 아이콘 파일: `icon-rateup-sparkle.svg` (26pt), 뽑기권 배지 아이콘: `icon-ticket-badge.svg` (10~11pt).
+
+## 6. 고양이 레이어 교체 (2026-10-12, 더 귀여운 치즈냥)
+- Files (@3x, transparent, trimmed, 510×433 px = 170×144.3pt):
+  - cat-sleeping.png/.webp: head + paws + drool (static use)
+  - cat-sleeping-nodrool.png/.webp: same without drool (use this when animating drool)
+  - drool.png/.webp: 53×69 px = 17.7×23pt drool only. Offset inside cat box: x 84.7pt, y 83.3pt (3x px 254,250)
+  - cat-tail.png/.svg: same shape, recolored to #FBC895 / stripe #DC884A (outline #4A3428)
+  - removed old cat-sleeping.svg (vector head no longer matches)
+- Placement (stage 390×400 coords, same box as before): cat x 110, y 8, w 170, h 144.3. Paw bottoms land on the deck top edge (stage y≈152), centered at x 195. Tail stays behind the card at (252,218).
+- zzz text moved +12pt right (282,40 / 300,22 / 313,8) so it clears the right ear. The new-badge red dot on main-draws-3 is at (296,400) page coords.
+- Drool loop (optional): `transform-origin: 50% 0` (top, at mouth); scale 0.85→1.1→0.85 over 2.4s ease-in-out infinite, same period/phase as the breathing loop (inhale = grow). `prefers-reduced-motion: reduce` → no animation, show the static scale 1. Hide the drool layer (show nodrool only) while the card reveal plays.
