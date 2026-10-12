@@ -99,6 +99,7 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
   const [roomsFile, setRoomsFile] = useState<RoomsFile | null>(null);
   const [state, setState] = useState<RoomSaveState | null>(null);
   const [economyRooms, setEconomyRooms] = useState<OpsEconomy["rooms"]>([]);
+  const [starterDrawerIds, setStarterDrawerIds] = useState<string[]>([]);
   const [themeFilter, setThemeFilter] = useState<RoomThemeFilter>("all");
   const [unlockRoom, setUnlockRoom] = useState<RoomDefinition | null | "soon">(null);
   const [dragX, setDragX] = useState(0);
@@ -151,6 +152,7 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
         setGrid(gridFile);
         setRoomsFile(rooms);
         setEconomyRooms(config.economy.rooms ?? []);
+        setStarterDrawerIds(config.starter.drawer ?? []);
         const loaded = await loadRoomState(priced, rooms, gridFile);
         setState(await syncRoomSaveWithOps(loaded));
       },
@@ -1049,6 +1051,15 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
           canUndo={undoStack.length > 0}
           otherRoomIds={otherRoomIds}
           preferOwnedSort={tutorialActive}
+          preferNewIds={[...starterDrawerIds].sort((a, b) => {
+            // Placeables (cushions…) before wallpaper/floor skins within starter gifts.
+            const ia = itemsById.get(a);
+            const ib = itemsById.get(b);
+            const pa = ia && isPlaceableDecor(ia) ? 0 : 1;
+            const pb = ib && isPlaceableDecor(ib) ? 0 : 1;
+            if (pa !== pb) return pa - pb;
+            return starterDrawerIds.indexOf(a) - starterDrawerIds.indexOf(b);
+          })}
           onPick={pickDrawerItem}
           onFillMode={(next) => {
             setFillMode(next);

@@ -441,8 +441,9 @@ export async function loadRoomState(
   if (stored) {
     return {
       ...stored,
-      owned: { ...mockOwned(items, roomsFile, grid), ...stored.owned },
-      unlocked: stored.unlocked.length ? stored.unlocked : mockUnlocked(roomsFile),
+      // Keep saved inventory — do not re-merge mockOwned (inflates cozy / unlocks).
+      owned: Object.keys(stored.owned).length ? stored.owned : mockOwned(items, roomsFile, grid),
+      unlocked: stored.unlocked.length ? stored.unlocked : [defaultRoomId(roomsFile)],
     };
   }
   const mock = mockState(items, roomsFile, grid);

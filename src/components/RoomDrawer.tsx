@@ -26,6 +26,8 @@ type RoomDrawerProps = {
   otherRoomIds: Record<string, string | null>;
   /** When true, 보유 tab sorts NEW placeables first (tutorial). */
   preferOwnedSort?: boolean;
+  /** Prefer these ids first among NEW placeables (starter.drawer order). */
+  preferNewIds?: string[];
   onPick: (item: RoomItem) => void;
   onFillMode: (mode: PaintFillMode) => void;
   onEraser: () => void;
@@ -86,6 +88,7 @@ export function RoomDrawer({
   canUndo,
   otherRoomIds,
   preferOwnedSort = false,
+  preferNewIds = [],
   onPick,
   onFillMode,
   onEraser,
@@ -106,12 +109,21 @@ export function RoomDrawer({
   });
 
   if (tab === "보유" || preferOwnedSort) {
+    const preferIndex = (id: string) => {
+      const idx = preferNewIds.indexOf(id);
+      return idx < 0 ? 1000 + id.charCodeAt(0) : idx;
+    };
     visible = [...visible].sort((a, b) => {
       const sa = tileState(a, layout, owned, selectedId, brushId, otherRoomIds[a.id] ?? null);
       const sb = tileState(b, layout, owned, selectedId, brushId, otherRoomIds[b.id] ?? null);
       const ra = ownedSortRank(a, sa);
       const rb = ownedSortRank(b, sb);
       if (ra !== rb) return ra - rb;
+      if (ra === 0) {
+        const pa = preferIndex(a.id);
+        const pb = preferIndex(b.id);
+        if (pa !== pb) return pa - pb;
+      }
       return a.nameKo.localeCompare(b.nameKo, "ko");
     });
   }

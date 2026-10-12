@@ -29,32 +29,32 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
   const ownedIds = Object.entries(state.owned)
     .filter(([, count]) => count > 0)
     .map(([id]) => id);
-  const mergedOwned = [...new Set([...ownedIds, ...ops.ownedItemIds])];
+  // Prefer ops inventory; room-owned fills gaps without letting mock seeds rewrite unlocks.
+  const mergedOwned = [...new Set([...ops.ownedItemIds, ...ownedIds])];
   const cozyPoints = computeOwnedCozy(config.prices, mergedOwned);
   const cozyLevel = cozyLevelFromPoints(config.economy, cozyPoints);
 
-  // Keep a single paw balance — room spends/writes back into ops.
-  const nextOps = {
-    ...ops,
-    pawBalance: state.points !== ops.pawBalance ? state.points : ops.pawBalance,
-    ownedItemIds: mergedOwned,
-    unlockedRoomIds: state.unlocked.length ? state.unlocked : ops.unlockedRoomIds,
-  };
   // Prefer ops balance as source of truth when room still has mock seed.
   const points = ops.pawBalance > 0 || state.points === 1240 ? ops.pawBalance : state.points;
-  nextOps.pawBalance = points;
-  await saveOpsState(nextOps);
 
   const unlocked = config.economy.rooms
     .filter((room) => {
       if (room.unlock.type === "default") return true;
-      if (ops.unlockedRoomIds.includes(room.id) || state.unlocked.includes(room.id)) return true;
+      // ops is source of truth — ignore mock-seeded state.unlocked
+      if (ops.unlockedRoomIds.includes(room.id)) return true;
       const needPaw = room.unlock.paw ?? 0;
       const needLv = room.unlock.cozyLevel ?? 0;
       return points >= needPaw && cozyLevel >= needLv;
     })
     .map((room) => room.id)
     .filter((id) => Boolean(state.rooms[id]));
+
+  await saveOpsState({
+    ...ops,
+    pawBalance: points,
+    ownedItemIds: mergedOwned,
+    unlockedRoomIds: unlocked.length ? unlocked : ops.unlockedRoomIds,
+  });
 
   return {
     ...state,
