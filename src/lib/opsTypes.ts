@@ -59,6 +59,15 @@ export type OpsEconomy = {
   };
   draws: {
     resetTimeKST: string;
+    /** Per-slot draw schedule; slot "up" may include adSeconds for long ads. */
+    daily?: Array<{
+      slot: number | "up" | string;
+      type: string;
+      ad?: string;
+      adSeconds?: number;
+      perDay?: number;
+      note?: string;
+    }>;
     normalPerDay: number;
     rateUpPerDay: number;
     tutorialFirstDrawFree: boolean;

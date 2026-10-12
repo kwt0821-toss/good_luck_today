@@ -49,7 +49,7 @@ export function rewardsIntroMark(
 export function resolveTutorialTarget(target: string, vars: { cardId?: string | null } = {}): string {
   let next = target;
   if (vars.cardId) {
-    next = next.replaceAll("{cardId}", vars.cardId);
+    next = next.split("{cardId}").join(vars.cardId);
   }
   // Unresolved placeholders are not valid CSS selectors — drop them so querySelector won't throw.
   if (next.includes("{") || next.includes("}")) {

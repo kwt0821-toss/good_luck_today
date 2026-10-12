@@ -1,6 +1,7 @@
-import { useRef, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 
-import { formatLuckyCatalogDate } from "../lib/date";
+import { formatCountdownHms, formatLuckyCatalogDate, msUntilNextKstMidnight } from "../lib/date";
+import { shouldReduceMenuMotion } from "../lib/menuSettings";
 
 const ASSETS = {
   bg: "/assets/main/bg-night-base.webp",
@@ -14,11 +15,25 @@ const ASSETS = {
   paw: "/assets/room/ui/icon-paw-point.svg",
 } as const;
 
+const FLIP_MS = 180;
+const SETTLE_MS = 240;
+const NUDGE_MS = 2600;
+
 type HomeScreenProps = {
-  remainingDraws: number;
+  /** Remaining normal draws today (deck size). */
+  remainingNormal: number;
+  normalPerDay: number;
   remainingRateUp: number;
+  rateUpTickets: number;
+  useRateUpTicket: boolean;
+  /** Long-ad seconds for rate-up tip (economy.draws.daily[slot=up].adSeconds). */
+  rateUpAdSeconds?: number;
   remainingPawAds: number;
   pawBalance: number;
+  /** True before any normal draw today. */
+  firstDrawPending: boolean;
+  rateNormalPct: string;
+  rateUpPct: string;
   menuBadge?: boolean;
   onDraw: () => void;
   onRateUpDraw: () => void;
@@ -29,10 +44,17 @@ type HomeScreenProps = {
 };
 
 export function HomeScreen({
-  remainingDraws,
+  remainingNormal,
+  normalPerDay,
   remainingRateUp,
+  rateUpTickets,
+  useRateUpTicket,
+  rateUpAdSeconds = 30,
   remainingPawAds,
   pawBalance,
+  firstDrawPending,
+  rateNormalPct,
+  rateUpPct,
   menuBadge = false,
   onDraw,
   onRateUpDraw,
@@ -42,13 +64,40 @@ export function HomeScreen({
   onOpenRoom,
 }: HomeScreenProps) {
   const [waking, setWaking] = useState(false);
+  const [flipping, setFlipping] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const wakeTimer = useRef<number>(0);
-  const noticeTimer = useRef<number>(0);
-  const navTimer = useRef<number>(0);
+  const [countdown, setCountdown] = useState(() => formatCountdownHms(msUntilNextKstMidnight()));
+  const [nudge, setNudge] = useState(false);
+  const wakeTimer = useRef(0);
+  const noticeTimer = useRef(0);
+  const navTimer = useRef(0);
   const navLock = useRef(false);
+  const reduce = shouldReduceMenuMotion();
   const dateLabel = formatLuckyCatalogDate();
-  const drawsDone = remainingDraws <= 0;
+  const drawsDone = remainingNormal <= 0;
+  const lowRemaining = remainingNormal === 1 || remainingNormal === 2;
+  const deckCount = drawsDone ? 1 : remainingNormal;
+  const showSparkle = firstDrawPending && remainingNormal > 0 && !reduce;
+
+  useEffect(() => {
+    if (!drawsDone) return;
+    const tick = () => setCountdown(formatCountdownHms(msUntilNextKstMidnight()));
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [drawsDone]);
+
+  useEffect(() => {
+    if (!lowRemaining || reduce || drawsDone) {
+      setNudge(false);
+      return;
+    }
+    const id = window.setInterval(() => {
+      setNudge(true);
+      window.setTimeout(() => setNudge(false), 420);
+    }, NUDGE_MS);
+    return () => window.clearInterval(id);
+  }, [lowRemaining, reduce, drawsDone]);
 
   const showNotice = (message: string) => {
     setNotice(message);
@@ -75,17 +124,40 @@ export function HomeScreen({
       showNotice("내일 다시 만나요");
       return;
     }
-    if (waking) return;
+    if (waking || flipping) return;
     setWaking(true);
+    setFlipping(true);
     window.clearTimeout(wakeTimer.current);
+    const flipDelay = reduce ? 0 : FLIP_MS;
+    const settleDelay = reduce ? 0 : SETTLE_MS;
     wakeTimer.current = window.setTimeout(() => {
       setWaking(false);
+      setFlipping(false);
       onDraw();
-    }, 480);
+    }, flipDelay + settleDelay + 40);
   };
 
+  const rateUpDisabled = remainingRateUp <= 0;
+  const rateUpLabel = rateUpDisabled
+    ? "내일 다시"
+    : useRateUpTicket
+      ? "뽑기권 사용"
+      : `5성↑ ${rateNormalPct}→${rateUpPct}`;
+  /** Hide when today's rate-up is used and no tickets remain. */
+  const showRateUpTip = remainingRateUp > 0;
+  const rateUpTipCopy =
+    rateUpTickets > 0
+      ? "뽑기권으로 광고 없이 확률업"
+      : `${rateUpAdSeconds}초 광고 보고 확률업`;
+
+  const countCopy = drawsDone
+    ? `내일 00:00에 다시 채워져요 · ${countdown}`
+    : remainingNormal >= normalPerDay
+      ? `오늘 ${remainingNormal}장 뽑을 수 있어요`
+      : `오늘 ${remainingNormal}장 더 뽑을 수 있어요`;
+
   return (
-    <div className="main-screen">
+    <div className={`main-screen ${drawsDone ? "is-draws-done" : ""} ${reduce ? "is-reduce" : ""}`}>
       <img className="main-bg" src={ASSETS.bg} alt="" />
 
       <header className="main-header">
@@ -133,19 +205,6 @@ export function HomeScreen({
         </button>
       </header>
 
-      <button
-        type="button"
-        id="chip-draws"
-        className={`main-chip ${drawsDone ? "is-done" : ""}`}
-        aria-label={drawsDone ? "오늘 뽑기 완료" : `오늘 남은 뽑기 ${remainingDraws}`}
-        onClick={() => {
-          if (drawsDone) showNotice("내일 다시 만나요");
-        }}
-      >
-        <span className="main-chip-dot" aria-hidden="true" />
-        {drawsDone ? "오늘 뽑기 완료" : `오늘 남은 뽑기 ${remainingDraws}`}
-      </button>
-
       <div className="main-rule" aria-hidden="true" />
 
       <div className="main-meta">
@@ -153,53 +212,123 @@ export function HomeScreen({
         <p className="main-date">{dateLabel}</p>
       </div>
 
-      <button
-        type="button"
-        id="stage-cat"
-        className={`main-stage ${waking ? "is-waking" : ""}`}
-        aria-label={drawsDone ? "오늘은 이미 뽑았어요" : "고양이 톡해서 오늘의 카드 받기"}
-        onClick={handleDrawTap}
-      >
-        <img className="main-moon" src={ASSETS.moon} alt="" />
-        <div className="main-float">
-          <img className="main-tail" src={ASSETS.tail} alt="" />
-          <div className="main-card-shadow" aria-hidden="true" />
-          <img className="main-card" src={ASSETS.card} alt="뒤집힌 행운 카드" />
-          <div className="main-cat">
-            <img src={ASSETS.cat} alt="잠자는 고양이" />
-          </div>
-          <div className="main-zzz" aria-hidden="true">
-            <span>z</span>
-            <span>z</span>
-            <span>z</span>
-          </div>
+      <div className="main-stage-row">
+        <div className="main-rateup-wrap">
+          {showRateUpTip ? (
+            <div className="main-rateup-tip" role="status" aria-live="polite">
+              <p className="main-rateup-tip-text">{rateUpTipCopy}</p>
+              <span className="main-rateup-tip-tail" aria-hidden="true" />
+            </div>
+          ) : null}
+          <button
+            type="button"
+            id="btn-rateup"
+            className={`main-rateup ${rateUpDisabled ? "is-dim" : ""} ${useRateUpTicket ? "is-ticket" : ""}`}
+            disabled={rateUpDisabled}
+            onClick={() => {
+              if (rateUpDisabled) {
+                showNotice("내일 다시 만나요");
+                return;
+              }
+              onRateUpDraw();
+            }}
+          >
+            {!rateUpDisabled && !useRateUpTicket ? (
+              <span className="main-rateup-hint">({rateUpAdSeconds}초 광고)</span>
+            ) : null}
+            <span className="main-rateup-label">{rateUpLabel}</span>
+            {rateUpTickets > 0 && !rateUpDisabled ? (
+              <span className="main-rateup-badge" aria-label={`뽑기권 ${rateUpTickets}장`}>
+                ×{rateUpTickets}
+              </span>
+            ) : null}
+          </button>
         </div>
-      </button>
 
-      <p className="main-cta-ad">(짧은 광고가 나온 뒤 카드를 뽑아요)</p>
-      <p className="main-cta">
-        <span className="main-cta-accent">톡,</span> 깨워서 오늘의 카드 받기
-      </p>
-      <p className="main-cta-en">TAP THE CAT TO DRAW</p>
-
-      <div className="main-ops-row">
         <button
           type="button"
-          id="btn-rateup"
-          className="main-ops-btn"
-          disabled={remainingRateUp <= 0}
-          onClick={() => {
-            if (remainingRateUp <= 0) {
-              showNotice("오늘 확률업을 모두 썼어요");
-              return;
-            }
-            onRateUpDraw();
-          }}
+          id="stage-cat"
+          className={`main-stage ${waking ? "is-waking" : ""} ${flipping ? "is-flipping" : ""} ${drawsDone ? "is-empty" : ""}`}
+          aria-label={drawsDone ? "오늘은 이미 뽑았어요" : "고양이 톡해서 오늘의 카드 받기"}
+          onClick={handleDrawTap}
         >
-          <span className="main-ops-hint">(30초 광고보고)</span>
-          <span className="main-ops-label">확률업 뽑기</span>
-          <em>{remainingRateUp}회</em>
+          <img className="main-moon" src={ASSETS.moon} alt="" />
+          <div className="main-float">
+            <img className="main-tail" src={ASSETS.tail} alt="" />
+            <div className={`main-deck ${drawsDone ? "is-done" : ""}`} aria-hidden="true">
+              {Array.from({ length: deckCount }, (_, index) => {
+                const fromTop = deckCount - 1 - index;
+                const isTop = fromTop === 0;
+                return (
+                  <div
+                    key={`deck-${index}-${remainingNormal}`}
+                    className={`main-deck-card ${isTop ? "is-top" : "is-back"} ${isTop && flipping ? "is-flip" : ""}`}
+                    style={{ zIndex: index + 1 }}
+                    data-depth={fromTop}
+                  >
+                    <img src={ASSETS.card} alt="" />
+                    {isTop && showSparkle ? (
+                      <>
+                        <span className="main-deck-dot" />
+                        <span className="main-deck-spark" />
+                      </>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="main-cat">
+              <img src={ASSETS.cat} alt="잠자는 고양이" />
+            </div>
+            {!drawsDone ? (
+              <div className="main-zzz" aria-hidden="true">
+                <span>z</span>
+                <span>z</span>
+                <span>z</span>
+              </div>
+            ) : null}
+          </div>
         </button>
+      </div>
+
+      {drawsDone ? (
+        <p className="main-cta main-cta-done">오늘 카드는 다 뽑았어요, 잘 자요</p>
+      ) : lowRemaining ? (
+        <button
+          type="button"
+          className={`main-draw-pill ${nudge ? "is-nudge" : ""}`}
+          onClick={handleDrawTap}
+        >
+          한 장 더 뽑기 <span className="main-draw-pill-ad">[광고]</span>
+          <span className="main-draw-pill-arrow" aria-hidden="true">
+            →
+          </span>
+        </button>
+      ) : (
+        <>
+          <p className="main-cta-ad">(짧은 광고가 나온 뒤 카드를 뽑아요)</p>
+          <p className="main-cta">
+            <span className="main-cta-accent">톡,</span> 깨워서 오늘의 카드 받기
+          </p>
+          <p className="main-cta-en">TAP THE CAT TO DRAW</p>
+        </>
+      )}
+
+      <div
+        id="chip-draws"
+        className={`main-count-pill ${drawsDone ? "is-done" : ""}`}
+        role="status"
+        aria-live={drawsDone ? "polite" : "off"}
+      >
+        <span className="main-count-dots" aria-hidden="true">
+          {Array.from({ length: normalPerDay }, (_, i) => (
+            <i key={i} className={i < remainingNormal ? "is-on" : ""} />
+          ))}
+        </span>
+        <span className="main-count-copy">{countCopy}</span>
+      </div>
+
+      <div className="main-ops-row">
         <button
           type="button"
           id="btn-paw-ad"
