@@ -10,11 +10,13 @@ import {
   WORLD_W,
   canPlaceWall,
   diamondPoints,
+  footprintCentreWorld,
   hostOf,
   isDecal,
   itemSize,
   occupancy,
   previewTiles,
+  resolveSuggestTile,
   shadowRect,
   sortFloor,
   spriteRect,
@@ -52,6 +54,9 @@ type RoomWorldProps = {
   shadowsEnabled: boolean;
   painting: boolean;
   paintHover: PaintTarget | null;
+  /** Tutorial step-4 suggest target (c/r); snaps to nearest free tile if blocked. */
+  suggestTile?: { c: number; r: number } | null;
+  suggestItemId?: string | null;
   onSelect: (instanceId: string | null, kind: "floor" | "wall") => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, instanceId: string) => void;
   onFloorPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
@@ -68,7 +73,7 @@ function TilePoly({
 }: {
   col: number;
   row: number;
-  tone: "selected" | "valid" | "invalid" | "hint" | "paint";
+  tone: "selected" | "valid" | "invalid" | "hint" | "paint" | "suggest";
 }) {
   return <polygon className={`lucky-tile is-${tone}`} points={diamondPoints(col, row)} />;
 }
@@ -266,6 +271,8 @@ export function RoomWorld({
   shadowsEnabled,
   painting,
   paintHover,
+  suggestTile = null,
+  suggestItemId = null,
   onSelect,
   onItemPointerDown,
   onFloorPointerDown,
@@ -312,6 +319,26 @@ export function RoomWorld({
     mode === "edit" && selectedFloor && selectedItem && selectedItem.placement !== "wall" && !selectedFloor.onTopOf && !dragging
       ? footprintTilesSafe(selectedFloor, selectedItem)
       : [];
+
+  const suggestItem = suggestItemId ? itemsById.get(suggestItemId) : undefined;
+  const resolvedSuggest =
+    mode === "edit" && suggestTile && suggestItem
+      ? resolveSuggestTile(
+          suggestItem,
+          "default",
+          layout.floor,
+          itemsById,
+          { col: suggestTile.c, row: suggestTile.r },
+        )
+      : null;
+  const suggestCentre = resolvedSuggest
+    ? footprintCentreWorld(
+        resolvedSuggest.col,
+        resolvedSuggest.row,
+        itemSize(suggestItem!, "default")[0],
+        itemSize(suggestItem!, "default")[1],
+      )
+    : null;
 
   const shownFloor = layout.floor.map((place) => {
     if (floorDrag && place.instanceId === floorDrag.instanceId && !place.onTopOf) {
@@ -440,10 +467,40 @@ export function RoomWorld({
               tone={tile.valid ? "valid" : "invalid"}
             />
           ))}
+          {resolvedSuggest ? (
+            <TilePoly
+              key={`suggest-${resolvedSuggest.col}-${resolvedSuggest.row}`}
+              col={resolvedSuggest.col}
+              row={resolvedSuggest.row}
+              tone="suggest"
+            />
+          ) : null}
           {paintHover?.kind === "floor" ? (
             <TilePoly key="paint-floor" col={paintHover.col} row={paintHover.row} tone="paint" />
           ) : null}
         </svg>
+      ) : null}
+
+      {mode === "edit" && resolvedSuggest && suggestItem && suggestCentre ? (
+        <div className="lucky-suggest-ghost" aria-hidden="true">
+          <img
+            className="lucky-suggest-item"
+            src={roomAsset(suggestItem.tileImage ?? suggestItem.image ?? `tiles/${suggestItem.id}.png`)}
+            alt=""
+            style={{
+              left: suggestCentre.x,
+              top: suggestCentre.y,
+            }}
+            draggable={false}
+          />
+          <div
+            className="lucky-suggest-finger"
+            style={{
+              left: suggestCentre.x,
+              top: suggestCentre.y,
+            }}
+          />
+        </div>
       ) : null}
 
       {mode === "edit" && wallGridWall ? (

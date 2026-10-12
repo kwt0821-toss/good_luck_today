@@ -1,4 +1,12 @@
-import { itemMatchesTab, itemMatchesTheme, roomAsset, ROOM_TABS, ROOM_THEME_FILTERS } from "../lib/roomCatalog";
+import {
+  isPaintItem,
+  isPlaceableDecor,
+  itemMatchesTab,
+  itemMatchesTheme,
+  roomAsset,
+  ROOM_TABS,
+  ROOM_THEME_FILTERS,
+} from "../lib/roomCatalog";
 import type { PaintFillMode, RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib/roomTypes";
 
 type RoomDrawerProps = {
@@ -16,6 +24,10 @@ type RoomDrawerProps = {
   eraser: boolean;
   canUndo: boolean;
   otherRoomIds: Record<string, string | null>;
+  /** When true, 보유 tab sorts NEW placeables first (tutorial). */
+  preferOwnedSort?: boolean;
+  /** Prefer these ids first among NEW placeables (starter.drawer order). */
+  preferNewIds?: string[];
   onPick: (item: RoomItem) => void;
   onFillMode: (mode: PaintFillMode) => void;
   onEraser: () => void;
@@ -47,6 +59,19 @@ function tileState(
   return { locked, placedHere, otherRoom: Boolean(otherRoomId) && !placedHere, selected, brushing };
 }
 
+function ownedSortRank(
+  item: RoomItem,
+  state: ReturnType<typeof tileState>,
+): number {
+  const isNew = !state.locked && !state.placedHere && !state.otherRoom;
+  if (isNew && isPlaceableDecor(item)) return 0;
+  if (isNew && isPaintItem(item)) return 1;
+  if (isNew) return 2;
+  if (!state.locked && state.otherRoom) return 3;
+  if (!state.locked && state.placedHere) return 4;
+  return 5;
+}
+
 export function RoomDrawer({
   tab,
   onTab,
@@ -62,19 +87,47 @@ export function RoomDrawer({
   eraser,
   canUndo,
   otherRoomIds,
+  preferOwnedSort = false,
+  preferNewIds = [],
   onPick,
   onFillMode,
   onEraser,
   onUndo,
   onExchange,
 }: RoomDrawerProps) {
-  const visible = items.filter(
-    (item) =>
+  let visible = items.filter((item) => {
+    if (tab === "보유") {
+      if ((owned[item.id] ?? 0) < 1) return false;
+      return itemMatchesTheme(item, themeFilter);
+    }
+    return (
       itemMatchesTab(item, tab) &&
       itemMatchesTheme(item, themeFilter) &&
       // Attendance-only items are excluded from the shop list until granted.
-      !(item.attendanceOnly && (owned[item.id] ?? 0) < 1),
-  );
+      !(item.attendanceOnly && (owned[item.id] ?? 0) < 1)
+    );
+  });
+
+  if (tab === "보유" || preferOwnedSort) {
+    const preferIndex = (id: string) => {
+      const idx = preferNewIds.indexOf(id);
+      return idx < 0 ? 1000 + id.charCodeAt(0) : idx;
+    };
+    visible = [...visible].sort((a, b) => {
+      const sa = tileState(a, layout, owned, selectedId, brushId, otherRoomIds[a.id] ?? null);
+      const sb = tileState(b, layout, owned, selectedId, brushId, otherRoomIds[b.id] ?? null);
+      const ra = ownedSortRank(a, sa);
+      const rb = ownedSortRank(b, sb);
+      if (ra !== rb) return ra - rb;
+      if (ra === 0) {
+        const pa = preferIndex(a.id);
+        const pb = preferIndex(b.id);
+        if (pa !== pb) return pa - pb;
+      }
+      return a.nameKo.localeCompare(b.nameKo, "ko");
+    });
+  }
+
   const paintTab = tab === "벽지" || tab === "바닥";
 
   return (
@@ -153,12 +206,13 @@ export function RoomDrawer({
       <div className="lucky-drawer-grid">
         {visible.map((item, index) => {
           const state = tileState(item, layout, owned, selectedId, brushId, otherRoomIds[item.id] ?? null);
+          const isNew = !state.locked && !state.placedHere && !state.otherRoom;
           return (
             <button
               key={item.id}
               id={index === 0 ? "drawer-item-0" : undefined}
               type="button"
-              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom ? "is-other" : ""} ${state.selected ? "is-selected" : ""}`}
+              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom ? "is-other" : ""} ${state.selected ? "is-selected" : ""} ${isNew ? "is-new" : ""}`}
               onClick={() => onPick(item)}
             >
               <span className="lucky-cell-tile">
@@ -167,6 +221,7 @@ export function RoomDrawer({
                 ) : (
                   <span className="lucky-cell-empty" />
                 )}
+                {isNew ? <span className="lucky-cell-new">NEW</span> : null}
                 {state.placedHere && !state.locked ? (
                   <img className="lucky-cell-check" src={roomAsset("ui/badge-check.svg")} alt="" />
                 ) : null}

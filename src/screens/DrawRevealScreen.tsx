@@ -517,9 +517,7 @@ export function DrawRevealScreen({
           style={{ display: reservation.isNew && toastText ? undefined : "none" }}
         >
           <div className="ic">toss</div>
-          <div>
-            도감에 등록됐어요! <b>토스 1원</b> 받았어요
-          </div>
+          <div>{toastText ?? "도감에 등록됐어요!"}</div>
         </div>
 
         {waitFailed ? (

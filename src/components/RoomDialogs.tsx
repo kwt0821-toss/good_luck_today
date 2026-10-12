@@ -90,20 +90,39 @@ export function RoomBuySheet({
 
 export function RoomUnlockSheet({
   room,
+  unlock,
   onClose,
 }: {
   room: RoomDefinition | null;
+  unlock?: { type?: string; paw?: number; cozyLevel?: number };
   onClose: () => void;
 }) {
   const title = room ? `${room.nameKo} 열기` : "새 방 열기";
-  const body = room?.unlock.example
-    ? `지금은 임시예요. 열기 조건: ${room.unlock.example}`
-    : "지금은 임시예요. COZY 레벨이나 발바닥 포인트로 새 방을 열 수 있게 될 거예요.";
+  const paw = unlock?.paw;
+  const cozy = unlock?.cozyLevel;
+  const hasReq = paw != null || cozy != null;
+  const reqLabel = [
+    paw != null ? `${paw.toLocaleString("ko-KR")}P` : null,
+    cozy != null ? `아늑함 Lv.${cozy}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const body = hasReq
+    ? `${reqLabel} 이면 이 방을 열 수 있어요.`
+    : room?.unlock.example
+      ? `열기 조건: ${room.unlock.example}`
+      : "COZY 레벨이나 발바닥 포인트로 새 방을 열 수 있게 될 거예요.";
   return (
     <div className="lucky-modal">
       <button type="button" className="lucky-modal-back" aria-label="닫기" onClick={onClose} />
       <div className="lucky-modal-card" role="dialog" aria-label={title}>
         <h3>{title}</h3>
+        {hasReq ? (
+          <p className="lucky-unlock-req">
+            <img src={roomAsset("ui/icon-lock.svg")} alt="" />
+            <span>{reqLabel}</span>
+          </p>
+        ) : null}
         <p>{body}</p>
         <div className="lucky-modal-actions">
           <button type="button" className="is-amber" onClick={onClose}>

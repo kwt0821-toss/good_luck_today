@@ -22,8 +22,9 @@
 }
 
 .tut-skip {
+  /* top-right below app bar — clears room edit “완료” and native nav */
   position: fixed;
-  top: 14px;
+  top: calc(env(safe-area-inset-top, 0px) + 52px);
   right: 14px;
   z-index: 81;
   pointer-events: auto;

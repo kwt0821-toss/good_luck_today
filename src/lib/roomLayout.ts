@@ -168,6 +168,35 @@ export function firstFreeTile(
   return null;
 }
 
+/** Prefer `prefer`; if blocked, pick the nearest free tile by Manhattan distance. */
+export function resolveSuggestTile(
+  item: RoomItem,
+  orientation: RoomOrientation,
+  floor: FloorPlacement[],
+  byId: Map<string, RoomItem>,
+  prefer: { col: number; row: number },
+): { col: number; row: number } | null {
+  const [w, d] = itemSize(item, orientation);
+  const used = occupancy(floor, byId);
+  const ok = (col: number, row: number) =>
+    isDecal(item) ? inGrid(col, row, w, d) : canPlace(col, row, w, d, used);
+  if (ok(prefer.col, prefer.row)) return prefer;
+
+  let best: { col: number; row: number } | null = null;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (let row = 0; row < GRID; row += 1) {
+    for (let col = 0; col < GRID; col += 1) {
+      if (!ok(col, row)) continue;
+      const dist = Math.abs(col - prefer.col) + Math.abs(row - prefer.row);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = { col, row };
+      }
+    }
+  }
+  return best;
+}
+
 export function depthKey(place: FloorPlacement, item: RoomItem) {
   const [w, d] = itemSize(item, place.orientation);
   const front = place.col + w - 1 + (place.row + d - 1);
