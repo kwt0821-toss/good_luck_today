@@ -157,11 +157,18 @@
    "open": "page:settings",
    "items": [
     {
+     "id": "bgm",
+     "label": "배경음악(BGM)",
+     "type": "toggle",
+     "default": false,
+     "storage": "lc.audio.bgm"
+    },
+    {
      "id": "sfx",
      "label": "효과음",
      "type": "toggle",
      "default": true,
-     "storage": "local"
+     "storage": "lc.audio.sfx"
     },
     {
      "id": "haptic",
@@ -201,6 +208,12 @@
      "label": "개인정보처리방침",
      "type": "link",
      "url": "TODO"
+    },
+    {
+     "id": "credits",
+     "label": "오디오 크레딧",
+     "type": "link",
+     "url": "/assets/audio/LICENSES.md"
     },
     {
      "id": "version",

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
+import { AudioManager } from "../audio/AudioManager";
 import { menuAsset } from "../lib/menuConfig";
 import {
   attendanceSheetState,
@@ -61,6 +62,7 @@ export function MenuPanel({
   const [toast, setToast] = useState<string | null>(null);
   const [stampDay, setStampDay] = useState<number | null>(null);
   const [popDay, setPopDay] = useState<number | null>(null);
+  const [creditsText, setCreditsText] = useState<string | null>(null);
   const reduce = shouldReduceMenuMotion(settings);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const sheetDrag = useRef<{ y: number; active: boolean }>({ y: 0, active: false });
@@ -70,6 +72,8 @@ export function MenuPanel({
     if (!open) return;
     setClosing(false);
     void buildMenuViewModel(ops).then(setModel);
+    AudioManager.playSfx("sheet-open");
+    AudioManager.setScreen("menu");
   }, [open, ops]);
 
   useEffect(() => {
@@ -88,6 +92,7 @@ export function MenuPanel({
       return;
     }
     setClosing(true);
+    AudioManager.playSfx("sheet-close");
     window.setTimeout(() => {
       setClosing(false);
       onClose();
@@ -96,11 +101,13 @@ export function MenuPanel({
 
   const openSheet = (id: MenuSheetId) => {
     setSheet(id);
+    AudioManager.playSfx("sheet-open");
     requestAnimationFrame(() => setSheetOpen(true));
   };
 
   const closeSheet = () => {
     setSheetOpen(false);
+    AudioManager.playSfx("sheet-close");
     window.setTimeout(() => setSheet(null), reduce ? 150 : 280);
   };
 
@@ -164,11 +171,13 @@ export function MenuPanel({
     setStampDay(day);
     onOpsChange(result.state);
     void haptic("success");
+    window.setTimeout(() => AudioManager.playSfx("stamp"), 180);
     const itemReward = result.response?.rewards.find((reward) => reward.kind === "item");
     const pawReward = result.response?.rewards.find((reward) => reward.kind === "paw");
     const ticketReward = result.response?.rewards.find((reward) => reward.kind === "rateUpTicket");
     window.setTimeout(() => {
       setPopDay(null);
+      if (pawReward || ticketReward) AudioManager.playSfx("reward-coin");
       if (itemReward) showToast("서랍에 쏙 넣었어요");
       else if (ticketReward) showToast("확률업 이용권을 받았어요");
       else if (pawReward) showToast(`포인트 +${pawReward.paw}`);
@@ -184,6 +193,7 @@ export function MenuPanel({
     }
     onOpsChange(result.state);
     showToast(`중복 ${result.converted}장 → +${result.gained}P`);
+    AudioManager.playSfx("reward-coin");
     void haptic("success");
     closeSheet();
   };
@@ -192,7 +202,10 @@ export function MenuPanel({
     const result = await collectAllRewards(ops);
     onOpsChange(result.state);
     showToast(result.count ? `보상 ${result.count}개를 받았어요` : "받을 보상이 없어요");
-    if (result.count) void haptic("success");
+    if (result.count) {
+      AudioManager.playSfx("reward-coin");
+      void haptic("success");
+    }
     closeSheet();
   };
 
@@ -689,13 +702,24 @@ export function MenuPanel({
                           <button
                             type="button"
                             className="link"
-                            onClick={() => showToast("링크는 곧 연결돼요")}
+                            onClick={() => {
+                              if (item.id === "credits" || item.url?.includes("LICENSES")) {
+                                void fetch(item.url ?? "/assets/audio/LICENSES.md")
+                                  .then((res) => (res.ok ? res.text() : "라이선스 파일을 찾지 못했어요."))
+                                  .then(setCreditsText);
+                                return;
+                              }
+                              showToast("링크는 곧 연결돼요");
+                            }}
                           >
                             {item.label}
                           </button>
                         </div>
                       );
                     })}
+                    {creditsText ? (
+                      <pre className="menu-credits">{creditsText}</pre>
+                    ) : null}
                   </>
                 ) : null}
               </div>

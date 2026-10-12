@@ -873,6 +873,20 @@
   opacity: 0.45;
 }
 
+.menu-credits {
+  margin: 12px 0 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(243, 233, 215, 0.05);
+  border: 1px solid rgba(243, 233, 215, 0.12);
+  color: rgba(243, 233, 215, 0.7);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow: auto;
+}
+
 /* settings */
 .settings-row {
   display: flex;

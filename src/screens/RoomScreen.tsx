@@ -5,6 +5,7 @@ import { RoomDrawer } from "../components/RoomDrawer";
 import { RoomWorld } from "../components/RoomWorld";
 import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
 import { loadDexOwned } from "../lib/dexCollection";
+import { AudioManager } from "../audio/AudioManager";
 import { haptic } from "../lib/native";
 import {
   isPaintItem,
@@ -432,6 +433,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
               entry.instanceId === place.instanceId ? { ...entry, col: dragging.col, row: dragging.row } : entry,
             ),
           });
+          AudioManager.playSfx("item-place");
           void haptic("softMedium");
         }
       }
@@ -450,6 +452,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
             ),
           });
           setActiveWall(next.wall);
+          AudioManager.playSfx("item-place");
           void haptic("softMedium");
         } else {
           shake(place.instanceId);
@@ -608,6 +611,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       });
       setSelectedId(instanceId);
       setActiveWall(slot.wall);
+      AudioManager.playSfx("item-place");
       return;
     }
     const spot = firstFreeTile(item, "default", layout.floor, itemsById);
@@ -624,6 +628,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       ],
     });
     setSelectedId(instanceId);
+    AudioManager.playSfx("item-place");
     void haptic("tap");
   };
 
