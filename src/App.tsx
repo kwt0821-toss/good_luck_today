@@ -21,6 +21,12 @@ import {
   confirmDrawAfterAd,
   grantPawAdReward,
 } from "./lib/opsRewards";
+import {
+  adGroupIdForKind,
+  isTossFullScreenAdSupported,
+  playTossFullScreenAd,
+  preloadTossAds,
+} from "./lib/tossAds";
 import type { DexCard } from "./lib/dexTypes";
 import { highlightRatesFromEconomy, rateUpAdSecondsFromEconomy } from "./lib/drawRates";
 import {
@@ -92,7 +98,13 @@ type AdSession = {
   kind: MockAdKind;
   purpose: "draw" | "paw";
   drawId?: string;
+  /** sdk = Toss full-screen ad group; mock = browser AdModal fallback. */
+  presentation: "sdk" | "mock";
 };
+
+function startAdPresentation(): AdSession["presentation"] {
+  return isTossFullScreenAdSupported() ? "sdk" : "mock";
+}
 
 export default function App() {
   const [ops, setOps] = useState<OpsState | null>(null);
@@ -133,6 +145,7 @@ export default function App() {
         syncAudioSettingsFromStorage();
         await AudioManager.init();
         AudioManager.installTapCapture();
+        preloadTossAds(nextConfig.economy.ads);
       } catch (error) {
         if (!cancelled) {
           setBootError(error instanceof Error ? error.message : "설정을 불러오지 못했어요");
@@ -393,6 +406,7 @@ export default function App() {
         kind: slot === "rateUp" ? "long" : "short",
         purpose: "draw",
         drawId: reserved.reservation.drawId,
+        presentation: startAdPresentation(),
       });
     },
     [ops, config, persistOps],
@@ -456,6 +470,43 @@ export default function App() {
     }
     setAd(null);
   }, [ad, ops, persistOps]);
+
+  const completeAdRef = useRef(completeAd);
+  const cancelAdRef = useRef(cancelAd);
+  completeAdRef.current = completeAd;
+  cancelAdRef.current = cancelAd;
+
+  /** Play console ad groups in Toss; fall back to AdModal in browser / on failure. */
+  useEffect(() => {
+    if (!ad || ad.presentation !== "sdk") return;
+    const snap = { kind: ad.kind, purpose: ad.purpose, drawId: ad.drawId };
+    const groupId = adGroupIdForKind(snap.kind, config?.economy.ads);
+    let active = true;
+    AudioManager.onAdOpen();
+    void playTossFullScreenAd(snap.kind, groupId).then((result) => {
+      AudioManager.onAdClose();
+      if (!active) return;
+      if (result === "completed") {
+        void completeAdRef.current();
+        return;
+      }
+      if (result === "cancelled") {
+        void cancelAdRef.current();
+        return;
+      }
+      // unsupported / failed → mock modal (browser preview or load miss)
+      setAd((prev) => {
+        if (!prev || prev.presentation !== "sdk") return prev;
+        if (prev.kind !== snap.kind || prev.purpose !== snap.purpose || prev.drawId !== snap.drawId) {
+          return prev;
+        }
+        return { ...prev, presentation: "mock" };
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [ad?.presentation, ad?.kind, ad?.purpose, ad?.drawId, config?.economy.ads]);
 
   const finishRewardsIntro = useCallback(
     async (status: "seen" | "skipped") => {
@@ -818,7 +869,7 @@ export default function App() {
         onOpenRoom={() => setScreen({ name: "room" })}
         onPawAd={() => {
           closeMenu();
-          setAd({ kind: "short", purpose: "paw" });
+          setAd({ kind: "short", purpose: "paw", presentation: startAdPresentation() });
         }}
         onRateUpDraw={() => {
           closeMenu();
@@ -864,7 +915,7 @@ export default function App() {
       />
 
       <AdModal
-        open={ad !== null}
+        open={ad !== null && ad.presentation === "mock"}
         kind={ad?.kind ?? "short"}
         onComplete={() => void completeAd()}
         onCancel={() => void cancelAd()}

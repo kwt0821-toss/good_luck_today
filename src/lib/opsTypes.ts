@@ -103,9 +103,22 @@ export type OpsEconomy = {
     };
   };
   ads: {
-    short: { use: string[] };
-    long: { use: string[] };
+    short: {
+      use: string[];
+      rewardOn?: string;
+      /** 앱인토스 콘솔 광고 그룹 ID (짧은 광고). */
+      adGroupId?: string;
+      note?: string;
+    };
+    long: {
+      use: string[];
+      /** 앱인토스 콘솔 광고 그룹 ID (30초 리워드). */
+      adGroupId?: string;
+      adSeconds?: number;
+      note?: string;
+    };
     dailyCaps: { drawAds: number; rateUpAds: number; pawAds: number };
+    ecpmKRW?: { short: number | null; long: number | null; source?: string };
   };
   cozy: {
     pointsPerTier: Record<string, number>;
