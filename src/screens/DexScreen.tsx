@@ -35,12 +35,20 @@ import { convertDuplicate } from "../lib/opsRewards";
 import type { OpsState } from "../lib/opsTypes";
 import "./DexScreen.css";
 
+export type DexTutorialPhase = "scroll" | "slot" | "claim" | "ncoin-after" | null;
+
 type DexScreenProps = {
   onBack: () => void;
   ops: OpsState;
   onOpsChange: (next: OpsState) => void;
   /** Carry-over toast from draw-reveal (tutorial step 2 → 3). */
   floatingToast?: string | null;
+  /** Tutorial: drawn card to focus (tab + scroll + claim gate). */
+  focusCardId?: string | null;
+  tutorialPhase?: DexTutorialPhase;
+  reduceMotion?: boolean;
+  onTutorialScrollDone?: () => void;
+  onTutorialClaimed?: () => void;
 };
 
 type CelebrateKind = "breedSet" | "typeSet" | "fullDex";
@@ -53,7 +61,17 @@ type CelebrateState = {
   nyangCoin: number;
 };
 
-export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: DexScreenProps) {
+export function DexScreen({
+  onBack,
+  ops,
+  onOpsChange,
+  floatingToast = null,
+  focusCardId = null,
+  tutorialPhase = null,
+  reduceMotion = false,
+  onTutorialScrollDone,
+  onTutorialClaimed,
+}: DexScreenProps) {
   const [catalog, setCatalog] = useState<DexCatalog | null>(null);
   const [owned, setOwned] = useState<DexOwnedMap>({});
   const [claimable, setClaimable] = useState<DexReward[]>([]);
@@ -70,7 +88,10 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
   const [burstToken, setBurstToken] = useState(0);
   const [burstConfetti, setBurstConfetti] = useState(false);
   const [celebrate, setCelebrate] = useState<CelebrateState | null>(null);
+  const [scrollLock, setScrollLock] = useState(false);
+  const [pulseSlotId, setPulseSlotId] = useState<string | null>(null);
   const toastTimer = useRef(0);
+  const scrollDoneRef = useRef(false);
   const tabRefs = useRef<Record<DexTab, HTMLButtonElement | null>>({
     breed: null,
     special: null,
@@ -78,6 +99,7 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
     legend: null,
   });
   const [underline, setUnderline] = useState({ left: 0, width: 56 });
+  const tutLocked = Boolean(focusCardId && tutorialPhase && tutorialPhase !== "ncoin-after");
 
   const refreshClaimable = async (state: OpsState, map?: DexOwnedMap) => {
     const list = await listClaimableDexRewards(state, map);
@@ -90,14 +112,23 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
       setCatalog(nextCatalog);
       setOwned(nextOwned);
       void refreshClaimable(ops, nextOwned);
-      const cardId = new URLSearchParams(window.location.search).get("card");
+      const cardId = focusCardId ?? new URLSearchParams(window.location.search).get("card");
       if (cardId) {
         const found = nextCatalog.cards.find((item) => item.id === cardId);
-        if (found && (nextOwned[found.id]?.count ?? 0) > 0) setOpenCard(found);
+        if (found) {
+          setTab(found.type);
+          if (!focusCardId && (nextOwned[found.id]?.count ?? 0) > 0) setOpenCard(found);
+        }
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- boot once; ops claim refresh via claim handlers
   }, []);
+
+  useEffect(() => {
+    if (!focusCardId || !catalog) return;
+    const found = catalog.cards.find((item) => item.id === focusCardId);
+    if (found && tab !== found.type) setTab(found.type);
+  }, [focusCardId, catalog, tab]);
 
   useEffect(() => {
     void refreshClaimable(ops, owned);
@@ -108,6 +139,65 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
     if (!el) return;
     setUnderline({ left: el.offsetLeft, width: el.offsetWidth });
   }, [tab, catalog, owned, claimable]);
+
+  /** Tutorial 3-1: scroll focused slot to center, then notify (no coach during scroll). */
+  useEffect(() => {
+    if (tutorialPhase !== "scroll" || !focusCardId || !catalog) return;
+    const focus = catalog.cards.find((item) => item.id === focusCardId);
+    if (!focus) {
+      onTutorialScrollDone?.();
+      return;
+    }
+    if (tab !== focus.type) return;
+    if (scrollDoneRef.current) return;
+
+    let cancelled = false;
+    setScrollLock(true);
+    const scrollMs = reduceMotion ? 0 : 600;
+
+    const run = () => {
+      const el = document.getElementById(`dex-slot-${focusCardId}`);
+      if (!el) {
+        setScrollLock(false);
+        onTutorialScrollDone?.();
+        return;
+      }
+      el.scrollIntoView({
+        block: "center",
+        behavior: reduceMotion ? "auto" : "smooth",
+        inline: "nearest",
+      });
+      window.setTimeout(() => {
+        if (cancelled) return;
+        scrollDoneRef.current = true;
+        setScrollLock(false);
+        onTutorialScrollDone?.();
+      }, scrollMs);
+    };
+
+    const raf = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(run);
+    });
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(raf);
+    };
+  }, [tutorialPhase, focusCardId, catalog, tab, reduceMotion, onTutorialScrollDone]);
+
+  useEffect(() => {
+    if (tutorialPhase !== "scroll") scrollDoneRef.current = false;
+  }, [tutorialPhase]);
+
+  /** Tutorial 3-1: one pulse when the slot coach appears. */
+  useEffect(() => {
+    if (tutorialPhase !== "slot" || !focusCardId || reduceMotion) {
+      setPulseSlotId(null);
+      return;
+    }
+    setPulseSlotId(focusCardId);
+    const timer = window.setTimeout(() => setPulseSlotId(null), 400);
+    return () => window.clearTimeout(timer);
+  }, [tutorialPhase, focusCardId, reduceMotion]);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -125,6 +215,16 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
 
   const runClaim = async (rewardIds: string[] | "all", celebrateAfter?: CelebrateKind) => {
     if (claimBusy) return;
+    if (tutLocked && tutorialPhase !== "claim") return;
+    if (
+      tutLocked &&
+      tutorialPhase === "claim" &&
+      focusCardId &&
+      rewardIds !== "all" &&
+      !rewardIds.some((id) => id.includes(focusCardId))
+    ) {
+      return;
+    }
     setClaimBusy(true);
     try {
       const result = await postDexRewardsClaim(ops, {
@@ -139,6 +239,15 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
       const claimed = result.claimed;
       await refreshClaimable(result.state, owned);
       playClaimFx(claimed);
+
+      if (
+        tutorialPhase === "claim" &&
+        focusCardId &&
+        claimed.some((item) => item.cardId === focusCardId || item.id === `newCard:${focusCardId}`)
+      ) {
+        onTutorialClaimed?.();
+        return;
+      }
 
       if (celebrateAfter && claimed.length) {
         const totalPaw = claimed.reduce((sum, item) => sum + item.paw, 0);
@@ -206,6 +315,7 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
   };
 
   const onSlot = (card: DexCard) => {
+    if (tutLocked) return;
     if ((owned[card.id]?.count ?? 0) > 0) {
       openOwned(card);
       return;
@@ -221,7 +331,13 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
 
       <header className="dex-header">
         <div className="dex-title-row">
-          <button type="button" className="dex-back" onClick={onBack} aria-label="뒤로 가기">
+          <button
+            type="button"
+            className="dex-back"
+            onClick={onBack}
+            aria-label="뒤로 가기"
+            disabled={tutLocked}
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M15 5l-7 7 7 7"
@@ -252,7 +368,7 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
               type="button"
               id="dex-claim-all"
               className="dex-claim-chip"
-              disabled={claimBusy}
+              disabled={claimBusy || tutLocked}
               onClick={() => void runClaim("all")}
             >
               <span>
@@ -279,7 +395,10 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
               ref={(el) => {
                 tabRefs.current[item.id] = el;
               }}
-              onClick={() => setTab(item.id)}
+              onClick={() => {
+                if (!tutLocked) setTab(item.id);
+              }}
+              disabled={tutLocked}
             >
               {item.label}
               <sup>
@@ -341,7 +460,7 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
                       <button
                         type="button"
                         className="dex-set-claim-btn is-inline"
-                        disabled={claimBusy}
+                        disabled={claimBusy || tutLocked}
                         onClick={() => void runClaim([setReward.id], "breedSet")}
                       >
                         완성 보상 받기
@@ -359,6 +478,11 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
                           record={owned[card.id]}
                           claimable={Boolean(cardReward)}
                           claimBusy={claimBusy}
+                          pulse={pulseSlotId === card.id}
+                          claimEnabled={
+                            !tutLocked ||
+                            (tutorialPhase === "claim" && focusCardId === card.id)
+                          }
                           onClaim={() => {
                             if (cardReward) void runClaim([cardReward.id]);
                           }}
@@ -381,13 +505,19 @@ export function DexScreen({ onBack, ops, onOpsChange, floatingToast = null }: De
             count={tabCounts[tab]}
             claimable={claimable}
             claimBusy={claimBusy}
-            typeReward={claimableTypeSet(claimable, tab)}
+            typeReward={tutLocked ? null : claimableTypeSet(claimable, tab)}
+            pulseSlotId={pulseSlotId}
+            focusCardId={focusCardId}
+            claimGate={tutorialPhase === "claim"}
+            tutLocked={tutLocked}
             onClaimCard={(rewardId) => void runClaim([rewardId])}
             onClaimSet={(rewardId) => void runClaim([rewardId], "typeSet")}
             onSlot={onSlot}
           />
         ) : null}
       </div>
+
+      {scrollLock ? <div className="dex-scroll-lock" aria-hidden="true" /> : null}
 
       <div className="dex-fade" aria-hidden="true" />
 
@@ -481,6 +611,10 @@ function GridTab({
   claimable,
   claimBusy,
   typeReward,
+  pulseSlotId,
+  focusCardId,
+  claimGate,
+  tutLocked,
   onClaimCard,
   onClaimSet,
   onSlot,
@@ -492,6 +626,10 @@ function GridTab({
   claimable: DexReward[];
   claimBusy: boolean;
   typeReward: DexReward | null;
+  pulseSlotId: string | null;
+  focusCardId: string | null;
+  claimGate: boolean;
+  tutLocked: boolean;
   onClaimCard: (rewardId: string) => void;
   onClaimSet: (rewardId: string) => void;
   onSlot: (card: DexCard) => void;
@@ -521,7 +659,7 @@ function GridTab({
           <button
             type="button"
             className="dex-set-claim-btn"
-            disabled={claimBusy}
+            disabled={claimBusy || tutLocked}
             onClick={() => onClaimSet(typeReward.id)}
           >
             완성 보상 받기
@@ -539,6 +677,8 @@ function GridTab({
                 record={owned[card.id]}
                 claimable={Boolean(cardReward)}
                 claimBusy={claimBusy}
+                pulse={pulseSlotId === card.id}
+                claimEnabled={!tutLocked || (claimGate && focusCardId === card.id)}
                 onClaim={() => {
                   if (cardReward) onClaimCard(cardReward.id);
                 }}

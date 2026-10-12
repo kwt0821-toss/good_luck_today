@@ -1,5 +1,6 @@
 import type {
   CoachMark,
+  DexTutorialSubstep,
   NcoinIntroThen,
   OpsState,
   OpsTutorial,
@@ -11,6 +12,65 @@ import type {
 
 export function isNcoinIntroThen(then: TutorialStepThen | undefined): then is NcoinIntroThen {
   return Boolean(then && "id" in then && then.id === "ncoin-intro" && "lines" in then);
+}
+
+export function dexSubstep(
+  step: TutorialStep | null | undefined,
+  id: string,
+): DexTutorialSubstep | null {
+  return step?.substeps?.find((entry) => entry.id === id) ?? null;
+}
+
+export function dexSlotCoachMark(
+  step: TutorialStep,
+  vars: { cardId?: string | null },
+): CoachMark | null {
+  const sub = dexSubstep(step, "3-1");
+  if (!sub) return null;
+  return {
+    id: "step-3-1",
+    target: resolveTutorialTarget(sub.target, vars),
+    copy: sub.copy,
+    cta: sub.cta ?? "다음",
+    ackOnly: sub.ackOnly !== false,
+    showFinger: false,
+    stepLabel: step.stepLabel ?? "STEP 3/4",
+    bubble: "above",
+  };
+}
+
+export function dexClaimCoachMark(
+  step: TutorialStep,
+  vars: { cardId?: string | null },
+): CoachMark | null {
+  const sub = dexSubstep(step, "3-2");
+  if (!sub) return null;
+  return {
+    id: "step-3-2",
+    target: resolveTutorialTarget(sub.target, vars, sub.fallbackTarget),
+    copy: sub.copy,
+    showFinger: sub.showFinger !== false,
+    ackOnly: true,
+    activateTarget: Boolean(sub.claimGate),
+    stepLabel: step.stepLabel ?? "STEP 3/4",
+    bubble: "above",
+  };
+}
+
+export function dexAfterClaimMark(step: TutorialStep): CoachMark | null {
+  const sub = dexSubstep(step, "3-2");
+  const after = sub?.afterClaim;
+  if (!after) return null;
+  return {
+    id: after.id,
+    target: "",
+    title: after.title,
+    copy: after.copy,
+    cta: after.cta ?? "알겠어요",
+    ackOnly: true,
+    showFinger: false,
+    stepLabel: step.stepLabel ?? "STEP 3/4",
+  };
 }
 
 export function resolveRewardsIntroCopy(step: RewardsIntroStep, ops: OpsState): string {

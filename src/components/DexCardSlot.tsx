@@ -12,6 +12,10 @@ type DexCardSlotProps = {
   claimable?: boolean;
   onClaim?: () => void;
   claimBusy?: boolean;
+  /** Tutorial pulse (scale 1→1.06→1). */
+  pulse?: boolean;
+  /** When false, claim badge ignores taps (tutorial gate). */
+  claimEnabled?: boolean;
 };
 
 function starsLabel(count: number): string {
@@ -26,6 +30,8 @@ export function DexCardSlot({
   claimable = false,
   onClaim,
   claimBusy = false,
+  pulse = false,
+  claimEnabled = true,
 }: DexCardSlotProps) {
   const owned = (record?.count ?? 0) > 0;
   const comingSoon = kind === "soon";
@@ -36,7 +42,7 @@ export function DexCardSlot({
     <button
       type="button"
       id={card?.id ? `dex-slot-${card.id}` : undefined}
-      className={`dex-slot dex-slot-${kind} ${owned ? "is-owned" : "is-locked"} ${comingSoon ? "is-soon" : ""} ${claimable ? "has-claim" : ""}`}
+      className={`dex-slot dex-slot-${kind} ${owned ? "is-owned" : "is-locked"} ${comingSoon ? "is-soon" : ""} ${claimable ? "has-claim" : ""} ${pulse ? "is-tut-pulse" : ""}`}
       onClick={comingSoon ? undefined : onClick}
       disabled={comingSoon}
       aria-label={comingSoon ? "곧 만나요" : owned ? name : "잠긴 카드"}
@@ -90,13 +96,13 @@ export function DexCardSlot({
           aria-label="보상 받기"
           onClick={(event) => {
             event.stopPropagation();
-            if (!claimBusy) onClaim?.();
+            if (!claimBusy && claimEnabled) onClaim?.();
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
               event.stopPropagation();
-              if (!claimBusy) onClaim?.();
+              if (!claimBusy && claimEnabled) onClaim?.();
             }
           }}
         >

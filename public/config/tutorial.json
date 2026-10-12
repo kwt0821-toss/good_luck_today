@@ -1,5 +1,5 @@
 {
- "_version": "tutorial-1.4",
+ "_version": "tutorial-1.5",
  "maxDurationSec": 60,
  "style": "coach marks (dim + 하이라이트 원/라운드 사각 + 말풍선)",
  "skip": {
@@ -67,17 +67,39 @@
   },
   {
    "step": 3,
-   "screen": "main→dex",
-   "target": "#icon-dex",
-   "effect": "glow pulse",
-   "copy": "도감에서 모은 카드를 볼 수 있어요",
-   "then": {
-    "screen": "dex",
-    "target": "#dex-claim-{cardId}",
-    "fallbackTarget": "#dex-slot-{cardId}",
-    "copy": "코인을 누르면 보상을 받을 수 있어요"
-   },
-   "action": "tap"
+   "screen": "dex",
+   "stepLabel": "STEP 3/4",
+   "target": "#dex-slot-{cardId}",
+   "copy": "방금 만난 고양이가 여기 들어왔어요",
+   "substeps": [
+    {
+     "id": "3-1",
+     "target": "#dex-slot-{cardId}",
+     "copy": "방금 만난 고양이가 여기 들어왔어요",
+     "cta": "다음",
+     "ackOnly": true,
+     "scrollIntoView": {
+      "block": "center",
+      "behavior": "smooth",
+      "ms": 600
+     },
+     "pulseMs": 400
+    },
+    {
+     "id": "3-2",
+     "target": "#dex-claim-{cardId}",
+     "fallbackTarget": "#dex-slot-{cardId}",
+     "copy": "코인을 톡 누르면 보상을 받아요 · 냥코인 1 + 20P",
+     "showFinger": true,
+     "claimGate": true,
+     "afterClaim": {
+      "id": "ncoin-first",
+      "title": "냥코인을 처음 받았어요!",
+      "cta": "알겠어요"
+     }
+    }
+   ],
+   "action": "scroll slot → pulse → claim coin → ncoin intro"
   },
   {
    "step": 4,
