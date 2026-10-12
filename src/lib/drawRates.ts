@@ -102,3 +102,31 @@ export function rateRows(economy: OpsEconomy, rateUp: boolean) {
       percent: `${(value * 100).toFixed(1)}%`,
     }));
 }
+
+/** 5성↑ 합계에 쓰는 등급 키 — economy rates + menu rates.highlight 와 동일. */
+export const RATE_HIGHLIGHT_KEYS = ["b5", "special", "character", "legend"] as const;
+
+export function sumHighlightRate(
+  table: Record<string, number> | undefined,
+  keys: readonly string[] = RATE_HIGHLIGHT_KEYS,
+): number {
+  if (!table) return 0;
+  return keys.reduce((sum, key) => sum + (table[key] ?? 0), 0);
+}
+
+export function formatHighlightPercent(rate: number): string {
+  const pct = rate * 100;
+  return Number.isInteger(pct) ? `${pct}%` : `${pct.toFixed(1)}%`;
+}
+
+export function highlightRatesFromEconomy(economy: OpsEconomy): {
+  normalPct: string;
+  rateUpPct: string;
+} {
+  const normal = sumHighlightRate(economy.draws.rates_proposal.normal);
+  const rateUp = sumHighlightRate(economy.draws.rates_proposal.rateUp);
+  return {
+    normalPct: formatHighlightPercent(normal),
+    rateUpPct: formatHighlightPercent(rateUp),
+  };
+}

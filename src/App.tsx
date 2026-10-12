@@ -15,10 +15,13 @@ import {
   confirmDrawAfterAd,
   grantPawAdReward,
 } from "./lib/opsRewards";
+import { highlightRatesFromEconomy } from "./lib/drawRates";
 import {
   daysSinceInstall,
   nextDrawSlot,
+  remainingNormalDraws,
   remainingPawAds,
+  remainingRateUpAdSlots,
   remainingRateUpDraws,
   remainingTotalDraws,
   willUseRateUpTicket,
@@ -187,8 +190,11 @@ export default function App() {
   }, []);
 
   const remainingDraws = ops && config ? remainingTotalDraws(ops, config) : 0;
+  const remainingNormal = ops && config ? remainingNormalDraws(ops, config) : 0;
   const remainingRateUp = ops && config ? remainingRateUpDraws(ops, config) : 0;
+  const rateUpAdSlots = ops && config ? remainingRateUpAdSlots(ops, config) : 0;
   const pawAdsLeft = ops && config ? remainingPawAds(ops, config) : 0;
+  const rateLabels = config ? highlightRatesFromEconomy(config.economy) : { normalPct: "0%", rateUpPct: "0%" };
 
   const tutorialStep: TutorialStep | null = useMemo(() => {
     if (!ops || !config) return null;
@@ -737,10 +743,16 @@ export default function App() {
 
       {screen.name === "home" || screen.name === "draw" ? (
         <HomeScreen
-          remainingDraws={remainingDraws}
+          remainingNormal={remainingNormal}
+          normalPerDay={config.economy.draws.normalPerDay}
           remainingRateUp={remainingRateUp}
+          rateUpTickets={ops.rateUpTickets}
+          useRateUpTicket={willUseRateUpTicket(ops, config) || (rateUpAdSlots <= 0 && ops.rateUpTickets > 0)}
           remainingPawAds={pawAdsLeft}
           pawBalance={ops.pawBalance}
+          firstDrawPending={ops.normalDrawsUsed === 0}
+          rateNormalPct={rateLabels.normalPct}
+          rateUpPct={rateLabels.rateUpPct}
           menuBadge={menuIconDot}
           onDraw={() => void beginDraw()}
           onRateUpDraw={() => void beginDraw("rateUp")}

@@ -29,6 +29,23 @@ export function formatShortDate(dateKey: string): string {
   return `${Number(month)}월 ${Number(day)}일`;
 }
 
+/** Ms until the next Asia/Seoul midnight (daily draw reset). */
+export function msUntilNextKstMidnight(date = new Date()): number {
+  const key = toKstDateKey(date);
+  const [year, month, day] = key.split("-").map(Number);
+  // KST midnight at the end of `key` = that calendar date 15:00 UTC.
+  const endOfKstDayUtc = Date.UTC(year, month - 1, day, 15, 0, 0);
+  return Math.max(0, endOfKstDayUtc - date.getTime());
+}
+
+export function formatCountdownHms(ms: number): string {
+  const total = Math.floor(Math.max(0, ms) / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
 /** 홈 시안용 날짜. 예: Nº 023 · FRI 10.09 */
 export function formatLuckyCatalogDate(date = new Date()): string {
   const key = toKstDateKey(date);

@@ -218,8 +218,6 @@ export function DrawRevealScreen({
 
   const theme = RAR[reservation.rarity] ?? RAR.b1;
   const frontSrc = reservation.frontUrl || reservation.thumbUrl;
-  const remainLabel =
-    remainingDraws > 0 ? `남은 ${remainingDraws}회` : "내일 또 만나요";
 
   useEffect(() => {
     const screen = screenRef.current;
@@ -594,7 +592,7 @@ export function DrawRevealScreen({
             >
               {remainingDraws > 0 ? (
                 <>
-                  한 번 더 뽑기 (광고) <em id="remain">{remainLabel}</em>
+                  한 장 더 뽑기 [광고] <em id="remain">(남은 {remainingDraws}장)</em>
                 </>
               ) : (
                 "내일 또 만나요"
