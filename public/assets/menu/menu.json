@@ -1,5 +1,5 @@
 {
- "_version": "menu-1.1 (2026-10-11)",
+ "_version": "menu-1.2 (2026-10-12)",
  "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
  "panel": {
   "side": "right",
@@ -157,11 +157,21 @@
    "open": "page:settings",
    "items": [
     {
+     "id": "bgm",
+     "label": "배경음악(BGM)",
+     "type": "toggle",
+     "default": false,
+     "storage": "localStorage lc.audio.bgm",
+     "effect": "ON → 첫 탭 이후 현재 화면 BGM 800ms 페이드인 / OFF → 400ms 페이드아웃",
+     "ref": "audio-assets/sounds.json"
+    },
+    {
      "id": "sfx",
      "label": "효과음",
      "type": "toggle",
      "default": true,
-     "storage": "local"
+     "storage": "localStorage lc.audio.sfx",
+     "ref": "audio-assets/sounds.json"
     },
     {
      "id": "haptic",

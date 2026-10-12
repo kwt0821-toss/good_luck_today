@@ -1,4 +1,4 @@
-# Lucky Cat — 메뉴 패널 스펙 (menu-1.1)
+# Lucky Cat — 메뉴 패널 스펙 (menu-1.2)
 
 디자인 프레임 **390 × 844 pt**, 에셋 3x. 시안: `menu-screen-a.png`(패널), `-b`(출석 체크 · 1주차), `-b2`(출석 체크 · 주간 반복), `-c`(확률 안내 시트).
 > 상태바 47 + 토스 내비 56 = 103 pt는 시안용이에요. **토스 내비는 앱인토스가 그려요 → 패널/딤은 콘텐츠 영역 top(=0)부터 시작.** 아래 y는 콘텐츠 영역 기준.
@@ -63,6 +63,7 @@ radius `28 28 0 0`, padding `10 24 0`, 그랩바 40×4. eyebrow Poppins 800 11px
 | 확률 안내 | economy.json `draws.rates_proposal.normal` / `.rateUp`, `keys` (⚠ `_proposal: true` — 확정 후 같은 키로 교체) |
 | 친구 초대 | economy.json `events.friendInvite.enabled`(false → "준비 중") |
 | 공지·이벤트 | 공지 API + economy.json `events` |
+| 설정 › 배경음악(BGM) / 효과음 | 토글 2개. BGM 기본 OFF, 효과음 기본 ON, localStorage `lc.audio.bgm` / `lc.audio.sfx`. 동작 규칙은 audio-assets/audio-spec.md |
 | 설정 › 튜토리얼 다시 보기 | tutorial.json `steps` 재생 (보상 재지급 없음, tutorialDone 유지) |
 
 ## 5. 파일
@@ -81,3 +82,7 @@ icon-attendance / points / exchange / rewards / rates / notice / invite / settin
 - **출석 한정 태그**: pill 8.5px 700, bg `#C9B6F2`, 글자 `#1E1A2B`, radius 999, padding 1×6. 출석 시트, 방꾸미기 서랍 카드, 아이템 상세에 표시해요(`item.attendanceOnly`). 상점 목록에는 출석 아이템 자체를 띄우지 않아요.
 - **애니메이션 추가**: 선물 상자는 흔들기(rotate ±6°, 3회, 360ms) 후 뚜껑이 열리고 아이템이 scale 0.6→1로 튀어나와요. 뽑기권은 슬라이드 인 후 반짝이 1회. 기념일은 배지가 scale 0→1.15→1(420ms) + 컨페티 대신 별 6개가 퍼져요(움직임 줄이기 ON이면 페이드만).
 - **새 파일**: `gift-att_*.png`(출석 한정 14종 타일), `badge-att-30.svg`, `badge-att-100.svg`, `icon-ticket.svg`, `icon-att-box.svg`, `icon-paw-coin.svg`. 방 렌더용 아트·레지스트리는 `attendance-items.zip`(items-attendance.json, items/, tiles/)에 있어요.
+
+## 7. 설정 화면 (menu-1.2)
+행 순서: **배경음악(BGM)**(기본 OFF) · **효과음**(기본 ON) · 진동 · 움직임 줄이기 · 튜토리얼 다시 보기 · 문의하기 · 이용약관 · 개인정보처리방침 · 버전.
+토글은 cream 트랙(ON = `#FFC48A`, OFF = cream 18 %), 44pt 높이 행. BGM 행 아래 보조 문구(10px, cream 50 %): "토스 안에서는 기본으로 꺼져 있어요". 바꾸는 즉시 적용·저장하고, 효과음을 켤 때는 sfx-tap을 한 번 들려줘요.

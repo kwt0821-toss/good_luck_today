@@ -1,0 +1,216 @@
+{
+ "_version": "sounds-1.0 (2026-10-12)",
+ "basePath": "/assets/audio/",
+ "formats": {
+  "primary": "m4a",
+  "fallback": "mp3",
+  "pick": "canPlayType(\"audio/mp4; codecs=mp4a.40.2\") ? m4a : mp3"
+ },
+ "defaults": {
+  "bgmEnabled": false,
+  "sfxEnabled": true,
+  "masterBgm": 1.0,
+  "masterSfx": 1.0,
+  "storageKeys": {
+   "bgm": "lc.audio.bgm",
+   "sfx": "lc.audio.sfx"
+  }
+ },
+ "rules": {
+  "crossfadeMs": 600,
+  "bgmFadeInMs": 800,
+  "bgmFadeOutMs": 400,
+  "duckDuringAdsTo": 0,
+  "pauseOnHidden": true,
+  "startAfterFirstUserGesture": true,
+  "sfxMaxConcurrent": 6
+ },
+ "sounds": [
+  {
+   "id": "bgm-main",
+   "type": "bgm",
+   "files": {
+    "m4a": "bgm-main.m4a",
+    "mp3": "bgm-main.mp3"
+   },
+   "volume": 0.55,
+   "loop": true,
+   "durationSec": 68.571,
+   "where": "메인, 도감, 메뉴, 뽑기 공개(뒤에서 계속)",
+   "trigger": "BGM 설정 ON + 첫 사용자 탭 이후 재생",
+   "descKo": "오르골(뮤직박스) 감성의 잔잔하고 귀여운 멜로디, 밤하늘 메인·도감용",
+   "loopStartSec": 0,
+   "loopEndSec": 68.5714,
+   "loopNote": "Web Audio에서 loopEnd를 지정해 디코더 패딩(특히 m4a)을 건너뛰어요"
+  },
+  {
+   "id": "bgm-room",
+   "type": "bgm",
+   "files": {
+    "m4a": "bgm-room.m4a",
+    "mp3": "bgm-room.mp3"
+   },
+   "volume": 0.55,
+   "loop": true,
+   "durationSec": 63.987,
+   "where": "방꾸미기(편집 모드 포함)",
+   "trigger": "방꾸미기 진입 시 bgm-main에서 600ms 크로스페이드",
+   "descKo": "포근한 로파이 힙합 루프(부드러운 비트+건반), 방꾸미기용",
+   "loopStartSec": 0,
+   "loopEndSec": 63.9866,
+   "loopNote": "Web Audio에서 loopEnd를 지정해 디코더 패딩(특히 m4a)을 건너뛰어요"
+  },
+  {
+   "id": "sfx-tap",
+   "type": "sfx",
+   "files": {
+    "m4a": "sfx-tap.m4a",
+    "mp3": "sfx-tap.mp3"
+   },
+   "volume": 0.35,
+   "loop": false,
+   "durationSec": 0.03,
+   "where": "모든 버튼·아이콘·메뉴 행",
+   "trigger": "pointerup (같은 소리 80ms 안 중복 재생 금지)",
+   "descKo": "아주 작은 \"틱\" 클릭"
+  },
+  {
+   "id": "sfx-card-flip",
+   "type": "sfx",
+   "files": {
+    "m4a": "sfx-card-flip.m4a",
+    "mp3": "sfx-card-flip.mp3"
+   },
+   "volume": 0.8,
+   "loop": false,
+   "durationSec": 0.457,
+   "where": "뽑기 공개 화면",
+   "trigger": "카드 뒤집기 애니메이션 시작",
+   "descKo": "카드가 스윽 미끄러지며 툭 뒤집히는 소리"
+  },
+  {
+   "id": "sfx-reveal",
+   "type": "sfx",
+   "files": {
+    "m4a": "sfx-reveal.m4a",
+    "mp3": "sfx-reveal.mp3"
+   },
+   "volume": 0.8,
+   "loop": false,
+   "durationSec": 0.287,
+   "where": "뽑기 공개 1~4성",
+   "trigger": "카드 앞면이 보이는 순간",
+   "descKo": "짧게 올라가는 밝은 차임 + 유리 반짝",
+   "useFor": [
+    "b1",
+    "b2",
+    "b3",
+    "b4"
+   ]
+  },
+  {
+   "id": "sfx-reveal-rare",
+   "type": "sfx",
+   "files": {
+    "m4a": "sfx-reveal-rare.m4a",
+    "mp3": "sfx-reveal-rare.mp3"
+   },
+   "volume": 0.9,
+   "loop": false,
+   "durationSec": 1.057,
+   "where": "뽑기 공개 5성·스페셜·캐릭터·레전드",
+   "trigger": "카드 앞면이 보이는 순간 (sfx-reveal 대신)",
+   "descKo": "상행 피치카토 징글 + 반짝이는 유리 음 4개 + 약한 에코",
+   "useFor": [
+    "b5",
+    "special",
+    "character",
+    "legend"
+   ]
+  },
+  {
+   "id": "sfx-item-place",
+   "type": "sfx",
+   "files": {
+    "m4a": "sfx-item-place.m4a",
+    "mp3": "sfx-item-place.mp3"
+   },
+   "volume": 0.7,
+   "loop": false,
+   "durationSec": 0.18,
+   "where": "방꾸미기",
+   "trigger": "아이템을 칸에 내려놓기 확정",
+   "descKo": "말랑한 \"통\" 착지 + 작은 팝"
+  },
+  {
+   "id": "sfx-stamp",
+   "type": "sfx",
+   "files": {
+    "m4a": "sfx-stamp.m4a",
+    "mp3": "sfx-stamp.mp3"
+   },
+   "volume": 0.8,
+   "loop": false,
+   "durationSec": 0.569,
+   "where": "출석 체크 시트",
+   "trigger": "도장 애니메이션 착지 프레임",
+   "descKo": "묵직하고 부드러운 \"쿵\" 도장"
+  },
+  {
+   "id": "sfx-reward-coin",
+   "type": "sfx",
+   "files": {
+    "m4a": "sfx-reward-coin.m4a",
+    "mp3": "sfx-reward-coin.mp3"
+   },
+   "volume": 0.75,
+   "loop": false,
+   "durationSec": 0.312,
+   "where": "포인트/보상 받기, 중복 교환, 보상함 받기, 출석 포인트",
+   "trigger": "지급 성공 응답 후",
+   "descKo": "동전 짤랑 + 맑은 \"딩\""
+  },
+  {
+   "id": "sfx-sheet-open",
+   "type": "sfx",
+   "files": {
+    "m4a": "sfx-sheet-open.m4a",
+    "mp3": "sfx-sheet-open.mp3"
+   },
+   "volume": 0.45,
+   "loop": false,
+   "durationSec": 0.368,
+   "where": "메뉴 패널·바텀 시트 열기",
+   "trigger": "열기 애니메이션 시작",
+   "descKo": "부드럽게 올라가는 \"슈욱\""
+  },
+  {
+   "id": "sfx-sheet-close",
+   "type": "sfx",
+   "files": {
+    "m4a": "sfx-sheet-close.m4a",
+    "mp3": "sfx-sheet-close.mp3"
+   },
+   "volume": 0.4,
+   "loop": false,
+   "durationSec": 0.371,
+   "where": "메뉴 패널·바텀 시트 닫기",
+   "trigger": "닫기 애니메이션 시작",
+   "descKo": "내려가는 \"슈욱\""
+  },
+  {
+   "id": "sfx-meow",
+   "type": "sfx",
+   "files": {
+    "m4a": "sfx-meow.m4a",
+    "mp3": "sfx-meow.mp3"
+   },
+   "volume": 0.5,
+   "loop": false,
+   "durationSec": 1.442,
+   "where": "방에서 돌아다니는 고양이",
+   "trigger": "고양이를 탭했을 때 (같은 고양이 8초 쿨다운), 자동 재생 없음",
+   "descKo": "실제 고양이의 작고 부드러운 \"먜~\" (잡음 제거)"
+  }
+ ]
+}
