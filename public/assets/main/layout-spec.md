@@ -94,10 +94,3 @@ Fonts: **Poppins** ExtraBold 800 / Medium 500 (Latin), **Noto Sans KR** (CJK; mo
 
 - ⚠ 27 %·10 %는 `rates_proposal`(_proposal: true) 기준이라 확률 확정 시 같은 식으로 다시 계산돼요. "두 배" 같은 고정 문구는 쓰지 않아요.
 - 접근성: 카운트 필 `aria-live="polite"`, 움직임 줄이기면 넛지·글로우 펄스 끔.
-
-### 5-1. 확률업 버튼 '포인트로 사기' 상태 (2026-10-12 추가)
-- 조건: 오늘 광고 확률업을 썼고 + 뽑기권 0장 + 이번 주/오늘 구매 한도 남음.
-- 버튼은 흐리지 않고 그대로(amber), 아래 작은 글씨 "200P"(발바닥 아이콘 10pt), 말풍선 "**200P**로 / 광고 없이 확률업". 탭하면 `sheet:ticketShop`(메뉴 스펙 10장, ticket-shop.png).
-- 한도도 다 쓰면 기존 "내일 다시" 흐린 상태, 말풍선 없음. 포인트 부족이면 말풍선 대신 버튼 아래 "포인트 n P 부족"(cream 50 %).
-
-- 확률업 버튼 반짝이 아이콘 파일: `icon-rateup-sparkle.svg` (26pt), 뽑기권 배지 아이콘: `icon-ticket-badge.svg` (10~11pt).
