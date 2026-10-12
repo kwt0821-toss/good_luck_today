@@ -9,6 +9,7 @@ const ASSETS = {
   menu: "/assets/main/icon-menu-paw.svg",
   dex: "/assets/main/icon-dex-book.svg",
   room: "/assets/main/icon-room-house.svg",
+  rateUp: "/assets/main/icon-rateup-sparkle.svg",
   tail: "/assets/main/cat-tail.png",
   card: "/assets/main/card-facedown.png",
   cat: "/assets/main/cat-body.png",
@@ -248,6 +249,7 @@ export function HomeScreen({
               onRateUpDraw();
             }}
           >
+            <img className="main-rateup-icon" src={ASSETS.rateUp} alt="" width={22} height={22} />
             {!rateUpDisabled && !useRateUpTicket && !rateUpShopEntry ? (
               <span className="main-rateup-hint">({rateUpAdSeconds}초 광고)</span>
             ) : null}

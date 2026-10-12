@@ -1127,6 +1127,14 @@
   cursor: pointer;
 }
 
+.main-rateup-icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
 .main-rateup-hint {
   font-size: 9px;
   font-weight: 400;
