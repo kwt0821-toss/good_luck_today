@@ -441,6 +441,12 @@ export default function App() {
           setScreen({ name: "home" });
           setTutorialReplayStep(1);
         }}
+        onDevResetNewUser={() => {
+          setTutorialReplayStep(null);
+          setFeatureIntro(null);
+          setMenuOpen(false);
+          setScreen({ name: "home" });
+        }}
       />
 
       <AdModal

@@ -96,8 +96,12 @@ async function writeKey(key: string, value: string): Promise<void> {
 }
 
 export async function loadDexOwned(): Promise<DexOwnedMap> {
-  const stored = parseOwned(await readKey(DEX_KEY));
-  if (stored && Object.keys(stored).length > 0) return stored;
+  const raw = await readKey(DEX_KEY);
+  // Explicit empty `{}` (e.g. DEV new-user reset) must not re-seed the mock catalog.
+  if (raw !== null) {
+    const stored = parseOwned(raw);
+    if (stored) return stored;
+  }
   const mock = toMap(MOCK_DEX_OWNED);
   await writeKey(DEX_KEY, JSON.stringify(mock));
   return mock;

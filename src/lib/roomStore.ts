@@ -1,6 +1,7 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
 import { isInTossApp } from "./native";
+import type { OpsState } from "./opsTypes";
 import type { GridLayoutEntry, RoomDefinition, RoomGridFile, RoomsFile } from "./roomCatalog";
 import { defaultRoomId } from "./roomCatalog";
 import { DEFAULT_CAT_BREED_ID } from "./roomCat";
@@ -200,6 +201,42 @@ export function mockState(items: RoomItem[], roomsFile: RoomsFile, grid?: RoomGr
     shadowsEnabled: true,
     currentRoomId: startId,
     unlocked: mockUnlocked(roomsFile),
+    rooms,
+  };
+}
+
+/** Fresh-install room save: starter unlocks / owned from ops, default layouts. */
+export function newUserRoomState(
+  _items: RoomItem[],
+  roomsFile: RoomsFile,
+  ops: OpsState,
+  grid?: RoomGridFile,
+): RoomSaveState {
+  const rooms: Record<string, RoomRecord> = {};
+  for (const def of roomsFile.rooms) {
+    rooms[def.id] = defaultRecord(def, grid);
+  }
+  const unlocked = ops.unlockedRoomIds.length
+    ? [...ops.unlockedRoomIds]
+    : [defaultRoomId(roomsFile)];
+  const currentRoomId = unlocked.find((id) => rooms[id]) ?? defaultRoomId(roomsFile);
+  const owned: Record<string, number> = {};
+  for (const id of ops.ownedItemIds) owned[id] = Math.max(1, owned[id] ?? 0);
+  for (const roomId of unlocked) {
+    const room = rooms[roomId];
+    if (!room) continue;
+    for (const place of room.floor) owned[place.id] = Math.max(owned[place.id] ?? 0, 1);
+    for (const place of room.walls) owned[place.id] = Math.max(owned[place.id] ?? 0, 1);
+    owned[room.floorSkin] = Math.max(owned[room.floorSkin] ?? 0, 1);
+    owned[room.wallpaper] = Math.max(owned[room.wallpaper] ?? 0, 1);
+  }
+  return {
+    points: ops.pawBalance,
+    owned,
+    cozyLevel: 1,
+    shadowsEnabled: true,
+    currentRoomId,
+    unlocked,
     rooms,
   };
 }
