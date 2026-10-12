@@ -69,8 +69,17 @@ export type OpsEconomy = {
     serverVerified: boolean;
     idempotencyKey: string;
     toTossPointRate?: number;
+    /** @deprecated use withdraw.min / withdraw.unit */
     withdrawMin?: number;
+    /** @deprecated use withdraw.unit */
     withdrawStep?: number;
+    withdraw?: {
+      min: number;
+      unit: number;
+      dailyLimit: number;
+      resetTimeKST?: string;
+      note?: string;
+    };
   };
   draws: {
     resetTimeKST: string;

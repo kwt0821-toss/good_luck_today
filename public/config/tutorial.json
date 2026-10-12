@@ -139,11 +139,15 @@
      "id": "r4",
      "target": "#withdraw-picker",
      "bubble": "above",
-     "copy": "원하는 만큼 골라 토스포인트로 받으세요",
+     "copy": "−/+로 금액을 골라요 · 하루 최대 50원까지 받을 수 있어요",
      "lines": [
       {
-       "when": "nyangCoinBalance >= 10",
-       "copy": "원하는 만큼 골라 토스포인트로 받으세요"
+       "when": "nyangCoinBalance >= 10 && remainingToday >= 10",
+       "copy": "−/+로 금액을 골라요 · 하루 최대 50원까지 받을 수 있어요"
+      },
+      {
+       "when": "nyangCoinBalance >= 10 && remainingToday < 10",
+       "copy": "오늘은 다 받았어요 · 내일 00:00에 다시 받을 수 있어요"
       },
       {
        "when": "nyangCoinBalance < 10",

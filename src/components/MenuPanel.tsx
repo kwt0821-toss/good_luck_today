@@ -19,7 +19,6 @@ import {
 import {
   buildWithdrawRequestId,
   postWalletWithdraw,
-  withdrawChipAmounts,
 } from "../lib/mockWallet";
 import {
   buildTicketBuyRequestId,
@@ -98,6 +97,10 @@ export function MenuPanel({
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const sheetDrag = useRef<{ y: number; active: boolean }>({ y: 0, active: false });
   const toastTimer = useRef(0);
+  const stepHoldTimer = useRef(0);
+  const stepRepeatTimer = useRef(0);
+  const withdrawAmountRef = useRef(withdrawAmount);
+  withdrawAmountRef.current = withdrawAmount;
 
   useEffect(() => {
     if (!open) return;
@@ -143,13 +146,60 @@ export function MenuPanel({
     setSheet(id);
     if (id === "rewards") {
       setRewardsView("inbox");
-      const balance = ops.nyangCoinBalance;
-      const chips = withdrawChipAmounts(balance);
-      setWithdrawAmount(chips.length ? chips[chips.length - 1]! : 0);
+      // Default to max; refined once model loads.
+      void buildMenuViewModel(ops).then((next) => {
+        setModel(next);
+        setWithdrawAmount(next.wallet.maxWithdrawable);
+      });
     }
     AudioManager.playSfx("sheet-open");
     requestAnimationFrame(() => setSheetOpen(true));
     onSheetOpen?.(id);
+  };
+
+  const clearStepHold = () => {
+    window.clearTimeout(stepHoldTimer.current);
+    window.clearInterval(stepRepeatTimer.current);
+    stepHoldTimer.current = 0;
+    stepRepeatTimer.current = 0;
+  };
+
+  useEffect(() => () => clearStepHold(), []);
+
+  useEffect(() => {
+    if (!model || sheet !== "rewards" || rewardsView !== "inbox") return;
+    const max = model.wallet.maxWithdrawable;
+    const min = model.wallet.min;
+    setWithdrawAmount((prev) => {
+      if (max <= 0) return 0;
+      if (prev < min || prev > max) return max;
+      if (prev % model.wallet.unit !== 0) return max;
+      return prev;
+    });
+  }, [model, sheet, rewardsView]);
+
+  const nudgeWithdraw = (delta: number) => {
+    if (!model) return;
+    const { min, unit, maxWithdrawable } = model.wallet;
+    if (maxWithdrawable < min) return;
+    const next = Math.min(
+      maxWithdrawable,
+      Math.max(min, withdrawAmountRef.current + delta * unit),
+    );
+    if (next === withdrawAmountRef.current) return;
+    setWithdrawAmount(next);
+    AudioManager.playSfx("tap");
+    void haptic("tap");
+  };
+
+  const startStepHold = (delta: number) => {
+    clearStepHold();
+    nudgeWithdraw(delta);
+    const longMs = model?.menu.sheets.rewards.wallet?.stepper?.longPressMs ?? 400;
+    const repeatMs = model?.menu.sheets.rewards.wallet?.stepper?.repeatMs ?? 120;
+    stepHoldTimer.current = window.setTimeout(() => {
+      stepRepeatTimer.current = window.setInterval(() => nudgeWithdraw(delta), repeatMs);
+    }, longMs);
   };
 
   const closeSheet = () => {
@@ -163,7 +213,8 @@ export function MenuPanel({
   };
 
   const doWithdraw = async () => {
-    if (!model || withdrawBusy || withdrawAmount < 10) return;
+    if (!model || withdrawBusy || withdrawAmount < model.wallet.min) return;
+    if (withdrawAmount > model.wallet.maxWithdrawable) return;
     setWithdrawBusy(true);
     try {
       const requestId = buildWithdrawRequestId();
@@ -178,11 +229,21 @@ export function MenuPanel({
         setLastWithdraw(row);
         setRewardsView("success");
         showToast("처리 중이에요. 잠시 후 기록에서 확인해 주세요");
+      } else if (result.response.ok === false && result.response.code === "DAILY_LIMIT") {
+        showToast(
+          result.response.remainingToday != null
+            ? `오늘은 ${result.response.remainingToday}원까지 받을 수 있어요`
+            : result.response.reason,
+        );
+        setRewardsView("inbox");
       } else {
         showToast(result.response.ok === false ? result.response.reason : "지급에 실패했어요");
         setRewardsView("inbox");
       }
-      void buildMenuViewModel(result.state).then(setModel);
+      void buildMenuViewModel(result.state).then((next) => {
+        setModel(next);
+        setWithdrawAmount(next.wallet.maxWithdrawable);
+      });
     } finally {
       setWithdrawBusy(false);
     }
@@ -864,39 +925,105 @@ export function MenuPanel({
                         </div>
                       </div>
                       <div id="withdraw-picker" className="withdraw-picker">
-                        <p className="wallet-hint">
-                          {model.nyangCoinBalance < 10
-                            ? (model.menu.sheets.rewards.wallet?.disabledHint ??
-                              "10냥코인부터 받을 수 있어요")
-                            : "받을 금액을 골라 주세요"}
-                        </p>
-                        {model.nyangCoinBalance >= 10 ? (
-                          <div className="wallet-chips" role="listbox" aria-label="출금 금액">
-                            {withdrawChipAmounts(model.nyangCoinBalance).map((amount) => (
-                              <button
-                                key={amount}
-                                type="button"
-                                className={`wallet-chip ${withdrawAmount === amount ? "is-active" : ""}`}
-                                onClick={() => setWithdrawAmount(amount)}
+                        {(() => {
+                          const { min, unit, dailyLimit, remainingToday, maxWithdrawable } =
+                            model.wallet;
+                          const balance = model.nyangCoinBalance;
+                          const lowBalance = balance < min;
+                          const dailyDone = !lowBalance && remainingToday < min;
+                          const stepperDisabled = lowBalance || dailyDone || maxWithdrawable < min;
+                          const canMinus = !stepperDisabled && withdrawAmount > min;
+                          const canPlus = !stepperDisabled && withdrawAmount < maxWithdrawable;
+                          const needMore = Math.max(0, min - balance);
+                          const leftover = Math.max(0, balance - withdrawAmount);
+                          const walletCopy = model.menu.sheets.rewards.wallet;
+                          const hint = lowBalance
+                            ? (walletCopy?.lowBalanceHint ??
+                                "10냥코인부터 받을 수 있어요 · {need}개 더 모아요").replace(
+                                "{need}",
+                                String(needMore),
+                              )
+                            : dailyDone
+                              ? (walletCopy?.dailyDoneHint ??
+                                "오늘은 다 받았어요 · 내일 00:00에 다시 받을 수 있어요")
+                              : (walletCopy?.dailyLimitHint ??
+                                  "오늘 {remainingToday}원 더 받을 수 있어요 · 하루 최대 {dailyLimit}원")
+                                  .replace("{remainingToday}", String(remainingToday))
+                                  .replace("{dailyLimit}", String(dailyLimit));
+                          const cta = stepperDisabled
+                            ? lowBalance
+                              ? (walletCopy?.disabledHint ?? "10냥코인부터 받을 수 있어요")
+                              : (walletCopy?.dailyDoneHint ?? "오늘은 다 받았어요")
+                            : `토스포인트로 받기 · ${withdrawAmount}원`;
+                          return (
+                            <>
+                              <div
+                                className={`wallet-stepper ${stepperDisabled ? "is-disabled" : ""}`}
+                                aria-disabled={stepperDisabled}
                               >
-                                {amount}
+                                <button
+                                  type="button"
+                                  className="wallet-stepper-btn"
+                                  aria-label={`${unit}냥코인 줄이기`}
+                                  disabled={!canMinus}
+                                  onPointerDown={(event) => {
+                                    event.preventDefault();
+                                    if (canMinus) startStepHold(-1);
+                                  }}
+                                  onPointerUp={clearStepHold}
+                                  onPointerLeave={clearStepHold}
+                                  onPointerCancel={clearStepHold}
+                                >
+                                  −
+                                </button>
+                                <div
+                                  className="wallet-stepper-value"
+                                  aria-live="polite"
+                                  aria-atomic="true"
+                                >
+                                  <strong>
+                                    {stepperDisabled ? Math.max(0, maxWithdrawable) : withdrawAmount}
+                                  </strong>
+                                  <span>냥코인</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="wallet-stepper-btn"
+                                  aria-label={`${unit}냥코인 늘리기`}
+                                  disabled={!canPlus}
+                                  onPointerDown={(event) => {
+                                    event.preventDefault();
+                                    if (canPlus) startStepHold(1);
+                                  }}
+                                  onPointerUp={clearStepHold}
+                                  onPointerLeave={clearStepHold}
+                                  onPointerCancel={clearStepHold}
+                                >
+                                  +
+                                </button>
+                              </div>
+                              <p className="wallet-hint">{hint}</p>
+                              {!stepperDisabled && leftover > 0 ? (
+                                <p className="wallet-remain-hint">
+                                  {(
+                                    walletCopy?.remainAfterHint ??
+                                    "받고 남는 {remain}냥코인은 그대로 모여요"
+                                  ).replace("{remain}", String(leftover))}
+                                </p>
+                              ) : null}
+                              <button
+                                type="button"
+                                id="btn-withdraw"
+                                className="menu-sheet-cta"
+                                style={{ marginTop: 12 }}
+                                disabled={stepperDisabled || withdrawAmount < min}
+                                onClick={() => setRewardsView("confirm")}
+                              >
+                                {cta}
                               </button>
-                            ))}
-                          </div>
-                        ) : null}
-                        <button
-                          type="button"
-                          id="btn-withdraw"
-                          className="menu-sheet-cta"
-                          style={{ marginTop: 12 }}
-                          disabled={model.nyangCoinBalance < 10 || withdrawAmount < 10}
-                          onClick={() => setRewardsView("confirm")}
-                        >
-                          {model.nyangCoinBalance < 10
-                            ? (model.menu.sheets.rewards.wallet?.disabledHint ??
-                              "10냥코인부터 받을 수 있어요")
-                            : `토스포인트로 받기 · ${withdrawAmount}원`}
-                        </button>
+                            </>
+                          );
+                        })()}
                       </div>
                       {model.rewards.dexClaimableCount > 0 ? (
                         <button

@@ -3,6 +3,12 @@ import type { AttendanceStatusResponse } from "./attendanceTypes";
 import { loadDexCatalog } from "./dexCatalog";
 import { loadDexOwned } from "./dexCollection";
 import { listClaimableDexRewards } from "./dexRewards";
+import {
+  getWithdrawRules,
+  maxWithdrawableAmount,
+  remainingTodayAmount,
+  withdrawnTodayAmount,
+} from "./mockWallet";
 import { isWeekendDoublePaw, loadOpsConfig, computeOwnedCozy, cozyLevelFromPoints } from "./opsConfig";
 import { getTicketShopStatus } from "./mockTicketShop";
 import { remainingPawAds } from "./opsState";
@@ -26,6 +32,14 @@ export type MenuViewModel = {
   exchange: { duplicateCount: number; totalPaw: number };
   /** Dex manual-claim pending count (inbox auto-grant removed). */
   rewards: { unclaimedCount: number; dexClaimableCount: number; items: [] };
+  wallet: {
+    min: number;
+    unit: number;
+    dailyLimit: number;
+    withdrawnToday: number;
+    remainingToday: number;
+    maxWithdrawable: number;
+  };
   ticketShop: ReturnType<typeof getTicketShopStatus>;
   ratesMetaPercent: number;
   latestNotice: { id: string; title: string } | null;
@@ -165,6 +179,15 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     section.rows.some((row) => row.badge.type === "dot"),
   );
 
+  const withdrawRules = getWithdrawRules(config.economy);
+  const withdrawnToday = withdrawnTodayAmount(ops);
+  const remainingToday = remainingTodayAmount(ops, withdrawRules.dailyLimit);
+  const maxWithdrawable = maxWithdrawableAmount(
+    ops.nyangCoinBalance,
+    remainingToday,
+    withdrawRules,
+  );
+
   return {
     menu,
     config,
@@ -180,6 +203,14 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     pawAds: { remaining: pawRemaining, max: pawMax, weekendDouble },
     exchange: { duplicateCount, totalPaw: exchangeTotal },
     rewards: { unclaimedCount: dexClaimableCount, dexClaimableCount, items: [] },
+    wallet: {
+      min: withdrawRules.min,
+      unit: withdrawRules.unit,
+      dailyLimit: withdrawRules.dailyLimit,
+      withdrawnToday,
+      remainingToday,
+      maxWithdrawable,
+    },
     ticketShop,
     ratesMetaPercent: highlightPct,
     latestNotice,
