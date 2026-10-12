@@ -4,6 +4,9 @@ import type { CoachMark, FeatureIntro } from "../lib/opsTypes";
 import "./TutorialCoach.css";
 
 const SKIP_TOP_ZONE_PT = 160;
+const BUBBLE_GAP = 16;
+const PAD_TOP = 16;
+const PAD_BOTTOM = 20;
 
 type TutorialCoachProps = {
   mark: CoachMark | null;
@@ -20,20 +23,18 @@ function rectsOverlap(a: DOMRect, b: { left: number; top: number; width: number;
   );
 }
 
-function safeBottomPad() {
-  try {
-    const raw = getComputedStyle(document.documentElement).getPropertyValue("--sat-bottom");
-    const fromVar = Number.parseFloat(raw);
-    if (Number.isFinite(fromVar) && fromVar > 0) return fromVar + 12;
-  } catch {
-    // ignore
-  }
-  // env() isn't readable via JS; keep a generous phone footer pad.
-  return 24;
+/** Fixed containing block for tutor layer (#root when it has transform). */
+function fixedFrameRect(): DOMRect {
+  const root = document.getElementById("root");
+  if (root) return root.getBoundingClientRect();
+  return new DOMRect(0, 0, window.innerWidth, window.innerHeight);
 }
 
 export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const [frame, setFrame] = useState<DOMRect>(() =>
+    typeof document === "undefined" ? new DOMRect(0, 0, 390, 844) : fixedFrameRect(),
+  );
   const [bubbleEl, setBubbleEl] = useState<HTMLDivElement | null>(null);
   const [measuredBubbleH, setMeasuredBubbleH] = useState(0);
 
@@ -45,6 +46,7 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
     const measure = () => {
       const el = document.querySelector(mark.target);
       setRect(el?.getBoundingClientRect() ?? null);
+      setFrame(fixedFrameRect());
     };
     measure();
     const timer = window.setInterval(measure, 400);
@@ -68,45 +70,52 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   }, [bubbleEl, mark]);
 
   const hole = useMemo(() => {
-    if (!rect) return { left: 40, top: 220, width: 310, height: 220 };
+    // Convert viewport rects → fixed-containing-block coords (#root on desktop).
+    if (!rect) {
+      return { left: 40, top: 220, width: 310, height: 220 };
+    }
     return {
-      left: Math.max(8, rect.left - 10),
-      top: Math.max(8, rect.top - 10),
+      left: Math.max(8, rect.left - frame.left - 10),
+      top: Math.max(8, rect.top - frame.top - 10),
       width: rect.width + 20,
       height: rect.height + 20,
     };
-  }, [rect]);
+  }, [rect, frame]);
 
   const skipInline = useMemo(() => {
     if (!rect) return false;
-    if (rect.top < SKIP_TOP_ZONE_PT) return true;
+    // Skip zone is in viewport / frame-local top.
+    const targetTopInFrame = rect.top - frame.top;
+    if (targetTopInFrame < SKIP_TOP_ZONE_PT) return true;
     const skipApprox = {
-      left: window.innerWidth - 110,
+      left: frame.width - 110,
       top: 52,
       width: 96,
       height: 40,
     };
-    return rectsOverlap(rect, skipApprox);
-  }, [rect]);
+    const local = new DOMRect(rect.left - frame.left, rect.top - frame.top, rect.width, rect.height);
+    return rectsOverlap(local, skipApprox);
+  }, [rect, frame]);
 
   const bubbleLayout = useMemo(() => {
-    if (!mark) return { top: 24, above: false };
+    if (!mark) return { top: PAD_TOP, above: false };
     const bubbleH = measuredBubbleH || estimateBubbleHeight(mark);
-    const padTop = 16;
-    const padBottom = safeBottomPad();
-    const viewH = window.innerHeight;
-    const maxTop = Math.max(padTop, viewH - padBottom - bubbleH);
-    const spaceBelow = viewH - (hole.top + hole.height) - padBottom;
-    const spaceAbove = hole.top - padTop;
+    const viewH = frame.height || window.innerHeight;
+    const maxTop = Math.max(PAD_TOP, viewH - PAD_BOTTOM - bubbleH);
+    const spaceBelow = viewH - (hole.top + hole.height) - PAD_BOTTOM;
+    const spaceAbove = hole.top - PAD_TOP;
     const preferAbove = mark.bubble === "above";
     const placeAbove =
-      preferAbove || (spaceBelow < bubbleH + 12 && spaceAbove >= Math.min(bubbleH + 12, spaceBelow));
-    const rawTop = placeAbove ? hole.top - 12 - bubbleH : hole.top + hole.height + 12;
+      preferAbove ||
+      (spaceBelow < bubbleH + BUBBLE_GAP && spaceAbove >= Math.min(bubbleH + BUBBLE_GAP, spaceBelow));
+    const rawTop = placeAbove
+      ? hole.top - BUBBLE_GAP - bubbleH
+      : hole.top + hole.height + BUBBLE_GAP;
     return {
-      top: Math.min(maxTop, Math.max(padTop, rawTop)),
+      top: Math.min(maxTop, Math.max(PAD_TOP, rawTop)),
       above: placeAbove,
     };
-  }, [mark, hole, measuredBubbleH]);
+  }, [mark, hole, measuredBubbleH, frame.height]);
 
   if (!mark) return null;
 
@@ -209,11 +218,15 @@ export function FeatureIntroBubble({ intro, onDismiss }: FeatureIntroBubbleProps
   useEffect(() => {
     const el = document.querySelector(intro.target);
     const next = el?.getBoundingClientRect();
+    const frame = fixedFrameRect();
     if (!next) {
       setPos({ left: 24, top: 120 });
       return;
     }
-    setPos({ left: Math.min(window.innerWidth - 260, Math.max(16, next.left)), top: next.bottom + 8 });
+    setPos({
+      left: Math.min(frame.width - 260, Math.max(16, next.left - frame.left)),
+      top: next.bottom - frame.top + 8,
+    });
   }, [intro]);
 
   if (!pos) return null;
