@@ -1,4 +1,4 @@
-# Lucky Cat — 메뉴 패널 스펙 (menu-1.3)
+# Lucky Cat — 메뉴 패널 스펙 (menu-1.4)
 
 디자인 프레임 **390 × 844 pt**, 에셋 3x. 시안: `menu-screen-a.png`(패널), `-b`(출석 체크 · 1주차), `-b2`(출석 체크 · 주간 반복), `-c`(확률 안내 시트).
 > 상태바 47 + 토스 내비 56 = 103 pt는 시안용이에요. **토스 내비는 앱인토스가 그려요 → 패널/딤은 콘텐츠 영역 top(=0)부터 시작.** 아래 y는 콘텐츠 영역 기준.
@@ -98,3 +98,8 @@ icon-attendance / points / exchange / rewards / rates / notice / invite / settin
 - **성공 + 기록 (menu-screen-d3)**: 코인 96pt + 초록 체크, "토스포인트 30원을 받았어요", "지금 7 냥코인", 받은 기록(완료/처리 중/실패 칩), 확인. sfx-reward-coin + 햅틱 success.
 - **동작**: 받기 → 버튼 로딩(중복 탭 막기) → 서버 `POST /wallet/withdraw {amount, requestId}` → done이면 성공 화면, pending이면 "처리 중이에요" 토스트 후 기록으로, failed면 잔액 복구 안내. 클라이언트는 토스 지급 API를 직접 부르지 않아요.
 - 값·문구: menu.json `sheets.rewards`, 규칙: economy.json `nyangCoin`.
+
+## 9. 튜토리얼 대상 id (menu-1.4)
+- 행: `#menu-row-{rowId}` (예: `#menu-row-rewards`), 메뉴 아이콘 `#icon-menu`.
+- 보상함 시트: `#wallet-card`, `#withdraw-picker`(라벨+칩+받기 버튼), `#btn-withdraw`, `#btn-claim-all`, `#btn-wallet-history`.
+- 보상함 튜토리얼(tutorial.json `contextual.rewards-intro`): 냥코인이 처음 10개가 되거나 보상함을 처음 열 때 1회. 시안 tutorial-rewards-1/2/3.png. 코치마크 중에는 메뉴 패널·시트 스와이프 닫기를 막고, 건너뛰기는 말풍선 아래줄에 둬요(패널 닫기 버튼과 겹치지 않게).

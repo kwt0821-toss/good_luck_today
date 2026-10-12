@@ -1,5 +1,5 @@
 {
- "_version": "menu-1.3 (2026-10-12)",
+ "_version": "menu-1.4 (2026-10-12)",
  "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
  "panel": {
   "side": "right",
@@ -82,7 +82,8 @@
    "badge": {
     "type": "dot",
     "when": "attendance.canClaimToday"
-   }
+   },
+   "domId": "#menu-row-attendance"
   },
   "points": {
    "label": "포인트 받기",
@@ -97,7 +98,8 @@
     "when": "events.weekendDoublePaw.enabled && today in events.weekendDoublePaw.days"
    },
    "disabledWhen": "remaining == 0",
-   "disabledMeta": "내일 다시 열려요"
+   "disabledMeta": "내일 다시 열려요",
+   "domId": "#menu-row-points"
   },
   "exchange": {
    "label": "중복 카드 교환",
@@ -110,7 +112,8 @@
     "type": "none"
    },
    "disabledWhen": "user.duplicateCount == 0",
-   "disabledMeta": "아직 겹친 카드가 없어요"
+   "disabledMeta": "아직 겹친 카드가 없어요",
+   "domId": "#menu-row-exchange"
   },
   "rewards": {
    "label": "보상함",
@@ -122,7 +125,8 @@
    "badge": {
     "type": "dot",
     "when": "rewards.unclaimedCount > 0 || user.nyangCoinBalance >= economy.nyangCoin.withdraw.min (하루 1번만)"
-   }
+   },
+   "domId": "#menu-row-rewards"
   },
   "rates": {
    "label": "확률 안내",
@@ -135,7 +139,8 @@
     "type": "none"
    },
    "required": true,
-   "_note": "확률 공개는 필수 — enabled=false로 내리지 마세요"
+   "_note": "확률 공개는 필수 — enabled=false로 내리지 마세요",
+   "domId": "#menu-row-rates"
   },
   "notice": {
    "label": "공지·이벤트",
@@ -148,7 +153,8 @@
     "type": "pill-new",
     "text": "NEW",
     "when": "latestNotice.id > user.lastSeenNoticeId"
-   }
+   },
+   "domId": "#menu-row-notice"
   },
   "invite": {
    "label": "친구 초대",
@@ -157,7 +163,8 @@
    "open": "sheet:invite",
    "disabledPill": "준비 중",
    "data": "economy.json → events.friendInvite (enabled=false)",
-   "enableWhen": "economy.events.friendInvite.enabled == true"
+   "enableWhen": "economy.events.friendInvite.enabled == true",
+   "domId": "#menu-row-invite"
   },
   "settings": {
    "label": "설정",
@@ -201,7 +208,7 @@
      "label": "튜토리얼 다시 보기",
      "type": "action",
      "action": "tutorial.replay",
-     "data": "tutorial.json (보상 재지급 없음)"
+     "data": "tutorial.json steps(ncoin-intro 포함) + contextual.rewards-intro (보상 재지급 없음)"
     },
     {
      "id": "contact",
@@ -227,7 +234,8 @@
      "type": "text",
      "value": "app.version"
     }
-   ]
+   ],
+   "domId": "#menu-row-settings"
   }
  },
  "menuIconBadge": {
@@ -405,7 +413,15 @@
     "menu-screen-d-low.png",
     "menu-screen-d2.png",
     "menu-screen-d3.png"
-   ]
+   ],
+   "domIds": {
+    "wallet": "#wallet-card",
+    "picker": "#withdraw-picker (라벨+칩+받기 버튼 감싸는 div)",
+    "withdrawButton": "#btn-withdraw",
+    "claimAll": "#btn-claim-all",
+    "history": "#btn-wallet-history"
+   },
+   "tutorial": "tutorial.json contextual.rewards-intro (r2~r4 대상이 위 id)"
   }
  },
  "attendanceOnlyTag": {
