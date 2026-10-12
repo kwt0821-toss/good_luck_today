@@ -112,7 +112,6 @@ export function DexDetailSheet({
   const dragKind = useRef<"close" | "card" | null>(null);
   const draggingRef = useRef(false);
   const dragTiltRef = useRef(0);
-  const ignoreClickRef = useRef(false);
 
   const record = owned[card.id];
   const ownedInGroup = group.filter((item) => (owned[item.id]?.count ?? 0) > 0);
@@ -193,7 +192,6 @@ export function DexDetailSheet({
   const flipTo = (dir: 1 | -1) => {
     if (flippingRef.current) return;
     flippingRef.current = true;
-    ignoreClickRef.current = true;
 
     const from = angleRef.current;
     const to = from + dir * 180;
@@ -319,7 +317,6 @@ export function DexDetailSheet({
     dragKind.current = "card";
     draggingRef.current = false;
     dragTiltRef.current = 0;
-    ignoreClickRef.current = false;
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -337,7 +334,6 @@ export function DexDetailSheet({
         return;
       }
       draggingRef.current = true;
-      ignoreClickRef.current = true;
     }
 
     if (reduceMotionRef.current) return;
@@ -396,10 +392,6 @@ export function DexDetailSheet({
   };
 
   const onFlipClick = () => {
-    if (ignoreClickRef.current) {
-      ignoreClickRef.current = false;
-      return;
-    }
     if (flippingRef.current) return;
     flipTo(1);
   };
