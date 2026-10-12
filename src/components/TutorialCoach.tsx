@@ -20,8 +20,22 @@ function rectsOverlap(a: DOMRect, b: { left: number; top: number; width: number;
   );
 }
 
+function safeBottomPad() {
+  try {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue("--sat-bottom");
+    const fromVar = Number.parseFloat(raw);
+    if (Number.isFinite(fromVar) && fromVar > 0) return fromVar + 12;
+  } catch {
+    // ignore
+  }
+  // env() isn't readable via JS; keep a generous phone footer pad.
+  return 24;
+}
+
 export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const [bubbleEl, setBubbleEl] = useState<HTMLDivElement | null>(null);
+  const [measuredBubbleH, setMeasuredBubbleH] = useState(0);
 
   useEffect(() => {
     if (!mark) {
@@ -40,6 +54,18 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
       window.removeEventListener("resize", measure);
     };
   }, [mark]);
+
+  useEffect(() => {
+    if (!bubbleEl) {
+      setMeasuredBubbleH(0);
+      return;
+    }
+    const update = () => setMeasuredBubbleH(bubbleEl.getBoundingClientRect().height);
+    update();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
+    ro?.observe(bubbleEl);
+    return () => ro?.disconnect();
+  }, [bubbleEl, mark]);
 
   const hole = useMemo(() => {
     if (!rect) return { left: 40, top: 220, width: 310, height: 220 };
@@ -63,12 +89,26 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
     return rectsOverlap(rect, skipApprox);
   }, [rect]);
 
-  if (!mark) return null;
+  const bubbleLayout = useMemo(() => {
+    if (!mark) return { top: 24, above: false };
+    const bubbleH = measuredBubbleH || estimateBubbleHeight(mark);
+    const padTop = 16;
+    const padBottom = safeBottomPad();
+    const viewH = window.innerHeight;
+    const maxTop = Math.max(padTop, viewH - padBottom - bubbleH);
+    const spaceBelow = viewH - (hole.top + hole.height) - padBottom;
+    const spaceAbove = hole.top - padTop;
+    const preferAbove = mark.bubble === "above";
+    const placeAbove =
+      preferAbove || (spaceBelow < bubbleH + 12 && spaceAbove >= Math.min(bubbleH + 12, spaceBelow));
+    const rawTop = placeAbove ? hole.top - 12 - bubbleH : hole.top + hole.height + 12;
+    return {
+      top: Math.min(maxTop, Math.max(padTop, rawTop)),
+      above: placeAbove,
+    };
+  }, [mark, hole, measuredBubbleH]);
 
-  const bubbleAbove = mark.bubble === "above";
-  const bubbleTop = bubbleAbove
-    ? Math.max(16, hole.top - 12 - estimateBubbleHeight(mark))
-    : Math.min(window.innerHeight - 160, hole.top + hole.height + 12);
+  if (!mark) return null;
 
   const ctaLabel = mark.cta ?? (mark.ackOnly ? "알겠어요" : "다음");
   const showFinger = mark.showFinger !== false && !mark.ackOnly && !mark.lines?.length;
@@ -98,7 +138,11 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
           건너뛰기
         </button>
       ) : null}
-      <div className="tut-bubble" style={{ top: bubbleTop, left: 24, right: 24 }}>
+      <div
+        ref={setBubbleEl}
+        className={`tut-bubble ${bubbleLayout.above ? "is-above" : "is-below"}`}
+        style={{ top: bubbleLayout.top, left: 24, right: 24 }}
+      >
         {mark.title ? <p className="tut-title">{mark.title}</p> : null}
         {mark.copy ? <p className="tut-copy">{mark.copy}</p> : null}
         {mark.sub ? <p className="tut-sub">{mark.sub}</p> : null}

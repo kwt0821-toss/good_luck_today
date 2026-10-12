@@ -87,6 +87,8 @@ export function ncoinNextMark(then: NcoinIntroThen): CoachMark | null {
     id: "ncoin-intro-next",
     target: then.next.target,
     copy: then.next.copy,
+    // #btn-to-dex sits in the footer — keep the bubble above so it isn't clipped.
+    bubble: "above",
     showFinger: true,
   };
 }
