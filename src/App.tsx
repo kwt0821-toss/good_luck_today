@@ -269,10 +269,12 @@ export default function App() {
     if (!ops.tutorialDone) return;
     if (ops.tut.rewardsIntro !== "unseen") return;
     if (ad || screen.name === "reveal" || screen.name === "draw") return;
+    if (featureIntro) return;
     if (menuOpen) return; // open-rewards trigger handled via onSheetOpen
     if (ops.nyangCoinBalance < 10) return;
     if (rewardsArmedRef.current) return;
     rewardsArmedRef.current = true;
+    if (screen.name !== "home") setScreen({ name: "home" });
     setRewardsIntro({ stepId: "r1", replay: false });
   }, [
     ops,
@@ -283,6 +285,7 @@ export default function App() {
     ad,
     screen.name,
     menuOpen,
+    featureIntro,
   ]);
 
   useEffect(() => {
