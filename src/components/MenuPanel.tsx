@@ -22,6 +22,10 @@ import {
   withdrawChipAmounts,
 } from "../lib/mockWallet";
 import {
+  buildTicketBuyRequestId,
+  postShopTicketsBuy,
+} from "../lib/mockTicketShop";
+import {
   claimAttendanceGift,
   collectAllRewards,
   convertAllDuplicates,
@@ -43,6 +47,8 @@ type MenuPanelProps = {
   onPawAd: () => void;
   onReplayTutorial: () => void;
   onDevResetNewUser?: () => void;
+  /** Start rate-up draw from ticket shop CTA. */
+  onRateUpDraw?: () => void;
   /** Force-open a sheet (rewards-intro coach). */
   forceSheet?: MenuSheetId;
   /** Block panel/sheet swipe & dim dismiss while coach marks are active. */
@@ -68,6 +74,7 @@ export function MenuPanel({
   onPawAd,
   onReplayTutorial,
   onDevResetNewUser,
+  onRateUpDraw,
   forceSheet = null,
   lockDismiss = false,
   onSheetOpen,
@@ -87,6 +94,7 @@ export function MenuPanel({
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
   const [withdrawBusy, setWithdrawBusy] = useState(false);
+  const [ticketBuyBusy, setTicketBuyBusy] = useState(false);
   const reduce = shouldReduceMenuMotion(settings);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const sheetDrag = useRef<{ y: number; active: boolean }>({ y: 0, active: false });
@@ -278,6 +286,27 @@ export function MenuPanel({
       void haptic("success");
     }
     closeSheet();
+  };
+
+  const doBuyRateUpTicket = async () => {
+    if (ticketBuyBusy) return;
+    setTicketBuyBusy(true);
+    try {
+      const result = await postShopTicketsBuy(ops, {
+        ticketType: "rateUp",
+        requestId: buildTicketBuyRequestId(),
+      });
+      onOpsChange(result.state);
+      if (!result.response.ok) {
+        showToast(result.response.reason);
+        return;
+      }
+      AudioManager.playSfx("reward-coin");
+      void haptic("success");
+      showToast(model?.menu.sheets.ticketShop.toastBought ?? "확률업 뽑기권을 샀어요");
+    } finally {
+      setTicketBuyBusy(false);
+    }
   };
 
   const patchSettings = (patch: Partial<MenuSettings>) => {
@@ -490,9 +519,11 @@ export function MenuPanel({
                       : 560
                     : sheet === "rates"
                       ? 640
-                      : sheet === "settings"
+                      : sheet === "ticketShop"
                         ? 520
-                        : 420,
+                        : sheet === "settings"
+                          ? 520
+                          : 420,
               }}
             >
               <div className="menu-grab" />
@@ -504,11 +535,13 @@ export function MenuPanel({
                       ? model.menu.sheets.rates.eyebrow
                       : sheet === "exchange"
                         ? model.menu.sheets.exchange.eyebrow
-                        : sheet === "rewards"
-                          ? model.menu.sheets.rewards.eyebrow
-                          : sheet === "settings"
-                            ? "SETTINGS"
-                            : "NOTICE"}
+                        : sheet === "ticketShop"
+                          ? model.menu.sheets.ticketShop.eyebrow
+                          : sheet === "rewards"
+                            ? model.menu.sheets.rewards.eyebrow
+                            : sheet === "settings"
+                              ? "SETTINGS"
+                              : "NOTICE"}
                 </p>
                 <h3 className="menu-sheet-title">
                   {sheet === "attendance"
@@ -517,11 +550,13 @@ export function MenuPanel({
                       ? model.menu.sheets.rates.title
                       : sheet === "exchange"
                         ? model.menu.sheets.exchange.title
-                        : sheet === "rewards"
-                          ? model.menu.sheets.rewards.title
-                          : sheet === "settings"
-                            ? "설정"
-                            : "공지·이벤트"}
+                        : sheet === "ticketShop"
+                          ? model.menu.sheets.ticketShop.title
+                          : sheet === "rewards"
+                            ? model.menu.sheets.rewards.title
+                            : sheet === "settings"
+                              ? "설정"
+                              : "공지·이벤트"}
                 </h3>
                 <p className="menu-sheet-desc">
                   {sheet === "attendance"
@@ -533,11 +568,13 @@ export function MenuPanel({
                       ? model.menu.sheets.rates.desc
                       : sheet === "exchange"
                         ? model.menu.sheets.exchange.desc
-                        : sheet === "rewards"
-                          ? model.menu.sheets.rewards.desc
-                          : sheet === "settings"
-                            ? "소리·진동·움직임과 계정 안내를 관리해요."
-                            : "이벤트와 공지를 확인해요."}
+                        : sheet === "ticketShop"
+                          ? model.menu.sheets.ticketShop.desc
+                          : sheet === "rewards"
+                            ? model.menu.sheets.rewards.desc
+                            : sheet === "settings"
+                              ? "소리·진동·움직임과 계정 안내를 관리해요."
+                              : "이벤트와 공지를 확인해요."}
                 </p>
                 <button
                   type="button"
@@ -718,6 +755,58 @@ export function MenuPanel({
                       <b>{model.exchange.totalPaw.toLocaleString("ko-KR")}P</b>
                     </div>
                   </>
+                ) : null}
+
+                {sheet === "ticketShop" ? (
+                  <div className="ticket-shop">
+                    <div className="ticket-shop-card">
+                      <div className="ticket-shop-card-icon" aria-hidden="true">
+                        <img src={menuAsset("icon-ticket.svg")} alt="" width={28} height={28} />
+                      </div>
+                      <div className="ticket-shop-card-copy">
+                        <p className="ticket-shop-card-title">{model.menu.sheets.ticketShop.cardTitle}</p>
+                        <p className="ticket-shop-card-desc">{model.menu.sheets.ticketShop.cardDesc}</p>
+                      </div>
+                      <p className="ticket-shop-card-price">
+                        {model.menu.sheets.ticketShop.priceLabel.replace(
+                          "{price}",
+                          String(model.ticketShop.pricePaw),
+                        )}
+                      </p>
+                    </div>
+                    <div className="ticket-shop-limits" role="list">
+                      <div className="ticket-shop-limit" role="listitem">
+                        <span>오늘</span>
+                        <b>
+                          {model.ticketShop.dayBought}/{model.ticketShop.dayLimit}
+                        </b>
+                      </div>
+                      <div className="ticket-shop-limit" role="listitem">
+                        <span>이번 주</span>
+                        <b>
+                          {model.ticketShop.weekBought}/{model.ticketShop.weekLimit}
+                        </b>
+                      </div>
+                      <div className="ticket-shop-limit" role="listitem">
+                        <span>보유</span>
+                        <b>
+                          {model.ticketShop.ticketsHeld}/{model.ticketShop.maxHold}
+                        </b>
+                      </div>
+                    </div>
+                    <p className="ticket-shop-balance">
+                      {model.menu.sheets.ticketShop.balanceLabel.replace(
+                        "{paw}",
+                        model.ticketShop.pawBalance.toLocaleString("ko-KR"),
+                      )}
+                    </p>
+                    {!model.ticketShop.canBuy && model.ticketShop.disabledReason ? (
+                      <p className="ticket-shop-disabled">{model.ticketShop.disabledReason}</p>
+                    ) : null}
+                    {model.menu.sheets.ticketShop.note ? (
+                      <p className="ticket-shop-note">{model.menu.sheets.ticketShop.note}</p>
+                    ) : null}
+                  </div>
                 ) : null}
 
                 {sheet === "rewards" ? (
@@ -1000,6 +1089,37 @@ export function MenuPanel({
                     String(model.exchange.totalPaw),
                   )}
                 </button>
+              ) : null}
+
+              {sheet === "ticketShop" ? (
+                <div className="ticket-shop-actions">
+                  <button
+                    type="button"
+                    className="menu-sheet-cta"
+                    disabled={!model.ticketShop.canBuy || ticketBuyBusy}
+                    onClick={() => void doBuyRateUpTicket()}
+                  >
+                    {ticketBuyBusy
+                      ? "구매 중…"
+                      : model.menu.sheets.ticketShop.ctaBuy.replace(
+                          "{price}",
+                          String(model.ticketShop.pricePaw),
+                        )}
+                  </button>
+                  {model.ticketShop.ticketsHeld > 0 && onRateUpDraw ? (
+                    <button
+                      type="button"
+                      className="menu-sheet-cta is-secondary"
+                      onClick={() => {
+                        closeSheet();
+                        onClose();
+                        onRateUpDraw();
+                      }}
+                    >
+                      {model.menu.sheets.ticketShop.ctaDraw}
+                    </button>
+                  ) : null}
+                </div>
               ) : null}
 
               {sheet === "rewards" ? (

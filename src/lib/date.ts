@@ -29,6 +29,36 @@ export function formatShortDate(dateKey: string): string {
   return `${Number(month)}월 ${Number(day)}일`;
 }
 
+/**
+ * Monday date key (YYYY-MM-DD) for the KST week containing `date`.
+ * Shop ticket week limits reset Monday 00:00 KST.
+ */
+export function toKstMondayWeekKey(date = new Date()): string {
+  const key = toKstDateKey(date);
+  const [year, month, day] = key.split("-").map(Number);
+  // 12:00 KST = 03:00 UTC on that calendar date
+  const probe = new Date(Date.UTC(year, month - 1, day, 3, 0, 0));
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    weekday: "short",
+  }).format(probe);
+  const offsetFromMonday: Record<string, number> = {
+    Mon: 0,
+    Tue: 1,
+    Wed: 2,
+    Thu: 3,
+    Fri: 4,
+    Sat: 5,
+    Sun: 6,
+  };
+  const delta = offsetFromMonday[weekday] ?? 0;
+  const monday = new Date(Date.UTC(year, month - 1, day - delta));
+  const y = monday.getUTCFullYear();
+  const m = String(monday.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(monday.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 /** Ms until the next Asia/Seoul midnight (daily draw reset). */
 export function msUntilNextKstMidnight(date = new Date()): number {
   const key = toKstDateKey(date);

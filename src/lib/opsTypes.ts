@@ -45,6 +45,16 @@ export type OpsEconomy = {
   shop?: {
     excludeSources: string[];
     note?: string;
+    tickets?: {
+      rateUpTicket: {
+        ticketType: "rateUp";
+        pricePaw: number;
+        dayLimit: number;
+        weekLimit: number;
+        weekReset?: string;
+        note?: string;
+      };
+    };
   };
   /** Was tossPayout — withdraw / payout rules for 냥코인 → 토스포인트 */
   nyangCoin: {
@@ -349,6 +359,14 @@ export type OpsState = {
   /** @deprecated use lastAttendDateKST */
   lastAttendanceDateKey: string;
   rateUpTickets: number;
+  /** KST Monday date key for shop.tickets week window */
+  ticketShopWeekKey: string;
+  ticketShopWeekBought: number;
+  /** KST date key for shop.tickets day window */
+  ticketShopDayKey: string;
+  ticketShopDayBought: number;
+  /** Idempotent purchase ledger (tossUserKey + requestId) */
+  ticketShopLedger: TicketShopLedgerItem[];
   attendanceBadges: string[];
   claimedMilestoneDays: number[];
   featureIntrosSeen: string[];
@@ -368,6 +386,16 @@ export type OpsState = {
   }>;
   walletHistory: WalletHistoryItem[];
   lastSeenNoticeId: string;
+};
+
+export type TicketShopLedgerItem = {
+  requestId: string;
+  ticketType: "rateUp";
+  createdAt: number;
+  paw: number;
+  ticketsHeld: number;
+  weekBought: number;
+  dayBought: number;
 };
 
 export type ConfirmDrawResult = {

@@ -1149,6 +1149,123 @@
   line-height: 1.45;
 }
 
+.ticket-shop {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ticket-shop-card {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 14px 14px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(243, 233, 215, 0.16);
+  background: rgba(243, 233, 215, 0.05);
+}
+
+.ticket-shop-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 196, 138, 0.14);
+  border: 1px solid rgba(255, 196, 138, 0.35);
+}
+
+.ticket-shop-card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ticket-shop-card-desc {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: rgba(243, 233, 215, 0.58);
+}
+
+.ticket-shop-card-price {
+  margin: 0;
+  font-family: Poppins, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #ffc48a;
+}
+
+.ticket-shop-limits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.ticket-shop-limit {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  border-radius: 14px;
+  border: 1px solid rgba(243, 233, 215, 0.14);
+  background: rgba(243, 233, 215, 0.04);
+}
+
+.ticket-shop-limit span {
+  font-size: 10.5px;
+  color: rgba(243, 233, 215, 0.55);
+}
+
+.ticket-shop-limit b {
+  font-family: Poppins, sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: #ffc48a;
+}
+
+.ticket-shop-balance {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(243, 233, 215, 0.78);
+}
+
+.ticket-shop-disabled {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f4a9a8;
+}
+
+.ticket-shop-note {
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(243, 233, 215, 0.42);
+}
+
+.ticket-shop-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ticket-shop-actions .menu-sheet-cta {
+  margin-bottom: 8px;
+}
+
+.ticket-shop-actions .menu-sheet-cta:last-child {
+  margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+}
+
+.ticket-shop-actions .menu-sheet-cta.is-secondary {
+  margin-top: 0;
+}
+
 .menu-sheet-cta.is-secondary {
   background: rgba(243, 233, 215, 0.08);
   color: var(--menu-cream);

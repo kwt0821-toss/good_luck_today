@@ -34,9 +34,13 @@ type HomeScreenProps = {
   firstDrawPending: boolean;
   rateNormalPct: string;
   rateUpPct: string;
+  /** Show 200P shop entry on rate-up (ad used, 0 tickets, limits left). */
+  offerTicketShop?: boolean;
+  ticketShopPricePaw?: number;
   menuBadge?: boolean;
   onDraw: () => void;
   onRateUpDraw: () => void;
+  onOpenTicketShop?: () => void;
   onPawAd: () => void;
   onOpenMenu: () => void;
   onOpenCollection: () => void;
@@ -55,9 +59,12 @@ export function HomeScreen({
   firstDrawPending,
   rateNormalPct,
   rateUpPct,
+  offerTicketShop = false,
+  ticketShopPricePaw = 200,
   menuBadge = false,
   onDraw,
   onRateUpDraw,
+  onOpenTicketShop,
   onPawAd,
   onOpenMenu,
   onOpenCollection,
@@ -137,16 +144,20 @@ export function HomeScreen({
     }, flipDelay + settleDelay + 40);
   };
 
-  const rateUpDisabled = remainingRateUp <= 0;
-  const rateUpLabel = rateUpDisabled
-    ? "내일 다시"
-    : useRateUpTicket
-      ? "뽑기권 사용"
-      : `5성↑ ${rateNormalPct}→${rateUpPct}`;
-  /** Hide when today's rate-up is used and no tickets remain. */
-  const showRateUpTip = remainingRateUp > 0;
-  const rateUpTipCopy =
-    rateUpTickets > 0
+  const rateUpShopEntry = offerTicketShop && remainingRateUp <= 0 && rateUpTickets <= 0;
+  const rateUpDisabled = remainingRateUp <= 0 && !rateUpShopEntry;
+  const rateUpLabel = rateUpShopEntry
+    ? `${ticketShopPricePaw}P`
+    : rateUpDisabled
+      ? "내일 다시"
+      : useRateUpTicket
+        ? "뽑기권 사용"
+        : `5성↑ ${rateNormalPct}→${rateUpPct}`;
+  /** Tip when draw available, or shop entry after ad used with 0 tickets. */
+  const showRateUpTip = remainingRateUp > 0 || rateUpShopEntry;
+  const rateUpTipCopy = rateUpShopEntry
+    ? `${ticketShopPricePaw}P로 광고 없이 확률업`
+    : rateUpTickets > 0
       ? "뽑기권으로 광고 없이 확률업"
       : `${rateUpAdSeconds}초 광고 보고 확률업`;
 
@@ -223,9 +234,13 @@ export function HomeScreen({
           <button
             type="button"
             id="btn-rateup"
-            className={`main-rateup ${rateUpDisabled ? "is-dim" : ""} ${useRateUpTicket ? "is-ticket" : ""}`}
+            className={`main-rateup ${rateUpDisabled ? "is-dim" : ""} ${useRateUpTicket ? "is-ticket" : ""} ${rateUpShopEntry ? "is-shop" : ""}`}
             disabled={rateUpDisabled}
             onClick={() => {
+              if (rateUpShopEntry) {
+                onOpenTicketShop?.();
+                return;
+              }
               if (rateUpDisabled) {
                 showNotice("내일 다시 만나요");
                 return;
@@ -233,11 +248,12 @@ export function HomeScreen({
               onRateUpDraw();
             }}
           >
-            {!rateUpDisabled && !useRateUpTicket ? (
+            {!rateUpDisabled && !useRateUpTicket && !rateUpShopEntry ? (
               <span className="main-rateup-hint">({rateUpAdSeconds}초 광고)</span>
             ) : null}
+            {rateUpShopEntry ? <span className="main-rateup-hint">포인트로 사기</span> : null}
             <span className="main-rateup-label">{rateUpLabel}</span>
-            {rateUpTickets > 0 && !rateUpDisabled ? (
+            {rateUpTickets > 0 && remainingRateUp > 0 ? (
               <span className="main-rateup-badge" aria-label={`뽑기권 ${rateUpTickets}장`}>
                 ×{rateUpTickets}
               </span>

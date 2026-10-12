@@ -1164,6 +1164,18 @@
   cursor: default;
 }
 
+.main-rateup.is-shop {
+  border-color: rgba(255, 196, 138, 0.55);
+  box-shadow: 0 0 12px rgba(255, 196, 138, 0.22);
+}
+
+.main-rateup.is-shop .main-rateup-label {
+  color: #ffc48a;
+  font-family: Poppins, "Noto Sans KR", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+}
+
 .main-stage {
   position: relative;
   width: 100%;
