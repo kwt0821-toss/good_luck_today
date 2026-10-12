@@ -1,7 +1,8 @@
 .tut-layer {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  /* Above menu panel (z=90) so rewards-intro can highlight rows/sheets */
+  z-index: 120;
   pointer-events: none;
 }
 
@@ -26,7 +27,7 @@
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 52px);
   right: 14px;
-  z-index: 81;
+  z-index: 121;
   pointer-events: auto;
   height: 34px;
   padding: 0 12px;
@@ -40,7 +41,7 @@
 
 .tut-bubble {
   position: fixed;
-  z-index: 81;
+  z-index: 121;
   pointer-events: auto;
   padding: 14px 16px;
   border-radius: 16px;
@@ -48,6 +49,13 @@
   border: 1px solid rgba(243, 233, 215, 0.22);
   color: #f3e9d7;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.tut-title {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
 }
 
 .tut-copy {
@@ -62,8 +70,70 @@
   color: rgba(243, 233, 215, 0.7);
 }
 
-.tut-next {
+.tut-lines {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tut-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: rgba(243, 233, 215, 0.92);
+}
+
+.tut-line.has-divider {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(243, 233, 215, 0.28);
+}
+
+.tut-line.is-muted {
+  color: rgba(243, 233, 215, 0.45);
+}
+
+.tut-line-icon {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.tut-line-icon.is-empty {
+  display: inline-block;
+}
+
+.tut-actions {
   margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.tut-actions.has-skip {
+  justify-content: space-between;
+}
+
+.tut-skip-inline {
+  height: 36px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: rgba(243, 233, 215, 0.62);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tut-next {
   height: 36px;
   padding: 0 14px;
   border: 0;
@@ -76,7 +146,7 @@
 
 .tut-finger {
   position: fixed;
-  z-index: 82;
+  z-index: 122;
   width: 28px;
   height: 28px;
   margin: -4px 0 0 -4px;

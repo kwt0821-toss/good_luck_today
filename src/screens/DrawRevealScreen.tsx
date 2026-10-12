@@ -107,6 +107,11 @@ type DrawRevealScreenProps = {
   waitFailed: boolean;
   toastText: string | null;
   remainingDraws: number;
+  /** Keep #dex-toast visible (tutorial ncoin-intro). */
+  holdToast?: boolean;
+  /** Force-hide toast (after ncoin-intro CTA). */
+  hideToast?: boolean;
+  onToastShown?: () => void;
   onToDex: () => void;
   onDrawAgain: () => void;
   onRetry: () => void;
@@ -143,6 +148,9 @@ export function DrawRevealScreen({
   waitFailed,
   toastText,
   remainingDraws,
+  holdToast = false,
+  hideToast = false,
+  onToastShown,
   onToDex,
   onDrawAgain,
   onRetry,
@@ -157,6 +165,15 @@ export function DrawRevealScreen({
   const dupRef = useRef<HTMLDivElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
   const toastRef = useRef<HTMLDivElement>(null);
+  const toastShownRef = useRef(false);
+  const [toastDismissed, setToastDismissed] = useState(false);
+  const [toastHasShown, setToastHasShown] = useState(false);
+  const holdToastRef = useRef(holdToast);
+  const hideToastRef = useRef(hideToast);
+  const onToastShownRef = useRef(onToastShown);
+  holdToastRef.current = holdToast;
+  hideToastRef.current = hideToast;
+  onToastShownRef.current = onToastShown;
   const btnsRef = useRef<HTMLDivElement>(null);
   const fxRef = useRef<SVGSVGElement>(null);
   const frontRef = useRef<HTMLImageElement>(null);
@@ -175,7 +192,14 @@ export function DrawRevealScreen({
 
   useEffect(() => {
     revealSoundRef.current = false;
+    toastShownRef.current = false;
+    setToastDismissed(false);
+    setToastHasShown(false);
   }, [reservation.drawId]);
+
+  useEffect(() => {
+    if (hideToast) setToastDismissed(true);
+  }, [hideToast]);
 
   useEffect(() => {
     if (!ready || revealSoundRef.current) return;
@@ -185,6 +209,12 @@ export function DrawRevealScreen({
       AudioManager.playSfx("reveal", { rarity: reservation.rarity });
     }, 420);
   }, [ready, reservation.rarity]);
+
+  useEffect(() => {
+    if (!toastText || !reservation.isNew || toastDismissed || holdToast || !toastHasShown) return;
+    const timer = window.setTimeout(() => setToastDismissed(true), 2800);
+    return () => window.clearTimeout(timer);
+  }, [toastText, reservation.isNew, toastDismissed, holdToast, toastHasShown, reservation.drawId]);
 
   const theme = RAR[reservation.rarity] ?? RAR.b1;
   const frontSrc = reservation.frontUrl || reservation.thumbUrl;
@@ -280,6 +310,11 @@ export function DrawRevealScreen({
       const btns = btnsRef.current;
       if (!glow || !cardbox || !inner) return;
 
+      const toastVisible =
+        Boolean(reservation.isNew && toastText) &&
+        !toastDismissed &&
+        !hideToastRef.current;
+
       if (reduce) {
         // Spec: short crossfade only — skip shake/rays/particles.
         const p = clamp(t / 250);
@@ -300,8 +335,13 @@ export function DrawRevealScreen({
           dup.style.transform = "translateX(-50%) scale(1)";
         }
         if (toast) {
-          toast.style.opacity = reservation.isNew && toastText ? String(p) : "0";
+          toast.style.opacity = toastVisible ? String(p) : "0";
           toast.style.transform = "translateY(0)";
+          if (toastVisible && p > 0.85 && !toastShownRef.current) {
+            toastShownRef.current = true;
+            setToastHasShown(true);
+            onToastShownRef.current?.();
+          }
         }
         if (btns) {
           btns.style.opacity = String(p);
@@ -373,9 +413,13 @@ export function DrawRevealScreen({
       }
       if (toast) {
         const tp = clamp((t - 900) / 300);
-        const show = Boolean(reservation.isNew && toastText);
-        toast.style.opacity = show ? String(tp) : "0";
+        toast.style.opacity = toastVisible ? String(tp) : "0";
         toast.style.transform = `translateY(${-24 * (1 - eOutC(tp))}px)`;
+        if (toastVisible && tp >= 1 && !toastShownRef.current) {
+          toastShownRef.current = true;
+          setToastHasShown(true);
+          onToastShownRef.current?.();
+        }
       }
       if (info) {
         const ip = clamp((t - 820) / 280);
@@ -404,7 +448,7 @@ export function DrawRevealScreen({
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [manualFlip, reservation.isNew, theme, toastText]);
+  }, [manualFlip, reservation.isNew, theme, toastText, toastDismissed]);
 
   useEffect(() => {
     if (frontRef.current) frontRef.current.src = frontSrc;
@@ -504,7 +548,12 @@ export function DrawRevealScreen({
           ref={toastRef}
           className="draw-reveal-toast"
           id="dex-toast"
-          style={{ display: reservation.isNew && toastText ? undefined : "none" }}
+          style={{
+            display:
+              reservation.isNew && toastText && !toastDismissed && !hideToast
+                ? undefined
+                : "none",
+          }}
         >
           <div className="ic" aria-hidden="true">
             <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={18} height={18} />

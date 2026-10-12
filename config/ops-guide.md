@@ -8,7 +8,7 @@
 | `economy.json` | **단일 소스.** 포인트 획득처(광고 10×10/일, 새 카드 +20, 중복 전환 10/30/60/150, 세트·전체 완성 보상), 토스 지급(1인 최대 417원), 뽑기 규칙(일반 3 + 확률업 1, 생애 첫 뽑기 무료), 제안 확률표, 코지 포인트·레벨 표, 상점 가격대, 방 해금, 이벤트, 어뷰징 방지 |
 | `prices.json` | 방 아이템·타일 144개 전부의 가격, 코지 포인트, 등급, 플래그(`starterPlaced`, `starterDrawer`, `attendance`, `roomUnlockGift:*`, `roomDefault`, `limited`). id는 `room-assets-v6/items.json`, `room-assets-themes/items-themes.json` 기준이에요 |
 | `starter.json` | 첫 방 배치(캣베드+히어로 고양이, 플로어 램프, 화분, 발바닥 러그, 아치 창문, 카드 액자, 기본 바닥·벽지), 서랍 4개, 시작 300포인트, 7일 출석(7일차 캣타워) |
-| `tutorial.json` | 4단계 코치마크(대상 요소 id, 해요체 문구, 건너뛰기 규칙) + 2~6일차 '새 기능' 말풍선 일정 |
+| `tutorial.json` | 4단계 코치마크 + step2.then 냥코인 소개(ncoin-intro) + contextual.rewards-intro(보상함) + 2~6일차 '새 기능' 말풍선 일정 |
 | `LuckyCat-economy.xlsx` | 기획 검토용 표. 노란 칸이 입력값이에요. 하루 수입을 바꾸면 '며칠 모으면'이 다시 계산돼요. eCPM은 비워 두었어요(앱인토스 대시보드 값을 입력) |
 
 ## 핵심 결정

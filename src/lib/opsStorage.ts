@@ -90,6 +90,14 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
       tutorialStep: typeof parsed.tutorialStep === "number" ? parsed.tutorialStep : 1,
       tutorialInterruptions:
         typeof parsed.tutorialInterruptions === "number" ? parsed.tutorialInterruptions : 0,
+      tut: (() => {
+        const raw = isRecord(parsed.tut) ? parsed.tut : null;
+        const status = raw?.rewardsIntro;
+        if (status === "seen" || status === "skipped" || status === "unseen") {
+          return { rewardsIntro: status };
+        }
+        return fallback.tut;
+      })(),
       installDateKey:
         typeof parsed.installDateKey === "string" ? parsed.installDateKey : fallback.installDateKey,
       attendanceDays:
@@ -153,17 +161,20 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
       walletHistory: Array.isArray(parsed.walletHistory)
         ? parsed.walletHistory
             .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
-            .map((item) => ({
-              requestId: typeof item.requestId === "string" ? item.requestId : "",
-              amount: typeof item.amount === "number" ? item.amount : 0,
-              status:
+            .map((item) => {
+              const status: "pending" | "done" | "failed" =
                 item.status === "done" || item.status === "failed" || item.status === "pending"
                   ? item.status
-                  : ("pending" as const),
-              createdAt: typeof item.createdAt === "number" ? item.createdAt : 0,
-              updatedAt: typeof item.updatedAt === "number" ? item.updatedAt : 0,
-              failReason: typeof item.failReason === "string" ? item.failReason : undefined,
-            }))
+                  : "pending";
+              return {
+                requestId: typeof item.requestId === "string" ? item.requestId : "",
+                amount: typeof item.amount === "number" ? item.amount : 0,
+                status,
+                createdAt: typeof item.createdAt === "number" ? item.createdAt : 0,
+                updatedAt: typeof item.updatedAt === "number" ? item.updatedAt : 0,
+                failReason: typeof item.failReason === "string" ? item.failReason : undefined,
+              };
+            })
             .filter((item) => item.requestId)
         : fallback.walletHistory,
       lastSeenNoticeId:

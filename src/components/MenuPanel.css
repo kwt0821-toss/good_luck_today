@@ -1076,6 +1076,10 @@
   cursor: default;
 }
 
+.withdraw-picker {
+  margin: 0 0 14px;
+}
+
 .wallet-hint {
   margin: 0 0 10px;
   font-size: 12px;

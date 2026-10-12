@@ -155,17 +155,45 @@ export type OpsStarter = {
   attendance?: AttendanceConfig;
 };
 
+export type TutorialLine = {
+  icon?: string;
+  text: string;
+  muted?: boolean;
+  dividerAbove?: boolean;
+  when?: string;
+  copy?: string;
+};
+
+export type NcoinIntroThen = {
+  id: "ncoin-intro";
+  delayAfterToastMs?: number;
+  title: string;
+  lines: TutorialLine[];
+  cta?: string;
+  dismissToastWithCta?: boolean;
+  next?: { target: string; copy: string };
+};
+
+export type TutorialStepThen =
+  | NcoinIntroThen
+  | { screen?: string; target: string; copy: string; id?: string };
+
 export type TutorialStep = {
   step: number;
   screen: string;
   target: string;
   copy: string;
   sub?: string;
-  toast?: { id: string; text: string };
+  toast?: {
+    id: string;
+    text: string;
+    autoHideMs?: number;
+    holdDuringTutorial?: boolean;
+  };
   action?: string;
   gesture?: string;
   suggestTile?: { c: number; r: number };
-  then?: { screen?: string; target: string; copy: string };
+  then?: TutorialStepThen;
   complete?: string;
 };
 
@@ -177,6 +205,42 @@ export type FeatureIntro = {
   condition?: string;
 };
 
+export type TutFlagStatus = "unseen" | "seen" | "skipped";
+
+export type RewardsIntroStep = {
+  id: string;
+  target: string;
+  copy?: string;
+  bubble?: "above" | "below";
+  lines?: TutorialLine[];
+  action?: string;
+};
+
+export type RewardsIntroConfig = {
+  id: string;
+  flag: string;
+  once?: boolean;
+  gate?: string;
+  triggers: Array<{ when: string; from: string; note?: string }>;
+  lockDismiss?: boolean;
+  steps: RewardsIntroStep[];
+};
+
+/** Active coach mark rendered by TutorialCoach (main + contextual). */
+export type CoachMark = {
+  id: string;
+  target: string;
+  copy?: string;
+  sub?: string;
+  title?: string;
+  lines?: TutorialLine[];
+  cta?: string;
+  bubble?: "above" | "below";
+  showFinger?: boolean;
+  /** When true, dim/hole taps do not advance — only CTA. */
+  ackOnly?: boolean;
+};
+
 export type OpsTutorial = {
   maxDurationSec: number;
   skip: {
@@ -185,6 +249,14 @@ export type OpsTutorial = {
     resume: string;
   };
   steps: TutorialStep[];
+  contextual?: {
+    "rewards-intro"?: RewardsIntroConfig;
+  };
+  replay?: {
+    from?: string;
+    includes?: string[];
+    regrantRewards?: boolean;
+  };
   featureIntros: {
     ui: string;
     schedule: FeatureIntro[];
@@ -255,6 +327,10 @@ export type OpsState = {
   tutorialDone: boolean;
   tutorialStep: number;
   tutorialInterruptions: number;
+  /** Server flag tut.rewardsIntro — contextual rewards coach once */
+  tut: {
+    rewardsIntro: TutFlagStatus;
+  };
   installDateKey: string;
   /** Cumulative attendance days (never resets) */
   attendanceDays: number;

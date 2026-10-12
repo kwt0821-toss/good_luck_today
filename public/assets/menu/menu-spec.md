@@ -63,7 +63,7 @@ radius `28 28 0 0`, padding `10 24 0`, 그랩바 40×4. eyebrow Poppins 800 11px
 | 확률 안내 | economy.json `draws.rates_proposal.normal` / `.rateUp`, `keys` (⚠ `_proposal: true` — 확정 후 같은 키로 교체) |
 | 친구 초대 | economy.json `events.friendInvite.enabled`(false → "준비 중") |
 | 공지·이벤트 | 공지 API + economy.json `events` |
-| 설정 › 튜토리얼 다시 보기 | tutorial.json `steps` 재생 (보상 재지급 없음, tutorialDone 유지) |
+| 설정 › 튜토리얼 다시 보기 | tutorial.json 메인 4단계 + contextual.rewards-intro(r1부터) 재생 (보상 재지급 없음, tutorialDone·tut.rewardsIntro 유지) |
 
 ## 5. 파일
 icon-attendance / points / exchange / rewards / rates / notice / invite / settings (행 아이콘 26×26 viewBox, 24pt로 표시), icon-close, icon-chevron, icon-paw-mini, icon-dex-mini, icon-room-mini, icon-stamp, icon-lock, panel-bg.png, gift-*.png(192px, 출석 썸네일), menu.json, menu-spec.md, menu-screen-a/b/c.png.
