@@ -152,11 +152,18 @@ export function DexDetailSheet({
           ? "캐릭터 컬렉션"
           : "레전드 컬렉션";
 
+  const applyFaceBlur = (blurPx: number) => {
+    const blur = blurPx > 0.05 ? `blur(${blurPx}px)` : "none";
+    // Blur faces — never the preserve-3d inner (filter flattens 3D / backface).
+    if (frontFaceRef.current) frontFaceRef.current.style.filter = blur;
+    if (backFaceRef.current) backFaceRef.current.style.filter = blur;
+  };
+
   const applyPose = (angle: number, scale: number, translateY: number, blurPx = 0, spinIntensity = 0) => {
     const inner = innerRef.current;
     if (!inner) return;
     inner.style.transform = `translateY(${translateY}px) scale(${scale}) rotateY(${angle}deg)`;
-    inner.style.filter = blurPx > 0.05 ? `blur(${blurPx}px)` : "none";
+    applyFaceBlur(blurPx);
 
     const shadow = shadowRef.current;
     if (shadow) {
@@ -172,8 +179,8 @@ export function DexDetailSheet({
     if (backFaceRef.current) backFaceRef.current.style.opacity = String(opacityBack);
     if (innerRef.current) {
       innerRef.current.style.transform = "none";
-      innerRef.current.style.filter = "none";
     }
+    applyFaceBlur(0);
   };
 
   const resetPose = (angle = 0) => {

@@ -708,7 +708,10 @@
   margin: 22px auto 0;
   touch-action: pan-y;
   animation: dex-card-in 380ms cubic-bezier(0.2, 0.9, 0.25, 1) 60ms both;
+  /* Perspective lives here with the stage tilt so the 3D scene stays intact. */
+  perspective: 1400px;
   transform: rotate(-1.5deg);
+  transform-style: preserve-3d;
 }
 
 .dex-card-glow {
@@ -723,7 +726,6 @@
   position: relative;
   width: 220px;
   height: 342px;
-  perspective: 1400px;
   border: 0;
   padding: 0;
   background: transparent;
@@ -732,6 +734,7 @@
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
   user-select: none;
+  transform-style: preserve-3d;
 }
 
 .card-inner.dex-card-inner {
@@ -739,7 +742,8 @@
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  will-change: transform, filter;
+  /* Only transform — filter on this node flattens preserve-3d / backface. */
+  will-change: transform;
 }
 
 .face.dex-face {
@@ -752,7 +756,7 @@
   -webkit-backface-visibility: hidden;
   overflow: hidden;
   box-shadow: 0 24px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(243, 233, 215, 0.15);
-  will-change: opacity, transform;
+  will-change: opacity, filter;
 }
 
 .face.dex-face img {
@@ -764,11 +768,11 @@
 }
 
 .face.front {
-  transform: rotateY(0deg);
+  transform: rotateY(0deg) translateZ(1px);
 }
 
 .face.back {
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(1px);
 }
 
 .dex-card-depth {
@@ -859,6 +863,7 @@
   transform: none;
   backface-visibility: visible;
   -webkit-backface-visibility: visible;
+  filter: none;
 }
 
 .dex-card.is-reduced .face.back {
