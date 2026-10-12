@@ -338,7 +338,7 @@ export function HomeScreen({
           className={`main-draw-pill ${nudge ? "is-nudge" : ""}`}
           onClick={handleDrawTap}
         >
-          한 장 더 뽑기 <span className="main-draw-pill-ad">[광고]</span>
+          한 장 더 뽑기 <span className="main-draw-pill-ad">광고</span>
           <span className="main-draw-pill-arrow" aria-hidden="true">
             →
           </span>
