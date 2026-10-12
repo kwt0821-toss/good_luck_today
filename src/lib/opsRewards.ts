@@ -2,7 +2,7 @@ import { toKstDateKey } from "./date";
 import { loadDexCatalog } from "./dexCatalog";
 import { loadDexOwned, saveDexOwned } from "./dexCollection";
 import type { DexCard, DexOwnedMap } from "./dexTypes";
-import { groupBreedRows, cardsOfType } from "./dexCatalog";
+import { duplicateRevealCopy, isManualDexClaim, newCardRevealCopy } from "./dexRewards";
 import { dupPawForCard } from "./drawRates";
 import { isWeekendDoublePaw, loadOpsConfig } from "./opsConfig";
 import {
@@ -14,75 +14,9 @@ import {
 } from "./opsState";
 import { saveOpsState } from "./opsStorage";
 import type { ConfirmDrawResult, DrawReservation, OpsState } from "./opsTypes";
-import { grantNyangCoinOnce } from "./mockToss";
 
 function delay(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
-}
-
-async function evaluateSetRewards(
-  state: OpsState,
-  owned: DexOwnedMap,
-): Promise<{ state: OpsState; rewards: ConfirmDrawResult["setRewards"] }> {
-  const config = await loadOpsConfig();
-  const catalog = await loadDexCatalog();
-  const economy = config.economy;
-  let next = state;
-  const rewards: ConfirmDrawResult["setRewards"] = [];
-
-  const grant = async (rewardId: string, paw: number, nyangCoin: number, label: string) => {
-    if (next.grantedSetRewardIds.includes(rewardId)) return;
-    next = {
-      ...next,
-      pawBalance: next.pawBalance + paw,
-      grantedSetRewardIds: [...next.grantedSetRewardIds, rewardId],
-      rewardInbox: [
-        ...next.rewardInbox,
-        { id: rewardId, label, paw, nyangCoin, collected: false },
-      ],
-    };
-    if (nyangCoin > 0) {
-      const tossRes = await grantNyangCoinOnce(next, {
-        tossUserKey: next.userId,
-        rewardId: `set:${rewardId}`,
-        amount: nyangCoin,
-      });
-      next = tossRes.state;
-    }
-    rewards.push({ id: rewardId, paw, nyangCoin, label });
-  };
-
-  const breedRows = groupBreedRows(cardsOfType(catalog, "breed"));
-  for (const row of breedRows) {
-    const complete = row.slots.every((card) => (owned[card.id]?.count ?? 0) > 0);
-    if (complete) {
-      const breedPack = economy.pawSources.setComplete.breed_1to5star;
-      await grant(
-        `breed:${row.breedId}`,
-        breedPack.paw,
-        breedPack.nyangCoin,
-        `${row.ko} 1~5성 완성 · ${breedPack.nyangCoin}냥코인 + ${breedPack.paw}P`,
-      );
-    }
-  }
-
-  for (const type of ["special", "character", "legend"] as const) {
-    const cards = cardsOfType(catalog, type);
-    const complete = cards.length > 0 && cards.every((card) => (owned[card.id]?.count ?? 0) > 0);
-    if (complete) {
-      const pack = economy.pawSources.setComplete[type];
-      await grant(`set:${type}`, pack.paw, pack.nyangCoin, `${type} 세트 완성 · ${pack.nyangCoin}냥코인 + ${pack.paw}P`);
-    }
-  }
-
-  const full =
-    catalog.cards.length > 0 && catalog.cards.every((card) => (owned[card.id]?.count ?? 0) > 0);
-  if (full) {
-    const pack = economy.pawSources.setComplete.fullDex;
-    await grant("set:fullDex", pack.paw, pack.nyangCoin, `전체 도감 완성 · ${pack.nyangCoin}냥코인 + ${pack.paw}P`);
-  }
-
-  return { state: next, rewards };
 }
 
 /**
@@ -137,45 +71,24 @@ export async function confirmDrawAfterAd(
     next = consumeRateUpTicket(next);
   }
 
-  let toast: string | null = null;
+  const dupPaw = isNew ? 0 : dupPawForCard(card, config.economy);
   const confirmed: DrawReservation = {
     ...reservation,
     isNew,
-    dupPaw: isNew ? 0 : dupPawForCard(card, config.economy),
+    dupPaw,
     confirmed: true,
     remainingAfter: Math.max(0, remainingTotalDraws(next, config)),
   };
 
-  if (isNew) {
-    const grant = config.economy.pawSources.newCardFirstGet;
-    const inboxId = `card:${card.id}`;
-    next = {
-      ...next,
-      pawBalance: next.pawBalance + grant.paw,
-      rewardInbox: next.rewardInbox.some((item) => item.id === inboxId)
-        ? next.rewardInbox
-        : [
-            ...next.rewardInbox,
-            {
-              id: inboxId,
-              label: `${card.id} 첫 획득`,
-              paw: grant.paw,
-              nyangCoin: grant.nyangCoin,
-              collected: false,
-            },
-          ],
-    };
-    const tossRes = await grantNyangCoinOnce(next, {
-      tossUserKey: next.userId,
-      rewardId: inboxId,
-      amount: grant.nyangCoin,
-    });
-    next = tossRes.state;
-    toast = `도감에 등록됐어요! 냥코인 ${grant.nyangCoin}개 + ${grant.paw}포인트 받았어요`;
+  // Manual claim: register the card only — no auto paw/nyangCoin/set grants.
+  let toast: string | null = null;
+  if (isManualDexClaim(config.economy)) {
+    toast = isNew
+      ? `${newCardRevealCopy(card).title}\n도감에서 보상을 받아 보세요`
+      : duplicateRevealCopy(dupPaw);
   }
 
-  const setEval = await evaluateSetRewards(next, owned);
-  next = { ...setEval.state, pendingDraw: confirmed };
+  next = { ...next, pendingDraw: confirmed };
   await saveOpsState(next);
 
   return {
@@ -183,7 +96,7 @@ export async function confirmDrawAfterAd(
     reservation: confirmed,
     card,
     toast,
-    setRewards: setEval.rewards,
+    setRewards: [],
   };
 }
 

@@ -36,6 +36,8 @@ type HomeScreenProps = {
   offerTicketShop?: boolean;
   ticketShopPricePaw?: number;
   menuBadge?: boolean;
+  /** Red dot on #icon-dex when dex rewards are claimable. */
+  dexBadge?: boolean;
   onDraw: () => void;
   onRateUpDraw: () => void;
   onOpenTicketShop?: () => void;
@@ -57,6 +59,7 @@ export function HomeScreen({
   offerTicketShop = false,
   ticketShopPricePaw = 200,
   menuBadge = false,
+  dexBadge = false,
   onDraw,
   onRateUpDraw,
   onOpenTicketShop,
@@ -375,7 +378,10 @@ export function HomeScreen({
           aria-label="도감"
           onClick={popThen(onOpenCollection)}
         >
-          <img src={ASSETS.dex} alt="" width={28} height={28} />
+          <span className="main-menu-icon-wrap">
+            <img src={ASSETS.dex} alt="" width={28} height={28} />
+            {dexBadge ? <span className="main-menu-dot" aria-hidden="true" /> : null}
+          </span>
           <span>도감</span>
         </button>
         <button type="button" className="main-nav-btn" aria-label="방꾸미기" onClick={popThen(onOpenRoom)}>

@@ -8,13 +8,25 @@ type DexCardSlotProps = {
   card?: DexCard;
   record?: DexOwnedRecord;
   onClick?: () => void;
+  /** Manual claim badge (economy.dexRewards.claimMode = manual). */
+  claimable?: boolean;
+  onClaim?: () => void;
+  claimBusy?: boolean;
 };
 
 function starsLabel(count: number): string {
   return "★".repeat(count);
 }
 
-export function DexCardSlot({ kind, card, record, onClick }: DexCardSlotProps) {
+export function DexCardSlot({
+  kind,
+  card,
+  record,
+  onClick,
+  claimable = false,
+  onClaim,
+  claimBusy = false,
+}: DexCardSlotProps) {
   const owned = (record?.count ?? 0) > 0;
   const comingSoon = kind === "soon";
   const name = card?.type === "breed" ? card.breed?.en : card?.name?.ko;
@@ -24,7 +36,7 @@ export function DexCardSlot({ kind, card, record, onClick }: DexCardSlotProps) {
     <button
       type="button"
       id={card?.id ? `dex-slot-${card.id}` : undefined}
-      className={`dex-slot dex-slot-${kind} ${owned ? "is-owned" : "is-locked"} ${comingSoon ? "is-soon" : ""}`}
+      className={`dex-slot dex-slot-${kind} ${owned ? "is-owned" : "is-locked"} ${comingSoon ? "is-soon" : ""} ${claimable ? "has-claim" : ""}`}
       onClick={comingSoon ? undefined : onClick}
       disabled={comingSoon}
       aria-label={comingSoon ? "곧 만나요" : owned ? name : "잠긴 카드"}
@@ -69,6 +81,28 @@ export function DexCardSlot({ kind, card, record, onClick }: DexCardSlotProps) {
       {owned ? <span className="dex-slot-shine" aria-hidden="true" /> : null}
       {owned && record?.isNew ? <span className="dex-tag-new">NEW</span> : null}
       {owned && (record?.count ?? 0) >= 2 ? <span className="dex-badge-dup">×{record?.count}</span> : null}
+      {owned && claimable && card ? (
+        <span
+          role="button"
+          tabIndex={0}
+          id={`dex-claim-${card.id}`}
+          className={`dex-claim-badge ${claimBusy ? "is-busy" : ""}`}
+          aria-label="보상 받기"
+          onClick={(event) => {
+            event.stopPropagation();
+            if (!claimBusy) onClaim?.();
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!claimBusy) onClaim?.();
+            }
+          }}
+        >
+          <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={14} height={14} />
+        </span>
+      ) : null}
     </button>
   );
 }

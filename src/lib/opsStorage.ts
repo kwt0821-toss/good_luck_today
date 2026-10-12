@@ -158,6 +158,38 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         return parseStringArray(parsed.grantedTossRewardIds);
       })(),
       grantedSetRewardIds: parseStringArray(parsed.grantedSetRewardIds),
+      claimedDexRewardIds: (() => {
+        const next = parseStringArray(parsed.claimedDexRewardIds);
+        if (next.length) return next;
+        // Migrate legacy auto-grants so they are not claimable again.
+        const legacyNyang = parseStringArray(parsed.grantedNyangCoinRewardIds).concat(
+          parseStringArray(parsed.grantedTossRewardIds),
+        );
+        const fromCards = legacyNyang.map((id) =>
+          id.startsWith("card:") ? `newCard:${id.slice("card:".length)}` : id,
+        );
+        const fromSets = parseStringArray(parsed.grantedSetRewardIds).map((id) =>
+          id.startsWith("breed:") ? `set:${id}` : id,
+        );
+        return [...new Set([...fromCards, ...fromSets])];
+      })(),
+      dexClaimLedger: Array.isArray(parsed.dexClaimLedger)
+        ? parsed.dexClaimLedger
+            .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+            .map((item) => ({
+              requestId: typeof item.requestId === "string" ? item.requestId : "",
+              rewardIds: Array.isArray(item.rewardIds)
+                ? item.rewardIds.filter((id): id is string => typeof id === "string")
+                : [],
+              createdAt: typeof item.createdAt === "number" ? item.createdAt : 0,
+              paw: typeof item.paw === "number" ? item.paw : 0,
+              nyangCoin: typeof item.nyangCoin === "number" ? item.nyangCoin : 0,
+              pawBalance: typeof item.pawBalance === "number" ? item.pawBalance : 0,
+              nyangCoinBalance:
+                typeof item.nyangCoinBalance === "number" ? item.nyangCoinBalance : 0,
+            }))
+            .filter((item) => item.requestId)
+        : fallback.dexClaimLedger,
       ownedItemIds: parseStringArray(parsed.ownedItemIds),
       unlockedRoomIds: parseStringArray(parsed.unlockedRoomIds).length
         ? parseStringArray(parsed.unlockedRoomIds)

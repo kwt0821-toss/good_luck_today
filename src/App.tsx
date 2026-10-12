@@ -8,6 +8,12 @@ import { toKstDateKey } from "./lib/date";
 import { buildMenuViewModel } from "./lib/menuModel";
 import { syncAudioSettingsFromStorage } from "./lib/menuSettings";
 import type { MockAdKind } from "./lib/mockAds";
+import {
+  buildDexClaimRequestId,
+  countClaimableDexRewards,
+  newCardRewardId,
+  postDexRewardsClaim,
+} from "./lib/dexRewards";
 import { cancelDrawReservation, preloadDrawImages, reserveDraw } from "./lib/mockDrawApi";
 import { configureNavigationBar, haptic } from "./lib/native";
 import { loadOpsConfig } from "./lib/opsConfig";
@@ -15,6 +21,7 @@ import {
   confirmDrawAfterAd,
   grantPawAdReward,
 } from "./lib/opsRewards";
+import type { DexCard } from "./lib/dexTypes";
 import { highlightRatesFromEconomy, rateUpAdSecondsFromEconomy } from "./lib/drawRates";
 import {
   rateUpTicketShopOffer,
@@ -93,6 +100,8 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>(initialScreen);
   const [menuOpen, setMenuOpen] = useState(initialMenuOpen);
   const [menuIconDot, setMenuIconDot] = useState(false);
+  const [dexClaimDot, setDexClaimDot] = useState(false);
+  const [revealCard, setRevealCard] = useState<DexCard | null>(null);
   const [tutorialReplayStep, setTutorialReplayStep] = useState<number | null>(null);
   const [revealTutPhase, setRevealTutPhase] = useState<RevealTutPhase | null>(null);
   const [hideRevealToast, setHideRevealToast] = useState(false);
@@ -153,6 +162,9 @@ export default function App() {
     let cancelled = false;
     void buildMenuViewModel(ops).then((model) => {
       if (!cancelled) setMenuIconDot(model.menuIconDot);
+    });
+    void countClaimableDexRewards(ops).then((count) => {
+      if (!cancelled) setDexClaimDot(count > 0);
     });
     return () => {
       cancelled = true;
@@ -368,6 +380,7 @@ export default function App() {
             : confirmed.state,
         );
         setReservation(confirmed.reservation);
+        setRevealCard(confirmed.card);
         setRevealToast(confirmed.toast);
         setRevealReady(true);
         setWaitFailed(false);
@@ -414,6 +427,7 @@ export default function App() {
     }
     await persistOps(confirmed.state);
     setReservation(confirmed.reservation);
+    setRevealCard(confirmed.card);
     setRevealToast(confirmed.toast);
     // Start the post-ad wait clock now (images may already be decoded).
     if (!revealReady) {
@@ -622,15 +636,33 @@ export default function App() {
       return;
     }
 
+    // Step 3 then: claim the first-card reward when the coach advances past #dex-claim-*.
+    let opsAfter = ops;
+    if (
+      tutorialStep.step === 3 &&
+      stepThenActive &&
+      tutorialCardId &&
+      !ops.claimedDexRewardIds.includes(newCardRewardId(tutorialCardId))
+    ) {
+      const claimed = await postDexRewardsClaim(ops, {
+        rewardIds: [newCardRewardId(tutorialCardId)],
+        requestId: buildDexClaimRequestId(),
+      });
+      if (claimed.response.ok) {
+        opsAfter = claimed.state;
+        AudioManager.playSfx("reward-coin");
+      }
+    }
+
     if (tutorialStep.complete || tutorialStep.step >= config.tutorial.steps.length) {
-      await persistOps({ ...ops, tutorialDone: true, tutorialStep: tutorialStep.step });
+      await persistOps({ ...opsAfter, tutorialDone: true, tutorialStep: tutorialStep.step });
       setStepThenActive(false);
       setScreen({ name: "home" });
       return;
     }
     const nextStep = tutorialStep.step + 1;
     const next = config.tutorial.steps.find((step) => step.step === nextStep);
-    await persistOps({ ...ops, tutorialStep: nextStep });
+    await persistOps({ ...opsAfter, tutorialStep: nextStep });
     setStepThenActive(false);
     if (next?.screen === "room") setScreen({ name: "room" });
     else if (next?.screen.includes("dex") || tutorialStep.screen.includes("dex")) {
@@ -643,6 +675,7 @@ export default function App() {
     config,
     tutorialStep,
     tutorialReplayStep,
+    tutorialCardId,
     beginDraw,
     persistOps,
     rewardsIntro,
@@ -677,6 +710,8 @@ export default function App() {
       {screen.name === "collection" ? (
         <CollectionScreen
           onBack={() => setScreen({ name: "home" })}
+          ops={ops}
+          onOpsChange={(next) => void persistOps(next)}
           floatingToast={
             ops && !ops.tutorialDone && ops.tutorialStep === 3 ? revealToast : null
           }
@@ -697,6 +732,7 @@ export default function App() {
       {screen.name === "reveal" && reservation ? (
         <DrawRevealScreen
           reservation={reservation}
+          card={revealCard}
           ready={revealReady && !waitFailed}
           waitFailed={waitFailed && !revealReady}
           toastText={revealToast}
@@ -760,6 +796,7 @@ export default function App() {
           rateNormalPct={rateLabels.normalPct}
           rateUpPct={rateLabels.rateUpPct}
           menuBadge={menuIconDot}
+          dexBadge={dexClaimDot}
           onDraw={() => void beginDraw()}
           onRateUpDraw={() => void beginDraw("rateUp")}
           onOpenTicketShop={() => {

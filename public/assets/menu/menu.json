@@ -1,5 +1,5 @@
 {
- "_version": "menu-1.1 (2026-10-12)",
+ "_version": "menu-1.6 (2026-10-12)",
  "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
  "panel": {
   "side": "right",
@@ -127,11 +127,11 @@
    "icon": "icon-rewards.svg",
    "enabled": true,
    "open": "sheet:rewards",
-   "meta": "'🪙{nyangCoinBalance} 냥코인 · 받을 보상 {rewards.unclaimedCount}'",
-   "data": "economy.json → pawSources.newCardFirstGet, setComplete, nyangCoin",
+   "meta": "'🪙{nyangCoinBalance} 냥코인 · 도감 보상 {rewards.dexClaimableCount}'",
+   "data": "economy.json → dexRewards.claimMode=manual + pawSources.newCardFirstGet / setComplete",
    "badge": {
     "type": "dot",
-    "when": "rewards.unclaimedCount > 0"
+    "when": "rewards.dexClaimableCount > 0"
    }
   },
   "rates": {
@@ -387,8 +387,8 @@
   "rewards": {
    "title": "보상함",
    "eyebrow": "REWARDS",
-   "desc": "도감을 채우면 냥코인과 발바닥 포인트가 와요.",
-   "cta": "모두 받기",
+   "desc": "도감을 채우면 냥코인과 발바닥 포인트를 도감에서 받아요.",
+   "cta": "도감에서 보상 받기",
    "wallet": {
     "title": "내 냥코인",
     "withdrawCta": "토스포인트로 받기 · {amount}원",
@@ -410,6 +410,11 @@
      "menu-screen-d2",
      "menu-screen-d3"
     ]
+   },
+   "dexShortcut": {
+    "label": "도감에서 받을 보상 {count}개",
+    "cta": "도감 가기 ›",
+    "when": "rewards.dexClaimableCount > 0"
    }
   }
  },
