@@ -506,7 +506,9 @@ export function DrawRevealScreen({
           id="dex-toast"
           style={{ display: reservation.isNew && toastText ? undefined : "none" }}
         >
-          <div className="ic">toss</div>
+          <div className="ic" aria-hidden="true">
+            <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={18} height={18} />
+          </div>
           <div>{toastText ?? "도감에 등록됐어요!"}</div>
         </div>
 

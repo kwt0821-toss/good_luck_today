@@ -257,7 +257,9 @@ export function DexScreen({ onBack, floatingToast = null }: DexScreenProps) {
 
       {floatingToast ? (
         <div className="draw-reveal-toast dex-floating-toast" id="dex-toast" role="status">
-          <div className="ic">toss</div>
+          <div className="ic" aria-hidden="true">
+            <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={18} height={18} />
+          </div>
           <div>{floatingToast}</div>
         </div>
       ) : null}

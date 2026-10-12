@@ -8,7 +8,7 @@
    "label": "건너뛰기",
    "position": "top-right below app bar"
   },
-  "onSkip": "남은 단계 보상은 그대로 지급 (첫 뽑기 무료·도감 등록·토스 1원은 서버에서 처리), tutorialDone=true",
+  "onSkip": "남은 단계 보상은 그대로 지급 (첫 뽑기 무료·도감 등록·냥코인 1개는 서버에서 처리), tutorialDone=true",
   "resume": "앱 종료 시 다음 실행 때 현재 단계부터, 2회 이상 중단 시 자동 완료"
  },
  "steps": [
@@ -28,7 +28,7 @@
    "copy": "오늘의 행운 문구가 도착했어요",
    "toast": {
     "id": "dex-toast",
-    "text": "도감에 등록됐어요! 토스 1원 + 20포인트 받았어요"
+    "text": "도감에 등록됐어요! 냥코인 1개 + 20포인트 받았어요"
    },
    "action": "tap #btn-to-dex (도감에 넣기)"
   },

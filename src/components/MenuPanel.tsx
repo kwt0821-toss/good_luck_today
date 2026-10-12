@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointer
 import { AudioManager } from "../audio/AudioManager";
 import { isDevBuild } from "../lib/devMode";
 import { resetToNewUserState } from "../lib/devReset";
-import { menuAsset } from "../lib/menuConfig";
+import { menuAsset, ncoinAsset } from "../lib/menuConfig";
 import {
   attendanceSheetState,
   buildMenuViewModel,
@@ -17,14 +17,21 @@ import {
   type MenuSettings,
 } from "../lib/menuSettings";
 import {
+  buildWithdrawRequestId,
+  postWalletWithdraw,
+  withdrawChipAmounts,
+} from "../lib/mockWallet";
+import {
   claimAttendanceGift,
   collectAllRewards,
   convertAllDuplicates,
 } from "../lib/opsRewards";
-import type { OpsState } from "../lib/opsTypes";
+import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
 import type { MenuSheetId } from "../lib/menuTypes";
 import { haptic } from "../lib/native";
 import "./MenuPanel.css";
+
+type RewardsView = "inbox" | "confirm" | "success" | "history";
 
 type MenuPanelProps = {
   open: boolean;
@@ -68,6 +75,10 @@ export function MenuPanel({
   const [popDay, setPopDay] = useState<number | null>(null);
   const [creditsText, setCreditsText] = useState<string | null>(null);
   const [devResetting, setDevResetting] = useState(false);
+  const [rewardsView, setRewardsView] = useState<RewardsView>("inbox");
+  const [withdrawAmount, setWithdrawAmount] = useState(0);
+  const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
+  const [withdrawBusy, setWithdrawBusy] = useState(false);
   const reduce = shouldReduceMenuMotion(settings);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const sheetDrag = useRef<{ y: number; active: boolean }>({ y: 0, active: false });
@@ -106,6 +117,12 @@ export function MenuPanel({
 
   const openSheet = (id: MenuSheetId) => {
     setSheet(id);
+    if (id === "rewards") {
+      setRewardsView("inbox");
+      const balance = ops.nyangCoinBalance;
+      const chips = withdrawChipAmounts(balance);
+      setWithdrawAmount(chips.length ? chips[chips.length - 1]! : 0);
+    }
     AudioManager.playSfx("sheet-open");
     requestAnimationFrame(() => setSheetOpen(true));
   };
@@ -113,7 +130,36 @@ export function MenuPanel({
   const closeSheet = () => {
     setSheetOpen(false);
     AudioManager.playSfx("sheet-close");
-    window.setTimeout(() => setSheet(null), reduce ? 150 : 280);
+    window.setTimeout(() => {
+      setSheet(null);
+      setRewardsView("inbox");
+    }, reduce ? 150 : 280);
+  };
+
+  const doWithdraw = async () => {
+    if (!model || withdrawBusy || withdrawAmount < 10) return;
+    setWithdrawBusy(true);
+    try {
+      const requestId = buildWithdrawRequestId();
+      const result = await postWalletWithdraw(ops, { amount: withdrawAmount, requestId });
+      onOpsChange(result.state);
+      const row = result.state.walletHistory.find((item) => item.requestId === requestId) ?? null;
+      setLastWithdraw(row);
+      if (result.response.ok && result.response.status === "done") {
+        setRewardsView("success");
+        haptic("success");
+      } else if (result.response.ok && result.response.status === "pending") {
+        setLastWithdraw(row);
+        setRewardsView("success");
+        showToast("처리 중이에요. 잠시 후 기록에서 확인해 주세요");
+      } else {
+        showToast(result.response.ok === false ? result.response.reason : "지급에 실패했어요");
+        setRewardsView("inbox");
+      }
+      void buildMenuViewModel(result.state).then(setModel);
+    } finally {
+      setWithdrawBusy(false);
+    }
   };
 
   const showToast = (message: string) => {
@@ -309,6 +355,13 @@ export function MenuPanel({
                   </div>
                   <div className="menu-stat-label">내 포인트</div>
                 </div>
+                <button type="button" className="menu-stat is-tap" onClick={() => openSheet("rewards")}>
+                  <div className="menu-stat-value">
+                    <img src={ncoinAsset(16)} alt="" />
+                    {model.nyangCoinBalance.toLocaleString("ko-KR")}
+                  </div>
+                  <div className="menu-stat-label">냥코인</div>
+                </button>
                 <button
                   type="button"
                   className="menu-stat is-tap"
@@ -633,20 +686,109 @@ export function MenuPanel({
                 ) : null}
 
                 {sheet === "rewards" ? (
-                  model.rewards.items.length ? (
-                    model.rewards.items.map((item) => (
-                      <div key={item.id} className={`menu-list-row ${item.collected ? "is-done" : ""}`}>
-                        <span>{item.label}</span>
-                        <b>
-                          {item.paw ? `+${item.paw}P` : ""}
-                          {item.paw && item.toss ? " · " : ""}
-                          {item.toss ? `토스 ${item.toss}원` : ""}
-                          {item.collected ? " · 완료" : ""}
-                        </b>
-                      </div>
-                    ))
+                  rewardsView === "history" ? (
+                    ops.walletHistory.length ? (
+                      ops.walletHistory.map((item) => (
+                        <div key={item.requestId} className="menu-list-row">
+                          <span>
+                            {item.amount}냥코인 → {item.amount}원
+                          </span>
+                          <b>
+                            <span className={`wallet-status is-${item.status}`}>
+                              {item.status === "done"
+                                ? "완료"
+                                : item.status === "pending"
+                                  ? "처리 중"
+                                  : "실패"}
+                            </span>
+                          </b>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="rates-note">아직 받은 기록이 없어요.</p>
+                    )
+                  ) : rewardsView === "success" ? (
+                    <div className="wallet-success">
+                      <img src={ncoinAsset(24)} alt="" />
+                      <h4>
+                        {lastWithdraw?.status === "pending"
+                          ? "처리 중이에요"
+                          : (model.menu.sheets.rewards.wallet?.successTitle ??
+                            "토스포인트를 받았어요")}
+                      </h4>
+                      <p>
+                        {lastWithdraw
+                          ? lastWithdraw.status === "pending"
+                            ? `${lastWithdraw.amount}원 지급을 확인하고 있어요.`
+                            : `${lastWithdraw.amount}원이 토스 포인트로 들어갔어요.`
+                          : null}
+                      </p>
+                    </div>
+                  ) : rewardsView === "confirm" ? (
+                    <div className="wallet-success">
+                      <img src={ncoinAsset(24)} alt="" />
+                      <h4>{model.menu.sheets.rewards.wallet?.confirmTitle ?? "토스포인트로 받을까요?"}</h4>
+                      <p>
+                        {withdrawAmount}냥코인을 토스포인트 {withdrawAmount}원으로 바꿔요.
+                      </p>
+                    </div>
                   ) : (
-                    <p className="rates-note">아직 받을 보상이 없어요.</p>
+                    <>
+                      <div className="wallet-card">
+                        <div className="wallet-card-label">
+                          {model.menu.sheets.rewards.wallet?.title ?? "내 냥코인"}
+                        </div>
+                        <div className="wallet-card-value">
+                          <img src={ncoinAsset(24)} alt="" />
+                          {model.nyangCoinBalance.toLocaleString("ko-KR")}
+                          <small>냥코인</small>
+                        </div>
+                      </div>
+                      {model.nyangCoinBalance < 10 ? (
+                        <p className="wallet-hint">
+                          {model.menu.sheets.rewards.wallet?.disabledHint ??
+                            "10냥코인부터 받을 수 있어요"}
+                        </p>
+                      ) : (
+                        <div className="wallet-chips" role="listbox" aria-label="출금 금액">
+                          {withdrawChipAmounts(model.nyangCoinBalance).map((amount) => (
+                            <button
+                              key={amount}
+                              type="button"
+                              className={`wallet-chip ${withdrawAmount === amount ? "is-active" : ""}`}
+                              onClick={() => setWithdrawAmount(amount)}
+                            >
+                              {amount}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {model.rewards.items.length ? (
+                        model.rewards.items.map((item) => (
+                          <div
+                            key={item.id}
+                            className={`menu-list-row ${item.collected ? "is-done" : ""}`}
+                          >
+                            <span>{item.label}</span>
+                            <b>
+                              {item.paw ? `+${item.paw}P` : ""}
+                              {item.paw && item.nyangCoin ? " · " : ""}
+                              {item.nyangCoin ? `${item.nyangCoin}냥코인` : ""}
+                              {item.collected ? " · 완료" : ""}
+                            </b>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="rates-note">아직 받을 보상이 없어요.</p>
+                      )}
+                      <button
+                        type="button"
+                        className="wallet-history-link"
+                        onClick={() => setRewardsView("history")}
+                      >
+                        {model.menu.sheets.rewards.wallet?.historyTitle ?? "받은 기록"}
+                      </button>
+                    </>
                   )
                 ) : null}
 
@@ -789,14 +931,48 @@ export function MenuPanel({
               ) : null}
 
               {sheet === "rewards" ? (
-                <button
-                  type="button"
-                  className="menu-sheet-cta"
-                  disabled={model.rewards.unclaimedCount <= 0}
-                  onClick={() => void doCollectRewards()}
-                >
-                  {model.menu.sheets.rewards.cta}
-                </button>
+                rewardsView === "history" ? (
+                  <button type="button" className="menu-sheet-cta" onClick={() => setRewardsView("inbox")}>
+                    돌아가기
+                  </button>
+                ) : rewardsView === "success" ? (
+                  <button type="button" className="menu-sheet-cta" onClick={() => setRewardsView("inbox")}>
+                    확인
+                  </button>
+                ) : rewardsView === "confirm" ? (
+                  <button
+                    type="button"
+                    className="menu-sheet-cta"
+                    disabled={withdrawBusy}
+                    onClick={() => void doWithdraw()}
+                  >
+                    {withdrawBusy ? "처리 중…" : `받기 · ${withdrawAmount}원`}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="menu-sheet-cta"
+                      disabled={model.nyangCoinBalance < 10 || withdrawAmount < 10}
+                      onClick={() => setRewardsView("confirm")}
+                    >
+                      {model.nyangCoinBalance < 10
+                        ? (model.menu.sheets.rewards.wallet?.disabledHint ??
+                          "10냥코인부터 받을 수 있어요")
+                        : `토스포인트로 받기 · ${withdrawAmount}원`}
+                    </button>
+                    {model.rewards.unclaimedCount > 0 ? (
+                      <button
+                        type="button"
+                        className="menu-sheet-cta is-secondary"
+                        style={{ marginTop: 8 }}
+                        onClick={() => void doCollectRewards()}
+                      >
+                        {model.menu.sheets.rewards.cta}
+                      </button>
+                    ) : null}
+                  </>
+                )
               ) : null}
 
               {sheet === "notice" ? (

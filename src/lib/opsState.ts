@@ -20,7 +20,7 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
   return {
     userId: `user_${id}`,
     pawBalance: resolveStartPaw(configPaw),
-    tossBalance: 0,
+    nyangCoinBalance: 0,
     dateKey: today,
     normalDrawsUsed: 0,
     rateUpUsed: 0,
@@ -38,12 +38,13 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     attendanceBadges: [],
     claimedMilestoneDays: [],
     featureIntrosSeen: [],
-    grantedTossRewardIds: [],
+    grantedNyangCoinRewardIds: [],
     grantedSetRewardIds: [],
     ownedItemIds: [...new Set(starterItems)],
     unlockedRoomIds: ["moon_bedroom"],
     pendingDraw: null,
     rewardInbox: [],
+    walletHistory: [],
     lastSeenNoticeId: "",
   };
 }

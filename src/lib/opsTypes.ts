@@ -1,9 +1,11 @@
 import type { DexCard, DexCardType } from "./dexTypes";
 
+export type NyangCoinReward = { paw: number; nyangCoin: number };
+
 export type OpsEconomy = {
   currency: {
     paw: { nameKo: string; startBalance: number };
-    toss: { nameKo: string; unit: string };
+    nyangCoin: { nameKo: string; unit: string; note?: string };
   };
   pawSources: {
     rewardedAd: {
@@ -13,7 +15,7 @@ export type OpsEconomy = {
       adType: string;
       grantOn: string;
     };
-    newCardFirstGet: { paw: number; toss: number };
+    newCardFirstGet: NyangCoinReward;
     duplicateConvert: {
       common_1to2star: number;
       rare_3to5star: number;
@@ -23,11 +25,11 @@ export type OpsEconomy = {
       auto: boolean;
     };
     setComplete: {
-      breed_1to5star: { paw: number; toss: number; count: number };
-      special: { paw: number; toss: number };
-      character: { paw: number; toss: number };
-      legend: { paw: number; toss: number };
-      fullDex: { paw: number; toss: number };
+      breed_1to5star: NyangCoinReward & { count: number };
+      special: NyangCoinReward;
+      character: NyangCoinReward;
+      legend: NyangCoinReward;
+      fullDex: NyangCoinReward;
     };
     attendance?: string;
   };
@@ -44,11 +46,16 @@ export type OpsEconomy = {
     excludeSources: string[];
     note?: string;
   };
-  tossPayout: {
+  /** Was tossPayout — withdraw / payout rules for 냥코인 → 토스포인트 */
+  nyangCoin: {
+    nameKo?: string;
     maxPerUserKRW: number;
     oncePerTossAccount: boolean;
     serverVerified: boolean;
     idempotencyKey: string;
+    toTossPointRate?: number;
+    withdrawMin?: number;
+    withdrawStep?: number;
   };
   draws: {
     resetTimeKST: string;
@@ -222,10 +229,22 @@ export type DrawReservation = {
   confirmed: boolean;
 };
 
+export type WalletWithdrawStatus = "pending" | "done" | "failed";
+
+export type WalletHistoryItem = {
+  requestId: string;
+  amount: number;
+  status: WalletWithdrawStatus;
+  createdAt: number;
+  updatedAt: number;
+  failReason?: string;
+};
+
 export type OpsState = {
   userId: string;
   pawBalance: number;
-  tossBalance: number;
+  /** 냥코인 잔액 (1냥코인 = 토스포인트 1원) */
+  nyangCoinBalance: number;
   /** KST date of last daily counter reset */
   dateKey: string;
   normalDrawsUsed: number;
@@ -248,14 +267,21 @@ export type OpsState = {
   attendanceBadges: string[];
   claimedMilestoneDays: number[];
   featureIntrosSeen: string[];
-  /** tossUserKey+rewardId style ids already granted */
-  grantedTossRewardIds: string[];
+  /** tossUserKey+rewardId style ids already granted as 냥코인 */
+  grantedNyangCoinRewardIds: string[];
   grantedSetRewardIds: string[];
   ownedItemIds: string[];
   unlockedRoomIds: string[];
   pendingDraw: DrawReservation | null;
   /** Rewards granted to balance but not yet collected from the inbox UI */
-  rewardInbox: Array<{ id: string; label: string; paw: number; toss: number; collected: boolean }>;
+  rewardInbox: Array<{
+    id: string;
+    label: string;
+    paw: number;
+    nyangCoin: number;
+    collected: boolean;
+  }>;
+  walletHistory: WalletHistoryItem[];
   lastSeenNoticeId: string;
 };
 
@@ -264,7 +290,7 @@ export type ConfirmDrawResult = {
   reservation: DrawReservation;
   card: DexCard;
   toast: string | null;
-  setRewards: Array<{ id: string; paw: number; toss: number; label: string }>;
+  setRewards: Array<{ id: string; paw: number; nyangCoin: number; label: string }>;
 };
 
 export type DupConvertKey = DexCardType | "common" | "rare";

@@ -357,15 +357,17 @@
   width: 28px;
   height: 28px;
   border-radius: 9px;
-  background: #3182f6;
+  background: rgba(255, 226, 154, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-family: Poppins, sans-serif;
-  font-weight: 800;
-  font-size: 11px;
   flex: 0 0 auto;
+}
+
+.draw-reveal-toast .ic img {
+  display: block;
+  width: 18px;
+  height: 18px;
 }
 
 .draw-reveal-toast b {
