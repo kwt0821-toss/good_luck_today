@@ -1165,10 +1165,11 @@
 }
 
 .main-rateup-hint {
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 400;
-  color: rgba(243, 233, 215, 0.55);
-  line-height: 1.2;
+  color: rgba(243, 233, 215, 0.5);
+  line-height: 1.15;
+  letter-spacing: 0.02em;
 }
 
 .main-rateup-label {
@@ -1244,46 +1245,49 @@
   animation: main-moon 4.5s ease-in-out infinite;
 }
 
+/* Stage space ≈ 390×400pt (layout-spec §6). */
 .main-float {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 50%;
   top: 50%;
-  width: 260px;
-  height: 340px;
-  margin: -170px auto 0;
-  will-change: top;
+  width: min(390px, 100%);
+  height: 360px;
+  margin-top: -180px;
+  transform: translateX(-50%);
+  will-change: top, transform;
   animation: main-float 3.6s ease-in-out infinite;
-}
-
-.main-tail {
-  position: absolute;
-  right: -2px;
-  top: 148px;
-  width: 78px;
-  z-index: 1;
-  display: block;
-  transform-origin: 18% 88%;
-  will-change: transform;
-  animation: main-tail 2.4s ease-in-out infinite;
-  pointer-events: none;
 }
 
 .main-deck {
   position: absolute;
   left: 50%;
-  top: 104px;
+  top: 152px;
   width: 168px;
   height: 224px;
   margin-left: -84px;
   z-index: 3;
   perspective: 900px;
+  overflow: visible;
   pointer-events: none;
 }
 
 .main-deck.is-done {
   filter: grayscale(1);
   opacity: 0.48;
+}
+
+/*
+ * Tilt group for the top card + cat + tail. Keep rotate here (not on the
+ * flipping face) so child breathe/sway animations are not trapped under
+ * backface-visibility / transform transitions.
+ */
+.deck-top {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-2deg);
+  transform-origin: 50% 60%;
+  overflow: visible;
+  pointer-events: none;
 }
 
 .main-deck-card {
@@ -1295,15 +1299,21 @@
     transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
     filter 240ms ease,
     opacity 240ms ease;
+  overflow: visible;
+}
+
+.main-deck-card.is-back {
   backface-visibility: hidden;
 }
 
-.main-deck-card img {
+.main-deck-face {
+  position: relative;
   display: block;
   width: 100%;
   height: auto;
   border-radius: 18px;
   box-shadow: 0 14px 22px rgba(10, 8, 24, 0.35);
+  z-index: 1;
 }
 
 .main-deck-card.is-back[data-depth="1"] {
@@ -1316,28 +1326,46 @@
   filter: brightness(0.48);
 }
 
-.main-deck-card.is-top {
-  transform: rotate(-2deg);
+/* Face only — tilt comes from .deck-top parent. */
+.deck-top .main-deck-card.is-top {
+  transform: none;
   filter: none;
   box-shadow: 0 0 0 1px rgba(255, 196, 138, 0.35);
+  backface-visibility: hidden;
 }
 
-.main-deck-card.is-top::after {
+.deck-top .main-deck-card.is-top::after {
   content: "";
   position: absolute;
   inset: -2px;
   border-radius: 20px;
   box-shadow: 0 0 22px rgba(255, 196, 138, 0.55);
   pointer-events: none;
+  z-index: 2;
 }
 
-.main-deck-card.is-top.is-flip {
+.deck-top .main-deck-card.is-top.is-flip {
   animation: main-deck-flip 180ms ease-in forwards;
 }
 
 .main-stage.is-flipping .main-deck-card.is-back {
   transform: rotate(-2deg) translate(0, 0) scale(1);
   filter: none;
+}
+
+/* Tail: pivot (+10px) tucked 10pt inside the card's right edge, behind the face. */
+.main-tail {
+  position: absolute;
+  left: calc(100% - 20px);
+  top: 66px;
+  width: 80px;
+  height: 94px;
+  z-index: 0;
+  display: block;
+  transform-origin: 12.5% 87%;
+  will-change: transform;
+  animation: main-tail 2.4s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .main-deck-dot {
@@ -1349,7 +1377,7 @@
   border-radius: 50%;
   background: #ff5a5f;
   box-shadow: 0 0 0 2px #1a1731;
-  z-index: 2;
+  z-index: 4;
 }
 
 .main-deck-spark {
@@ -1361,39 +1389,67 @@
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 220, 160, 0.9) 0%, rgba(255, 90, 95, 0.15) 55%, transparent 70%);
   animation: main-deck-spark 1.4s ease-in-out infinite;
-  z-index: 1;
+  z-index: 4;
   pointer-events: none;
 }
 
+/*
+ * Cat anchored to the top card: centered, sitting above with paws overlapping ~22pt.
+ * Face centerline = card centerline (emblem) via left:50% + translateX(-50%).
+ */
 .main-cat {
   position: absolute;
   left: 50%;
-  top: -4px;
-  width: 186px;
-  margin-left: -93px;
-  z-index: 4;
+  bottom: 100%;
+  margin-bottom: -22px;
+  width: 170px;
+  height: 144.3px;
+  z-index: 3;
   pointer-events: none;
+  transform: translateX(-50%);
   transform-origin: 50% 93%;
   will-change: transform;
-  animation: main-breathe 3s ease-in-out infinite;
+  /* Same 2.4s period/phase as .main-drool (layout-spec §6). */
+  animation: main-breathe 2.4s ease-in-out infinite;
 }
 
-.main-cat img {
+.main-cat-body {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
   pointer-events: none;
+}
+
+.main-drool {
+  position: absolute;
+  left: 84.7px;
+  top: 83.3px;
+  width: 17.7px;
+  height: 23px;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  transform-origin: 50% 0; /* top center — mouth */
+  will-change: transform;
+  animation: main-drool 2.4s ease-in-out infinite;
+}
+
+/* Hide drool while the card flip/reveal plays. */
+.main-stage.is-flipping .main-drool,
+.main-stage.is-waking .main-drool {
+  opacity: 0;
+  animation: none;
 }
 
 .main-zzz {
   position: absolute;
-  top: 8px;
-  right: 48px;
+  inset: 0;
   z-index: 5;
   color: #f3ebd7;
-  font-family: Poppins, Georgia, serif;
-  font-style: italic;
-  font-weight: 500;
+  font-family: "Gamja Flower", Poppins, Georgia, serif;
+  font-style: normal;
+  font-weight: 400;
   pointer-events: none;
 }
 
@@ -1404,24 +1460,28 @@
   animation: main-zzz 2.5s ease-in-out infinite;
 }
 
+/* Stage coords from layout-spec §6: (282,40) / (300,22) / (313,8). */
 .main-zzz span:nth-child(1) {
-  font-size: 22px;
-  right: 18px;
-  top: 18px;
+  font-size: 28px;
+  left: 282px;
+  top: 40px;
+  opacity: 0.95;
   animation-delay: 0s;
 }
 
 .main-zzz span:nth-child(2) {
-  font-size: 14px;
-  right: 4px;
-  top: 4px;
+  font-size: 20px;
+  left: 300px;
+  top: 22px;
+  opacity: 0.7;
   animation-delay: 0.8s;
 }
 
 .main-zzz span:nth-child(3) {
-  font-size: 11px;
-  right: -6px;
-  top: -8px;
+  font-size: 14px;
+  left: 313px;
+  top: 8px;
+  opacity: 0.5;
   animation-delay: 1.6s;
 }
 
@@ -1431,12 +1491,12 @@
 
 .main-stage:active .main-cat {
   animation: none;
-  transform: scale(0.97);
+  transform: translateX(-50%) scale(0.97);
 }
 
 .main-stage.is-waking .main-cat {
   animation: none;
-  transform: scale(1.05);
+  transform: translateX(-50%) scale(1.05);
 }
 
 .main-stage.is-waking .main-zzz {
@@ -1636,20 +1696,31 @@
 @keyframes main-breathe {
   0%,
   100% {
-    transform: scale(1) translateY(0);
+    transform: translateX(-50%) scale(1);
   }
   50% {
-    transform: scale(1.06) translateY(-6px);
+    transform: translateX(-50%) scale(1.03);
+  }
+}
+
+/* Mouth-anchored pulse; inhale = grow (synced with main-breathe). */
+@keyframes main-drool {
+  0%,
+  100% {
+    transform: scale(0.85);
+  }
+  50% {
+    transform: scale(1.1);
   }
 }
 
 @keyframes main-tail {
   0%,
   100% {
-    transform: rotate(-14deg);
+    transform: rotate(-6deg);
   }
   50% {
-    transform: rotate(14deg);
+    transform: rotate(6deg);
   }
 }
 
@@ -1667,9 +1738,11 @@
   0%,
   100% {
     top: 50%;
+    transform: translateX(-50%);
   }
   50% {
     top: calc(50% - 12px);
+    transform: translateX(-50%);
   }
 }
 
@@ -1699,12 +1772,13 @@
   }
 }
 
+/* Flip the face only; parent .deck-top already holds the -2deg tilt. */
 @keyframes main-deck-flip {
   0% {
-    transform: rotate(-2deg) rotateY(0deg);
+    transform: rotateY(0deg);
   }
   100% {
-    transform: rotate(-2deg) rotateY(95deg) scale(0.92);
+    transform: rotateY(95deg) scale(0.92);
     opacity: 0.2;
   }
 }
@@ -1751,37 +1825,28 @@
   opacity: 0.35;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .main-moon {
-    animation-duration: 6s;
-  }
-
-  .main-float {
-    animation-duration: 4.8s;
-  }
-
-  .main-tail {
-    animation-duration: 3.2s;
-  }
-
-  .main-cat {
-    animation-duration: 4s;
-  }
-
-  .main-deck-spark {
-    animation: none;
-  }
-
-  .main-draw-pill.is-nudge {
-    transform: none;
-  }
-
-  .main-rateup-tip {
-    animation: none;
-    transform: translateX(-50%);
-  }
-
-  .main-deck-card {
-    transition: none;
-  }
+.main-screen.is-reduce .main-float,
+.main-screen.is-reduce .main-tail,
+.main-screen.is-reduce .main-cat,
+.main-screen.is-reduce .main-drool,
+.main-screen.is-reduce .main-zzz span {
+  animation: none;
 }
+
+.main-screen.is-reduce .main-float {
+  transform: translateX(-50%);
+}
+
+.main-screen.is-reduce .main-cat {
+  transform: translateX(-50%);
+}
+
+.main-screen.is-reduce .main-drool {
+  transform: scale(1);
+}
+
+/*
+ * Main-stage motion is gated only by .main-screen.is-reduce (menu toggle).
+ * Do not also kill animations via prefers-reduced-motion here — that OS flag
+ * stays on in many Cursor/dev browsers and ignored the in-app OFF setting.
+ */

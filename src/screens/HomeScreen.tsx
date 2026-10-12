@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 import { formatCountdownHms, formatLuckyCatalogDate, msUntilNextKstMidnight } from "../lib/date";
-import { shouldReduceMenuMotion } from "../lib/menuSettings";
+import { MENU_SETTINGS_EVENT, shouldReduceMenuMotion } from "../lib/menuSettings";
 
 const ASSETS = {
   bg: "/assets/main/bg-night-base.webp",
@@ -10,9 +10,12 @@ const ASSETS = {
   dex: "/assets/main/icon-dex-book.svg",
   room: "/assets/main/icon-room-house.svg",
   rateUp: "/assets/main/icon-rateup-sparkle.svg",
-  tail: "/assets/main/cat-tail.png",
+  /** Recolored cheese-cat tail (#FBC895 / #DC884A) — layout-spec §6. */
+  tail: "/assets/main/mainscreen-assets/cat-tail.svg",
   card: "/assets/main/card-facedown.png",
-  cat: "/assets/main/cat-body.png",
+  /** Head+paws without drool; drool is a separate animated layer. */
+  cat: "/assets/main/mainscreen-assets/cat-sleeping-nodrool.webp",
+  drool: "/assets/main/mainscreen-assets/drool.png",
 } as const;
 
 const FLIP_MS = 180;
@@ -76,8 +79,18 @@ export function HomeScreen({
   const noticeTimer = useRef(0);
   const navTimer = useRef(0);
   const navLock = useRef(false);
-  const reduce = shouldReduceMenuMotion();
+  const [reduce, setReduce] = useState(() => shouldReduceMenuMotion());
   const dateLabel = formatLuckyCatalogDate();
+
+  useEffect(() => {
+    const sync = () => setReduce(shouldReduceMenuMotion());
+    window.addEventListener(MENU_SETTINGS_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(MENU_SETTINGS_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
   const drawsDone = remainingNormal <= 0;
   const lowRemaining = remainingNormal === 1 || remainingNormal === 2;
   const deckCount = drawsDone ? 1 : remainingNormal;
@@ -153,7 +166,7 @@ export function HomeScreen({
     : rateUpTickets > 0
       ? "뽑기권 사용"
       : !rateUpDisabled
-        ? `(${rateUpAdSeconds}초 광고)`
+        ? "광고"
         : null;
   /** Tip when draw available, or shop entry after ad used with 0 tickets. */
   const showRateUpTip = remainingRateUp > 0 || rateUpShopEntry;
@@ -296,31 +309,53 @@ export function HomeScreen({
         >
           <img className="main-moon" src={ASSETS.moon} alt="" />
           <div className="main-float">
-            <img className="main-tail" src={ASSETS.tail} alt="" />
             <div className={`main-deck ${drawsDone ? "is-done" : ""}`} aria-hidden="true">
               {Array.from({ length: deckCount }, (_, index) => {
                 const fromTop = deckCount - 1 - index;
                 const isTop = fromTop === 0;
+                if (isTop) {
+                  /* .deck-top carries the -2deg tilt; cat/tail sit beside the face
+                     (not inside the flipping 3D card) so breathe/sway keep compositing. */
+                  return (
+                    <div
+                      key={`deck-top-${remainingNormal}`}
+                      className="deck-top"
+                      style={{ zIndex: index + 1 }}
+                    >
+                      <img className="main-tail" src={ASSETS.tail} alt="" draggable={false} />
+                      <div className={`main-deck-card is-top ${flipping ? "is-flip" : ""}`}>
+                        <img className="main-deck-face" src={ASSETS.card} alt="" />
+                        {showSparkle ? (
+                          <>
+                            <span className="main-deck-dot" />
+                            <span className="main-deck-spark" />
+                          </>
+                        ) : null}
+                      </div>
+                      <div className="main-cat">
+                        <img className="main-cat-body" src={ASSETS.cat} alt="잠자는 고양이" />
+                        <img
+                          className="main-drool"
+                          src={ASSETS.drool}
+                          alt=""
+                          aria-hidden="true"
+                          draggable={false}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
                 return (
                   <div
                     key={`deck-${index}-${remainingNormal}`}
-                    className={`main-deck-card ${isTop ? "is-top" : "is-back"} ${isTop && flipping ? "is-flip" : ""}`}
+                    className="main-deck-card is-back"
                     style={{ zIndex: index + 1 }}
                     data-depth={fromTop}
                   >
-                    <img src={ASSETS.card} alt="" />
-                    {isTop && showSparkle ? (
-                      <>
-                        <span className="main-deck-dot" />
-                        <span className="main-deck-spark" />
-                      </>
-                    ) : null}
+                    <img className="main-deck-face" src={ASSETS.card} alt="" />
                   </div>
                 );
               })}
-            </div>
-            <div className="main-cat">
-              <img src={ASSETS.cat} alt="잠자는 고양이" />
             </div>
             {!drawsDone ? (
               <div className="main-zzz" aria-hidden="true">
