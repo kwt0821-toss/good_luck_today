@@ -1,5 +1,5 @@
 {
- "_version": "tutorial-1.3 (2026-10-12)",
+ "_version": "tutorial-1.4 (2026-10-12)",
  "maxDurationSec": 60,
  "style": "coach marks (dim + 하이라이트 원/라운드 사각 + 말풍선)",
  "skip": {
@@ -8,7 +8,7 @@
    "label": "건너뛰기",
    "position": "top-right (앱 바 아래). 대상이 화면 위쪽 160pt 안에 있거나 다른 버튼과 겹치면 말풍선 아래줄(STEP 옆)에 '건너뛰기' 텍스트 버튼으로 표시"
   },
-  "onSkip": "남은 단계 보상은 그대로 지급 (첫 뽑기 무료·도감 등록·냥코인 1개는 서버에서 처리), tutorialDone=true",
+  "onSkip": "남은 단계는 건너뛰지만 첫 뽑기 무료·도감 등록은 서버에서 처리. 보상은 자동 지급하지 않고 도감에 '받을 보상'으로 남아요. tutorialDone=true",
   "resume": "앱 종료 시 다음 실행 때 현재 단계부터, 2회 이상 중단 시 자동 완료"
  },
  "steps": [
@@ -28,52 +28,11 @@
    "copy": "오늘의 행운 문구가 도착했어요",
    "toast": {
     "id": "dex-toast",
-    "text": "도감에 등록됐어요! 냥코인 1개 + 20포인트 받았어요",
-    "chips": [
-     {
-      "icon": "ncoin",
-      "text": "+1"
-     },
-     {
-      "icon": "paw",
-      "text": "+20P"
-     }
-    ],
-    "sub": "냥코인 10개부터 토스포인트로 받아요",
-    "persistDuringTutorial": true,
-    "note": "튜토리얼 중엔 자동으로 사라지지 않고 ncoin-intro 말풍선을 닫을 때 사라져요"
+    "text": "새로운 고양이를 만났어요!",
+    "sub": "도감에서 보상을 받아 보세요 · 🎁 냥코인 1 + 20P",
+    "persistDuringTutorial": true
    },
-   "action": "(ncoin-intro 닫은 뒤) tap #btn-to-dex (도감에 넣기)",
-   "then": {
-    "id": "ncoin-intro",
-    "screen": "draw-reveal",
-    "target": "#dex-toast",
-    "when": "toast 표시 직후 (약 600ms)",
-    "copy": "냥코인을 처음 받았어요!",
-    "lines": [
-     {
-      "icon": "ncoin",
-      "text": "토스포인트로 바꿀 수 있는 코인이에요 · 1냥코인 = 1원"
-     },
-     {
-      "icon": "ncoin",
-      "text": "처음 만나는 카드, 세트 완성으로 모여요"
-     },
-     {
-      "icon": "ncoin",
-      "text": "10개부터 메뉴 › 보상함에서 받을 수 있어요"
-     },
-     {
-      "icon": "paw",
-      "text": "발바닥 포인트는 방꾸미기 아이템을 사는 데 써요",
-      "style": "divider above, muted"
-     }
-    ],
-    "button": "알겠어요",
-    "skipInBubble": true,
-    "action": "tap 알겠어요 → 토스트 닫힘 → #btn-to-dex 하이라이트",
-    "mockup": "tutorial-ncoin.png"
-   }
+   "action": "tap #btn-to-dex (도감에서 보상 받기)"
   },
   {
    "step": 3,
@@ -83,8 +42,40 @@
    "copy": "도감에서 모은 카드를 볼 수 있어요",
    "then": {
     "screen": "dex",
-    "target": "#dex-slot-{cardId}",
-    "copy": "방금 뽑은 카드가 여기 들어갔어요"
+    "target": "#dex-slot-{cardId} .gift (코인 배지)",
+    "copy": "방금 만난 고양이가 선물을 들고 왔어요",
+    "sub": "코인을 톡 눌러 받아 보세요",
+    "action": "tap → POST /dex/rewards/claim → 코인 버스트 + sfx-reward-coin + 토스트 '냥코인 1개 + 20포인트 받았어요'",
+    "then": {
+     "id": "ncoin-intro",
+     "screen": "dex",
+     "target": "#dex-claim-toast",
+     "when": "첫 수동 받기 직후",
+     "copy": "냥코인을 처음 받았어요!",
+     "lines": [
+      {
+       "icon": "ncoin",
+       "text": "토스포인트로 바꿀 수 있는 코인이에요 · 1냥코인 = 1원"
+      },
+      {
+       "icon": "ncoin",
+       "text": "처음 만나는 카드, 세트 완성으로 모여요"
+      },
+      {
+       "icon": "ncoin",
+       "text": "10개부터 메뉴 › 보상함에서 받을 수 있어요"
+      },
+      {
+       "icon": "paw",
+       "text": "발바닥 포인트는 방꾸미기 아이템을 사는 데 써요",
+       "style": "divider above, muted"
+      }
+     ],
+     "button": "알겠어요",
+     "skipInBubble": true,
+     "action": "tap 알겠어요 → 토스트 닫힘 → #btn-to-dex 하이라이트",
+     "mockup": "tutorial-ncoin.png (토스트 문구만 '냥코인 1개 + 20포인트 받았어요'로 바뀜)"
+    }
    },
    "action": "tap"
   },
@@ -231,9 +222,9 @@
        "when": "balance < 10 (보상함을 먼저 연 경우)"
       },
       {
-       "icon": "rewards",
-       "text": "아래 세트 보상은 모두 받기로 한 번에 챙겨요",
-       "when": "rewards.unclaimedCount > 0"
+       "icon": "dex",
+       "text": "새 카드·세트 보상은 도감에서 받아요",
+       "when": "dex.unclaimedCount > 0"
       }
      ],
      "button": "알겠어요",

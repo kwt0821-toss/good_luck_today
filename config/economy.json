@@ -1,5 +1,5 @@
 {
- "_version": "economy-1.4 (2026-10-12)",
+ "_version": "economy-1.5 (2026-10-12)",
  "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
  "currency": {
   "paw": {
@@ -84,7 +84,8 @@
     100
    ],
    "noReset": true
-  }
+  },
+  "claimMode": "manual"
  },
  "nyangCoin": {
   "maxEarnPerUser": 417,
@@ -470,5 +471,24 @@
    ],
    "rates": "draws.rates_proposal.rateUp"
   }
+ },
+ "dexRewards": {
+  "claimMode": "manual",
+  "autoCredit": false,
+  "where": "도감 화면에서만 받기 (새 카드 슬롯 코인 배지 / 카드 상세 '받기' / 세트 행·탭 헤더 '완성 보상 받기' / 헤더 '모두 받기')",
+  "rewardIds": {
+   "newCard": "newCard:{cardId}",
+   "breedSet": "set:breed:{breedId}",
+   "group": "set:{special|character|legend}",
+   "fullDex": "fullDex"
+  },
+  "amounts": "newCardFirstGet / setComplete.* (nyangCoin + paw)",
+  "createOn": "카드 획득 확정 시 서버가 claimable 보상 생성 (광고 완료 콜백 이후)",
+  "expires": null,
+  "persist": "받을 때까지 무기한 보관",
+  "claimApi": "POST /dex/rewards/claim {rewardIds:[...]|'all', requestId} → {claimed:[{id,nyangCoin,paw}], pawBalance, nyangCoinBalance, unclaimedCount}",
+  "idempotency": "보상 id별 계정당 1회(유니크 키 tossUserKey+rewardId) + requestId 재시도 시 같은 응답",
+  "atomic": "지급 + claimed 표시 한 트랜잭션",
+  "badges": "unclaimedCount>0 → 메인 도감 아이콘 빨간 점, 도감 탭 점(해당 그룹), 메뉴 보상함 행 meta"
  }
 }

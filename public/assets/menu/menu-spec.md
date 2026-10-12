@@ -109,3 +109,6 @@ icon-attendance / points / exchange / rewards / rates / notice / invite / settin
 - 시트: 뽑기권 카드(아이콘 64, "확률업 뽑기권", "광고 없이 확률업 1회 · 5성↑ 27%", 가격 발바닥 아이콘 + 200 Pop 700 amber) → 한도 3칸(이번 주 n/7 · 오늘 n/2 · 보유 n/3) → 내 포인트(→ 산 뒤 잔액 미리보기) → "200P로 사기"(cream) → 보유 ≥1이면 보조 버튼 "지금 확률업 뽑기 (뽑기권 n장)" → 안내 "포인트는 방꾸미기에도 써요 · 이번 주 구매는 월요일 00:00에 다시 열려요".
 - 사면 토스트(상단, 초록 체크) "확률업 뽑기권 1장을 샀어요 / 남은 포인트 1,040P · 보유 1/3". 비활성 문구는 menu.json `sheets.ticketShop.disabled`.
 - 값은 economy.json `shop.tickets.rateUpTicket` (가격·한도), `tickets.rateUpTicket.maxHold`.
+
+## 11. 보상함 변경 (menu-1.6, claimMode manual)
+받을 보상 목록과 모두 받기를 없앴어요. 보상함에는 지갑(출금)과 바로가기 #btn-rewards-to-dex "도감에서 받을 보상 {n}개 · 도감 가기 ›"만 남아요. 받기는 도감 한 곳에서만 해요 (축하 연출을 도감에서 보여 주고, 중복 요청과 혼동을 막기 위해). n=0이면 "받을 도감 보상을 모두 받았어요"

@@ -1,5 +1,5 @@
 {
- "_version": "menu-1.5 (2026-10-12)",
+ "_version": "menu-1.6 (2026-10-12)",
  "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
  "panel": {
   "side": "right",
@@ -121,11 +121,11 @@
    "icon": "icon-rewards.svg",
    "enabled": true,
    "open": "sheet:rewards",
-   "meta": "'{icon:ncoin 14pt}{user.nyangCoinBalance} 냥코인 · 받을 보상 {rewards.unclaimedCount}' (받을 보상 0이면 '{n} 냥코인'만)",
+   "meta": "'{icon:ncoin 14pt}{user.nyangCoinBalance} 냥코인' (+ ' · 도감 보상 {dex.unclaimedCount}' 있을 때)",
    "data": "economy.json → pawSources.newCardFirstGet, setComplete (nyangCoin, paw), nyangCoin.withdraw; 유저 API nyangCoinBalance",
    "badge": {
     "type": "dot",
-    "when": "rewards.unclaimedCount > 0 || user.nyangCoinBalance >= economy.nyangCoin.withdraw.min (하루 1번만)"
+    "when": "user.nyangCoinBalance >= 10 (하루 1번) — 도감 보상 점은 메인 도감 아이콘에 표시"
    },
    "domId": "#menu-row-rewards"
   },
@@ -254,7 +254,7 @@
  "menuIconBadge": {
   "type": "dot",
   "on": "#icon-menu (메인 우상단 발바닥)",
-  "when": "any(row.badge.type=='dot' && row.badge.when)"
+  "when": "any(row.badge.type=='dot' && row.badge.when) (도감 보상 점은 메인 도감 아이콘이 따로 가짐)"
  },
  "sheets": {
   "attendance": {
@@ -365,7 +365,7 @@
   "rewards": {
    "title": "보상함",
    "eyebrow": "REWARDS",
-   "desc": "도감을 채우면 냥코인과 포인트가 와요. 냥코인은 10개씩 토스포인트로 받을 수 있어요.",
+   "desc": "도감에서 받은 냥코인이 여기 모여요. 10개씩 토스포인트로 받을 수 있어요.",
    "wallet": {
     "label": "내 냥코인",
     "rateText": "1냥코인 = 토스포인트 1원",
@@ -383,9 +383,12 @@
     }
    },
    "list": {
-    "title": "받을 보상 {n}",
-    "claimAll": "모두 받기",
-    "item": "썸네일 · 이름 · 칩(+N냥코인, +NP) · 받기"
+    "type": "shortcut",
+    "title": "도감에서 받을 보상 {n}개",
+    "sub": "냥코인 {c} + {p}P",
+    "cta": "도감 가기 ›",
+    "emptyText": "받을 도감 보상을 모두 받았어요",
+    "decision": "받기는 도감 한 곳에서만 (보상함에 '모두 받기'를 두지 않음): 받는 순간의 카드·세트 축하 연출을 도감에서 보여 주고, 두 곳에서 같은 보상을 받는 혼동·중복 요청을 막아요."
    },
    "note": "토스포인트는 서버에서 확인한 뒤 내 토스 계정으로 보내 드려요",
    "confirm": {
@@ -431,8 +434,8 @@
     "wallet": "#wallet-card",
     "picker": "#withdraw-picker (라벨+칩+받기 버튼 감싸는 div)",
     "withdrawButton": "#btn-withdraw",
-    "claimAll": "#btn-claim-all",
-    "history": "#btn-wallet-history"
+    "history": "#btn-wallet-history",
+    "dexShortcut": "#btn-rewards-to-dex"
    },
    "tutorial": "tutorial.json contextual.rewards-intro (r2~r4 대상이 위 id)"
   },
