@@ -177,8 +177,8 @@
    {
     "day": 4,
     "id": "intro-paw-ads",
-    "target": "#btn-paw-ad",
-    "copy": "광고 보고 포인트 10개 받아요 (하루 10번까지)"
+    "target": "#icon-menu",
+    "copy": "메뉴 › 포인트 받기에서 광고 보고 포인트 10개 받아요 (하루 10번까지)"
    },
    {
     "day": 5,

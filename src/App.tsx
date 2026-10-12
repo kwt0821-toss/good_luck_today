@@ -17,10 +17,13 @@ import {
 } from "./lib/opsRewards";
 import { highlightRatesFromEconomy, rateUpAdSecondsFromEconomy } from "./lib/drawRates";
 import {
+  rateUpTicketShopOffer,
+  shouldOfferTicketShopOnRateUp,
+} from "./lib/mockTicketShop";
+import {
   daysSinceInstall,
   nextDrawSlot,
   remainingNormalDraws,
-  remainingPawAds,
   remainingRateUpAdSlots,
   remainingRateUpDraws,
   remainingTotalDraws,
@@ -193,9 +196,10 @@ export default function App() {
   const remainingNormal = ops && config ? remainingNormalDraws(ops, config) : 0;
   const remainingRateUp = ops && config ? remainingRateUpDraws(ops, config) : 0;
   const rateUpAdSlots = ops && config ? remainingRateUpAdSlots(ops, config) : 0;
-  const pawAdsLeft = ops && config ? remainingPawAds(ops, config) : 0;
   const rateLabels = config ? highlightRatesFromEconomy(config.economy) : { normalPct: "0%", rateUpPct: "0%" };
   const rateUpAdSeconds = config ? rateUpAdSecondsFromEconomy(config.economy) : 30;
+  const offerTicketShop = ops && config ? shouldOfferTicketShopOnRateUp(ops, config) : false;
+  const ticketShopPricePaw = config ? rateUpTicketShopOffer(config).pricePaw : 200;
 
   const tutorialStep: TutorialStep | null = useMemo(() => {
     if (!ops || !config) return null;
@@ -750,15 +754,18 @@ export default function App() {
           rateUpTickets={ops.rateUpTickets}
           useRateUpTicket={willUseRateUpTicket(ops, config) || (rateUpAdSlots <= 0 && ops.rateUpTickets > 0)}
           rateUpAdSeconds={rateUpAdSeconds}
-          remainingPawAds={pawAdsLeft}
-          pawBalance={ops.pawBalance}
+          offerTicketShop={offerTicketShop}
+          ticketShopPricePaw={ticketShopPricePaw}
           firstDrawPending={ops.normalDrawsUsed === 0}
           rateNormalPct={rateLabels.normalPct}
           rateUpPct={rateLabels.rateUpPct}
           menuBadge={menuIconDot}
           onDraw={() => void beginDraw()}
           onRateUpDraw={() => void beginDraw("rateUp")}
-          onPawAd={() => setAd({ kind: "short", purpose: "paw" })}
+          onOpenTicketShop={() => {
+            setForceMenuSheet("ticketShop");
+            setMenuOpen(true);
+          }}
           onOpenMenu={() => setMenuOpen(true)}
           onOpenCollection={() => setScreen({ name: "collection" })}
           onOpenRoom={() => setScreen({ name: "room" })}
@@ -775,6 +782,10 @@ export default function App() {
         onPawAd={() => {
           closeMenu();
           setAd({ kind: "short", purpose: "paw" });
+        }}
+        onRateUpDraw={() => {
+          closeMenu();
+          void beginDraw("rateUp");
         }}
         onReplayTutorial={() => {
           closeMenu();
@@ -798,6 +809,9 @@ export default function App() {
         forceSheet={forceMenuSheet}
         lockDismiss={coachLockDismiss}
         onSheetOpen={(id) => {
+          if (forceMenuSheet && id === forceMenuSheet) {
+            setForceMenuSheet(null);
+          }
           if (id !== "rewards" || !ops || !rewardsIntroConfig) return;
           if (rewardsIntro) return;
           if (tutorialReplayStep != null) return;

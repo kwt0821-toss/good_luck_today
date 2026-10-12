@@ -125,6 +125,28 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
             ? parsed.lastAttendanceDateKey
             : "",
       rateUpTickets: typeof parsed.rateUpTickets === "number" ? parsed.rateUpTickets : 0,
+      ticketShopWeekKey:
+        typeof parsed.ticketShopWeekKey === "string" ? parsed.ticketShopWeekKey : fallback.ticketShopWeekKey,
+      ticketShopWeekBought:
+        typeof parsed.ticketShopWeekBought === "number" ? parsed.ticketShopWeekBought : 0,
+      ticketShopDayKey:
+        typeof parsed.ticketShopDayKey === "string" ? parsed.ticketShopDayKey : fallback.ticketShopDayKey,
+      ticketShopDayBought:
+        typeof parsed.ticketShopDayBought === "number" ? parsed.ticketShopDayBought : 0,
+      ticketShopLedger: Array.isArray(parsed.ticketShopLedger)
+        ? parsed.ticketShopLedger
+            .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+            .map((item) => ({
+              requestId: typeof item.requestId === "string" ? item.requestId : "",
+              ticketType: "rateUp" as const,
+              createdAt: typeof item.createdAt === "number" ? item.createdAt : 0,
+              paw: typeof item.paw === "number" ? item.paw : 0,
+              ticketsHeld: typeof item.ticketsHeld === "number" ? item.ticketsHeld : 0,
+              weekBought: typeof item.weekBought === "number" ? item.weekBought : 0,
+              dayBought: typeof item.dayBought === "number" ? item.dayBought : 0,
+            }))
+            .filter((item) => item.requestId)
+        : fallback.ticketShopLedger,
       attendanceBadges: parseStringArray(parsed.attendanceBadges),
       claimedMilestoneDays: Array.isArray(parsed.claimedMilestoneDays)
         ? parsed.claimedMilestoneDays.filter((n): n is number => typeof n === "number")

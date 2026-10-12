@@ -3,6 +3,7 @@ import type { AttendanceStatusResponse } from "./attendanceTypes";
 import { loadDexCatalog } from "./dexCatalog";
 import { loadDexOwned } from "./dexCollection";
 import { isWeekendDoublePaw, loadOpsConfig, computeOwnedCozy, cozyLevelFromPoints } from "./opsConfig";
+import { getTicketShopStatus } from "./mockTicketShop";
 import { remainingPawAds } from "./opsState";
 import type { OpsConfig, OpsState } from "./opsTypes";
 import { loadMenuConfig, menuAsset } from "./menuConfig";
@@ -23,6 +24,7 @@ export type MenuViewModel = {
   pawAds: { remaining: number; max: number; weekendDouble: boolean };
   exchange: { duplicateCount: number; totalPaw: number };
   rewards: { unclaimedCount: number; items: OpsState["rewardInbox"] };
+  ticketShop: ReturnType<typeof getTicketShopStatus>;
   ratesMetaPercent: number;
   latestNotice: { id: string; title: string } | null;
 };
@@ -67,6 +69,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
   const pawMax = config.economy.pawSources.rewardedAd.maxPerDay;
   const weekendDouble = isWeekendDoublePaw(config.economy);
   const highlightPct = Math.round(ratesHighlightSum(menu, config) * 1000) / 10;
+  const ticketShop = getTicketShopStatus(ops, config);
 
   const friendEnabled = Boolean(config.economy.events.friendInvite?.enabled);
   const latestNotice = weekendDouble
@@ -101,6 +104,9 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
           ? `중복 ${duplicateCount}장`
           : (def.disabledMeta ?? "아직 겹친 카드가 없어요");
       rowDisabled = duplicateCount <= 0;
+    } else if (id === "ticketShop") {
+      const shop = getTicketShopStatus(ops, config);
+      meta = `보유 ${shop.ticketsHeld}장 · 오늘 ${shop.dayBought}/${shop.dayLimit}`;
     } else if (id === "rewards") {
       meta = `🪙${ops.nyangCoinBalance} 냥코인 · 받을 보상 ${unclaimed.length}`;
       if (unclaimed.length > 0) badge = { type: "dot" };
@@ -168,6 +174,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     pawAds: { remaining: pawRemaining, max: pawMax, weekendDouble },
     exchange: { duplicateCount, totalPaw: exchangeTotal },
     rewards: { unclaimedCount: unclaimed.length, items: ops.rewardInbox },
+    ticketShop,
     ratesMetaPercent: highlightPct,
     latestNotice,
   };

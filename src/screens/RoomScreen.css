@@ -70,7 +70,7 @@
 .lucky-title-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   min-height: 32px;
   margin: 0 0 2px;
   pointer-events: auto;

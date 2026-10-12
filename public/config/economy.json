@@ -211,7 +211,17 @@
   "excludeSources": [
    "attendance"
   ],
-  "note": "attendanceOnly 아이템은 상점·구매·서랍 기본지급·방 해금 선물·다른 보상 풀에서 제외. 출석 API만 지급."
+  "note": "attendanceOnly 아이템은 상점·구매·서랍 기본지급·방 해금 선물·다른 보상 풀에서 제외. 출석 API만 지급.",
+  "tickets": {
+   "rateUpTicket": {
+    "ticketType": "rateUp",
+    "pricePaw": 200,
+    "dayLimit": 2,
+    "weekLimit": 7,
+    "weekReset": "monday 00:00 KST",
+    "note": "포인트로 확률업 뽑기권 구매. 일반 뽑기권은 만들지 않음. 보유 상한은 tickets.rateUpTicket.maxHold(3)과 출석 지급분 공유. 멱등키 tossUserKey+requestId."
+   }
+  }
  },
  "rooms": [
   {

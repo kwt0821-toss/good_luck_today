@@ -1,4 +1,4 @@
-import { toKstDateKey } from "./date";
+import { toKstDateKey, toKstMondayWeekKey } from "./date";
 import { resolveStartPaw } from "./devMode";
 import type { OpsConfig, OpsState } from "./opsTypes";
 
@@ -36,6 +36,11 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     attendanceClaimed: 0,
     lastAttendanceDateKey: "",
     rateUpTickets: 0,
+    ticketShopWeekKey: toKstMondayWeekKey(),
+    ticketShopWeekBought: 0,
+    ticketShopDayKey: today,
+    ticketShopDayBought: 0,
+    ticketShopLedger: [],
     attendanceBadges: [],
     claimedMilestoneDays: [],
     featureIntrosSeen: [],
@@ -50,10 +55,24 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
   };
 }
 
+/** Reset day/week ticket-shop counters when KST windows roll. */
+export function syncTicketShopWindows(state: OpsState, today = toKstDateKey()): OpsState {
+  const weekKey = toKstMondayWeekKey();
+  let next = state;
+  if (next.ticketShopDayKey !== today) {
+    next = { ...next, ticketShopDayKey: today, ticketShopDayBought: 0 };
+  }
+  if (next.ticketShopWeekKey !== weekKey) {
+    next = { ...next, ticketShopWeekKey: weekKey, ticketShopWeekBought: 0 };
+  }
+  return next;
+}
+
 export function applyOpsDailyReset(state: OpsState, today = toKstDateKey()): OpsState {
-  if (state.dateKey === today) return state;
+  const synced = syncTicketShopWindows(state, today);
+  if (synced.dateKey === today) return synced;
   return {
-    ...state,
+    ...synced,
     dateKey: today,
     normalDrawsUsed: 0,
     rateUpUsed: 0,

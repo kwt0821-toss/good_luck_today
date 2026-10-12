@@ -112,6 +112,22 @@ export type MenuConfig = {
       note: string;
     };
     exchange: { title: string; eyebrow: string; desc: string; cta: string };
+    ticketShop: {
+      title: string;
+      eyebrow: string;
+      desc: string;
+      mockup?: string;
+      cardTitle: string;
+      cardDesc: string;
+      priceLabel: string;
+      limits: Array<{ id: string; label: string; format: string }>;
+      balanceLabel: string;
+      ctaBuy: string;
+      ctaDraw: string;
+      toastBought: string;
+      disabled: { paw: string; day: string; week: string; hold: string };
+      note?: string;
+    };
     rewards: {
       title: string;
       eyebrow: string;
@@ -134,7 +150,15 @@ export type MenuRowView = {
   chevron: boolean;
 };
 
-export type MenuSheetId = "attendance" | "rates" | "exchange" | "rewards" | "notice" | "settings" | null;
+export type MenuSheetId =
+  | "attendance"
+  | "rates"
+  | "exchange"
+  | "ticketShop"
+  | "rewards"
+  | "notice"
+  | "settings"
+  | null;
 
 export type RewardInboxItem = {
   id: string;
