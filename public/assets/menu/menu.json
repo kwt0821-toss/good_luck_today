@@ -1,5 +1,5 @@
 {
- "_version": "menu-1.6.1 (2026-10-12)",
+ "_version": "menu-1.7 (2026-10-12)",
  "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
  "panel": {
   "side": "right",
@@ -413,7 +413,17 @@
      "menu-screen-d-low",
      "menu-screen-d2",
      "menu-screen-d3"
-    ]
+    ],
+    "dailyLimitHint": "오늘 {remainingToday}원 더 받을 수 있어요 · 하루 최대 {dailyLimit}원",
+    "dailyDoneHint": "오늘은 다 받았어요 · 내일 00:00에 다시 받을 수 있어요",
+    "lowBalanceHint": "10냥코인부터 받을 수 있어요 · {need}개 더 모아요",
+    "remainAfterHint": "받고 남는 {remain}냥코인은 그대로 모여요",
+    "stepper": {
+     "step": 10,
+     "minHit": 44,
+     "longPressMs": 400,
+     "repeatMs": 120
+    }
    },
    "dexShortcut": {
     "label": "도감에서 받을 보상 {count}개",

@@ -177,11 +177,22 @@ export type RewardsWalletSheet = {
   title: string;
   withdrawCta: string;
   disabledHint: string;
+  dailyLimitHint?: string;
+  dailyDoneHint?: string;
+  lowBalanceHint?: string;
+  remainAfterHint?: string;
   confirmTitle: string;
   confirmDesc: string;
   successTitle: string;
   successDesc: string;
   historyTitle: string;
   status: { done: string; pending: string; failed: string };
+  /** @deprecated chips replaced by stepper */
   chipStep: number;
+  stepper?: {
+    step: number;
+    minHit: number;
+    longPressMs: number;
+    repeatMs: number;
+  };
 };

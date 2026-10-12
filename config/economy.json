@@ -348,6 +348,13 @@
   "nameKo": "냥코인",
   "toTossPointRate": 1,
   "withdrawMin": 10,
-  "withdrawStep": 10
+  "withdrawStep": 10,
+  "withdraw": {
+   "min": 10,
+   "unit": 10,
+   "dailyLimit": 50,
+   "resetTimeKST": "00:00",
+   "note": "KST 00:00 리셋. 오늘 합계는 done+pending만 (failed 제외). POST /wallet/withdraw 409 DAILY_LIMIT."
+  }
  }
 }

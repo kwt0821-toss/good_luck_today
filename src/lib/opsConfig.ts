@@ -47,18 +47,31 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
       withdrawStep: 10,
     };
   }
+  const baseNyang = nyangCoin ?? {
+    maxPerUserKRW: 417,
+    oncePerTossAccount: true,
+    serverVerified: true,
+    idempotencyKey: "tossUserKey + requestId",
+    withdrawMin: 10,
+    withdrawStep: 10,
+    toTossPointRate: 1,
+  };
+  const withdraw = {
+    min: baseNyang.withdraw?.min ?? baseNyang.withdrawMin ?? 10,
+    unit: baseNyang.withdraw?.unit ?? baseNyang.withdrawStep ?? 10,
+    dailyLimit: baseNyang.withdraw?.dailyLimit ?? 50,
+    resetTimeKST: baseNyang.withdraw?.resetTimeKST ?? "00:00",
+    note: baseNyang.withdraw?.note,
+  };
   return {
     ...raw,
     currency: currency as OpsEconomy["currency"],
     pawSources: pawSources as OpsEconomy["pawSources"],
-    nyangCoin: nyangCoin ?? {
-      maxPerUserKRW: 417,
-      oncePerTossAccount: true,
-      serverVerified: true,
-      idempotencyKey: "tossUserKey + requestId",
-      withdrawMin: 10,
-      withdrawStep: 10,
-      toTossPointRate: 1,
+    nyangCoin: {
+      ...baseNyang,
+      withdraw,
+      withdrawMin: withdraw.min,
+      withdrawStep: withdraw.unit,
     },
   };
 }
