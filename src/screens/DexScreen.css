@@ -621,7 +621,8 @@
   width: 100%;
   height: auto;
   max-height: min(620px, 88%);
-  overflow: auto;
+  /* Keep overflow visible so mid-spin scale/lift isn't clipped into a scrollbar. */
+  overflow: visible;
   border-radius: 28px 28px 0 0;
   background: radial-gradient(90% 60% at 50% 30%, #3a2f55 0%, #251f3d 55%, #1a1730 100%);
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.45);
