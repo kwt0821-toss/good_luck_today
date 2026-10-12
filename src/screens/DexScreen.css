@@ -723,7 +723,7 @@
   position: relative;
   width: 220px;
   height: 342px;
-  perspective: 1200px;
+  perspective: 1400px;
   border: 0;
   padding: 0;
   background: transparent;
@@ -739,7 +739,7 @@
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  will-change: transform;
+  will-change: transform, filter;
 }
 
 .face.dex-face {

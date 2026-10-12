@@ -15,21 +15,22 @@ type DexDetailSheetProps = {
   onConvertDuplicate?: (card: DexCard) => void;
 };
 
-const LIFT_MS = 80;
-const ROTATE_END_MS = 520;
-const BOUNCE_MS = 140;
-const TOTAL_FLIP_MS = ROTATE_END_MS + BOUNCE_MS;
+const LIFT_MS = 100;
+const ROTATE_END_MS = 1000;
+const BOUNCE_MS = 160;
+const TOTAL_SPIN_MS = ROTATE_END_MS + BOUNCE_MS;
+const TAP_DELTA = 900; // 2.5 turns
 const SWIPE_PT = 40;
-const DRAG_MAX_DEG = 25;
-const DRAG_FLIP_RATIO = 0.5;
 const CROSSFADE_MS = 200;
 const SHINE_MS = 380;
+const LIFT_SCALE = 1.06;
+const LIFT_Y = -8;
 
-/** cubic-bezier(.2, .8, .2, 1) — progress in [0,1] → eased [0,1] */
-function easeFlip(t: number): number {
-  const x1 = 0.2;
-  const y1 = 0.8;
-  const x2 = 0.2;
+/** cubic-bezier(.15, .85, .25, 1) */
+function easeSpin(t: number): number {
+  const x1 = 0.15;
+  const y1 = 0.85;
+  const x2 = 0.25;
   const y2 = 1;
   let x = t;
   for (let i = 0; i < 6; i += 1) {
@@ -44,19 +45,19 @@ function easeFlip(t: number): number {
   return 3 * u * u * x * y1 + 3 * u * x * x * y2 + x * x * x;
 }
 
-function bounceScale(t: number): number {
-  // Overshoot then settle: 1.04 → 0.985 → 1
+function bounceScale(t: number, from = LIFT_SCALE): number {
+  // from → 0.985 → 1
   if (t < 0.55) {
     const p = t / 0.55;
-    return 1.04 + (0.985 - 1.04) * (1 - (1 - p) * (1 - p));
+    return from + (0.985 - from) * (1 - (1 - p) * (1 - p));
   }
   const p = (t - 0.55) / 0.45;
   return 0.985 + (1 - 0.985) * (1 - (1 - p) * (1 - p));
 }
 
 function isBackFace(angle: number): boolean {
-  const halfTurns = Math.round(angle / 180);
-  return ((halfTurns % 2) + 2) % 2 === 1;
+  const normalized = ((Math.round(angle / 180) % 2) + 2) % 2;
+  return normalized === 1;
 }
 
 function isRareCard(card: DexCard): boolean {
@@ -80,6 +81,16 @@ function prefetchCardFaces(card: DexCard) {
   back.src = dexAsset(card.back);
 }
 
+/** Swipe speed (px/ms) → 1.5 / 2.5 / 3.5 turns (always lands on opposite face). */
+function spinDeltaFromSwipe(dx: number, durationMs: number): number {
+  const dir = dx >= 0 ? 1 : -1;
+  const speed = Math.abs(dx) / Math.max(16, durationMs);
+  let turns = 1.5;
+  if (speed >= 1.1) turns = 3.5;
+  else if (speed >= 0.45) turns = 2.5;
+  return dir * turns * 360;
+}
+
 export function DexDetailSheet({
   card,
   group,
@@ -101,17 +112,18 @@ export function DexDetailSheet({
   const backFaceRef = useRef<HTMLDivElement>(null);
 
   const angleRef = useRef(0);
-  const flippingRef = useRef(false);
+  const spinningRef = useRef(false);
   const rafRef = useRef(0);
   const shineTimerRef = useRef(0);
   const reduceMotionRef = useRef(shouldReduceMenuMotion());
+  const lastAngleRef = useRef(0);
 
   const pointerIdRef = useRef<number | null>(null);
   const startX = useRef(0);
   const startY = useRef(0);
+  const startAt = useRef(0);
   const dragKind = useRef<"close" | "card" | null>(null);
   const draggingRef = useRef(false);
-  const dragTiltRef = useRef(0);
 
   const record = owned[card.id];
   const ownedInGroup = group.filter((item) => (owned[item.id]?.count ?? 0) > 0);
@@ -140,18 +152,18 @@ export function DexDetailSheet({
           ? "캐릭터 컬렉션"
           : "레전드 컬렉션";
 
-  const applyPose = (angle: number, scale: number, translateY: number) => {
+  const applyPose = (angle: number, scale: number, translateY: number, blurPx = 0, spinIntensity = 0) => {
     const inner = innerRef.current;
     if (!inner) return;
     inner.style.transform = `translateY(${translateY}px) scale(${scale}) rotateY(${angle}deg)`;
+    inner.style.filter = blurPx > 0.05 ? `blur(${blurPx}px)` : "none";
 
-    // Mid-flip thickness: narrow + soft shadow near 90° within each half-turn
-    const phase = Math.abs(((angle % 180) + 180) % 180);
-    const mid = 1 - Math.abs(phase - 90) / 90;
     const shadow = shadowRef.current;
     if (shadow) {
-      shadow.style.opacity = String(0.42 - mid * 0.28);
-      shadow.style.transform = `translateX(-50%) scaleX(${1 - mid * 0.62}) scaleY(${1 - mid * 0.08})`;
+      // Faster spin → narrower / softer shadow
+      const t = Math.min(1, Math.max(0, spinIntensity));
+      shadow.style.opacity = String(0.42 - t * 0.3);
+      shadow.style.transform = `translateX(-50%) scaleX(${1 - t * 0.7}) scaleY(${1 - t * 0.12})`;
     }
   };
 
@@ -159,13 +171,14 @@ export function DexDetailSheet({
     if (frontFaceRef.current) frontFaceRef.current.style.opacity = String(opacityFront);
     if (backFaceRef.current) backFaceRef.current.style.opacity = String(opacityBack);
     if (innerRef.current) {
-      // Stacked faces only — no 3D spin when motion is reduced
       innerRef.current.style.transform = "none";
+      innerRef.current.style.filter = "none";
     }
   };
 
   const resetPose = (angle = 0) => {
     angleRef.current = angle;
+    lastAngleRef.current = angle;
     setShowingBack(isBackFace(angle));
     if (reduceMotionRef.current) {
       const back = isBackFace(angle);
@@ -178,27 +191,37 @@ export function DexDetailSheet({
     }
     if (frontFaceRef.current) frontFaceRef.current.style.opacity = "1";
     if (backFaceRef.current) backFaceRef.current.style.opacity = "1";
-    applyPose(angle, 1, 0);
+    applyPose(angle, 1, 0, 0, 0);
   };
 
-  const playShine = () => {
-    if (!rare) return;
-    setShining(true);
-    AudioManager.playSfx("reveal-rare", { volume: 0.5 });
-    window.clearTimeout(shineTimerRef.current);
-    shineTimerRef.current = window.setTimeout(() => setShining(false), SHINE_MS);
+  const onLand = (finalAngle: number) => {
+    angleRef.current = finalAngle;
+    lastAngleRef.current = finalAngle;
+    const back = isBackFace(finalAngle);
+    setShowingBack(back);
+    applyPose(finalAngle, 1, 0, 0, 0);
+    spinningRef.current = false;
+    lightVibrate(10);
+    if (rare) {
+      setShining(true);
+      AudioManager.playSfx("reveal-rare", { volume: 0.5 });
+      window.clearTimeout(shineTimerRef.current);
+      shineTimerRef.current = window.setTimeout(() => setShining(false), SHINE_MS);
+    }
   };
 
-  const flipTo = (dir: 1 | -1) => {
-    if (flippingRef.current) return;
-    flippingRef.current = true;
+  const spinBy = (deltaDeg: number) => {
+    if (spinningRef.current) return;
+    spinningRef.current = true;
 
     const from = angleRef.current;
-    const to = from + dir * 180;
+    // Snap delta so we always finish on a half-turn boundary (0 / 180 mod 360)
+    const rawTo = from + deltaDeg;
+    const half = Math.round(rawTo / 180) * 180;
+    const to = half;
     const willShowBack = isBackFace(to);
 
     AudioManager.playSfx("card-flip");
-    lightVibrate(10);
 
     if (reduceMotionRef.current) {
       const start = performance.now();
@@ -215,51 +238,56 @@ export function DexDetailSheet({
           rafRef.current = requestAnimationFrame(tickFade);
           return;
         }
-        angleRef.current = willShowBack ? 180 : 0;
-        setShowingBack(willShowBack);
-        flippingRef.current = false;
-        if (rare) playShine();
+        // Keep resting angles normalized for reduced-motion path
+        onLand(willShowBack ? 180 : 0);
       };
       rafRef.current = requestAnimationFrame(tickFade);
       return;
     }
 
     const start = performance.now();
+    lastAngleRef.current = from;
+
     const tick = (now: number) => {
       const elapsed = now - start;
       let scale = 1;
       let translateY = 0;
       let angle = from;
+      let blur = 0;
+      let intensity = 0;
 
       if (elapsed < LIFT_MS) {
         const p = elapsed / LIFT_MS;
-        scale = 1 + 0.04 * p;
-        translateY = -6 * p;
+        scale = 1 + (LIFT_SCALE - 1) * p;
+        translateY = LIFT_Y * p;
         angle = from;
       } else if (elapsed < ROTATE_END_MS) {
-        const p = easeFlip((elapsed - LIFT_MS) / (ROTATE_END_MS - LIFT_MS));
-        scale = 1.04;
-        translateY = -6;
+        const p = easeSpin((elapsed - LIFT_MS) / (ROTATE_END_MS - LIFT_MS));
+        scale = LIFT_SCALE;
+        translateY = LIFT_Y;
         angle = from + (to - from) * p;
+        // Peak blur mid-spin when easing is steepest
+        const speedApprox = Math.min(1, Math.abs(easeSpin(Math.min(1, p + 0.02)) - p) * 40);
+        intensity = 0.35 + speedApprox * 0.65;
+        blur = 0.6 * intensity;
       } else {
         const p = Math.min(1, (elapsed - ROTATE_END_MS) / BOUNCE_MS);
         scale = bounceScale(p);
-        translateY = -6 * (1 - p);
+        translateY = LIFT_Y * (1 - p);
         angle = to;
+        blur = 0.6 * (1 - p);
+        intensity = 1 - p;
       }
 
-      applyPose(angle, scale, translateY);
+      applyPose(angle, scale, translateY, blur, intensity);
+      lastAngleRef.current = angle;
 
-      if (elapsed < TOTAL_FLIP_MS) {
+      if (elapsed < TOTAL_SPIN_MS) {
         rafRef.current = requestAnimationFrame(tick);
         return;
       }
 
-      angleRef.current = to;
-      setShowingBack(willShowBack);
-      applyPose(to, 1, 0);
-      flippingRef.current = false;
-      if (rare) playShine();
+      onLand(to);
     };
 
     rafRef.current = requestAnimationFrame(tick);
@@ -274,8 +302,7 @@ export function DexDetailSheet({
   useEffect(() => {
     reduceMotionRef.current = shouldReduceMenuMotion();
     cancelAnimationFrame(rafRef.current);
-    flippingRef.current = false;
-    dragTiltRef.current = 0;
+    spinningRef.current = false;
     setShining(false);
     resetPose(0);
     prefetchCardFaces(card);
@@ -309,39 +336,31 @@ export function DexDetailSheet({
   };
 
   const onCardPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (flippingRef.current) return;
+    if (spinningRef.current) return;
     if (event.button != null && event.button !== 0) return;
     pointerIdRef.current = event.pointerId;
     startX.current = event.clientX;
     startY.current = event.clientY;
+    startAt.current = performance.now();
     dragKind.current = "card";
     draggingRef.current = false;
-    dragTiltRef.current = 0;
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onCardPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (dragKind.current !== "card" || flippingRef.current) return;
+    if (dragKind.current !== "card" || spinningRef.current) return;
     if (pointerIdRef.current != null && event.pointerId !== pointerIdRef.current) return;
 
     const dx = event.clientX - startX.current;
     const dy = event.clientY - startY.current;
     if (!draggingRef.current) {
-      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12) {
-        // Vertical intent — don't steal for flip tilt
         dragKind.current = null;
         return;
       }
       draggingRef.current = true;
     }
-
-    if (reduceMotionRef.current) return;
-
-    const width = cardRef.current?.clientWidth || 220;
-    const tilt = Math.max(-DRAG_MAX_DEG, Math.min(DRAG_MAX_DEG, (dx / width) * DRAG_MAX_DEG * 2));
-    dragTiltRef.current = tilt;
-    applyPose(angleRef.current + tilt, 1.02, -3);
   };
 
   const onCardPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -349,54 +368,37 @@ export function DexDetailSheet({
     dragKind.current = null;
     if (pointerIdRef.current != null && event.pointerId !== pointerIdRef.current) return;
     pointerIdRef.current = null;
-
-    if (flippingRef.current) return;
+    if (spinningRef.current) return;
 
     const dx = event.clientX - startX.current;
     const dy = event.clientY - startY.current;
-    const width = cardRef.current?.clientWidth || 220;
+    const duration = performance.now() - startAt.current;
 
     if (draggingRef.current) {
       draggingRef.current = false;
-      const ratio = dx / width;
-      if (Math.abs(ratio) >= DRAG_FLIP_RATIO) {
-        flipTo(dx > 0 ? 1 : -1);
-        return;
-      }
       if (Math.abs(dx) >= SWIPE_PT && Math.abs(dx) > Math.abs(dy)) {
-        flipTo(dx > 0 ? 1 : -1);
+        spinBy(spinDeltaFromSwipe(dx, duration));
         return;
       }
-      // Spring back
-      if (!reduceMotionRef.current) {
-        applyPose(angleRef.current, 1, 0);
-      }
-      dragTiltRef.current = 0;
       return;
     }
 
-    // Tap
     if (Math.abs(dx) < 8 && Math.abs(dy) < 8) {
-      flipTo(1);
+      spinBy(TAP_DELTA);
     }
   };
 
   const onCardPointerCancel = () => {
     dragKind.current = null;
     pointerIdRef.current = null;
-    if (draggingRef.current && !flippingRef.current && !reduceMotionRef.current) {
-      applyPose(angleRef.current, 1, 0);
-    }
     draggingRef.current = false;
-    dragTiltRef.current = 0;
   };
 
   const onFlipClick = () => {
-    if (flippingRef.current) return;
-    flipTo(1);
+    if (spinningRef.current) return;
+    spinBy(TAP_DELTA);
   };
 
-  // Keep onChangeCard available for future nav; suppress unused lint by referencing in dots
   const selectOwned = (item: DexCard) => {
     if ((owned[item.id]?.count ?? 0) <= 0) return;
     if (item.id === card.id) return;
