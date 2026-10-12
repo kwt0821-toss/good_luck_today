@@ -29,6 +29,7 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     tutorialDone: false,
     tutorialStep: 1,
     tutorialInterruptions: 0,
+    tut: { rewardsIntro: "unseen" },
     installDateKey: today,
     attendanceDays: 0,
     lastAttendDateKST: "",

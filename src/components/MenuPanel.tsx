@@ -43,6 +43,11 @@ type MenuPanelProps = {
   onPawAd: () => void;
   onReplayTutorial: () => void;
   onDevResetNewUser?: () => void;
+  /** Force-open a sheet (rewards-intro coach). */
+  forceSheet?: MenuSheetId;
+  /** Block panel/sheet swipe & dim dismiss while coach marks are active. */
+  lockDismiss?: boolean;
+  onSheetOpen?: (id: NonNullable<MenuSheetId>) => void;
 };
 
 function formatMeta(text: string) {
@@ -63,6 +68,9 @@ export function MenuPanel({
   onPawAd,
   onReplayTutorial,
   onDevResetNewUser,
+  forceSheet = null,
+  lockDismiss = false,
+  onSheetOpen,
 }: MenuPanelProps) {
   const [model, setModel] = useState<MenuViewModel | null>(null);
   const [closing, setClosing] = useState(false);
@@ -93,16 +101,24 @@ export function MenuPanel({
   }, [open, ops]);
 
   useEffect(() => {
+    if (!open || !forceSheet) return;
+    if (sheet === forceSheet && sheetOpen) return;
+    openSheet(forceSheet);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, forceSheet]);
+
+  useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") requestClose();
+      if (event.key === "Escape" && !lockDismiss) requestClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, sheet]);
+  }, [open, sheet, lockDismiss]);
 
   const requestClose = () => {
+    if (lockDismiss) return;
     if (sheet) {
       closeSheet();
       return;
@@ -116,6 +132,7 @@ export function MenuPanel({
   };
 
   const openSheet = (id: MenuSheetId) => {
+    if (!id) return;
     setSheet(id);
     if (id === "rewards") {
       setRewardsView("inbox");
@@ -125,9 +142,11 @@ export function MenuPanel({
     }
     AudioManager.playSfx("sheet-open");
     requestAnimationFrame(() => setSheetOpen(true));
+    onSheetOpen?.(id);
   };
 
   const closeSheet = () => {
+    if (lockDismiss) return;
     setSheetOpen(false);
     AudioManager.playSfx("sheet-close");
     window.setTimeout(() => {
@@ -173,7 +192,7 @@ export function MenuPanel({
   };
 
   const onPanelPointerUp = (event: ReactPointerEvent) => {
-    if (!swipeStart.current || !model) return;
+    if (lockDismiss || !swipeStart.current || !model) return;
     const dx = event.clientX - swipeStart.current.x;
     const dy = Math.abs(event.clientY - swipeStart.current.y);
     swipeStart.current = null;
@@ -181,11 +200,12 @@ export function MenuPanel({
   };
 
   const onSheetPointerDown = (event: ReactPointerEvent) => {
+    if (lockDismiss) return;
     sheetDrag.current = { y: event.clientY, active: true };
   };
 
   const onSheetPointerUp = (event: ReactPointerEvent) => {
-    if (!sheetDrag.current.active) return;
+    if (lockDismiss || !sheetDrag.current.active) return;
     const dy = event.clientY - sheetDrag.current.y;
     sheetDrag.current.active = false;
     if (dy > 120) closeSheet();
@@ -327,7 +347,14 @@ export function MenuPanel({
     <div
       className={`menu-root ${open && !closing ? "is-open" : ""} ${closing ? "is-closing" : ""} ${reduce ? "is-reduce" : ""}`}
     >
-      <button type="button" className="menu-dim" aria-label="메뉴 닫기" onClick={requestClose} />
+      <button
+        type="button"
+        className="menu-dim"
+        aria-label="메뉴 닫기"
+        onClick={() => {
+          if (!lockDismiss) requestClose();
+        }}
+      />
       <aside
         className="menu-panel"
         role="dialog"
@@ -400,6 +427,7 @@ export function MenuPanel({
                   {section.rows.map((row, index) => (
                     <button
                       key={row.id}
+                      id={`menu-row-${row.id}`}
                       type="button"
                       className={`menu-row ${row.enabled ? "" : "is-disabled"}`}
                       style={{ animationDelay: reduce ? "0ms" : `${index * 30}ms` }}
@@ -442,7 +470,14 @@ export function MenuPanel({
 
         {sheet && model ? (
           <div className={`menu-sheet-root ${sheetOpen ? "is-open" : ""}`}>
-            <button type="button" className="menu-sheet-dim" aria-label="시트 닫기" onClick={closeSheet} />
+            <button
+              type="button"
+              className="menu-sheet-dim"
+              aria-label="시트 닫기"
+              onClick={() => {
+                if (!lockDismiss) closeSheet();
+              }}
+            />
             <div
               className="menu-sheet"
               onPointerDown={onSheetPointerDown}
@@ -734,7 +769,7 @@ export function MenuPanel({
                     </div>
                   ) : (
                     <>
-                      <div className="wallet-card">
+                      <div className="wallet-card" id="wallet-card">
                         <div className="wallet-card-label">
                           {model.menu.sheets.rewards.wallet?.title ?? "내 냥코인"}
                         </div>
@@ -744,25 +779,41 @@ export function MenuPanel({
                           <small>냥코인</small>
                         </div>
                       </div>
-                      {model.nyangCoinBalance < 10 ? (
+                      <div id="withdraw-picker" className="withdraw-picker">
                         <p className="wallet-hint">
-                          {model.menu.sheets.rewards.wallet?.disabledHint ??
-                            "10냥코인부터 받을 수 있어요"}
+                          {model.nyangCoinBalance < 10
+                            ? (model.menu.sheets.rewards.wallet?.disabledHint ??
+                              "10냥코인부터 받을 수 있어요")
+                            : "받을 금액을 골라 주세요"}
                         </p>
-                      ) : (
-                        <div className="wallet-chips" role="listbox" aria-label="출금 금액">
-                          {withdrawChipAmounts(model.nyangCoinBalance).map((amount) => (
-                            <button
-                              key={amount}
-                              type="button"
-                              className={`wallet-chip ${withdrawAmount === amount ? "is-active" : ""}`}
-                              onClick={() => setWithdrawAmount(amount)}
-                            >
-                              {amount}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                        {model.nyangCoinBalance >= 10 ? (
+                          <div className="wallet-chips" role="listbox" aria-label="출금 금액">
+                            {withdrawChipAmounts(model.nyangCoinBalance).map((amount) => (
+                              <button
+                                key={amount}
+                                type="button"
+                                className={`wallet-chip ${withdrawAmount === amount ? "is-active" : ""}`}
+                                onClick={() => setWithdrawAmount(amount)}
+                              >
+                                {amount}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                        <button
+                          type="button"
+                          id="btn-withdraw"
+                          className="menu-sheet-cta"
+                          style={{ marginTop: 12 }}
+                          disabled={model.nyangCoinBalance < 10 || withdrawAmount < 10}
+                          onClick={() => setRewardsView("confirm")}
+                        >
+                          {model.nyangCoinBalance < 10
+                            ? (model.menu.sheets.rewards.wallet?.disabledHint ??
+                              "10냥코인부터 받을 수 있어요")
+                            : `토스포인트로 받기 · ${withdrawAmount}원`}
+                        </button>
+                      </div>
                       {model.rewards.items.length ? (
                         model.rewards.items.map((item) => (
                           <div
@@ -783,6 +834,7 @@ export function MenuPanel({
                       )}
                       <button
                         type="button"
+                        id="btn-wallet-history"
                         className="wallet-history-link"
                         onClick={() => setRewardsView("history")}
                       >
@@ -865,33 +917,53 @@ export function MenuPanel({
                       );
                     })}
                     {isDevBuild ? (
-                      <div className="settings-row settings-row-dev">
-                        <button
-                          type="button"
-                          className="link is-danger"
-                          disabled={devResetting}
-                          onClick={() => {
-                            if (devResetting) return;
-                            const ok = window.confirm(
-                              "개발용: 신규 유저 상태로 초기화할까요?\n도감·출석·튜토리얼·방 진행도가 지워져요.",
-                            );
-                            if (!ok) return;
-                            setDevResetting(true);
-                            void resetToNewUserState()
-                              .then((next) => {
-                                onOpsChange(next);
-                                onDevResetNewUser?.();
-                                window.location.assign("/");
-                              })
-                              .catch(() => {
-                                setDevResetting(false);
-                                showToast("초기화에 실패했어요");
-                              });
-                          }}
-                        >
-                          {devResetting ? "초기화 중…" : "신규 유저로 초기화 (DEV)"}
-                        </button>
-                      </div>
+                      <>
+                        <div className="settings-row settings-row-dev">
+                          <button
+                            type="button"
+                            className="link"
+                            onClick={() => {
+                              const next = {
+                                ...ops,
+                                nyangCoinBalance: ops.nyangCoinBalance + 10,
+                              };
+                              onOpsChange(next);
+                              void buildMenuViewModel(next).then(setModel);
+                              showToast("냥코인 +10 (DEV)");
+                              AudioManager.playSfx("reward-coin");
+                            }}
+                          >
+                            냥코인 10개 획득 (DEV)
+                          </button>
+                        </div>
+                        <div className="settings-row settings-row-dev">
+                          <button
+                            type="button"
+                            className="link is-danger"
+                            disabled={devResetting}
+                            onClick={() => {
+                              if (devResetting) return;
+                              const ok = window.confirm(
+                                "개발용: 신규 유저 상태로 초기화할까요?\n도감·출석·튜토리얼·방 진행도가 지워져요.",
+                              );
+                              if (!ok) return;
+                              setDevResetting(true);
+                              void resetToNewUserState()
+                                .then((next) => {
+                                  onOpsChange(next);
+                                  onDevResetNewUser?.();
+                                  window.location.assign("/");
+                                })
+                                .catch(() => {
+                                  setDevResetting(false);
+                                  showToast("초기화에 실패했어요");
+                                });
+                            }}
+                          >
+                            {devResetting ? "초기화 중…" : "신규 유저로 초기화 (DEV)"}
+                          </button>
+                        </div>
+                      </>
                     ) : null}
                     {creditsText ? (
                       <pre className="menu-credits">{creditsText}</pre>
@@ -948,31 +1020,16 @@ export function MenuPanel({
                   >
                     {withdrawBusy ? "처리 중…" : `받기 · ${withdrawAmount}원`}
                   </button>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      className="menu-sheet-cta"
-                      disabled={model.nyangCoinBalance < 10 || withdrawAmount < 10}
-                      onClick={() => setRewardsView("confirm")}
-                    >
-                      {model.nyangCoinBalance < 10
-                        ? (model.menu.sheets.rewards.wallet?.disabledHint ??
-                          "10냥코인부터 받을 수 있어요")
-                        : `토스포인트로 받기 · ${withdrawAmount}원`}
-                    </button>
-                    {model.rewards.unclaimedCount > 0 ? (
-                      <button
-                        type="button"
-                        className="menu-sheet-cta is-secondary"
-                        style={{ marginTop: 8 }}
-                        onClick={() => void doCollectRewards()}
-                      >
-                        {model.menu.sheets.rewards.cta}
-                      </button>
-                    ) : null}
-                  </>
-                )
+                ) : model.rewards.unclaimedCount > 0 ? (
+                  <button
+                    type="button"
+                    id="btn-claim-all"
+                    className="menu-sheet-cta is-secondary"
+                    onClick={() => void doCollectRewards()}
+                  >
+                    {model.menu.sheets.rewards.cta}
+                  </button>
+                ) : null
               ) : null}
 
               {sheet === "notice" ? (

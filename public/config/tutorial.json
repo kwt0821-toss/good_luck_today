@@ -1,14 +1,14 @@
 {
- "_version": "tutorial-1.0",
+ "_version": "tutorial-1.3",
  "maxDurationSec": 60,
  "style": "coach marks (dim + 하이라이트 원/라운드 사각 + 말풍선)",
-  "skip": {
+ "skip": {
   "button": {
    "id": "tut-skip",
    "label": "건너뛰기",
-   "position": "top-right below app bar"
+   "position": "top-right below app bar; if target in top 160pt or overlaps skip, use bubble footer text button"
   },
-  "onSkip": "남은 단계 보상은 그대로 지급 (첫 뽑기 무료·도감 등록·냥코인 1개는 서버에서 처리), tutorialDone=true",
+  "onSkip": "남은 단계 보상은 그대로 지급 (첫 뽑기 무료·도감 등록·냥코인 1개는 서버에서 처리), tutorialDone=true; contextual rewards-intro skip → tut.rewardsIntro=skipped",
   "resume": "앱 종료 시 다음 실행 때 현재 단계부터, 2회 이상 중단 시 자동 완료"
  },
  "steps": [
@@ -28,7 +28,40 @@
    "copy": "오늘의 행운 문구가 도착했어요",
    "toast": {
     "id": "dex-toast",
-    "text": "도감에 등록됐어요! 냥코인 1개 + 20포인트 받았어요"
+    "text": "도감에 등록됐어요! 냥코인 1개 + 20포인트 받았어요",
+    "autoHideMs": 2800,
+    "holdDuringTutorial": true
+   },
+   "then": {
+    "id": "ncoin-intro",
+    "delayAfterToastMs": 600,
+    "title": "냥코인을 모아요",
+    "lines": [
+     {
+      "icon": "/assets/ncoin/ncoin-16@3x.svg",
+      "text": "새 카드를 뽑으면 냥코인을 받아요"
+     },
+     {
+      "icon": "/assets/menu/icon-rewards.svg",
+      "text": "보상함에 차곡차곡 쌓여요"
+     },
+     {
+      "icon": "/assets/menu/icon-dex-mini.svg",
+      "text": "10개부터 토스포인트로 바꿔요"
+     },
+     {
+      "icon": "/assets/menu/icon-paw-mini.svg",
+      "text": "발바닥 포인트랑은 달라요",
+      "muted": true,
+      "dividerAbove": true
+     }
+    ],
+    "cta": "알겠어요",
+    "dismissToastWithCta": true,
+    "next": {
+     "target": "#btn-to-dex",
+     "copy": "도감에 넣어 볼까요?"
+    }
    },
    "action": "tap #btn-to-dex (도감에 넣기)"
   },
@@ -63,6 +96,69 @@
    "complete": "tutorialDone=true"
   }
  ],
+ "contextual": {
+  "rewards-intro": {
+   "id": "rewards-intro",
+   "flag": "tut.rewardsIntro",
+   "once": true,
+   "gate": "tutorialDone && not drawing && not ad && not otherSheet",
+   "triggers": [
+    {
+     "when": "nyangCoinBalance >= 10",
+     "from": "r1",
+     "note": "냥코인 처음 ≥10 (r1부터)"
+    },
+    {
+     "when": "openSheet:rewards",
+     "from": "r3",
+     "note": "보상함 처음 열기 (r3부터) — 둘 중 먼저 1회"
+    }
+   ],
+   "lockDismiss": true,
+   "steps": [
+    {
+     "id": "r1",
+     "target": "#icon-menu",
+     "copy": "메뉴에서 보상함을 열 수 있어요",
+     "action": "tap → open menu"
+    },
+    {
+     "id": "r2",
+     "target": "#menu-row-rewards",
+     "copy": "보상함을 눌러 볼까요?",
+     "action": "tap → open sheet:rewards"
+    },
+    {
+     "id": "r3",
+     "target": "#wallet-card",
+     "copy": "모은 냥코인이 여기에 보여요",
+     "action": "next"
+    },
+    {
+     "id": "r4",
+     "target": "#withdraw-picker",
+     "bubble": "above",
+     "copy": "원하는 만큼 골라 토스포인트로 받으세요",
+     "lines": [
+      {
+       "when": "nyangCoinBalance >= 10",
+       "copy": "원하는 만큼 골라 토스포인트로 받으세요"
+      },
+      {
+       "when": "nyangCoinBalance < 10",
+       "copy": "10냥코인부터 토스포인트로 받을 수 있어요"
+      }
+     ],
+     "action": "ack — 실제 출금은 유저가 직접"
+    }
+   ]
+  }
+ },
+ "replay": {
+  "from": "settings",
+  "includes": ["steps 1–4", "contextual.rewards-intro from r1"],
+  "regrantRewards": false
+ },
  "featureIntros": {
   "ui": "'새 기능' 말풍선 (대상 요소 옆, 1회 노출, 탭하면 닫힘)",
   "schedule": [
