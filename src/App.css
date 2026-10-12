@@ -16,9 +16,11 @@
   #root {
     width: 390px;
     max-width: 390px;
-    height: 844px;
-    min-height: 844px;
-    max-height: 844px;
+    /* iPhone 기준 844, 짧은 노트북 뷰포트에서는 잘리지 않게 축소 */
+    --phone-h: min(844px, calc(100dvh - 48px));
+    height: var(--phone-h);
+    min-height: var(--phone-h);
+    max-height: var(--phone-h);
     margin: 24px auto;
     border-radius: 32px;
     overflow: hidden;
