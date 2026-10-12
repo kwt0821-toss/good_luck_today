@@ -15,15 +15,63 @@ async function fetchJson<T>(name: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** Tolerate older economy.json keys (toss / tossPayout) during rollout. */
+function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy {
+  const anyRaw = raw as Record<string, unknown>;
+  const currency = { ...(raw.currency as Record<string, unknown>) };
+  if (!currency.nyangCoin && currency.toss) {
+    const toss = currency.toss as { nameKo?: string; unit?: string };
+    currency.nyangCoin = { nameKo: "냥코인", unit: "NYANG", note: "1냥코인 = 토스포인트 1원", ...toss };
+    delete currency.toss;
+  }
+  const pawSources = structuredClone(raw.pawSources) as OpsEconomy["pawSources"] & Record<string, unknown>;
+  const first = pawSources.newCardFirstGet as Record<string, number>;
+  if (first && first.nyangCoin == null && first.toss != null) {
+    first.nyangCoin = first.toss;
+    delete first.toss;
+  }
+  const setComplete = pawSources.setComplete as Record<string, Record<string, number>>;
+  for (const pack of Object.values(setComplete ?? {})) {
+    if (pack && pack.nyangCoin == null && pack.toss != null) {
+      pack.nyangCoin = pack.toss;
+      delete pack.toss;
+    }
+  }
+  let nyangCoin = raw.nyangCoin;
+  if (!nyangCoin && anyRaw.tossPayout) {
+    nyangCoin = {
+      ...(anyRaw.tossPayout as OpsEconomy["nyangCoin"]),
+      nameKo: "냥코인",
+      toTossPointRate: 1,
+      withdrawMin: 10,
+      withdrawStep: 10,
+    };
+  }
+  return {
+    ...raw,
+    currency: currency as OpsEconomy["currency"],
+    pawSources: pawSources as OpsEconomy["pawSources"],
+    nyangCoin: nyangCoin ?? {
+      maxPerUserKRW: 417,
+      oncePerTossAccount: true,
+      serverVerified: true,
+      idempotencyKey: "tossUserKey + requestId",
+      withdrawMin: 10,
+      withdrawStep: 10,
+      toTossPointRate: 1,
+    },
+  };
+}
+
 export function loadOpsConfig(): Promise<OpsConfig> {
   if (!cache) {
     cache = Promise.all([
-      fetchJson<OpsEconomy>("economy.json"),
+      fetchJson<OpsEconomy & Record<string, unknown>>("economy.json"),
       fetchJson<OpsPrices>("prices.json"),
       fetchJson<OpsStarter>("starter.json"),
       fetchJson<OpsTutorial>("tutorial.json"),
     ]).then(([economy, prices, starter, tutorial]) => ({
-      economy,
+      economy: normalizeEconomy(economy),
       prices,
       starter,
       tutorial,

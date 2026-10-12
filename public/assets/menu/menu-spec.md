@@ -81,3 +81,16 @@ icon-attendance / points / exchange / rewards / rates / notice / invite / settin
 - `item.attendanceOnly` 이면 서랍 카드·아이템 상세·출석 시트에 **출석 한정** 태그 (`menu.json attendanceOnlyTag`).
 - 보상·티켓·마일스톤 숫자는 `starter.json` / `economy.json` / `prices.json` 만 읽음 (하드코딩 금지).
 - 출석 한정 아이템(`prices.attendanceOnly.ids` / `source==attendance`)은 상점·구매·서랍 기본지급·방 해금 선물·기타 보상 풀에서 제외. 지급은 출석 API만.
+
+## 7. 보상함·냥코인 지갑 (menu-screen-d)
+시안: `menu-screen-d` (지갑+칩), `d-low` (10 미만 비활성), `d2` (확인), `d3` (성공/기록).
+
+| 요소 | 값 |
+|---|---|
+| 헤더 스탯 | 4칸: 포인트 · 냥코인 · 도감 · 방 레벨 |
+| 보상함 행 meta | `🪙{잔액} 냥코인 · 받을 보상 {n}` |
+| 지갑 카드 | 잔액 + ncoin-24@3x, 10단위 칩(최대 기본 선택) |
+| CTA | `토스포인트로 받기 · N원` / 10 미만 시 비활성 + "10냥코인부터 받을 수 있어요" |
+| 출금 | 클라이언트는 POST `/wallet/withdraw` 만 호출 (토스 지급 API 직접 호출 금지) |
+| 기록 | GET `/wallet/history` — 완료 / 처리 중 / 실패 |
+| 화폐 | economy `currency.nyangCoin`, 지급 규칙 `nyangCoin` (구 tossPayout). 1냥코인 = 토스포인트 1원 |

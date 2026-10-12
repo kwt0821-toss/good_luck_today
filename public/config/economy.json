@@ -1,14 +1,15 @@
 {
- "_version": "economy-1.1 (2026-10-11)",
+ "_version": "economy-1.2 (2026-10-12)",
  "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
  "currency": {
   "paw": {
    "nameKo": "포인트(발바닥)",
    "startBalance": 300
   },
-  "toss": {
-   "nameKo": "토스 포인트(원)",
-   "unit": "KRW"
+  "nyangCoin": {
+   "nameKo": "냥코인",
+   "unit": "NYANG",
+   "note": "1냥코인 = 토스포인트 1원"
   }
  },
  "pawSources": {
@@ -21,7 +22,7 @@
   },
   "newCardFirstGet": {
    "paw": 20,
-   "toss": 1
+   "nyangCoin": 1
   },
   "duplicateConvert": {
    "common_1to2star": 10,
@@ -35,35 +36,27 @@
   "setComplete": {
    "breed_1to5star": {
     "paw": 200,
-    "toss": 10,
-    "count": 18
+    "count": 18,
+    "nyangCoin": 10
    },
    "special": {
     "paw": 300,
-    "toss": 10
+    "nyangCoin": 10
    },
    "character": {
     "paw": 300,
-    "toss": 10
+    "nyangCoin": 10
    },
    "legend": {
     "paw": 300,
-    "toss": 10
+    "nyangCoin": 10
    },
    "fullDex": {
     "paw": 3000,
-    "toss": 100
+    "nyangCoin": 100
    }
   },
   "attendance": "starter.json → attendance"
- },
- "tossPayout": {
-  "maxPerUserKRW": 417,
-  "formula": "107×1 + 18×10 + 3×10 + 100",
-  "oncePerTossAccount": true,
-  "serverVerified": true,
-  "idempotencyKey": "tossUserKey + rewardId",
-  "budgetAlertKRW": null
  },
  "draws": {
   "resetTimeKST": "00:00",
@@ -281,12 +274,12 @@
    "appliesTo": [
     "rewardedAd"
    ],
-   "note": "광고 포인트만 2배 (토스 지급·중복 전환은 제외)"
+   "note": "광고 포인트만 2배 (냥코인 지급·중복 전환은 제외)"
   },
   "monthlyCardPack": {
    "enabled": false,
    "_proposal": true,
-   "note": "매달 신규 카드 세트 추가 시 도감·totalCards·tossPayout 재계산 필요"
+   "note": "매달 신규 카드 세트 추가 시 도감·totalCards·nyangCoin 재계산 필요"
   },
   "seasonalRooms": {
    "enabled": false,
@@ -309,12 +302,12 @@
   }
  },
  "antiAbuse": {
-  "toss1wonOncePerAccount": true,
   "serverSideOnly": true,
   "adRewardOnlyAfterCompleteCallback": true,
   "drawResultServerDecided": true,
   "rateLimit": "동일 계정 뽑기/광고 보상 요청 1초 1회",
-  "deviceChange": "계정 기준 지급 (기기 무관)"
+  "deviceChange": "계정 기준 지급 (기기 무관)",
+  "nyangCoinOncePerAccount": true
  },
  "files": {
   "prices": "prices.json",
@@ -329,5 +322,17 @@
    "maxHold": 3,
    "note": "광고 없이 확률업 1회. 하루 rateUp 한도와 별개. 보유 상한 maxHold."
   }
+ },
+ "nyangCoin": {
+  "maxPerUserKRW": 417,
+  "formula": "107×1 + 18×10 + 3×10 + 100",
+  "oncePerTossAccount": true,
+  "serverVerified": true,
+  "idempotencyKey": "tossUserKey + requestId",
+  "budgetAlertKRW": null,
+  "nameKo": "냥코인",
+  "toTossPointRate": 1,
+  "withdrawMin": 10,
+  "withdrawStep": 10
  }
 }

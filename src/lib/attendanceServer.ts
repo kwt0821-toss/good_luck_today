@@ -208,7 +208,7 @@ export async function claimAttendanceOnServer(
   // Idempotency key: tossUserKey + attendanceMilestone:{days}
   for (const days of milestoneHit) {
     const key = `${state.userId}+attendanceMilestone:${days}`;
-    if (state.grantedTossRewardIds.includes(key)) {
+    if (state.grantedNyangCoinRewardIds.includes(key)) {
       // Already granted — strip duplicate milestone rewards
       // (keeps day rewards; milestones are once per account)
     }
@@ -230,7 +230,7 @@ export async function claimAttendanceOnServer(
     const milestone = config.starter.attendance!.milestones.find((m) => m.days === n);
     if (!milestone) return true;
     const key = `${state.userId}+attendanceMilestone:${milestone.days}`;
-    if (state.grantedTossRewardIds.includes(key)) {
+    if (state.grantedNyangCoinRewardIds.includes(key)) {
       return reward.kind !== "badge" && !(reward.kind === "item" && reward.itemId === milestone.itemId);
     }
     return true;
@@ -241,8 +241,8 @@ export async function claimAttendanceOnServer(
     const milestone = config.starter.attendance.milestones.find((m) => m.days === n);
     if (milestone) {
       const key = `${state.userId}+attendanceMilestone:${milestone.days}`;
-      if (!next.grantedTossRewardIds.includes(key)) {
-        next = { ...next, grantedTossRewardIds: [...next.grantedTossRewardIds, key] };
+      if (!next.grantedNyangCoinRewardIds.includes(key)) {
+        next = { ...next, grantedNyangCoinRewardIds: [...next.grantedNyangCoinRewardIds, key] };
       }
     }
   }

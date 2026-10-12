@@ -1,5 +1,5 @@
 {
- "_version": "menu-1.0 (2026-10-11)",
+ "_version": "menu-1.1 (2026-10-12)",
  "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
  "panel": {
   "side": "right",
@@ -21,6 +21,13 @@
     "value": "user.pawBalance",
     "format": "number(ko-KR)",
     "icon": "icon-paw-mini.svg"
+   },
+   {
+    "id": "nyangCoin",
+    "label": "냥코인",
+    "value": "user.nyangCoinBalance",
+    "format": "number(ko-KR)",
+    "icon": "/assets/ncoin/ncoin-16@3x.svg"
    },
    {
     "id": "dex",
@@ -108,8 +115,8 @@
    "icon": "icon-rewards.svg",
    "enabled": true,
    "open": "sheet:rewards",
-   "meta": "'받을 보상 {rewards.unclaimedCount}'",
-   "data": "economy.json → pawSources.newCardFirstGet, setComplete, tossPayout",
+   "meta": "'🪙{nyangCoinBalance} 냥코인 · 받을 보상 {rewards.unclaimedCount}'",
+   "data": "economy.json → pawSources.newCardFirstGet, setComplete, nyangCoin",
    "badge": {
     "type": "dot",
     "when": "rewards.unclaimedCount > 0"
@@ -331,8 +338,30 @@
   "rewards": {
    "title": "보상함",
    "eyebrow": "REWARDS",
-   "desc": "도감을 채우면 토스 포인트와 발바닥 포인트가 와요.",
-   "cta": "모두 받기"
+   "desc": "도감을 채우면 냥코인과 발바닥 포인트가 와요.",
+   "cta": "모두 받기",
+   "wallet": {
+    "title": "내 냥코인",
+    "withdrawCta": "토스포인트로 받기 · {amount}원",
+    "disabledHint": "10냥코인부터 받을 수 있어요",
+    "confirmTitle": "토스포인트로 받을까요?",
+    "confirmDesc": "{amount}냥코인을 토스포인트 {amount}원으로 바꿔요.",
+    "successTitle": "토스포인트를 받았어요",
+    "successDesc": "{amount}원이 토스 포인트로 들어갔어요.",
+    "historyTitle": "받은 기록",
+    "status": {
+     "done": "완료",
+     "pending": "처리 중",
+     "failed": "실패"
+    },
+    "chipStep": 10,
+    "mockups": [
+     "menu-screen-d",
+     "menu-screen-d-low",
+     "menu-screen-d2",
+     "menu-screen-d3"
+    ]
+   }
   }
  },
  "attendanceOnlyTag": {

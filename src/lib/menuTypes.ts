@@ -112,7 +112,13 @@ export type MenuConfig = {
       note: string;
     };
     exchange: { title: string; eyebrow: string; desc: string; cta: string };
-    rewards: { title: string; eyebrow: string; desc: string; cta: string };
+    rewards: {
+      title: string;
+      eyebrow: string;
+      desc: string;
+      cta: string;
+      wallet?: RewardsWalletSheet;
+    };
   };
 };
 
@@ -134,6 +140,19 @@ export type RewardInboxItem = {
   id: string;
   label: string;
   paw: number;
-  toss: number;
+  nyangCoin: number;
   collected: boolean;
+};
+
+export type RewardsWalletSheet = {
+  title: string;
+  withdrawCta: string;
+  disabledHint: string;
+  confirmTitle: string;
+  confirmDesc: string;
+  successTitle: string;
+  successDesc: string;
+  historyTitle: string;
+  status: { done: string; pending: string; failed: string };
+  chipStep: number;
 };

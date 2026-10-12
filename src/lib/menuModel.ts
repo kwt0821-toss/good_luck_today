@@ -12,6 +12,7 @@ export type MenuViewModel = {
   menu: MenuConfig;
   config: OpsConfig;
   pawBalance: number;
+  nyangCoinBalance: number;
   dexOwned: number;
   dexTotal: number;
   cozyLevel: number;
@@ -101,7 +102,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
           : (def.disabledMeta ?? "아직 겹친 카드가 없어요");
       rowDisabled = duplicateCount <= 0;
     } else if (id === "rewards") {
-      meta = `받을 보상 ${unclaimed.length}`;
+      meta = `🪙${ops.nyangCoinBalance} 냥코인 · 받을 보상 ${unclaimed.length}`;
       if (unclaimed.length > 0) badge = { type: "dot" };
     } else if (id === "rates") {
       meta = `5성↑·스페셜 ${highlightPct}%`;
@@ -156,6 +157,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     menu,
     config,
     pawBalance: ops.pawBalance,
+    nyangCoinBalance: ops.nyangCoinBalance,
     dexOwned,
     dexTotal,
     cozyLevel,

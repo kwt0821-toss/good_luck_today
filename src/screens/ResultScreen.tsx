@@ -52,7 +52,7 @@ export function ResultScreen({
 
       <div className="reward-banner" role="status">
         <div className="reward-pills">
-          <span className="reward-pill is-point">토스포인트 +{result.earnedTossPoints}원</span>
+          <span className="reward-pill is-point">냥코인 +{result.earnedTossPoints}</span>
           <span className="reward-pill is-jelly">핑크젤리 +{result.earnedPinkJelly}</span>
         </div>
         <p>

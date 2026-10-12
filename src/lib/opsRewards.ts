@@ -14,7 +14,7 @@ import {
 } from "./opsState";
 import { saveOpsState } from "./opsStorage";
 import type { ConfirmDrawResult, DrawReservation, OpsState } from "./opsTypes";
-import { grantTossOnce } from "./mockToss";
+import { grantNyangCoinOnce } from "./mockToss";
 
 function delay(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -30,7 +30,7 @@ async function evaluateSetRewards(
   let next = state;
   const rewards: ConfirmDrawResult["setRewards"] = [];
 
-  const grant = async (rewardId: string, paw: number, toss: number, label: string) => {
+  const grant = async (rewardId: string, paw: number, nyangCoin: number, label: string) => {
     if (next.grantedSetRewardIds.includes(rewardId)) return;
     next = {
       ...next,
@@ -38,29 +38,30 @@ async function evaluateSetRewards(
       grantedSetRewardIds: [...next.grantedSetRewardIds, rewardId],
       rewardInbox: [
         ...next.rewardInbox,
-        { id: rewardId, label, paw, toss, collected: false },
+        { id: rewardId, label, paw, nyangCoin, collected: false },
       ],
     };
-    if (toss > 0) {
-      const tossRes = await grantTossOnce(next, {
+    if (nyangCoin > 0) {
+      const tossRes = await grantNyangCoinOnce(next, {
         tossUserKey: next.userId,
         rewardId: `set:${rewardId}`,
-        amountKRW: toss,
+        amount: nyangCoin,
       });
       next = tossRes.state;
     }
-    rewards.push({ id: rewardId, paw, toss, label });
+    rewards.push({ id: rewardId, paw, nyangCoin, label });
   };
 
   const breedRows = groupBreedRows(cardsOfType(catalog, "breed"));
   for (const row of breedRows) {
     const complete = row.slots.every((card) => (owned[card.id]?.count ?? 0) > 0);
     if (complete) {
+      const breedPack = economy.pawSources.setComplete.breed_1to5star;
       await grant(
         `breed:${row.breedId}`,
-        economy.pawSources.setComplete.breed_1to5star.paw,
-        economy.pawSources.setComplete.breed_1to5star.toss,
-        `${row.ko} 1~5성 완성`,
+        breedPack.paw,
+        breedPack.nyangCoin,
+        `${row.ko} 1~5성 완성 · ${breedPack.nyangCoin}냥코인 + ${breedPack.paw}P`,
       );
     }
   }
@@ -70,7 +71,7 @@ async function evaluateSetRewards(
     const complete = cards.length > 0 && cards.every((card) => (owned[card.id]?.count ?? 0) > 0);
     if (complete) {
       const pack = economy.pawSources.setComplete[type];
-      await grant(`set:${type}`, pack.paw, pack.toss, `${type} 세트 완성`);
+      await grant(`set:${type}`, pack.paw, pack.nyangCoin, `${type} 세트 완성 · ${pack.nyangCoin}냥코인 + ${pack.paw}P`);
     }
   }
 
@@ -78,7 +79,7 @@ async function evaluateSetRewards(
     catalog.cards.length > 0 && catalog.cards.every((card) => (owned[card.id]?.count ?? 0) > 0);
   if (full) {
     const pack = economy.pawSources.setComplete.fullDex;
-    await grant("set:fullDex", pack.paw, pack.toss, "전체 도감 완성");
+    await grant("set:fullDex", pack.paw, pack.nyangCoin, `전체 도감 완성 · ${pack.nyangCoin}냥코인 + ${pack.paw}P`);
   }
 
   return { state: next, rewards };
@@ -159,18 +160,18 @@ export async function confirmDrawAfterAd(
               id: inboxId,
               label: `${card.id} 첫 획득`,
               paw: grant.paw,
-              toss: grant.toss,
+              nyangCoin: grant.nyangCoin,
               collected: false,
             },
           ],
     };
-    const tossRes = await grantTossOnce(next, {
+    const tossRes = await grantNyangCoinOnce(next, {
       tossUserKey: next.userId,
       rewardId: inboxId,
-      amountKRW: grant.toss,
+      amount: grant.nyangCoin,
     });
     next = tossRes.state;
-    toast = `도감에 등록됐어요! 토스 ${grant.toss}원 + ${grant.paw}포인트 받았어요`;
+    toast = `도감에 등록됐어요! 냥코인 ${grant.nyangCoin}개 + ${grant.paw}포인트 받았어요`;
   }
 
   const setEval = await evaluateSetRewards(next, owned);

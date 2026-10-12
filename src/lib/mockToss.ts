@@ -1,49 +1,51 @@
 import type { OpsState } from "./opsTypes";
 
 /**
- * Server-shaped toss payout gate. Real server must verify
- * `tossUserKey + rewardId` once per account. This mock keeps the same
- * idempotency surface on the client for local preview.
+ * Server-shaped 냥코인 grant gate (earning into wallet).
+ * Real server verifies `tossUserKey + rewardId` once per account.
  */
-export type TossGrantRequest = {
+export type NyangCoinGrantRequest = {
   tossUserKey: string;
   rewardId: string;
-  amountKRW: number;
+  amount: number;
 };
 
-export type TossGrantResult =
-  | { ok: true; alreadyGranted: boolean; amountKRW: number }
+export type NyangCoinGrantResult =
+  | { ok: true; alreadyGranted: boolean; amount: number }
   | { ok: false; reason: string };
 
 const memory = new Set<string>();
 
-function keyOf(req: TossGrantRequest) {
+function keyOf(req: NyangCoinGrantRequest) {
   return `${req.tossUserKey}::${req.rewardId}`;
 }
 
-export async function grantTossOnce(
+export async function grantNyangCoinOnce(
   state: OpsState,
-  req: TossGrantRequest,
-): Promise<{ state: OpsState; result: TossGrantResult }> {
+  req: NyangCoinGrantRequest,
+): Promise<{ state: OpsState; result: NyangCoinGrantResult }> {
   await delay(40);
-  if (req.amountKRW <= 0) {
+  if (req.amount <= 0) {
     return { state, result: { ok: false, reason: "invalid amount" } };
   }
   const key = keyOf(req);
-  if (memory.has(key) || state.grantedTossRewardIds.includes(req.rewardId)) {
+  if (memory.has(key) || state.grantedNyangCoinRewardIds.includes(req.rewardId)) {
     return {
       state,
-      result: { ok: true, alreadyGranted: true, amountKRW: 0 },
+      result: { ok: true, alreadyGranted: true, amount: 0 },
     };
   }
   memory.add(key);
   const next: OpsState = {
     ...state,
-    tossBalance: state.tossBalance + req.amountKRW,
-    grantedTossRewardIds: [...state.grantedTossRewardIds, req.rewardId],
+    nyangCoinBalance: state.nyangCoinBalance + req.amount,
+    grantedNyangCoinRewardIds: [...state.grantedNyangCoinRewardIds, req.rewardId],
   };
-  return { state: next, result: { ok: true, alreadyGranted: false, amountKRW: req.amountKRW } };
+  return { state: next, result: { ok: true, alreadyGranted: false, amount: req.amount } };
 }
+
+/** @deprecated use grantNyangCoinOnce */
+export const grantTossOnce = grantNyangCoinOnce;
 
 function delay(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));

@@ -74,7 +74,12 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
       ...fallback,
       userId: typeof parsed.userId === "string" ? parsed.userId : fallback.userId,
       pawBalance: typeof parsed.pawBalance === "number" ? parsed.pawBalance : fallback.pawBalance,
-      tossBalance: typeof parsed.tossBalance === "number" ? parsed.tossBalance : fallback.tossBalance,
+      nyangCoinBalance:
+        typeof parsed.nyangCoinBalance === "number"
+          ? parsed.nyangCoinBalance
+          : typeof parsed.tossBalance === "number"
+            ? parsed.tossBalance
+            : fallback.nyangCoinBalance,
       dateKey: typeof parsed.dateKey === "string" ? parsed.dateKey : fallback.dateKey,
       normalDrawsUsed:
         typeof parsed.normalDrawsUsed === "number" ? parsed.normalDrawsUsed : fallback.normalDrawsUsed,
@@ -117,7 +122,11 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         ? parsed.claimedMilestoneDays.filter((n): n is number => typeof n === "number")
         : [],
       featureIntrosSeen: parseStringArray(parsed.featureIntrosSeen),
-      grantedTossRewardIds: parseStringArray(parsed.grantedTossRewardIds),
+      grantedNyangCoinRewardIds: (() => {
+        const next = parseStringArray(parsed.grantedNyangCoinRewardIds);
+        if (next.length) return next;
+        return parseStringArray(parsed.grantedTossRewardIds);
+      })(),
       grantedSetRewardIds: parseStringArray(parsed.grantedSetRewardIds),
       ownedItemIds: parseStringArray(parsed.ownedItemIds),
       unlockedRoomIds: parseStringArray(parsed.unlockedRoomIds).length
@@ -131,11 +140,32 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
               id: typeof item.id === "string" ? item.id : "",
               label: typeof item.label === "string" ? item.label : "",
               paw: typeof item.paw === "number" ? item.paw : 0,
-              toss: typeof item.toss === "number" ? item.toss : 0,
+              nyangCoin:
+                typeof item.nyangCoin === "number"
+                  ? item.nyangCoin
+                  : typeof item.toss === "number"
+                    ? item.toss
+                    : 0,
               collected: Boolean(item.collected),
             }))
             .filter((item) => item.id)
         : fallback.rewardInbox,
+      walletHistory: Array.isArray(parsed.walletHistory)
+        ? parsed.walletHistory
+            .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+            .map((item) => ({
+              requestId: typeof item.requestId === "string" ? item.requestId : "",
+              amount: typeof item.amount === "number" ? item.amount : 0,
+              status:
+                item.status === "done" || item.status === "failed" || item.status === "pending"
+                  ? item.status
+                  : ("pending" as const),
+              createdAt: typeof item.createdAt === "number" ? item.createdAt : 0,
+              updatedAt: typeof item.updatedAt === "number" ? item.updatedAt : 0,
+              failReason: typeof item.failReason === "string" ? item.failReason : undefined,
+            }))
+            .filter((item) => item.requestId)
+        : fallback.walletHistory,
       lastSeenNoticeId:
         typeof parsed.lastSeenNoticeId === "string" ? parsed.lastSeenNoticeId : "",
     };
