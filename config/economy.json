@@ -126,12 +126,17 @@
     "draw",
     "paw"
    ],
-   "rewardOn": "complete callback only"
+   "rewardOn": "complete callback only",
+   "adGroupId": "ait.v2.live.5d314f95538c4737",
+   "note": "짧은 광고 (일반 뽑기·포인트 받기)"
   },
   "long": {
    "use": [
     "rateUpDraw"
-   ]
+   ],
+   "adGroupId": "ait.v2.live.3e9536c7ec2d4ae7",
+   "adSeconds": 30,
+   "note": "30초 리워드 광고 (확률업)"
   },
   "dailyCaps": {
    "drawAds": 3,
