@@ -398,7 +398,7 @@ class AudioManagerImpl {
     }
   }
 
-  playSfx(id: string, opts?: { catId?: string; rarity?: string }) {
+  playSfx(id: string, opts?: { catId?: string; rarity?: string; volume?: number }) {
     if (!this.sfxEnabled || this.adMuted || !this.unlocked) return;
     if (!this.config) {
       void this.init().then(() => this.playSfx(id, opts));
@@ -427,7 +427,7 @@ class AudioManagerImpl {
 
     const entry = this.config.sfx[key];
     if (!entry) return;
-    void this.playBuffer(entry);
+    void this.playBuffer(entry, opts?.volume);
   }
 
   private resolveReveal(rarity?: string): string | null {
@@ -438,7 +438,7 @@ class AudioManagerImpl {
     return "reveal";
   }
 
-  private async playBuffer(entry: SoundEntry) {
+  private async playBuffer(entry: SoundEntry, volumeScale = 1) {
     try {
       const ctx = this.ensureContext();
       if (ctx.state === "suspended") await ctx.resume();
@@ -446,7 +446,8 @@ class AudioManagerImpl {
       if (!buffer || !this.masterGain) return;
       const source = ctx.createBufferSource();
       const gain = ctx.createGain();
-      gain.gain.value = entry.volume * (this.config?.masterVolume ?? 1);
+      const scale = Number.isFinite(volumeScale) ? Math.max(0, volumeScale) : 1;
+      gain.gain.value = entry.volume * scale * (this.config?.masterVolume ?? 1);
       source.buffer = buffer;
       source.connect(gain);
       gain.connect(this.masterGain);
