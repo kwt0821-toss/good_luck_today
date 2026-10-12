@@ -77,6 +77,7 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
     return () => ro?.disconnect();
   }, [bubbleEl, mark]);
 
+  const hasHole = Boolean(mark?.target && rect);
   const hole = useMemo(() => {
     // Convert viewport rects → fixed-containing-block coords (#root on desktop).
     if (!rect) {
@@ -155,16 +156,18 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
           if (!mark.ackOnly && !mark.activateTarget) onAdvance();
         }}
       />
-      <div
-        className={`tut-hole ${mark.activateTarget ? "is-activate" : ""}`}
-        style={{
-          left: hole.left,
-          top: hole.top,
-          width: hole.width,
-          height: hole.height,
-        }}
-        onClick={activateOrAdvance}
-      />
+      {hasHole ? (
+        <div
+          className={`tut-hole ${mark.activateTarget ? "is-activate" : ""}`}
+          style={{
+            left: hole.left,
+            top: hole.top,
+            width: hole.width,
+            height: hole.height,
+          }}
+          onClick={activateOrAdvance}
+        />
+      ) : null}
       {!skipInline ? (
         <button type="button" className="tut-skip" id="tut-skip" onClick={onSkip}>
           건너뛰기
@@ -172,8 +175,12 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
       ) : null}
       <div
         ref={setBubbleEl}
-        className={`tut-bubble ${bubbleLayout.above ? "is-above" : "is-below"}`}
-        style={{ top: bubbleLayout.top, left: 24, right: 24 }}
+        className={`tut-bubble ${bubbleLayout.above ? "is-above" : "is-below"} ${hasHole ? "" : "is-centered"}`}
+        style={
+          hasHole
+            ? { top: bubbleLayout.top, left: 24, right: 24 }
+            : { top: "40%", left: 24, right: 24, transform: "translateY(-50%)" }
+        }
       >
         {mark.stepLabel ? <p className="tut-step-label">{mark.stepLabel}</p> : null}
         {mark.title ? <p className="tut-title">{mark.title}</p> : null}
@@ -213,7 +220,7 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
           </div>
         ) : null}
       </div>
-      {showFinger ? (
+      {showFinger && hasHole ? (
         <div
           className="tut-finger"
           style={{ left: hole.left + hole.width / 2, top: hole.top + hole.height / 2 }}
