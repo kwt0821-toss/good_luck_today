@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
+import { AudioManager } from "../audio/AudioManager";
 import type { DrawReservation } from "../lib/opsTypes";
 import "./DrawRevealScreen.css";
 
@@ -168,8 +169,22 @@ export function DrawRevealScreen({
   const t0Ref = useRef(0);
   const readyAtRef = useRef<number | null>(null);
   const skipToFinalRef = useRef(false);
+  const revealSoundRef = useRef(false);
 
   readyRef.current = ready;
+
+  useEffect(() => {
+    revealSoundRef.current = false;
+  }, [reservation.drawId]);
+
+  useEffect(() => {
+    if (!ready || revealSoundRef.current) return;
+    revealSoundRef.current = true;
+    AudioManager.playSfx("card-flip");
+    window.setTimeout(() => {
+      AudioManager.playSfx("reveal", { rarity: reservation.rarity });
+    }, 420);
+  }, [ready, reservation.rarity]);
 
   const theme = RAR[reservation.rarity] ?? RAR.b1;
   const frontSrc = reservation.frontUrl || reservation.thumbUrl;
@@ -409,6 +424,7 @@ export function DrawRevealScreen({
       return;
     }
     if (target.closest("#reveal-card") || target.closest(".draw-reveal-cardbox")) {
+      AudioManager.playSfx("card-flip");
       setManualFlip((value) => !value);
       if (rearRef.current) {
         rearRef.current.src = manualFlip ? FACEDOWN : reservation.backUrl || FACEDOWN;

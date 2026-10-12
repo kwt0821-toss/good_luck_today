@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { AudioManager } from "./audio/AudioManager";
 import { AdModal } from "./components/AdModal";
 import { MenuPanel } from "./components/MenuPanel";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import { toKstDateKey } from "./lib/date";
 import { buildMenuViewModel } from "./lib/menuModel";
+import { syncAudioSettingsFromStorage } from "./lib/menuSettings";
 import type { MockAdKind } from "./lib/mockAds";
 import { cancelDrawReservation, preloadDrawImages, reserveDraw } from "./lib/mockDrawApi";
 import { configureNavigationBar, haptic } from "./lib/native";
@@ -84,6 +86,9 @@ export default function App() {
         if (cancelled) return;
         setConfig(nextConfig);
         setOps(nextOps);
+        syncAudioSettingsFromStorage();
+        await AudioManager.init();
+        AudioManager.installTapCapture();
       } catch (error) {
         if (!cancelled) {
           setBootError(error instanceof Error ? error.message : "설정을 불러오지 못했어요");
@@ -94,6 +99,19 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (menuOpen) {
+      AudioManager.setScreen("menu");
+      return;
+    }
+    AudioManager.setScreen(screen.name);
+  }, [screen.name, menuOpen]);
+
+  useEffect(() => {
+    if (ad) AudioManager.onAdOpen();
+    else AudioManager.onAdClose();
+  }, [ad]);
 
   useEffect(() => {
     if (!ops) return;
@@ -232,6 +250,7 @@ export default function App() {
         return;
       }
       await persistOps(result.state);
+      AudioManager.playSfx("reward-coin");
       setLocalToast(`포인트 +${result.gained}`);
       window.setTimeout(() => setLocalToast(null), 1800);
       await haptic("success");

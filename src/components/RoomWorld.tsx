@@ -1,6 +1,7 @@
 import { useEffect, useRef, type PointerEvent } from "react";
 
 import { roomAsset } from "../lib/roomCatalog";
+import { AudioManager } from "../audio/AudioManager";
 import { catAsset, catDepthKey, furnitureDepthKey } from "../lib/roomCat";
 import {
   WALL_BANDS,
@@ -280,6 +281,11 @@ export function RoomWorld({
     active: roamingActive,
     reducedMotion: false,
   });
+  const onCatTap = () => {
+    // Manual tap only — never auto-play meows.
+    if (roamingCatId) AudioManager.playSfx("meow", { catId: roamingCatId });
+    tapCat();
+  };
   const selected = [...layout.floor, ...layout.walls].find((item) => item.instanceId === selectedId);
   const selectedItem = selected ? itemsById.get(selected.id) : undefined;
   const used = occupancy(layout.floor, itemsById, dragging?.instanceId ?? selectedId ?? undefined);
@@ -531,7 +537,7 @@ export function RoomWorld({
       {drawList.map((entry) => {
         if (entry.kind === "cat") {
           return (
-            <RoamingCatBody key="roaming-cat" view={catView} motionRef={catMotionRef} onTap={tapCat} />
+            <RoamingCatBody key="roaming-cat" view={catView} motionRef={catMotionRef} onTap={onCatTap} />
           );
         }
         const place = entry.place;

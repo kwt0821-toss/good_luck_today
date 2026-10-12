@@ -1,6 +1,10 @@
+import { AudioManager, audioStorageKeys } from "../audio/AudioManager";
+
 const KEY = "lucky-cat.menu-settings.v1";
+const audioKeys = audioStorageKeys();
 
 export type MenuSettings = {
+  bgm: boolean;
   sfx: boolean;
   haptic: boolean;
   reduceMotion: boolean;
@@ -14,8 +18,19 @@ function prefersReduced(): boolean {
   }
 }
 
+function readAudioFlag(key: string, defaultOn: boolean): boolean {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (raw === null) return defaultOn;
+    return raw === "1";
+  } catch {
+    return defaultOn;
+  }
+}
+
 export function defaultMenuSettings(): MenuSettings {
   return {
+    bgm: false,
     sfx: true,
     haptic: true,
     reduceMotion: prefersReduced(),
@@ -26,10 +41,10 @@ export function loadMenuSettings(): MenuSettings {
   const base = defaultMenuSettings();
   try {
     const raw = window.localStorage.getItem(KEY);
-    if (!raw) return base;
-    const parsed = JSON.parse(raw) as Partial<MenuSettings>;
+    const parsed = raw ? (JSON.parse(raw) as Partial<MenuSettings>) : {};
     return {
-      sfx: typeof parsed.sfx === "boolean" ? parsed.sfx : base.sfx,
+      bgm: readAudioFlag(audioKeys.bgm, base.bgm),
+      sfx: readAudioFlag(audioKeys.sfx, typeof parsed.sfx === "boolean" ? parsed.sfx : base.sfx),
       haptic: typeof parsed.haptic === "boolean" ? parsed.haptic : base.haptic,
       reduceMotion:
         typeof parsed.reduceMotion === "boolean" ? parsed.reduceMotion : base.reduceMotion,
@@ -41,13 +56,29 @@ export function loadMenuSettings(): MenuSettings {
 
 export function saveMenuSettings(next: MenuSettings): void {
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(next));
+    window.localStorage.setItem(
+      KEY,
+      JSON.stringify({
+        haptic: next.haptic,
+        reduceMotion: next.reduceMotion,
+        sfx: next.sfx,
+      }),
+    );
   } catch {
     // ignore
   }
+  AudioManager.setBgmEnabled(next.bgm);
+  AudioManager.setSfxEnabled(next.sfx);
 }
 
 export function shouldReduceMenuMotion(settings?: MenuSettings): boolean {
   const s = settings ?? loadMenuSettings();
   return s.reduceMotion || prefersReduced();
+}
+
+/** Apply stored audio flags to AudioManager (call once at boot). */
+export function syncAudioSettingsFromStorage() {
+  const s = loadMenuSettings();
+  AudioManager.setBgmEnabled(s.bgm);
+  AudioManager.setSfxEnabled(s.sfx);
 }

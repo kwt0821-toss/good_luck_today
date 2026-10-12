@@ -1,0 +1,61 @@
+{
+  "_version": "audio-1.0",
+  "basePath": "/assets/audio",
+  "masterVolume": 1,
+  "formats": {
+    "preferred": "m4a",
+    "fallback": "mp3",
+    "probe": "audio/mp4; codecs=\"mp4a.40.2\""
+  },
+  "timing": {
+    "bgmFadeInMs": 800,
+    "bgmCrossfadeMs": 600,
+    "bgmFadeOutMs": 400,
+    "tapDebounceMs": 80,
+    "maxConcurrentSfx": 6,
+    "meowCooldownSec": 8
+  },
+  "bgm": {
+    "bgm-main": {
+      "file": "bgm-main",
+      "volume": 0.32,
+      "loopStart": 0,
+      "loopEndSec": 32
+    },
+    "bgm-room": {
+      "file": "bgm-room",
+      "volume": 0.3,
+      "loopStart": 0,
+      "loopEndSec": 28
+    }
+  },
+  "sfx": {
+    "tap": { "file": "sfx-tap", "volume": 0.45 },
+    "sheet-open": { "file": "sfx-sheet-open", "volume": 0.5 },
+    "sheet-close": { "file": "sfx-sheet-close", "volume": 0.5 },
+    "card-flip": { "file": "sfx-card-flip", "volume": 0.55 },
+    "reveal": {
+      "file": "sfx-reveal",
+      "volume": 0.6,
+      "useFor": ["b1", "b2", "b3", "b4"]
+    },
+    "reveal-rare": {
+      "file": "sfx-reveal-rare",
+      "volume": 0.7,
+      "useFor": ["b5", "special", "character", "legend"]
+    },
+    "item-place": { "file": "sfx-item-place", "volume": 0.55 },
+    "stamp": { "file": "sfx-stamp", "volume": 0.6 },
+    "reward-coin": { "file": "sfx-reward-coin", "volume": 0.6 },
+    "meow": { "file": "sfx-meow", "volume": 0.55, "cooldownSec": 8 }
+  },
+  "screenBgm": {
+    "home": "bgm-main",
+    "collection": "bgm-main",
+    "menu": "bgm-main",
+    "reveal": "bgm-main",
+    "draw": "bgm-main",
+    "rates": "bgm-main",
+    "room": "bgm-room"
+  }
+}
