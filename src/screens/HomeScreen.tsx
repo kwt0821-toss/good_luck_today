@@ -26,6 +26,8 @@ type HomeScreenProps = {
   remainingRateUp: number;
   rateUpTickets: number;
   useRateUpTicket: boolean;
+  /** Long-ad seconds for rate-up tip (economy.draws.daily[slot=up].adSeconds). */
+  rateUpAdSeconds?: number;
   remainingPawAds: number;
   pawBalance: number;
   /** True before any normal draw today. */
@@ -47,6 +49,7 @@ export function HomeScreen({
   remainingRateUp,
   rateUpTickets,
   useRateUpTicket,
+  rateUpAdSeconds = 30,
   remainingPawAds,
   pawBalance,
   firstDrawPending,
@@ -140,6 +143,12 @@ export function HomeScreen({
     : useRateUpTicket
       ? "뽑기권 사용"
       : `5성↑ ${rateNormalPct}→${rateUpPct}`;
+  /** Hide when today's rate-up is used and no tickets remain. */
+  const showRateUpTip = remainingRateUp > 0;
+  const rateUpTipCopy =
+    rateUpTickets > 0
+      ? "뽑기권으로 광고 없이 확률업"
+      : `${rateUpAdSeconds}초 광고 보고 확률업`;
 
   const countCopy = drawsDone
     ? `내일 00:00에 다시 채워져요 · ${countdown}`
@@ -204,29 +213,37 @@ export function HomeScreen({
       </div>
 
       <div className="main-stage-row">
-        <button
-          type="button"
-          id="btn-rateup"
-          className={`main-rateup ${rateUpDisabled ? "is-dim" : ""} ${useRateUpTicket ? "is-ticket" : ""}`}
-          disabled={rateUpDisabled}
-          onClick={() => {
-            if (rateUpDisabled) {
-              showNotice("내일 다시 만나요");
-              return;
-            }
-            onRateUpDraw();
-          }}
-        >
-          {!rateUpDisabled && !useRateUpTicket ? (
-            <span className="main-rateup-hint">(30초 광고)</span>
+        <div className="main-rateup-wrap">
+          {showRateUpTip ? (
+            <div className="main-rateup-tip" role="status" aria-live="polite">
+              <p className="main-rateup-tip-text">{rateUpTipCopy}</p>
+              <span className="main-rateup-tip-tail" aria-hidden="true" />
+            </div>
           ) : null}
-          <span className="main-rateup-label">{rateUpLabel}</span>
-          {rateUpTickets > 0 && !rateUpDisabled ? (
-            <span className="main-rateup-badge" aria-label={`뽑기권 ${rateUpTickets}장`}>
-              ×{rateUpTickets}
-            </span>
-          ) : null}
-        </button>
+          <button
+            type="button"
+            id="btn-rateup"
+            className={`main-rateup ${rateUpDisabled ? "is-dim" : ""} ${useRateUpTicket ? "is-ticket" : ""}`}
+            disabled={rateUpDisabled}
+            onClick={() => {
+              if (rateUpDisabled) {
+                showNotice("내일 다시 만나요");
+                return;
+              }
+              onRateUpDraw();
+            }}
+          >
+            {!rateUpDisabled && !useRateUpTicket ? (
+              <span className="main-rateup-hint">({rateUpAdSeconds}초 광고)</span>
+            ) : null}
+            <span className="main-rateup-label">{rateUpLabel}</span>
+            {rateUpTickets > 0 && !rateUpDisabled ? (
+              <span className="main-rateup-badge" aria-label={`뽑기권 ${rateUpTickets}장`}>
+                ×{rateUpTickets}
+              </span>
+            ) : null}
+          </button>
+        </div>
 
         <button
           type="button"

@@ -15,7 +15,7 @@ import {
   confirmDrawAfterAd,
   grantPawAdReward,
 } from "./lib/opsRewards";
-import { highlightRatesFromEconomy } from "./lib/drawRates";
+import { highlightRatesFromEconomy, rateUpAdSecondsFromEconomy } from "./lib/drawRates";
 import {
   daysSinceInstall,
   nextDrawSlot,
@@ -195,6 +195,7 @@ export default function App() {
   const rateUpAdSlots = ops && config ? remainingRateUpAdSlots(ops, config) : 0;
   const pawAdsLeft = ops && config ? remainingPawAds(ops, config) : 0;
   const rateLabels = config ? highlightRatesFromEconomy(config.economy) : { normalPct: "0%", rateUpPct: "0%" };
+  const rateUpAdSeconds = config ? rateUpAdSecondsFromEconomy(config.economy) : 30;
 
   const tutorialStep: TutorialStep | null = useMemo(() => {
     if (!ops || !config) return null;
@@ -748,6 +749,7 @@ export default function App() {
           remainingRateUp={remainingRateUp}
           rateUpTickets={ops.rateUpTickets}
           useRateUpTicket={willUseRateUpTicket(ops, config) || (rateUpAdSlots <= 0 && ops.rateUpTickets > 0)}
+          rateUpAdSeconds={rateUpAdSeconds}
           remainingPawAds={pawAdsLeft}
           pawBalance={ops.pawBalance}
           firstDrawPending={ops.normalDrawsUsed === 0}

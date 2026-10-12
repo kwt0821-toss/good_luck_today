@@ -1051,6 +1051,62 @@
   margin: 2px 0 0;
 }
 
+.main-rateup-wrap {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  width: 76px;
+}
+
+.main-rateup-tip {
+  --rateup-amber: #e8a84a;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 120px;
+  padding: 8px 10px;
+  border: 1.2px solid var(--rateup-amber);
+  border-radius: 12px;
+  background: var(--cream);
+  box-shadow:
+    0 0 0 1px rgba(232, 168, 74, 0.22),
+    0 0 10px rgba(232, 168, 74, 0.45);
+  pointer-events: none;
+  animation: main-rateup-tip-bounce 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+.main-rateup-tip-text {
+  margin: 0;
+  color: #2a1e10;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.main-rateup-tip-tail {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-right: 1.2px solid var(--rateup-amber);
+  border-bottom: 1.2px solid var(--rateup-amber);
+  background: var(--cream);
+  transform: rotate(45deg);
+  box-shadow: 2px 2px 6px rgba(232, 168, 74, 0.28);
+}
+
 .main-rateup {
   position: relative;
   z-index: 2;
@@ -1059,6 +1115,7 @@
   align-items: flex-start;
   justify-content: center;
   gap: 4px;
+  width: 100%;
   min-height: 72px;
   padding: 10px 8px;
   border: 1px solid rgba(243, 233, 215, 0.28);
@@ -1600,10 +1657,25 @@
   }
 }
 
+@keyframes main-rateup-tip-bounce {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-3px);
+  }
+}
+
 .main-screen.is-reduce .main-deck-spark,
 .main-screen.is-reduce .main-draw-pill.is-nudge {
   animation: none;
   transform: none;
+}
+
+.main-screen.is-reduce .main-rateup-tip {
+  animation: none;
+  transform: translateX(-50%);
 }
 
 .main-screen.is-reduce .main-deck-card {
@@ -1638,6 +1710,11 @@
 
   .main-draw-pill.is-nudge {
     transform: none;
+  }
+
+  .main-rateup-tip {
+    animation: none;
+    transform: translateX(-50%);
   }
 
   .main-deck-card {

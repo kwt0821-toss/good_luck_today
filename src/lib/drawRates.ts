@@ -130,3 +130,10 @@ export function highlightRatesFromEconomy(economy: OpsEconomy): {
     rateUpPct: formatHighlightPercent(rateUp),
   };
 }
+
+/** Long-ad duration for rate-up (economy.draws.daily[slot=up].adSeconds). */
+export function rateUpAdSecondsFromEconomy(economy: OpsEconomy, fallback = 30): number {
+  const up = economy.draws.daily?.find((entry) => entry.slot === "up");
+  const seconds = up?.adSeconds;
+  return typeof seconds === "number" && seconds > 0 ? Math.floor(seconds) : fallback;
+}

@@ -81,6 +81,7 @@
     "slot": "up",
     "type": "rateUp",
     "ad": "long",
+    "adSeconds": 30,
     "perDay": 1
    }
   ],
