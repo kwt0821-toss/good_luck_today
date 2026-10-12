@@ -1816,6 +1816,7 @@
 
   .main-float {
     animation: none;
+    transform: translateX(-50%);
   }
 
   .main-tail {
