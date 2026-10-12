@@ -1,4 +1,4 @@
-# Lucky Cat — 메뉴 패널 스펙 (menu-1.2)
+# Lucky Cat — 메뉴 패널 스펙 (menu-1.3)
 
 디자인 프레임 **390 × 844 pt**, 에셋 3x. 시안: `menu-screen-a.png`(패널), `-b`(출석 체크 · 1주차), `-b2`(출석 체크 · 주간 반복), `-c`(확률 안내 시트).
 > 상태바 47 + 토스 내비 56 = 103 pt는 시안용이에요. **토스 내비는 앱인토스가 그려요 → 패널/딤은 콘텐츠 영역 top(=0)부터 시작.** 아래 y는 콘텐츠 영역 기준.
@@ -54,12 +54,13 @@ radius `28 28 0 0`, padding `10 24 0`, 그랩바 40×4. eyebrow Poppins 800 11px
 | 행/요소 | 읽는 곳 |
 |---|---|
 | 내 포인트 | 유저 API `pawBalance` (초기값 economy.json `currency.paw.startBalance` = starter.json `startPaw` 300) |
-| 도감 42/107 | 유저 `dexOwned` / 전체 107 (= 18품종×5 + 스페셜 9 + 캐릭터 4 + 레전드 4, economy `tossPayout.formula`와 동일) |
+| 도감 42/107 | 유저 `dexOwned` / 전체 107 (= 18품종×5 + 스페셜 9 + 캐릭터 4 + 레전드 4, economy `nyangCoin.formula`와 동일) |
 | 방 레벨 | 유저 `cozyPoints` → economy.json `cozy.levels`(minCozy) / `beyondLv10` |
 | 출석 체크 | starter.json `attendance` (`firstWeek`, `weeklyCycle`, `milestones`, `noReset`), 이름·썸네일 = prices.json `nameKo` / gift-{itemId}.png, 출석 한정 = prices.json `attendanceOnly` |
 | 포인트 받기 | economy.json `pawSources.rewardedAd.pawPerAd`(10) / `maxPerDay`(10), 주말 2배 = `events.weekendDoublePaw`; 보상은 광고 완료 콜백 후 서버 지급만 |
 | 중복 카드 교환 | economy.json `pawSources.duplicateConvert` (1–2★ 10, 3–5★ 30, 스페셜/캐릭터 60, 레전드 150) |
-| 보상함 | economy.json `pawSources.newCardFirstGet`, `setComplete`, `tossPayout`(서버 검증·계정당 1회) |
+| 냥코인 | 유저 API `nyangCoinBalance` (시작 0, starter.json `startNyangCoin`) |
+| 보상함 | economy.json `pawSources.newCardFirstGet`, `setComplete`(nyangCoin·paw, 보상 id별 1회), `nyangCoin.withdraw`(10 단위·서버 검증) |
 | 확률 안내 | economy.json `draws.rates_proposal.normal` / `.rateUp`, `keys` (⚠ `_proposal: true` — 확정 후 같은 키로 교체) |
 | 친구 초대 | economy.json `events.friendInvite.enabled`(false → "준비 중") |
 | 공지·이벤트 | 공지 API + economy.json `events` |
@@ -67,7 +68,7 @@ radius `28 28 0 0`, padding `10 24 0`, 그랩바 40×4. eyebrow Poppins 800 11px
 | 설정 › 튜토리얼 다시 보기 | tutorial.json `steps` 재생 (보상 재지급 없음, tutorialDone 유지) |
 
 ## 5. 파일
-icon-attendance / points / exchange / rewards / rates / notice / invite / settings (행 아이콘 26×26 viewBox, 24pt로 표시), icon-close, icon-chevron, icon-paw-mini, icon-dex-mini, icon-room-mini, icon-stamp, icon-lock, panel-bg.png, gift-*.png(192px, 출석 썸네일), menu.json, menu-spec.md, menu-screen-a/b/c.png.
+icon-attendance / points / exchange / rewards / rates / notice / invite / settings (행 아이콘 26×26 viewBox, 24pt로 표시), icon-close, icon-chevron, icon-paw-mini, icon-dex-mini, icon-room-mini, icon-stamp, icon-lock, panel-bg.png, gift-*.png(192px, 출석 썸네일), menu.json, menu-spec.md, menu-screen-a/b/b2/c/d/d-low/d2/d3.png, ncoin-128.png / ncoin-24@3x.png / ncoin-16@3x.png (냥코인 아이콘, 원본은 ncoin/).
 
 ## 6. 출석 (menu-1.1 추가)
 - **규칙(서버)**: 누적 출석일 `attendanceDays` 기준, 빠져도 리셋 없음. 1~7일 = `firstWeek` 출석 한정 아이템, 8일차부터 `weeklyCycle` (cycleNo = floor((n−8)/7)+1, cycleDay = ((n−8) % 7)+1). 30·100일 = `milestones` 추가 지급.
@@ -86,3 +87,14 @@ icon-attendance / points / exchange / rewards / rates / notice / invite / settin
 ## 7. 설정 화면 (menu-1.2)
 행 순서: **배경음악(BGM)**(기본 OFF) · **효과음**(기본 ON) · 진동 · 움직임 줄이기 · 튜토리얼 다시 보기 · 문의하기 · 이용약관 · 개인정보처리방침 · 버전.
 토글은 cream 트랙(ON = `#FFC48A`, OFF = cream 18 %), 44pt 높이 행. BGM 행 아래 보조 문구(10px, cream 50 %): "토스 안에서는 기본으로 꺼져 있어요". 바꾸는 즉시 적용·저장하고, 효과음을 켤 때는 sfx-tap을 한 번 들려줘요.
+
+## 8. 냥코인 · 보상함 (menu-1.3)
+- **화폐**: 냥코인 = 토스포인트로 바뀌는 화폐(1냥코인 = 토스포인트 1원). 포인트(발바닥 P)는 앱 안 화폐로 그대로. UI에서 '토스 N원 지급' 문구는 쓰지 않고 'N냥코인'으로 표시해요.
+- **헤더 통계**: 4칸(포인트 · 냥코인 · 도감 · 방 레벨), 숫자 Pop 600 14px, 아이콘 12~14pt. 냥코인 칸을 누르면 보상함 시트가 열려요 (menu-screen-a).
+- **보상함 행 meta**: `[ncoin 14] 37 냥코인 · 받을 보상 2`.
+- **보상함 시트 (menu-screen-d, 높이 ≈ 668)**: 지갑 카드(r20, amber 45% 테두리, 코인 52pt, 잔액 Pop 800 32px, "1냥코인 = 토스포인트 1원", "받은 기록 ›") → "얼마나 받을까요?" 칩(높이 38, 10 단위, 최대값 기본 선택 + '최대' 태그) → 버튼 "토스포인트로 받기 · 30원" → 남는 냥코인 안내 → 받을 보상 목록(썸네일 38×52, +N냥코인/+NP 칩, 받기) → 하단 안내.
+- **10 미만 (menu-screen-d-low)**: 칩·버튼 비활성(cream 12%), 힌트 "10냥코인부터 받을 수 있어요 · N개 더 모으면 돼요".
+- **확인 시트 (menu-screen-d2, 높이 ≈ 452, 보상함 위에 겹침)**: 30냥코인 → 토스포인트 30원 카드 2개, 받는 곳/남는 냥코인, 취소 + "30원 받기", "받은 토스포인트는 냥코인으로 되돌릴 수 없어요".
+- **성공 + 기록 (menu-screen-d3)**: 코인 96pt + 초록 체크, "토스포인트 30원을 받았어요", "지금 7 냥코인", 받은 기록(완료/처리 중/실패 칩), 확인. sfx-reward-coin + 햅틱 success.
+- **동작**: 받기 → 버튼 로딩(중복 탭 막기) → 서버 `POST /wallet/withdraw {amount, requestId}` → done이면 성공 화면, pending이면 "처리 중이에요" 토스트 후 기록으로, failed면 잔액 복구 안내. 클라이언트는 토스 지급 API를 직접 부르지 않아요.
+- 값·문구: menu.json `sheets.rewards`, 규칙: economy.json `nyangCoin`.

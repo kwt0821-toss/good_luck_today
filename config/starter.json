@@ -1,6 +1,7 @@
 {
- "_version": "starter-1.1 (2026-10-11)",
+ "_version": "starter-1.2 (2026-10-12)",
  "startPaw": 300,
+ "startNyangCoin": 0,
  "firstRoom": {
   "roomId": "moon_bedroom",
   "floor": "floor_wood_honey",
