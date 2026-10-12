@@ -5,7 +5,7 @@
   width: 100%;
   max-width: 390px;
   height: 100%;
-  min-height: 100dvh;
+  min-height: 0;
   margin: 0 auto;
   overflow: hidden;
   user-select: none;
@@ -16,6 +16,8 @@
   --g1: rgba(255, 240, 215, 0.38);
   --g2: rgba(255, 220, 180, 0.12);
   --acc: #f3e9d7;
+  display: flex;
+  flex-direction: column;
 }
 
 .draw-reveal-grain {
@@ -27,15 +29,18 @@
 }
 
 .draw-reveal-content {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 24px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  box-sizing: border-box;
 }
 
 .draw-reveal-head {
-  position: absolute;
-  left: 24px;
-  right: 24px;
-  top: 18px;
+  flex: 0 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -79,20 +84,21 @@
 }
 
 .draw-reveal-stage {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 56px;
-  height: 470px;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 160px;
+  width: 100%;
+  margin: 8px 0 0;
 }
 
 .draw-reveal-glow {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 420px;
-  height: 420px;
-  margin: -210px 0 0 -210px;
+  width: min(420px, 120%);
+  height: min(420px, 120%);
+  margin: 0;
+  translate: -50% -50%;
   border-radius: 50%;
   background: radial-gradient(circle, var(--g1) 0%, var(--g2) 36%, transparent 68%);
   will-change: transform, opacity;
@@ -102,9 +108,10 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 640px;
-  height: 640px;
-  margin: -320px 0 0 -320px;
+  width: min(640px, 160%);
+  height: min(640px, 160%);
+  margin: 0;
+  translate: -50% -50%;
   border-radius: 50%;
   opacity: 0;
   -webkit-mask: radial-gradient(circle, #000 18%, transparent 62%);
@@ -117,15 +124,20 @@
   inset: 0;
   pointer-events: none;
   overflow: visible;
+  width: 100%;
+  height: 100%;
 }
 
 .draw-reveal-cardbox {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 236px;
-  height: 367px;
-  margin: -183.5px 0 0 -118px;
+  width: min(236px, 62%);
+  aspect-ratio: 236 / 367;
+  height: auto;
+  max-height: 92%;
+  margin: 0;
+  translate: -50% -50%;
   perspective: 1100px;
   will-change: transform;
 }
@@ -134,9 +146,10 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 220px;
+  width: min(220px, 58%);
   height: 22px;
-  margin: 186px 0 0 -110px;
+  margin: 0;
+  translate: -50% calc(min(186px, 42%) + 8px);
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.5);
   filter: blur(10px);
@@ -230,13 +243,19 @@
   color: #ffc48a;
 }
 
+.draw-reveal-footer {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+
 .draw-reveal-info {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 500px;
+  flex: 0 0 auto;
   text-align: center;
   opacity: 0;
+  margin-top: 6px;
+  padding: 0 4px;
 }
 
 .draw-reveal-info .n {
@@ -261,16 +280,14 @@
 }
 
 .draw-reveal-btns {
-  position: absolute;
-  left: 24px;
-  right: 24px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
   opacity: 0;
   pointer-events: none;
   z-index: 4;
+  margin-top: 14px;
 }
 
 .draw-reveal-btn {
@@ -359,7 +376,7 @@
   position: absolute;
   left: 24px;
   right: 24px;
-  bottom: 120px;
+  bottom: 140px;
   text-align: center;
   font-size: 13px;
   color: rgba(243, 233, 215, 0.75);

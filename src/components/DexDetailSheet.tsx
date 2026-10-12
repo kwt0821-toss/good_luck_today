@@ -114,6 +114,7 @@ export function DexDetailSheet({
   const angleRef = useRef(0);
   const spinningRef = useRef(false);
   const rafRef = useRef(0);
+  const spinAnimRef = useRef<Animation | null>(null);
   const shineTimerRef = useRef(0);
   const reduceMotionRef = useRef(shouldReduceMenuMotion());
   const lastAngleRef = useRef(0);
@@ -224,8 +225,7 @@ export function DexDetailSheet({
     const from = angleRef.current;
     // Snap delta so we always finish on a half-turn boundary (0 / 180 mod 360)
     const rawTo = from + deltaDeg;
-    const half = Math.round(rawTo / 180) * 180;
-    const to = half;
+    const to = Math.round(rawTo / 180) * 180;
     const willShowBack = isBackFace(to);
 
     AudioManager.playSfx("card-flip");
@@ -245,59 +245,114 @@ export function DexDetailSheet({
           rafRef.current = requestAnimationFrame(tickFade);
           return;
         }
-        // Keep resting angles normalized for reduced-motion path
         onLand(willShowBack ? 180 : 0);
       };
       rafRef.current = requestAnimationFrame(tickFade);
       return;
     }
 
-    const start = performance.now();
+    const inner = innerRef.current;
+    if (!inner) {
+      spinningRef.current = false;
+      return;
+    }
+
+    spinAnimRef.current?.cancel();
+    cancelAnimationFrame(rafRef.current);
     lastAngleRef.current = from;
 
-    const tick = (now: number) => {
+    const pose = (angle: number, scale: number, y: number) =>
+      `translateY(${y}px) scale(${scale}) rotateY(${angle}deg)`;
+
+    // Compositor-driven transform — rAF style writes were hard to see under SwiftShader.
+    const liftEnd = LIFT_MS / TOTAL_SPIN_MS;
+    const rotateEnd = ROTATE_END_MS / TOTAL_SPIN_MS;
+    const bounceMid = (ROTATE_END_MS + BOUNCE_MS * 0.55) / TOTAL_SPIN_MS;
+    const anim = inner.animate(
+      [
+        { transform: pose(from, 1, 0), offset: 0, easing: "ease-out" },
+        {
+          transform: pose(from, LIFT_SCALE, LIFT_Y),
+          offset: liftEnd,
+          easing: "cubic-bezier(0.15, 0.85, 0.25, 1)",
+        },
+        {
+          transform: pose(to, LIFT_SCALE, LIFT_Y),
+          offset: rotateEnd,
+          easing: "ease-out",
+        },
+        {
+          transform: pose(to, 0.985, LIFT_Y * 0.2),
+          offset: bounceMid,
+          easing: "ease-out",
+        },
+        { transform: pose(to, 1, 0), offset: 1 },
+      ],
+      { duration: TOTAL_SPIN_MS, fill: "forwards" },
+    );
+    spinAnimRef.current = anim;
+
+    let landed = false;
+    const finish = () => {
+      if (landed) return;
+      landed = true;
+      cancelAnimationFrame(rafRef.current);
+      try {
+        anim.commitStyles();
+      } catch {
+        applyPose(to, 1, 0, 0, 0);
+      }
+      anim.cancel();
+      spinAnimRef.current = null;
+      applyFaceBlur(0);
+      if (shadowRef.current) {
+        shadowRef.current.style.opacity = "0.42";
+        shadowRef.current.style.transform = "translateX(-50%) scaleX(1) scaleY(1)";
+      }
+      onLand(to);
+    };
+
+    const start = performance.now();
+    const tickFx = (now: number) => {
+      if (landed) return;
       const elapsed = now - start;
-      let scale = 1;
-      let translateY = 0;
-      let angle = from;
       let blur = 0;
       let intensity = 0;
+      let angle = from;
 
       if (elapsed < LIFT_MS) {
-        const p = elapsed / LIFT_MS;
-        scale = 1 + (LIFT_SCALE - 1) * p;
-        translateY = LIFT_Y * p;
         angle = from;
       } else if (elapsed < ROTATE_END_MS) {
         const p = easeSpin((elapsed - LIFT_MS) / (ROTATE_END_MS - LIFT_MS));
-        scale = LIFT_SCALE;
-        translateY = LIFT_Y;
         angle = from + (to - from) * p;
-        // Peak blur mid-spin when easing is steepest
         const speedApprox = Math.min(1, Math.abs(easeSpin(Math.min(1, p + 0.02)) - p) * 40);
         intensity = 0.35 + speedApprox * 0.65;
         blur = 0.6 * intensity;
       } else {
         const p = Math.min(1, (elapsed - ROTATE_END_MS) / BOUNCE_MS);
-        scale = bounceScale(p);
-        translateY = LIFT_Y * (1 - p);
         angle = to;
         blur = 0.6 * (1 - p);
         intensity = 1 - p;
       }
 
-      applyPose(angle, scale, translateY, blur, intensity);
+      applyFaceBlur(blur);
+      const shadow = shadowRef.current;
+      if (shadow) {
+        const t = Math.min(1, Math.max(0, intensity));
+        shadow.style.opacity = String(0.42 - t * 0.3);
+        shadow.style.transform = `translateX(-50%) scaleX(${1 - t * 0.7}) scaleY(${1 - t * 0.12})`;
+      }
       lastAngleRef.current = angle;
 
-      if (elapsed < TOTAL_SPIN_MS) {
-        rafRef.current = requestAnimationFrame(tick);
+      if (elapsed >= TOTAL_SPIN_MS) {
+        finish();
         return;
       }
-
-      onLand(to);
+      rafRef.current = requestAnimationFrame(tickFx);
     };
 
-    rafRef.current = requestAnimationFrame(tick);
+    rafRef.current = requestAnimationFrame(tickFx);
+    void anim.finished.then(finish).catch(() => finish());
   };
 
   const close = () => {
@@ -309,6 +364,8 @@ export function DexDetailSheet({
   useEffect(() => {
     reduceMotionRef.current = shouldReduceMenuMotion();
     cancelAnimationFrame(rafRef.current);
+    spinAnimRef.current?.cancel();
+    spinAnimRef.current = null;
     spinningRef.current = false;
     setShining(false);
     resetPose(0);
@@ -324,6 +381,8 @@ export function DexDetailSheet({
       window.clearTimeout(settle);
       window.clearTimeout(shineTimerRef.current);
       cancelAnimationFrame(rafRef.current);
+      spinAnimRef.current?.cancel();
+      spinAnimRef.current = null;
     };
   }, []);
 
@@ -448,41 +507,43 @@ export function DexDetailSheet({
         </p>
 
         <div className="dex-flip-stage">
-          <div className="dex-card-glow" />
-          <div
-            ref={cardRef}
-            className={`card dex-card ${reduceMotionRef.current ? "is-reduced" : ""}`}
-            onPointerDown={onCardPointerDown}
-            onPointerMove={onCardPointerMove}
-            onPointerUp={onCardPointerUp}
-            onPointerCancel={onCardPointerCancel}
-            role="button"
-            tabIndex={0}
-            aria-label={showingBack ? "앞면 보기" : "뒷면 보기"}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onFlipClick();
-              }
-            }}
-          >
-            <div ref={shadowRef} className="dex-card-depth" aria-hidden="true" />
-            <div ref={innerRef} className="card-inner dex-card-inner">
-              <div ref={frontFaceRef} className="face front dex-face">
-                <img src={dexAsset(card.front)} alt={`${cardDisplayName(card)} 앞면`} draggable={false} />
-              </div>
-              <div ref={backFaceRef} className="face back dex-face">
-                <img src={dexAsset(card.back)} alt={`${cardDisplayName(card)} 뒷면`} draggable={false} />
-              </div>
-            </div>
+          <div className="dex-flip-stage-tilt">
+            <div className="dex-card-glow" />
             <div
-              className={`dex-card-shine ${shining ? "is-active" : ""} ${legend ? "is-legend" : ""}`}
-              aria-hidden="true"
-            />
+              ref={cardRef}
+              className={`card dex-card ${reduceMotionRef.current ? "is-reduced" : ""}`}
+              onPointerDown={onCardPointerDown}
+              onPointerMove={onCardPointerMove}
+              onPointerUp={onCardPointerUp}
+              onPointerCancel={onCardPointerCancel}
+              role="button"
+              tabIndex={0}
+              aria-label={showingBack ? "앞면 보기" : "뒷면 보기"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onFlipClick();
+                }
+              }}
+            >
+              <div ref={shadowRef} className="dex-card-depth" aria-hidden="true" />
+              <div ref={innerRef} className="card-inner dex-card-inner">
+                <div ref={frontFaceRef} className="face front dex-face">
+                  <img src={dexAsset(card.front)} alt={`${cardDisplayName(card)} 앞면`} draggable={false} />
+                </div>
+                <div ref={backFaceRef} className="face back dex-face">
+                  <img src={dexAsset(card.back)} alt={`${cardDisplayName(card)} 뒷면`} draggable={false} />
+                </div>
+              </div>
+              <div
+                className={`dex-card-shine ${shining ? "is-active" : ""} ${legend ? "is-legend" : ""}`}
+                aria-hidden="true"
+              />
+            </div>
+            <button type="button" className="dex-flip-btn" aria-label="카드 뒤집기" onClick={onFlipClick}>
+              <img src={dexAsset("icons/icon-flip.svg")} alt="" />
+            </button>
           </div>
-          <button type="button" className="dex-flip-btn" aria-label="카드 뒤집기" onClick={onFlipClick}>
-            <img src={dexAsset("icons/icon-flip.svg")} alt="" />
-          </button>
         </div>
 
         <p className="dex-flip-hint">

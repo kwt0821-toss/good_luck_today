@@ -497,17 +497,7 @@ export function DrawRevealScreen({
               </div>
             </div>
           </div>
-          <svg ref={fxRef} className="draw-reveal-fx" id="fx" width="390" height="470" viewBox="0 0 390 470" />
-        </div>
-
-        <div ref={infoRef} className="draw-reveal-info" id="info">
-          <div className="n" id="name">
-            {reservation.nameKo}
-          </div>
-          <div className="s" id="stars">
-            {reservation.starsLabel}
-          </div>
-          <div className="h">카드를 톡 누르면 뒷면을 볼 수 있어요</div>
+          <svg ref={fxRef} className="draw-reveal-fx" id="fx" viewBox="0 0 390 470" preserveAspectRatio="xMidYMid meet" />
         </div>
 
         <div
@@ -529,25 +519,37 @@ export function DrawRevealScreen({
           </div>
         ) : null}
 
-        <div ref={btnsRef} className="draw-reveal-btns" id="btns">
-          <button type="button" className="draw-reveal-btn is-primary" id="btn-to-dex" onClick={onToDex}>
-            도감에 넣기
-          </button>
-          <button
-            type="button"
-            className="draw-reveal-btn is-secondary"
-            id="btn-draw-again"
-            disabled={remainingDraws <= 0}
-            onClick={onDrawAgain}
-          >
-            {remainingDraws > 0 ? (
-              <>
-                한 번 더 뽑기 (광고) <em id="remain">{remainLabel}</em>
-              </>
-            ) : (
-              "내일 또 만나요"
-            )}
-          </button>
+        <div className="draw-reveal-footer">
+          <div ref={infoRef} className="draw-reveal-info" id="info">
+            <div className="n" id="name">
+              {reservation.nameKo}
+            </div>
+            <div className="s" id="stars">
+              {reservation.starsLabel}
+            </div>
+            <div className="h">카드를 톡 누르면 뒷면을 볼 수 있어요</div>
+          </div>
+
+          <div ref={btnsRef} className="draw-reveal-btns" id="btns">
+            <button type="button" className="draw-reveal-btn is-primary" id="btn-to-dex" onClick={onToDex}>
+              도감에 넣기
+            </button>
+            <button
+              type="button"
+              className="draw-reveal-btn is-secondary"
+              id="btn-draw-again"
+              disabled={remainingDraws <= 0}
+              onClick={onDrawAgain}
+            >
+              {remainingDraws > 0 ? (
+                <>
+                  한 번 더 뽑기 (광고) <em id="remain">{remainLabel}</em>
+                </>
+              ) : (
+                "내일 또 만나요"
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
