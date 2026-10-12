@@ -1,5 +1,5 @@
 {
- "_version": "menu-1.6 (2026-10-12)",
+ "_version": "menu-1.6.1 (2026-10-12)",
  "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
  "panel": {
   "side": "right",
@@ -96,7 +96,11 @@
     "when": "events.weekendDoublePaw.enabled && today in events.weekendDoublePaw.days"
    },
    "disabledWhen": "remaining == 0",
-   "disabledMeta": "내일 다시 열려요"
+   "disabledMeta": "내일 다시 열려요",
+   "adTag": {
+    "text": "광고",
+    "style": "cream-border (main-draw-pill-ad)"
+   }
   },
   "exchange": {
    "label": "중복 카드 교환",
