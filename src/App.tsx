@@ -24,7 +24,6 @@ import {
   daysSinceInstall,
   nextDrawSlot,
   remainingNormalDraws,
-  remainingPawAds,
   remainingRateUpAdSlots,
   remainingRateUpDraws,
   remainingTotalDraws,
@@ -197,7 +196,6 @@ export default function App() {
   const remainingNormal = ops && config ? remainingNormalDraws(ops, config) : 0;
   const remainingRateUp = ops && config ? remainingRateUpDraws(ops, config) : 0;
   const rateUpAdSlots = ops && config ? remainingRateUpAdSlots(ops, config) : 0;
-  const pawAdsLeft = ops && config ? remainingPawAds(ops, config) : 0;
   const rateLabels = config ? highlightRatesFromEconomy(config.economy) : { normalPct: "0%", rateUpPct: "0%" };
   const rateUpAdSeconds = config ? rateUpAdSecondsFromEconomy(config.economy) : 30;
   const offerTicketShop = ops && config ? shouldOfferTicketShopOnRateUp(ops, config) : false;
@@ -758,8 +756,6 @@ export default function App() {
           rateUpAdSeconds={rateUpAdSeconds}
           offerTicketShop={offerTicketShop}
           ticketShopPricePaw={ticketShopPricePaw}
-          remainingPawAds={pawAdsLeft}
-          pawBalance={ops.pawBalance}
           firstDrawPending={ops.normalDrawsUsed === 0}
           rateNormalPct={rateLabels.normalPct}
           rateUpPct={rateLabels.rateUpPct}
@@ -770,7 +766,6 @@ export default function App() {
             setForceMenuSheet("ticketShop");
             setMenuOpen(true);
           }}
-          onPawAd={() => setAd({ kind: "short", purpose: "paw" })}
           onOpenMenu={() => setMenuOpen(true)}
           onOpenCollection={() => setScreen({ name: "collection" })}
           onOpenRoom={() => setScreen({ name: "room" })}
