@@ -1845,44 +1845,8 @@
   transform: scale(1);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .main-moon {
-    animation-duration: 6s;
-  }
-
-  .main-float {
-    animation: none;
-    transform: translateX(-50%);
-  }
-
-  .main-tail {
-    animation: none;
-  }
-
-  .main-cat {
-    animation: none;
-    transform: translateX(-50%);
-  }
-
-  .main-drool {
-    animation: none;
-    transform: scale(1);
-  }
-
-  .main-deck-spark {
-    animation: none;
-  }
-
-  .main-draw-pill.is-nudge {
-    transform: none;
-  }
-
-  .main-rateup-tip {
-    animation: none;
-    transform: translateX(-50%);
-  }
-
-  .main-deck-card {
-    transition: none;
-  }
-}
+/*
+ * Main-stage motion is gated only by .main-screen.is-reduce (menu toggle).
+ * Do not also kill animations via prefers-reduced-motion here — that OS flag
+ * stays on in many Cursor/dev browsers and ignored the in-app OFF setting.
+ */

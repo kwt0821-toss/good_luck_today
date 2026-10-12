@@ -3,6 +3,9 @@ import { AudioManager, audioStorageKeys } from "../audio/AudioManager";
 const KEY = "lucky-cat.menu-settings.v1";
 const audioKeys = audioStorageKeys();
 
+/** Fired after saveMenuSettings so open screens can drop .is-reduce live. */
+export const MENU_SETTINGS_EVENT = "lucky-cat:menu-settings";
+
 export type MenuSettings = {
   bgm: boolean;
   sfx: boolean;
@@ -69,11 +72,22 @@ export function saveMenuSettings(next: MenuSettings): void {
   }
   AudioManager.setBgmEnabled(next.bgm);
   AudioManager.setSfxEnabled(next.sfx);
+  try {
+    window.dispatchEvent(new CustomEvent(MENU_SETTINGS_EVENT, { detail: next }));
+  } catch {
+    // ignore
+  }
 }
 
+/**
+ * In-app "움직임 줄이기" is the source of truth once loaded/saved.
+ * Defaults still seed from prefers-reduced-motion when unset, but an
+ * explicit OFF must win — otherwise OS reduce-motion keeps freezing the
+ * main cat even after the user turns the toggle off.
+ */
 export function shouldReduceMenuMotion(settings?: MenuSettings): boolean {
   const s = settings ?? loadMenuSettings();
-  return s.reduceMotion || prefersReduced();
+  return s.reduceMotion;
 }
 
 /** Apply stored audio flags to AudioManager (call once at boot). */

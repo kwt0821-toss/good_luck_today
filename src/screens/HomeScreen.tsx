@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 import { formatCountdownHms, formatLuckyCatalogDate, msUntilNextKstMidnight } from "../lib/date";
-import { shouldReduceMenuMotion } from "../lib/menuSettings";
+import { MENU_SETTINGS_EVENT, shouldReduceMenuMotion } from "../lib/menuSettings";
 
 const ASSETS = {
   bg: "/assets/main/bg-night-base.webp",
@@ -79,8 +79,18 @@ export function HomeScreen({
   const noticeTimer = useRef(0);
   const navTimer = useRef(0);
   const navLock = useRef(false);
-  const reduce = shouldReduceMenuMotion();
+  const [reduce, setReduce] = useState(() => shouldReduceMenuMotion());
   const dateLabel = formatLuckyCatalogDate();
+
+  useEffect(() => {
+    const sync = () => setReduce(shouldReduceMenuMotion());
+    window.addEventListener(MENU_SETTINGS_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(MENU_SETTINGS_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
   const drawsDone = remainingNormal <= 0;
   const lowRemaining = remainingNormal === 1 || remainingNormal === 2;
   const deckCount = drawsDone ? 1 : remainingNormal;
