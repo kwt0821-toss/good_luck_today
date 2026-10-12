@@ -343,9 +343,14 @@ export default function App() {
       return;
     }
     const nextStep = tutorialStep.step + 1;
+    const next = config.tutorial.steps.find((step) => step.step === nextStep);
     await persistOps({ ...ops, tutorialStep: nextStep });
-    if (tutorialStep.screen.includes("dex")) setScreen({ name: "collection" });
-    if (tutorialStep.screen === "room") setScreen({ name: "room" });
+    if (next?.screen === "room") setScreen({ name: "room" });
+    else if (next?.screen.includes("dex") || tutorialStep.screen.includes("dex")) {
+      setScreen({ name: "collection" });
+    } else if (next?.screen === "main" || next?.screen === "draw-reveal") {
+      setScreen({ name: "home" });
+    }
   }, [ops, config, tutorialStep, tutorialReplayStep, beginDraw, persistOps]);
 
   if (bootError) {
@@ -371,10 +376,24 @@ export default function App() {
       {screen.name === "rates" ? <RatesGuideScreen onBack={() => setScreen({ name: "home" })} /> : null}
 
       {screen.name === "collection" ? (
-        <CollectionScreen onBack={() => setScreen({ name: "home" })} />
+        <CollectionScreen
+          onBack={() => setScreen({ name: "home" })}
+          floatingToast={
+            ops && !ops.tutorialDone && ops.tutorialStep === 3 ? revealToast : null
+          }
+        />
       ) : null}
 
-      {screen.name === "room" ? <RoomScreen onBack={() => setScreen({ name: "home" })} /> : null}
+      {screen.name === "room" ? (
+        <RoomScreen
+          onBack={() => setScreen({ name: "home" })}
+          tutorialActive={Boolean(
+            tutorialStep?.screen === "room" &&
+              (tutorialReplayStep != null || (ops && !ops.tutorialDone)),
+          )}
+          suggestTile={tutorialStep?.screen === "room" ? (tutorialStep.suggestTile ?? null) : null}
+        />
+      ) : null}
 
       {screen.name === "reveal" && reservation ? (
         <DrawRevealScreen
@@ -456,17 +475,17 @@ export default function App() {
         onCancel={() => void cancelAd()}
       />
 
-      {(screen.name === "home" || tutorialReplayStep != null) &&
-      tutorialStep &&
-      (tutorialStep.screen === "main" ||
+      {tutorialStep &&
+      ((screen.name === "home" && tutorialStep.screen === "main") ||
+        (screen.name === "reveal" &&
+          tutorialStep.screen === "draw-reveal" &&
+          tutorialReplayStep == null) ||
+        (screen.name === "collection" && tutorialStep.screen.includes("dex")) ||
+        (screen.name === "room" && tutorialStep.screen === "room") ||
         (tutorialReplayStep != null &&
-          (tutorialStep.screen === "main" ||
-            tutorialStep.screen.includes("dex") ||
-            tutorialStep.screen === "room"))) ? (
-        <TutorialCoach step={tutorialStep} onSkip={() => void skipTutorial()} onAdvance={() => void advanceTutorial()} />
-      ) : null}
-
-      {screen.name === "reveal" && tutorialStep && tutorialStep.screen === "draw-reveal" && tutorialReplayStep == null ? (
+          (screen.name === "home" ||
+            screen.name === "collection" ||
+            screen.name === "room"))) ? (
         <TutorialCoach step={tutorialStep} onSkip={() => void skipTutorial()} onAdvance={() => void advanceTutorial()} />
       ) : null}
 

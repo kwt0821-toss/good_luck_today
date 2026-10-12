@@ -170,7 +170,7 @@ export async function confirmDrawAfterAd(
       amountKRW: grant.toss,
     });
     next = tossRes.state;
-    toast = "도감에 등록됐어요! 토스 1원 받았어요";
+    toast = `도감에 등록됐어요! 토스 ${grant.toss}원 + ${grant.paw}포인트 받았어요`;
   }
 
   const setEval = await evaluateSetRewards(next, owned);

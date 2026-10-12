@@ -157,6 +157,7 @@ export type TutorialStep = {
   toast?: { id: string; text: string };
   action?: string;
   gesture?: string;
+  suggestTile?: { c: number; r: number };
   then?: { screen?: string; target: string; copy: string };
   complete?: string;
 };

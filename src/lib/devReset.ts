@@ -53,7 +53,7 @@ export async function resetToNewUserState(): Promise<OpsState> {
     loadRoomsFile(),
   ]);
   const items = await applyOpsPrices(catalog.items);
-  const room = newUserRoomState(items, rooms, next, grid);
+  const room = newUserRoomState(items, rooms, next, grid, config.starter);
   await saveRoomState(room);
 
   return next;

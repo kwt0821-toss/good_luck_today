@@ -1,7 +1,7 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
 import { isInTossApp } from "./native";
-import type { OpsState } from "./opsTypes";
+import type { OpsStarter, OpsState } from "./opsTypes";
 import type { GridLayoutEntry, RoomDefinition, RoomGridFile, RoomsFile } from "./roomCatalog";
 import { defaultRoomId } from "./roomCatalog";
 import { DEFAULT_CAT_BREED_ID } from "./roomCat";
@@ -205,16 +205,58 @@ export function mockState(items: RoomItem[], roomsFile: RoomsFile, grid?: RoomGr
   };
 }
 
-/** Fresh-install room save: starter unlocks / owned from ops, default layouts. */
+function starterEntries(firstRoom: OpsStarter["firstRoom"]): GridLayoutEntry[] {
+  const out: GridLayoutEntry[] = [];
+  for (const raw of firstRoom.placed) {
+    if (typeof raw.id !== "string") continue;
+    const entry: GridLayoutEntry = { id: raw.id };
+    if (typeof raw.c === "number") entry.c = raw.c;
+    if (typeof raw.r === "number") entry.r = raw.r;
+    if (raw.orientation === "mirrored" || raw.orientation === "default") {
+      entry.orientation = raw.orientation;
+    }
+    if (raw.wall === "L" || raw.wall === "R") entry.wall = raw.wall;
+    if (typeof raw.t === "number") entry.t = raw.t;
+    if (typeof raw.heightUnits === "number") entry.heightUnits = raw.heightUnits;
+    out.push(entry);
+  }
+  return out;
+}
+
+function skinTextureId(id: string) {
+  // starter.json uses catalog ids (floor_wood_honey); room tiles use texture ids (wood_honey).
+  return id.replace(/^(floor_|wall_)/, "");
+}
+
+/** Build moon_bedroom (etc.) from starter.json so drawer gifts stay NEW/unplaced. */
+export function layoutFromStarter(firstRoom: OpsStarter["firstRoom"], roomId = firstRoom.roomId): RoomLayoutState {
+  return layoutFromEntries(
+    starterEntries(firstRoom),
+    roomId,
+    skinTextureId(firstRoom.floor),
+    skinTextureId(firstRoom.wall.L),
+    skinTextureId(firstRoom.wall.R),
+  );
+}
+
+/** Fresh-install room save: starter unlocks / owned from ops, starter first-room layout. */
 export function newUserRoomState(
   _items: RoomItem[],
   roomsFile: RoomsFile,
   ops: OpsState,
   grid?: RoomGridFile,
+  starter?: OpsStarter,
 ): RoomSaveState {
   const rooms: Record<string, RoomRecord> = {};
   for (const def of roomsFile.rooms) {
-    rooms[def.id] = defaultRecord(def, grid);
+    if (starter && def.id === starter.firstRoom.roomId) {
+      rooms[def.id] = asRecord(
+        layoutFromStarter(starter.firstRoom, def.id),
+        def.roamingCatId ?? DEFAULT_CAT_BREED_ID,
+      );
+    } else {
+      rooms[def.id] = defaultRecord(def, grid);
+    }
   }
   const unlocked = ops.unlockedRoomIds.length
     ? [...ops.unlockedRoomIds]

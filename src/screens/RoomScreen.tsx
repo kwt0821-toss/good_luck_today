@@ -7,8 +7,10 @@ import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
 import { loadDexOwned } from "../lib/dexCollection";
 import { AudioManager } from "../audio/AudioManager";
 import { haptic } from "../lib/native";
+import { loadOpsConfig } from "../lib/opsConfig";
 import {
   isPaintItem,
+  isPlaceableDecor,
   itemMap,
   loadRoomCatalog,
   loadRoomGrid,
@@ -62,6 +64,7 @@ import {
   paintTargetLabel,
 } from "../lib/roomTiles";
 import type { DexCard } from "../lib/dexTypes";
+import type { OpsEconomy } from "../lib/opsTypes";
 import type {
   FloorPlacement,
   PaintFillMode,
@@ -82,25 +85,28 @@ import "./RoomScreen.css";
 
 type RoomScreenProps = {
   onBack: () => void;
+  tutorialActive?: boolean;
+  suggestTile?: { c: number; r: number } | null;
 };
 
 function formatPoints(value: number) {
   return value.toLocaleString("en-US");
 }
 
-export function RoomScreen({ onBack }: RoomScreenProps) {
+export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null }: RoomScreenProps) {
   const [items, setItems] = useState<RoomItem[]>([]);
   const [grid, setGrid] = useState<RoomGridFile | null>(null);
   const [roomsFile, setRoomsFile] = useState<RoomsFile | null>(null);
   const [state, setState] = useState<RoomSaveState | null>(null);
+  const [economyRooms, setEconomyRooms] = useState<OpsEconomy["rooms"]>([]);
   const [themeFilter, setThemeFilter] = useState<RoomThemeFilter>("all");
   const [unlockRoom, setUnlockRoom] = useState<RoomDefinition | null | "soon">(null);
   const [dragX, setDragX] = useState(0);
   const [frameThumbs, setFrameThumbs] = useState<string[]>([]);
   const [mode, setMode] = useState<RoomMode>(() =>
-    new URLSearchParams(window.location.search).get("edit") ? "edit" : "view",
+    new URLSearchParams(window.location.search).get("edit") || tutorialActive ? "edit" : "view",
   );
-  const [tab, setTab] = useState<RoomTab>("가구");
+  const [tab, setTab] = useState<RoomTab>(tutorialActive ? "보유" : "가구");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<RoomLayoutState | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -137,15 +143,18 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   const paintTab = tab === "벽지" || tab === "바닥";
 
   useEffect(() => {
-    void Promise.all([loadRoomCatalog(), loadRoomGrid(), loadRoomsFile()]).then(async ([catalog, gridFile, rooms]) => {
-      const { applyOpsPrices, syncRoomSaveWithOps } = await import("../lib/roomEconomy");
-      const priced = await applyOpsPrices(catalog.items);
-      setItems(priced);
-      setGrid(gridFile);
-      setRoomsFile(rooms);
-      const loaded = await loadRoomState(priced, rooms, gridFile);
-      setState(await syncRoomSaveWithOps(loaded));
-    });
+    void Promise.all([loadRoomCatalog(), loadRoomGrid(), loadRoomsFile(), loadOpsConfig()]).then(
+      async ([catalog, gridFile, rooms, config]) => {
+        const { applyOpsPrices, syncRoomSaveWithOps } = await import("../lib/roomEconomy");
+        const priced = await applyOpsPrices(catalog.items);
+        setItems(priced);
+        setGrid(gridFile);
+        setRoomsFile(rooms);
+        setEconomyRooms(config.economy.rooms ?? []);
+        const loaded = await loadRoomState(priced, rooms, gridFile);
+        setState(await syncRoomSaveWithOps(loaded));
+      },
+    );
     void Promise.all([loadDexCatalog(), loadDexOwned()]).then(([catalog, owned]) => {
       const thumbs = catalog.cards
         .filter((card) => (owned[card.id]?.count ?? 0) > 0)
@@ -154,6 +163,35 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       setFrameThumbs(thumbs);
     });
   }, []);
+
+  useEffect(() => {
+    if (!tutorialActive || !state) return;
+    setTab("보유");
+    setMode((prev) => {
+      if (prev === "edit") return prev;
+      setSnapshot(cloneLayout(currentRoom(state)));
+      setSelectedId(null);
+      setUndoStack([]);
+      return "edit";
+    });
+    // Free starter drawer placeables (e.g. cushions) so #drawer-item-0 can target NEW.
+    void loadOpsConfig().then((config) => {
+      const gifts = new Set(config.starter.drawer);
+      setState((prev) => {
+        if (!prev) return prev;
+        const room = currentRoom(prev);
+        const nextFloor = room.floor.filter((place) => {
+          const item = itemsById.get(place.id);
+          if (!item || !gifts.has(place.id)) return true;
+          return !isPlaceableDecor(item);
+        });
+        if (nextFloor.length === room.floor.length) return prev;
+        const next = patchCurrentRoom(prev, { ...room, floor: nextFloor });
+        void saveRoomState(next);
+        return next;
+      });
+    });
+  }, [tutorialActive, state?.currentRoomId, itemsById]);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -181,6 +219,20 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
   const lockedRooms = roomsFile.rooms.filter((room) => !state.unlocked.includes(room.id));
   const currentIndex = Math.max(0, unlockedIds.indexOf(state.currentRoomId));
   const otherRoomIds = Object.fromEntries(items.map((item) => [item.id, placedInOtherRoom(state, item.id)]));
+  const layoutForSuggest = currentRoom(state);
+  const suggestItemId =
+    tutorialActive && suggestTile
+      ? items
+          .filter((item) => (state.owned[item.id] ?? 0) > 0 && isPlaceableDecor(item))
+          .find((item) => {
+            const placedHere =
+              layoutForSuggest.floor.some((place) => place.id === item.id) ||
+              layoutForSuggest.walls.some((place) => place.id === item.id);
+            const other = Boolean(otherRoomIds[item.id]) && !placedHere;
+            return !placedHere && !other;
+          })?.id ?? "cushions"
+      : null;
+  const unlockFor = (roomId: string) => economyRooms.find((row) => row.id === roomId)?.unlock;
   if (!paintStroke.current) {
     tilesRef.current = { floorTiles: layout.floorTiles, wallTiles: layout.wallTiles };
   }
@@ -773,23 +825,42 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
             </button>
           </div>
           <div className="lucky-room-pager">
-            {unlockedIds.map((id, index) => (
-              <button
-                key={id}
-                type="button"
-                className={`lucky-room-dot ${index === currentIndex ? "is-on" : ""}`}
-                aria-label={roomById(roomsFile.rooms, id)?.nameKo ?? id}
-                onClick={() => goToUnlocked(index)}
-              />
-            ))}
-            <button
-              type="button"
-              className="lucky-new-room"
-              onClick={() => setUnlockRoom(lockedRooms[0] ?? "soon")}
-            >
-              <img src={roomAsset("ui/icon-lock.svg")} alt="" />
-              + 새 방
-            </button>
+            {roomsFile.switcher.order.map((id) => {
+              const unlocked = unlockedIds.includes(id);
+              const def = roomById(roomsFile.rooms, id);
+              if (unlocked) {
+                const index = unlockedIds.indexOf(id);
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`lucky-room-dot ${index === currentIndex ? "is-on" : ""}`}
+                    aria-label={def?.nameKo ?? id}
+                    onClick={() => goToUnlocked(index)}
+                  />
+                );
+              }
+              const unlock = unlockFor(id);
+              const paw = unlock?.paw;
+              const cozy = unlock?.cozyLevel;
+              if (paw == null && cozy == null) return null;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  className="lucky-room-locked"
+                  aria-label={`${def?.nameKo ?? id} 잠김`}
+                  onClick={() => setUnlockRoom(def ?? "soon")}
+                >
+                  <img src={roomAsset("ui/icon-lock.svg")} alt="" />
+                  <span>
+                    {paw != null ? `${paw.toLocaleString("ko-KR")}P` : ""}
+                    {paw != null && cozy != null ? " · " : ""}
+                    {cozy != null ? `아늑함 Lv.${cozy}` : ""}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       ) : null}
@@ -843,6 +914,8 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
                       shadowsEnabled={state.shadowsEnabled}
                       painting={active && paintTab}
                       paintHover={active && paintTab ? paintHover : null}
+                      suggestTile={active && tutorialActive ? suggestTile : null}
+                      suggestItemId={active && tutorialActive ? suggestItemId : null}
                       onSelect={onSelect}
                       onItemPointerDown={onItemPointerDown}
                       onFloorPointerDown={onFloorPointerDown}
@@ -960,6 +1033,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
               setEraser(false);
             } else {
               setPaintHover(null);
+              setBrushId(null);
             }
           }}
           themeFilter={themeFilter}
@@ -974,6 +1048,7 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
           eraser={eraser}
           canUndo={undoStack.length > 0}
           otherRoomIds={otherRoomIds}
+          preferOwnedSort={tutorialActive}
           onPick={pickDrawerItem}
           onFillMode={(next) => {
             setFillMode(next);
@@ -1039,6 +1114,9 @@ export function RoomScreen({ onBack }: RoomScreenProps) {
       {unlockRoom ? (
         <RoomUnlockSheet
           room={unlockRoom === "soon" ? null : unlockRoom}
+          unlock={
+            unlockRoom && unlockRoom !== "soon" ? unlockFor(unlockRoom.id) : undefined
+          }
           onClose={() => setUnlockRoom(null)}
         />
       ) : null}

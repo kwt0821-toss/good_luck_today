@@ -551,7 +551,8 @@ export function itemMap(items: RoomItem[]) {
   return new Map(items.map((item) => [item.id, item]));
 }
 
-export const ROOM_TABS: { id: RoomCategory; label: string }[] = [
+export const ROOM_TABS: { id: RoomTab; label: string }[] = [
+  { id: "보유", label: "보유" },
   { id: "가구", label: "가구" },
   { id: "소품", label: "소품" },
   { id: "벽 꾸미기", label: "벽 꾸미기" },
@@ -562,7 +563,24 @@ export const ROOM_TABS: { id: RoomCategory; label: string }[] = [
 
 export const CARD_FRAME_IDS = new Set(["squareframe", "cardframe"]);
 
+/** Placeable furniture/props (not wallpaper / floor skins). */
+export function isPlaceableDecor(item: RoomItem): boolean {
+  if (item.placement === "wallpaper" || item.placement === "floor-skin") return false;
+  if (item.category === "벽지" || item.category === "바닥") return false;
+  return (
+    item.category === "가구" ||
+    item.category === "소품" ||
+    item.category === "벽 꾸미기" ||
+    item.category === "카드액자" ||
+    item.placement === "floor" ||
+    item.placement === "wall" ||
+    item.placement === "wallTop" ||
+    CARD_FRAME_IDS.has(item.id)
+  );
+}
+
 export function itemMatchesTab(item: RoomItem, tab: RoomTab) {
+  if (tab === "보유") return true;
   if (tab === "벽 꾸미기") return isWallDecor(item);
   if (tab === "벽지") return item.category === "벽지" || item.placement === "wallpaper";
   if (tab === "카드액자") return item.category === "카드액자" || CARD_FRAME_IDS.has(item.id);

@@ -23,9 +23,11 @@ import "./DexScreen.css";
 
 type DexScreenProps = {
   onBack: () => void;
+  /** Carry-over toast from draw-reveal (tutorial step 2 → 3). */
+  floatingToast?: string | null;
 };
 
-export function DexScreen({ onBack }: DexScreenProps) {
+export function DexScreen({ onBack, floatingToast = null }: DexScreenProps) {
   const [catalog, setCatalog] = useState<DexCatalog | null>(null);
   const [owned, setOwned] = useState<DexOwnedMap>({});
   const [tab, setTab] = useState<DexTab>(() => {
@@ -250,6 +252,13 @@ export function DexScreen({ onBack }: DexScreenProps) {
       {toast ? (
         <div className="local-toast" role="status">
           {toast}
+        </div>
+      ) : null}
+
+      {floatingToast ? (
+        <div className="draw-reveal-toast dex-floating-toast" id="dex-toast" role="status">
+          <div className="ic">toss</div>
+          <div>{floatingToast}</div>
         </div>
       ) : null}
     </div>
