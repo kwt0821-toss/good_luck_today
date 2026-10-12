@@ -1258,35 +1258,16 @@
   animation: main-float 3.6s ease-in-out infinite;
 }
 
-.main-tail {
-  position: absolute;
-  /*
-   * Deck is centered (left 50%, width 168 → right = 50% + 84).
-   * Pivot is +10px from the SVG left; tuck that pivot 10pt inside the deck right edge.
-   * left = (50% + 84) - 10 - 10 = 50% + 64. Keeps tuck when the float is narrower than 390.
-   */
-  left: calc(50% + 64px);
-  top: 218px;
-  width: 80px;
-  height: 94px;
-  z-index: 1; /* behind .main-deck (3) */
-  display: block;
-  transform-origin: 12.5% 87%;
-  will-change: transform;
-  animation: main-tail 2.4s ease-in-out infinite;
-  pointer-events: none;
-}
-
 .main-deck {
   position: absolute;
   left: 50%;
-  /* Paw bottoms land on the deck top edge (stage y ≈ 152). */
   top: 152px;
   width: 168px;
   height: 224px;
   margin-left: -84px;
   z-index: 3;
   perspective: 900px;
+  overflow: visible;
   pointer-events: none;
 }
 
@@ -1305,14 +1286,17 @@
     filter 240ms ease,
     opacity 240ms ease;
   backface-visibility: hidden;
+  overflow: visible;
 }
 
-.main-deck-card img {
+.main-deck-face {
+  position: relative;
   display: block;
   width: 100%;
   height: auto;
   border-radius: 18px;
   box-shadow: 0 14px 22px rgba(10, 8, 24, 0.35);
+  z-index: 1;
 }
 
 .main-deck-card.is-back[data-depth="1"] {
@@ -1325,19 +1309,24 @@
   filter: brightness(0.48);
 }
 
-.main-deck-card.is-top {
+/* Top card owns cat + tail so they share rotate(-2deg). */
+.main-deck-card.is-top,
+.main-deck-card.deck-top {
   transform: rotate(-2deg);
   filter: none;
   box-shadow: 0 0 0 1px rgba(255, 196, 138, 0.35);
+  overflow: visible;
 }
 
-.main-deck-card.is-top::after {
+.main-deck-card.is-top::after,
+.main-deck-card.deck-top::after {
   content: "";
   position: absolute;
   inset: -2px;
   border-radius: 20px;
   box-shadow: 0 0 22px rgba(255, 196, 138, 0.55);
   pointer-events: none;
+  z-index: 2;
 }
 
 .main-deck-card.is-top.is-flip {
@@ -1349,6 +1338,21 @@
   filter: none;
 }
 
+/* Tail: pivot (+10px) tucked 10pt inside the card's right edge, behind the face. */
+.main-tail {
+  position: absolute;
+  left: calc(100% - 20px);
+  top: 66px;
+  width: 80px;
+  height: 94px;
+  z-index: 0;
+  display: block;
+  transform-origin: 12.5% 87%;
+  will-change: transform;
+  animation: main-tail 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
 .main-deck-dot {
   position: absolute;
   top: 8px;
@@ -1358,7 +1362,7 @@
   border-radius: 50%;
   background: #ff5a5f;
   box-shadow: 0 0 0 2px #1a1731;
-  z-index: 2;
+  z-index: 4;
 }
 
 .main-deck-spark {
@@ -1370,18 +1374,24 @@
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 220, 160, 0.9) 0%, rgba(255, 90, 95, 0.15) 55%, transparent 70%);
   animation: main-deck-spark 1.4s ease-in-out infinite;
-  z-index: 1;
+  z-index: 4;
   pointer-events: none;
 }
 
+/*
+ * Cat anchored to the top card: centered, sitting above with paws overlapping ~22pt.
+ * Face centerline = card centerline (emblem) via left:50% + translateX(-50%).
+ */
 .main-cat {
   position: absolute;
-  left: 110px;
-  top: 8px;
+  left: 50%;
+  bottom: 100%;
+  margin-bottom: -22px;
   width: 170px;
   height: 144.3px;
-  z-index: 4;
+  z-index: 3;
   pointer-events: none;
+  transform: translateX(-50%);
   transform-origin: 50% 93%;
   will-change: transform;
   /* Same 2.4s period/phase as .main-drool (layout-spec §6). */
@@ -1405,7 +1415,7 @@
   display: block;
   object-fit: contain;
   pointer-events: none;
-  transform-origin: 50% 0;
+  transform-origin: 50% 0; /* top center — mouth */
   will-change: transform;
   animation: main-drool 2.4s ease-in-out infinite;
 }
@@ -1466,12 +1476,12 @@
 
 .main-stage:active .main-cat {
   animation: none;
-  transform: scale(0.97);
+  transform: translateX(-50%) scale(0.97);
 }
 
 .main-stage.is-waking .main-cat {
   animation: none;
-  transform: scale(1.05);
+  transform: translateX(-50%) scale(1.05);
 }
 
 .main-stage.is-waking .main-zzz {
@@ -1671,10 +1681,10 @@
 @keyframes main-breathe {
   0%,
   100% {
-    transform: scale(1);
+    transform: translateX(-50%) scale(1);
   }
   50% {
-    transform: scale(1.03);
+    transform: translateX(-50%) scale(1.03);
   }
 }
 
@@ -1811,6 +1821,10 @@
   transform: translateX(-50%);
 }
 
+.main-screen.is-reduce .main-cat {
+  transform: translateX(-50%);
+}
+
 .main-screen.is-reduce .main-drool {
   transform: scale(1);
 }
@@ -1831,6 +1845,7 @@
 
   .main-cat {
     animation: none;
+    transform: translateX(-50%);
   }
 
   .main-drool {

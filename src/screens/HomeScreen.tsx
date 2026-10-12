@@ -299,7 +299,6 @@ export function HomeScreen({
         >
           <img className="main-moon" src={ASSETS.moon} alt="" />
           <div className="main-float">
-            <img className="main-tail" src={ASSETS.tail} alt="" />
             <div className={`main-deck ${drawsDone ? "is-done" : ""}`} aria-hidden="true">
               {Array.from({ length: deckCount }, (_, index) => {
                 const fromTop = deckCount - 1 - index;
@@ -307,11 +306,28 @@ export function HomeScreen({
                 return (
                   <div
                     key={`deck-${index}-${remainingNormal}`}
-                    className={`main-deck-card ${isTop ? "is-top" : "is-back"} ${isTop && flipping ? "is-flip" : ""}`}
+                    className={`main-deck-card ${isTop ? "is-top deck-top" : "is-back"} ${isTop && flipping ? "is-flip" : ""}`}
                     style={{ zIndex: index + 1 }}
                     data-depth={fromTop}
                   >
-                    <img src={ASSETS.card} alt="" />
+                    {/* Tail + cat live on the top card so they share its rotate(-2deg). */}
+                    {isTop ? (
+                      <img className="main-tail" src={ASSETS.tail} alt="" draggable={false} />
+                    ) : null}
+                    <img className="main-deck-face" src={ASSETS.card} alt="" />
+                    {isTop ? (
+                      <div className="main-cat">
+                        <img className="main-cat-body" src={ASSETS.cat} alt="잠자는 고양이" />
+                        {/* Drool pulses with breathe; hidden while the card reveal flip plays. */}
+                        <img
+                          className="main-drool"
+                          src={ASSETS.drool}
+                          alt=""
+                          aria-hidden="true"
+                          draggable={false}
+                        />
+                      </div>
+                    ) : null}
                     {isTop && showSparkle ? (
                       <>
                         <span className="main-deck-dot" />
@@ -321,17 +337,6 @@ export function HomeScreen({
                   </div>
                 );
               })}
-            </div>
-            <div className="main-cat">
-              <img className="main-cat-body" src={ASSETS.cat} alt="잠자는 고양이" />
-              {/* Drool pulses with breathe; hidden while the card reveal flip plays. */}
-              <img
-                className="main-drool"
-                src={ASSETS.drool}
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-              />
             </div>
             {!drawsDone ? (
               <div className="main-zzz" aria-hidden="true">
