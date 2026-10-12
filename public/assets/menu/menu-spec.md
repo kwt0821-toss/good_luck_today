@@ -1,4 +1,4 @@
-# Lucky Cat — 메뉴 패널 스펙 (menu-1.4)
+# Lucky Cat — 메뉴 패널 스펙 (menu-1.5)
 
 디자인 프레임 **390 × 844 pt**, 에셋 3x. 시안: `menu-screen-a.png`(패널), `-b`(출석 체크 · 1주차), `-b2`(출석 체크 · 주간 반복), `-c`(확률 안내 시트).
 > 상태바 47 + 토스 내비 56 = 103 pt는 시안용이에요. **토스 내비는 앱인토스가 그려요 → 패널/딤은 콘텐츠 영역 top(=0)부터 시작.** 아래 y는 콘텐츠 영역 기준.
@@ -103,3 +103,9 @@ icon-attendance / points / exchange / rewards / rates / notice / invite / settin
 - 행: `#menu-row-{rowId}` (예: `#menu-row-rewards`), 메뉴 아이콘 `#icon-menu`.
 - 보상함 시트: `#wallet-card`, `#withdraw-picker`(라벨+칩+받기 버튼), `#btn-withdraw`, `#btn-claim-all`, `#btn-wallet-history`.
 - 보상함 튜토리얼(tutorial.json `contextual.rewards-intro`): 냥코인이 처음 10개가 되거나 보상함을 처음 열 때 1회. 시안 tutorial-rewards-1/2/3.png. 코치마크 중에는 메뉴 패널·시트 스와이프 닫기를 막고, 건너뛰기는 말풍선 아래줄에 둬요(패널 닫기 버튼과 겹치지 않게).
+
+## 10. 뽑기권 (menu-1.5)
+- **사는 곳은 하나**: 바텀 시트 `sheet:ticketShop` (ticket-shop.png). 들어가는 길 2개: ① 메인 확률업 버튼(오늘 광고 확률업을 썼고 뽑기권 0장일 때) ② 메뉴 DAILY › **뽑기권** 행(보상함 위, `icon-ticket.svg`, meta "보유 1/3 · 이번 주 2/7").
+- 시트: 뽑기권 카드(아이콘 64, "확률업 뽑기권", "광고 없이 확률업 1회 · 5성↑ 27%", 가격 발바닥 아이콘 + 200 Pop 700 amber) → 한도 3칸(이번 주 n/7 · 오늘 n/2 · 보유 n/3) → 내 포인트(→ 산 뒤 잔액 미리보기) → "200P로 사기"(cream) → 보유 ≥1이면 보조 버튼 "지금 확률업 뽑기 (뽑기권 n장)" → 안내 "포인트는 방꾸미기에도 써요 · 이번 주 구매는 월요일 00:00에 다시 열려요".
+- 사면 토스트(상단, 초록 체크) "확률업 뽑기권 1장을 샀어요 / 남은 포인트 1,040P · 보유 1/3". 비활성 문구는 menu.json `sheets.ticketShop.disabled`.
+- 값은 economy.json `shop.tickets.rateUpTicket` (가격·한도), `tickets.rateUpTicket.maxHold`.

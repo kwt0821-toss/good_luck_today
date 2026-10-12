@@ -1,5 +1,5 @@
 {
- "_version": "economy-1.3 (2026-10-12)",
+ "_version": "economy-1.4 (2026-10-12)",
  "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
  "currency": {
   "paw": {
@@ -323,7 +323,35 @@
   "excludeSources": [
    "attendance"
   ],
-  "attendanceOnlyRule": "prices.json에서 source==\"attendance\" / purchasable=false 아이템은 상점 목록·가격표·다른 보상 풀(방 해금 선물, 이벤트, 상자)에 넣지 않아요. 지급은 서버 출석 API에서만."
+  "attendanceOnlyRule": "prices.json에서 source==\"attendance\" / purchasable=false 아이템은 상점 목록·가격표·다른 보상 풀(방 해금 선물, 이벤트, 상자)에 넣지 않아요. 지급은 서버 출석 API에서만.",
+  "tickets": {
+   "rateUpTicket": {
+    "nameKo": "확률업 뽑기권",
+    "pricePaw": 200,
+    "weeklyCap": 7,
+    "dailyCap": 2,
+    "weekResetKST": "MON 00:00",
+    "dayResetKST": "00:00",
+    "buyableWhen": "오늘 광고 확률업(rateUpPerDay)을 이미 썼거나 광고를 보기 싫을 때도 구매 가능. 단 보유 수 < tickets.rateUpTicket.maxHold",
+    "sharesHoldWith": "tickets.rateUpTicket (출석 7일차 지급분과 합쳐 최대 3장)",
+    "separateFromDailyCap": true,
+    "serverValidated": true,
+    "validate": [
+     "paw 잔액 ≥ 가격 (서버 잔액)",
+     "이번 주 구매 수 < weeklyCap",
+     "오늘 구매 수 < dailyCap",
+     "보유 < maxHold"
+    ],
+    "idempotencyKey": "tossUserKey + purchaseRequestId (클라이언트 UUID)",
+    "atomic": "paw 차감 + 뽑기권 +1 + 구매 기록을 한 트랜잭션으로",
+    "api": "POST /shop/tickets/buy {ticketType:'rateUp', requestId} → {paw, ticketsHeld, weekBought, dayBought}"
+   },
+   "normalTicket": {
+    "enabled": false,
+    "_rejected": "일반 뽑기권은 짧은 광고 뽑기를 대체하고 방꾸미기 완료를 ~317일로 늦춰서 넣지 않아요 (sim D/E 참고)"
+   },
+   "_sim": "/workspace/sim/sim.py opt — 최대 참여 유저, 도감 먼저 정책: 도감 중앙값 285→198일, p90 436→301일, 방꾸미기 완료 144→268일"
+  }
  },
  "rooms": [
   {
@@ -437,7 +465,8 @@
    "maxHold": 3,
    "expires": null,
    "sources": [
-    "attendance.weeklyCycle.day7"
+    "attendance.weeklyCycle.day7",
+    "shop.tickets.rateUpTicket (200P)"
    ],
    "rates": "draws.rates_proposal.rateUp"
   }

@@ -1,5 +1,5 @@
 {
- "_version": "menu-1.4 (2026-10-12)",
+ "_version": "menu-1.5 (2026-10-12)",
  "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
  "panel": {
   "side": "right",
@@ -57,6 +57,7 @@
     "attendance",
     "points",
     "exchange",
+    "tickets",
     "rewards"
    ]
   },
@@ -236,6 +237,18 @@
     }
    ],
    "domId": "#menu-row-settings"
+  },
+  "tickets": {
+   "label": "뽑기권",
+   "icon": "icon-ticket.svg",
+   "enabled": true,
+   "open": "sheet:ticketShop",
+   "domId": "#menu-row-tickets",
+   "meta": "'보유 {held}/3 · 이번 주 {weekBought}/7'",
+   "data": "economy.json → shop.tickets.rateUpTicket, tickets.rateUpTicket.maxHold",
+   "badge": {
+    "type": "none"
+   }
   }
  },
  "menuIconBadge": {
@@ -422,6 +435,37 @@
     "history": "#btn-wallet-history"
    },
    "tutorial": "tutorial.json contextual.rewards-intro (r2~r4 대상이 위 id)"
+  },
+  "ticketShop": {
+   "eyebrow": "TICKET",
+   "title": "뽑기권",
+   "desc": "모은 포인트로 광고 없이 확률업 뽑기를 해요.",
+   "card": {
+    "name": "확률업 뽑기권",
+    "sub": "광고 없이 확률업 1회 · 5성↑ {rateUpPct}%",
+    "price": "{pricePaw}P",
+    "limits": [
+     "이번 주 {weekBought}/{weeklyCap}",
+     "오늘 {dayBought}/{dailyCap}",
+     "보유 {held}/{maxHold}"
+    ]
+   },
+   "balance": "내 포인트 {paw}",
+   "cta": "{pricePaw}P로 사기",
+   "ctaUseNow": "사고 바로 뽑기",
+   "disabled": {
+    "noPaw": "포인트가 {short}P 부족해요",
+    "weekCap": "이번 주는 다 샀어요 · 월요일에 다시 열려요",
+    "dayCap": "오늘은 다 샀어요",
+    "hold": "뽑기권은 3장까지 가질 수 있어요"
+   },
+   "note": "포인트는 방꾸미기에도 써요. 꼭 필요한 만큼만 사요",
+   "toast": "확률업 뽑기권 1장을 샀어요 · 남은 포인트 {paw}",
+   "entryPoints": [
+    "메인 확률업 버튼 (오늘 광고 확률업을 썼고 뽑기권 0장일 때 → 이 시트)",
+    "메뉴 › 뽑기권 행"
+   ],
+   "mockup": "ticket-shop.png"
   }
  },
  "attendanceOnlyTag": {
