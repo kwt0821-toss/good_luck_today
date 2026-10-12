@@ -709,9 +709,10 @@
   height: 342px;
   margin: 22px auto 0;
   touch-action: pan-y;
-  /* Perspective only — never animate transform here (flattens 3D / hides spin). */
-  perspective: 1400px;
-  perspective-origin: 50% 45%;
+  /* Perspective only — never animate transform here (flattens 3D / hides spin).
+     900px (tighter than 1400) makes edge-on turns read more clearly. */
+  perspective: 900px;
+  perspective-origin: 50% 42%;
   transform-style: preserve-3d;
   overflow: visible;
 }
