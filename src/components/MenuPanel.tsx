@@ -454,7 +454,14 @@ export function MenuPanel({
                         <img src={row.icon} alt="" />
                         {row.badge.type === "dot" ? <span className="menu-dot" /> : null}
                       </span>
-                      <span className="menu-row-label">{row.label}</span>
+                      <span className="menu-row-label">
+                        {row.label}
+                        {row.id === "points" ? (
+                          <span className="menu-ad-tag" aria-label="광고">
+                            광고
+                          </span>
+                        ) : null}
+                      </span>
                       <span className="menu-row-meta">
                         {row.badge.type === "pill" || row.badge.type === "pill-new" ? (
                           <span
