@@ -154,11 +154,11 @@ export function HomeScreen({
         : null;
   /** Tip when draw available, or shop entry after ad used with 0 tickets. */
   const showRateUpTip = remainingRateUp > 0 || rateUpShopEntry;
-  const rateUpTipLead = rateUpShopEntry
-    ? `${ticketShopPricePaw}P로 광고 없이 `
+  const rateUpTipLines = rateUpShopEntry
+    ? [`${ticketShopPricePaw}P로`, "광고 없이"]
     : rateUpTickets > 0
-      ? "뽑기권으로 광고 없이 "
-      : `${rateUpAdSeconds}초 광고 보고 `;
+      ? ["뽑기권으로", "광고 없이"]
+      : [`${rateUpAdSeconds}초 광고`, "보고"];
 
   const countCopy = drawsDone
     ? `내일 00:00에 다시 채워져요 · ${countdown}`
@@ -227,8 +227,18 @@ export function HomeScreen({
           {showRateUpTip ? (
             <div className="main-rateup-tip" role="status" aria-live="polite">
               <p className="main-rateup-tip-text">
-                {rateUpTipLead}
-                <span className="main-rateup-tip-accent">확률업</span>
+                {rateUpTipLines.map((line, index) => (
+                  <span key={line} className="main-rateup-tip-line">
+                    {index > 0 ? <br /> : null}
+                    {line}
+                    {index === rateUpTipLines.length - 1 ? (
+                      <>
+                        {" "}
+                        <span className="main-rateup-tip-accent">확률업</span>
+                      </>
+                    ) : null}
+                  </span>
+                ))}
               </p>
               <span className="main-rateup-tip-tail" aria-hidden="true" />
             </div>
@@ -252,10 +262,10 @@ export function HomeScreen({
             }}
           >
             <span className="main-rateup-orb">
-              <img className="main-rateup-icon" src={ASSETS.rateUp} alt="" width={28} height={28} />
+              <img className="main-rateup-icon" src={ASSETS.rateUp} alt="" width={22} height={22} />
               {rateUpTickets > 0 ? (
                 <span className="main-rateup-badge" aria-label={`뽑기권 ${rateUpTickets}장`}>
-                  <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
+                  <svg viewBox="0 0 12 12" width="9" height="9" aria-hidden="true">
                     <path
                       d="M1.5 3.8c0-.6.5-1.1 1.1-1.1h6.8c.6 0 1.1.5 1.1 1.1v.5c-.6.1-1 .6-1 1.2s.4 1.1 1 1.2v.5c0 .6-.5 1.1-1.1 1.1H2.6c-.6 0-1.1-.5-1.1-1.1v-.5c.6-.1 1-.6 1-1.2s-.4-1.1-1-1.2v-.5z"
                       fill="none"
