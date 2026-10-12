@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
+import { isDevBuild } from "../lib/devMode";
+import { resetToNewUserState } from "../lib/devReset";
 import { menuAsset } from "../lib/menuConfig";
 import {
   attendanceSheetState,
@@ -33,6 +35,7 @@ type MenuPanelProps = {
   onOpenRoom: () => void;
   onPawAd: () => void;
   onReplayTutorial: () => void;
+  onDevResetNewUser?: () => void;
 };
 
 function formatMeta(text: string) {
@@ -52,6 +55,7 @@ export function MenuPanel({
   onOpenRoom,
   onPawAd,
   onReplayTutorial,
+  onDevResetNewUser,
 }: MenuPanelProps) {
   const [model, setModel] = useState<MenuViewModel | null>(null);
   const [closing, setClosing] = useState(false);
@@ -63,6 +67,7 @@ export function MenuPanel({
   const [stampDay, setStampDay] = useState<number | null>(null);
   const [popDay, setPopDay] = useState<number | null>(null);
   const [creditsText, setCreditsText] = useState<string | null>(null);
+  const [devResetting, setDevResetting] = useState(false);
   const reduce = shouldReduceMenuMotion(settings);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const sheetDrag = useRef<{ y: number; active: boolean }>({ y: 0, active: false });
@@ -693,7 +698,7 @@ export function MenuPanel({
                         return (
                           <div key={item.id} className="settings-row">
                             <span>{item.label}</span>
-                            <span>v1.0.0</span>
+                            <span>v1.0.0{isDevBuild ? " · DEV" : ""}</span>
                           </div>
                         );
                       }
@@ -717,6 +722,35 @@ export function MenuPanel({
                         </div>
                       );
                     })}
+                    {isDevBuild ? (
+                      <div className="settings-row settings-row-dev">
+                        <button
+                          type="button"
+                          className="link is-danger"
+                          disabled={devResetting}
+                          onClick={() => {
+                            if (devResetting) return;
+                            const ok = window.confirm(
+                              "개발용: 신규 유저 상태로 초기화할까요?\n도감·출석·튜토리얼·방 진행도가 지워져요.",
+                            );
+                            if (!ok) return;
+                            setDevResetting(true);
+                            void resetToNewUserState()
+                              .then((next) => {
+                                onOpsChange(next);
+                                onDevResetNewUser?.();
+                                window.location.assign("/");
+                              })
+                              .catch(() => {
+                                setDevResetting(false);
+                                showToast("초기화에 실패했어요");
+                              });
+                          }}
+                        >
+                          {devResetting ? "초기화 중…" : "신규 유저로 초기화 (DEV)"}
+                        </button>
+                      </div>
+                    ) : null}
                     {creditsText ? (
                       <pre className="menu-credits">{creditsText}</pre>
                     ) : null}

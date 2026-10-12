@@ -1,4 +1,5 @@
 import { toKstDateKey } from "./date";
+import { resolveStartPaw } from "./devMode";
 import type { OpsConfig, OpsState } from "./opsTypes";
 
 export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey()): OpsState {
@@ -15,9 +16,10 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     config.starter.firstRoom.wall.L,
     config.starter.firstRoom.wall.R,
   ];
+  const configPaw = config.starter.startPaw ?? config.economy.currency.paw.startBalance;
   return {
     userId: `user_${id}`,
-    pawBalance: config.starter.startPaw ?? config.economy.currency.paw.startBalance,
+    pawBalance: resolveStartPaw(configPaw),
     tossBalance: 0,
     dateKey: today,
     normalDrawsUsed: 0,
