@@ -51,6 +51,18 @@
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
 }
 
+.tut-step-label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 196, 138, 0.9);
+}
+
+.tut-hole.is-activate {
+  cursor: pointer;
+}
+
 .tut-title {
   margin: 0 0 10px;
   font-size: 16px;

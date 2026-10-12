@@ -224,9 +224,35 @@ export type TutorialStepThen =
   | NcoinIntroThen
   | { screen?: string; target: string; fallbackTarget?: string; copy: string; id?: string };
 
+/** Dex step 3 sub-phases (still shown as STEP 3/4). */
+export type DexTutorialSubstep = {
+  id: "3-1" | "3-2" | string;
+  target: string;
+  fallbackTarget?: string;
+  copy: string;
+  cta?: string;
+  ackOnly?: boolean;
+  showFinger?: boolean;
+  claimGate?: boolean;
+  scrollIntoView?: {
+    block?: ScrollLogicalPosition;
+    behavior?: ScrollBehavior;
+    ms?: number;
+  };
+  pulseMs?: number;
+  afterClaim?: {
+    id: string;
+    title: string;
+    cta?: string;
+    copy?: string;
+  };
+};
+
 export type TutorialStep = {
   step: number;
   screen: string;
+  /** UI badge e.g. "STEP 3/4" — substeps keep the same label. */
+  stepLabel?: string;
   target: string;
   copy: string;
   sub?: string;
@@ -240,6 +266,8 @@ export type TutorialStep = {
   gesture?: string;
   suggestTile?: { c: number; r: number };
   then?: TutorialStepThen;
+  /** Step 3: 3-1 slot highlight, 3-2 coin claim. */
+  substeps?: DexTutorialSubstep[];
   complete?: string;
 };
 
@@ -285,6 +313,10 @@ export type CoachMark = {
   showFinger?: boolean;
   /** When true, dim/hole taps do not advance — only CTA. */
   ackOnly?: boolean;
+  /** Shown in the bubble (e.g. STEP 3/4). */
+  stepLabel?: string;
+  /** Hole click activates the target element (claim badge) instead of advancing. */
+  activateTarget?: boolean;
 };
 
 export type OpsTutorial = {

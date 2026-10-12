@@ -6,14 +6,13 @@ import { MenuPanel } from "./components/MenuPanel";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import { toKstDateKey } from "./lib/date";
 import { buildMenuViewModel } from "./lib/menuModel";
-import { syncAudioSettingsFromStorage } from "./lib/menuSettings";
-import type { MockAdKind } from "./lib/mockAds";
 import {
-  buildDexClaimRequestId,
-  countClaimableDexRewards,
-  newCardRewardId,
-  postDexRewardsClaim,
-} from "./lib/dexRewards";
+  MENU_SETTINGS_EVENT,
+  shouldReduceMenuMotion,
+  syncAudioSettingsFromStorage,
+} from "./lib/menuSettings";
+import type { MockAdKind } from "./lib/mockAds";
+import { countClaimableDexRewards } from "./lib/dexRewards";
 import { cancelDrawReservation, preloadDrawImages, reserveDraw } from "./lib/mockDrawApi";
 import { configureNavigationBar, haptic } from "./lib/native";
 import { loadOpsConfig } from "./lib/opsConfig";
@@ -53,6 +52,9 @@ import type {
 } from "./lib/opsTypes";
 import type { MenuSheetId } from "./lib/menuTypes";
 import {
+  dexAfterClaimMark,
+  dexClaimCoachMark,
+  dexSlotCoachMark,
   getRewardsIntroConfig,
   isNcoinIntroThen,
   mainStepMark,
@@ -60,6 +62,7 @@ import {
   ncoinNextMark,
   rewardsIntroMark,
 } from "./lib/tutorialFlow";
+import type { DexTutorialPhase } from "./screens/DexScreen";
 import { DRAW_REVEAL_WAIT_MAX_MS, DrawRevealScreen } from "./screens/DrawRevealScreen";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
@@ -120,6 +123,8 @@ export default function App() {
   const [rewardsIntro, setRewardsIntro] = useState<RewardsIntroSession | null>(null);
   const [forceMenuSheet, setForceMenuSheet] = useState<MenuSheetId>(null);
   const [stepThenActive, setStepThenActive] = useState(false);
+  const [dexTutPhase, setDexTutPhase] = useState<DexTutorialPhase>(null);
+  const [reduceMotion, setReduceMotion] = useState(() => shouldReduceMenuMotion());
   const menuHistRef = useRef(false);
   const ncoinTimerRef = useRef(0);
   const rewardsArmedRef = useRef(false);
@@ -164,6 +169,13 @@ export default function App() {
     }
     AudioManager.setScreen(screen.name);
   }, [screen.name, menuOpen]);
+
+  useEffect(() => {
+    const sync = () => setReduceMotion(shouldReduceMenuMotion());
+    sync();
+    window.addEventListener(MENU_SETTINGS_EVENT, sync);
+    return () => window.removeEventListener(MENU_SETTINGS_EVENT, sync);
+  }, []);
 
   useEffect(() => {
     if (ad) AudioManager.onAdOpen();
@@ -237,7 +249,7 @@ export default function App() {
 
   const rewardsIntroConfig = config ? getRewardsIntroConfig(config.tutorial) : null;
 
-  const tutorialCardId = reservation?.cardId ?? null;
+  const tutorialCardId = reservation?.cardId ?? revealCard?.id ?? null;
 
   const coachMark: CoachMark | null = useMemo(() => {
     if (!ops || !config) return null;
@@ -267,15 +279,12 @@ export default function App() {
       return null;
     }
 
-    // Step 3 arrives on collection from reveal — skip missing #icon-dex and highlight the slot.
-    if (
-      tutorialStep.step === 3 &&
-      screen.name === "collection" &&
-      tutorialStep.then &&
-      !isNcoinIntroThen(tutorialStep.then) &&
-      (stepThenActive || tutorialCardId)
-    ) {
-      return mainStepMark(tutorialStep, "then", vars);
+    // Step 3: scroll → slot highlight → claim → ncoin-after (still STEP 3/4).
+    if (tutorialStep.step === 3 && screen.name === "collection") {
+      if (dexTutPhase === "scroll" || dexTutPhase == null) return null;
+      if (dexTutPhase === "slot") return dexSlotCoachMark(tutorialStep, vars);
+      if (dexTutPhase === "claim") return dexClaimCoachMark(tutorialStep, vars);
+      if (dexTutPhase === "ncoin-after") return dexAfterClaimMark(tutorialStep);
     }
 
     if (stepThenActive && tutorialStep.then && !isNcoinIntroThen(tutorialStep.then)) {
@@ -294,6 +303,7 @@ export default function App() {
     stepThenActive,
     tutorialReplayStep,
     tutorialCardId,
+    dexTutPhase,
   ]);
 
   const coachLockDismiss = Boolean(rewardsIntro && rewardsIntroConfig?.lockDismiss);
@@ -584,6 +594,7 @@ export default function App() {
     setRevealTutPhase(null);
     setHideRevealToast(false);
     setStepThenActive(false);
+    setDexTutPhase(null);
   }, [ops, persistOps, tutorialReplayStep, rewardsIntro, finishRewardsIntro]);
 
   const onRevealToastShown = useCallback(() => {
@@ -628,15 +639,47 @@ export default function App() {
         await persistOps({ ...ops, tutorialStep: 3 });
         setRevealTutPhase(null);
         setHideRevealToast(false);
-        setStepThenActive(true); // collection: highlight #dex-slot-{cardId}
+        setStepThenActive(false);
+        setDexTutPhase("scroll");
         setScreen({ name: "collection" });
         return;
       }
       if (onReveal) return;
     }
 
+    // Step 3 substeps: slot CTA → claim spotlight; claim itself is via badge tap.
+    if (tutorialStep.step === 3 && screen.name === "collection") {
+      if (dexTutPhase === "slot") {
+        setDexTutPhase("claim");
+        return;
+      }
+      if (dexTutPhase === "claim") {
+        // Waiting for coin badge tap — CTA / dim do not skip the claim.
+        return;
+      }
+      if (dexTutPhase === "ncoin-after") {
+        const nextStep = 4;
+        if (tutorialReplayStep != null) {
+          setTutorialReplayStep(nextStep);
+          setDexTutPhase(null);
+          setScreen({ name: "room" });
+          return;
+        }
+        await persistOps({ ...ops, tutorialStep: nextStep });
+        setDexTutPhase(null);
+        setScreen({ name: "room" });
+        return;
+      }
+      return;
+    }
+
     // Replay: walk steps with no rewards / no state mutation of tutorialDone.
     if (tutorialReplayStep != null) {
+      if (tutorialStep.step === 3) {
+        setDexTutPhase("scroll");
+        setScreen({ name: "collection" });
+        return;
+      }
       if (
         tutorialStep.then &&
         !isNcoinIntroThen(tutorialStep.then) &&
@@ -652,6 +695,7 @@ export default function App() {
       if (tutorialStep.complete || tutorialStep.step >= config.tutorial.steps.length) {
         setTutorialReplayStep(null);
         setStepThenActive(false);
+        setDexTutPhase(null);
         setScreen({ name: "home" });
         setMenuOpen(false);
         setForceMenuSheet(null);
@@ -661,9 +705,10 @@ export default function App() {
       const nextStep = tutorialStep.step + 1;
       setTutorialReplayStep(nextStep);
       setStepThenActive(false);
+      setDexTutPhase(nextStep === 3 ? "scroll" : null);
       setRevealTutPhase(nextStep === 2 ? "ncoin-intro" : null);
-      if (tutorialStep.screen.includes("dex")) setScreen({ name: "collection" });
-      else if (tutorialStep.screen === "room") setScreen({ name: "room" });
+      if (nextStep === 3 || tutorialStep.screen.includes("dex")) setScreen({ name: "collection" });
+      else if (tutorialStep.screen === "room" || nextStep === 4) setScreen({ name: "room" });
       else if (tutorialStep.screen === "main" || tutorialStep.screen === "draw-reveal") {
         setScreen({ name: "home" });
       }
@@ -678,7 +723,8 @@ export default function App() {
     if (
       tutorialStep.then &&
       !isNcoinIntroThen(tutorialStep.then) &&
-      !stepThenActive
+      !stepThenActive &&
+      tutorialStep.step !== 3
     ) {
       setStepThenActive(true);
       if (tutorialStep.screen.includes("dex") || tutorialStep.then.screen === "dex") {
@@ -687,34 +733,18 @@ export default function App() {
       return;
     }
 
-    // Step 3 then: claim the first-card reward when the coach advances past #dex-claim-*.
-    let opsAfter = ops;
-    if (
-      tutorialStep.step === 3 &&
-      stepThenActive &&
-      tutorialCardId &&
-      !ops.claimedDexRewardIds.includes(newCardRewardId(tutorialCardId))
-    ) {
-      const claimed = await postDexRewardsClaim(ops, {
-        rewardIds: [newCardRewardId(tutorialCardId)],
-        requestId: buildDexClaimRequestId(),
-      });
-      if (claimed.response.ok) {
-        opsAfter = claimed.state;
-        AudioManager.playSfx("reward-coin");
-      }
-    }
-
     if (tutorialStep.complete || tutorialStep.step >= config.tutorial.steps.length) {
-      await persistOps({ ...opsAfter, tutorialDone: true, tutorialStep: tutorialStep.step });
+      await persistOps({ ...ops, tutorialDone: true, tutorialStep: tutorialStep.step });
       setStepThenActive(false);
+      setDexTutPhase(null);
       setScreen({ name: "home" });
       return;
     }
     const nextStep = tutorialStep.step + 1;
     const next = config.tutorial.steps.find((step) => step.step === nextStep);
-    await persistOps({ ...opsAfter, tutorialStep: nextStep });
+    await persistOps({ ...ops, tutorialStep: nextStep });
     setStepThenActive(false);
+    setDexTutPhase(nextStep === 3 ? "scroll" : null);
     if (next?.screen === "room") setScreen({ name: "room" });
     else if (next?.screen.includes("dex") || tutorialStep.screen.includes("dex")) {
       setScreen({ name: "collection" });
@@ -734,6 +764,7 @@ export default function App() {
     screen.name,
     revealTutPhase,
     stepThenActive,
+    dexTutPhase,
   ]);
 
   if (bootError) {
@@ -760,12 +791,30 @@ export default function App() {
 
       {screen.name === "collection" ? (
         <CollectionScreen
-          onBack={() => setScreen({ name: "home" })}
+          onBack={() => {
+            if (dexTutPhase) return;
+            setScreen({ name: "home" });
+          }}
           ops={ops}
           onOpsChange={(next) => void persistOps(next)}
           floatingToast={
-            ops && !ops.tutorialDone && ops.tutorialStep === 3 ? revealToast : null
+            ops && !ops.tutorialDone && ops.tutorialStep === 3 && dexTutPhase === "scroll"
+              ? revealToast
+              : null
           }
+          focusCardId={
+            tutorialStep?.step === 3 || tutorialReplayStep === 3 ? tutorialCardId : null
+          }
+          tutorialPhase={
+            tutorialStep?.step === 3 || tutorialReplayStep === 3 ? dexTutPhase : null
+          }
+          reduceMotion={reduceMotion}
+          onTutorialScrollDone={() => {
+            if (dexTutPhase === "scroll") setDexTutPhase("slot");
+          }}
+          onTutorialClaimed={() => {
+            if (dexTutPhase === "claim") setDexTutPhase("ncoin-after");
+          }}
         />
       ) : null}
 
@@ -802,7 +851,8 @@ export default function App() {
                 setTutorialReplayStep(3);
                 setRevealTutPhase(null);
                 setHideRevealToast(false);
-                setStepThenActive(true);
+                setStepThenActive(false);
+                setDexTutPhase("scroll");
                 setScreen({ name: "collection" });
                 return;
               }
@@ -811,7 +861,8 @@ export default function App() {
               }
               setRevealTutPhase(null);
               setHideRevealToast(false);
-              setStepThenActive(true);
+              setStepThenActive(false);
+              setDexTutPhase("scroll");
               setScreen({ name: "collection" });
             })();
           }}
