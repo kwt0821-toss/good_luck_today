@@ -15,7 +15,7 @@ const ASSETS = {
   card: "/assets/main/card-facedown.png",
   /** Head+paws without drool; drool is a separate animated layer. */
   cat: "/assets/main/mainscreen-assets/cat-sleeping-nodrool.webp",
-  drool: "/assets/main/mainscreen-assets/drool.webp",
+  drool: "/assets/main/mainscreen-assets/drool.png",
 } as const;
 
 const FLIP_MS = 180;
@@ -156,7 +156,7 @@ export function HomeScreen({
     : rateUpTickets > 0
       ? "뽑기권 사용"
       : !rateUpDisabled
-        ? `(${rateUpAdSeconds}초 광고)`
+        ? "광고"
         : null;
   /** Tip when draw available, or shop entry after ad used with 0 tickets. */
   const showRateUpTip = remainingRateUp > 0 || rateUpShopEntry;
