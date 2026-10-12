@@ -10,9 +10,12 @@ const ASSETS = {
   dex: "/assets/main/icon-dex-book.svg",
   room: "/assets/main/icon-room-house.svg",
   rateUp: "/assets/main/icon-rateup-sparkle.svg",
-  tail: "/assets/main/cat-tail.png",
+  /** Recolored cheese-cat tail (#FBC895 / #DC884A) — layout-spec §6. */
+  tail: "/assets/main/mainscreen-assets/cat-tail.svg",
   card: "/assets/main/card-facedown.png",
-  cat: "/assets/main/cat-body.png",
+  /** Head+paws without drool; drool is a separate animated layer. */
+  cat: "/assets/main/mainscreen-assets/cat-sleeping-nodrool.webp",
+  drool: "/assets/main/mainscreen-assets/drool.webp",
 } as const;
 
 const FLIP_MS = 180;
@@ -320,7 +323,15 @@ export function HomeScreen({
               })}
             </div>
             <div className="main-cat">
-              <img src={ASSETS.cat} alt="잠자는 고양이" />
+              <img className="main-cat-body" src={ASSETS.cat} alt="잠자는 고양이" />
+              {/* Drool pulses with breathe; hidden while the card reveal flip plays. */}
+              <img
+                className="main-drool"
+                src={ASSETS.drool}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+              />
             </div>
             {!drawsDone ? (
               <div className="main-zzz" aria-hidden="true">

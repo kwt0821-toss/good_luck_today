@@ -1244,26 +1244,28 @@
   animation: main-moon 4.5s ease-in-out infinite;
 }
 
+/* Stage space ≈ 390×400pt (layout-spec §6). */
 .main-float {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 50%;
   top: 50%;
-  width: 260px;
-  height: 340px;
-  margin: -170px auto 0;
-  will-change: top;
+  width: min(390px, 100%);
+  height: 360px;
+  margin-top: -180px;
+  transform: translateX(-50%);
+  will-change: top, transform;
   animation: main-float 3.6s ease-in-out infinite;
 }
 
 .main-tail {
   position: absolute;
-  right: -2px;
-  top: 148px;
-  width: 78px;
+  left: 252px;
+  top: 218px;
+  width: 80px;
+  height: 94px;
   z-index: 1;
   display: block;
-  transform-origin: 18% 88%;
+  transform-origin: 12.5% 87%;
   will-change: transform;
   animation: main-tail 2.4s ease-in-out infinite;
   pointer-events: none;
@@ -1272,7 +1274,8 @@
 .main-deck {
   position: absolute;
   left: 50%;
-  top: 104px;
+  /* Paw bottoms land on the deck top edge (stage y ≈ 152). */
+  top: 152px;
   width: 168px;
   height: 224px;
   margin-left: -84px;
@@ -1367,33 +1370,55 @@
 
 .main-cat {
   position: absolute;
-  left: 50%;
-  top: -4px;
-  width: 186px;
-  margin-left: -93px;
+  left: 110px;
+  top: 8px;
+  width: 170px;
+  height: 144.3px;
   z-index: 4;
   pointer-events: none;
   transform-origin: 50% 93%;
   will-change: transform;
-  animation: main-breathe 3s ease-in-out infinite;
+  /* Same 2.4s period/phase as .main-drool (layout-spec §6). */
+  animation: main-breathe 2.4s ease-in-out infinite;
 }
 
-.main-cat img {
+.main-cat-body {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
   pointer-events: none;
+}
+
+.main-drool {
+  position: absolute;
+  left: 84.7px;
+  top: 83.3px;
+  width: 17.7px;
+  height: 23px;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  transform-origin: 50% 0;
+  will-change: transform;
+  animation: main-drool 2.4s ease-in-out infinite;
+}
+
+/* Hide drool while the card flip/reveal plays. */
+.main-stage.is-flipping .main-drool,
+.main-stage.is-waking .main-drool {
+  opacity: 0;
+  animation: none;
 }
 
 .main-zzz {
   position: absolute;
-  top: 8px;
-  right: 48px;
+  inset: 0;
   z-index: 5;
   color: #f3ebd7;
-  font-family: Poppins, Georgia, serif;
-  font-style: italic;
-  font-weight: 500;
+  font-family: "Gamja Flower", Poppins, Georgia, serif;
+  font-style: normal;
+  font-weight: 400;
   pointer-events: none;
 }
 
@@ -1404,24 +1429,28 @@
   animation: main-zzz 2.5s ease-in-out infinite;
 }
 
+/* Stage coords from layout-spec §6: (282,40) / (300,22) / (313,8). */
 .main-zzz span:nth-child(1) {
-  font-size: 22px;
-  right: 18px;
-  top: 18px;
+  font-size: 28px;
+  left: 282px;
+  top: 40px;
+  opacity: 0.95;
   animation-delay: 0s;
 }
 
 .main-zzz span:nth-child(2) {
-  font-size: 14px;
-  right: 4px;
-  top: 4px;
+  font-size: 20px;
+  left: 300px;
+  top: 22px;
+  opacity: 0.7;
   animation-delay: 0.8s;
 }
 
 .main-zzz span:nth-child(3) {
-  font-size: 11px;
-  right: -6px;
-  top: -8px;
+  font-size: 14px;
+  left: 313px;
+  top: 8px;
+  opacity: 0.5;
   animation-delay: 1.6s;
 }
 
@@ -1636,20 +1665,31 @@
 @keyframes main-breathe {
   0%,
   100% {
-    transform: scale(1) translateY(0);
+    transform: scale(1);
   }
   50% {
-    transform: scale(1.06) translateY(-6px);
+    transform: scale(1.03);
+  }
+}
+
+/* Mouth-anchored pulse; inhale = grow (synced with main-breathe). */
+@keyframes main-drool {
+  0%,
+  100% {
+    transform: scale(0.85);
+  }
+  50% {
+    transform: scale(1.1);
   }
 }
 
 @keyframes main-tail {
   0%,
   100% {
-    transform: rotate(-14deg);
+    transform: rotate(-6deg);
   }
   50% {
-    transform: rotate(14deg);
+    transform: rotate(6deg);
   }
 }
 
@@ -1667,9 +1707,11 @@
   0%,
   100% {
     top: 50%;
+    transform: translateX(-50%);
   }
   50% {
     top: calc(50% - 12px);
+    transform: translateX(-50%);
   }
 }
 
@@ -1751,21 +1793,42 @@
   opacity: 0.35;
 }
 
+.main-screen.is-reduce .main-float,
+.main-screen.is-reduce .main-tail,
+.main-screen.is-reduce .main-cat,
+.main-screen.is-reduce .main-drool,
+.main-screen.is-reduce .main-zzz span {
+  animation: none;
+}
+
+.main-screen.is-reduce .main-float {
+  transform: translateX(-50%);
+}
+
+.main-screen.is-reduce .main-drool {
+  transform: scale(1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .main-moon {
     animation-duration: 6s;
   }
 
   .main-float {
-    animation-duration: 4.8s;
+    animation: none;
   }
 
   .main-tail {
-    animation-duration: 3.2s;
+    animation: none;
   }
 
   .main-cat {
-    animation-duration: 4s;
+    animation: none;
+  }
+
+  .main-drool {
+    animation: none;
+    transform: scale(1);
   }
 
   .main-deck-spark {
