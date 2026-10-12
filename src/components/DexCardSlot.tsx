@@ -23,6 +23,7 @@ export function DexCardSlot({ kind, card, record, onClick }: DexCardSlotProps) {
   return (
     <button
       type="button"
+      id={card?.id ? `dex-slot-${card.id}` : undefined}
       className={`dex-slot dex-slot-${kind} ${owned ? "is-owned" : "is-locked"} ${comingSoon ? "is-soon" : ""}`}
       onClick={comingSoon ? undefined : onClick}
       disabled={comingSoon}

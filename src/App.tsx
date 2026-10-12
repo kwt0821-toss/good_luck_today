@@ -201,6 +201,8 @@ export default function App() {
 
   const rewardsIntroConfig = config ? getRewardsIntroConfig(config.tutorial) : null;
 
+  const tutorialCardId = reservation?.cardId ?? null;
+
   const coachMark: CoachMark | null = useMemo(() => {
     if (!ops || !config) return null;
 
@@ -209,6 +211,7 @@ export default function App() {
     }
 
     if (!tutorialStep) return null;
+    const vars = { cardId: tutorialCardId };
 
     if (tutorialStep.step === 2) {
       if (screen.name === "reveal") {
@@ -228,11 +231,22 @@ export default function App() {
       return null;
     }
 
-    if (stepThenActive && tutorialStep.then && !isNcoinIntroThen(tutorialStep.then)) {
-      return mainStepMark(tutorialStep, "then");
+    // Step 3 arrives on collection from reveal — skip missing #icon-dex and highlight the slot.
+    if (
+      tutorialStep.step === 3 &&
+      screen.name === "collection" &&
+      tutorialStep.then &&
+      !isNcoinIntroThen(tutorialStep.then) &&
+      (stepThenActive || tutorialCardId)
+    ) {
+      return mainStepMark(tutorialStep, "then", vars);
     }
 
-    return mainStepMark(tutorialStep, "base");
+    if (stepThenActive && tutorialStep.then && !isNcoinIntroThen(tutorialStep.then)) {
+      return mainStepMark(tutorialStep, "then", vars);
+    }
+
+    return mainStepMark(tutorialStep, "base", vars);
   }, [
     ops,
     config,
@@ -242,6 +256,8 @@ export default function App() {
     screen.name,
     revealTutPhase,
     stepThenActive,
+    tutorialReplayStep,
+    tutorialCardId,
   ]);
 
   const coachLockDismiss = Boolean(rewardsIntro && rewardsIntroConfig?.lockDismiss);
@@ -536,6 +552,7 @@ export default function App() {
         await persistOps({ ...ops, tutorialStep: 3 });
         setRevealTutPhase(null);
         setHideRevealToast(false);
+        setStepThenActive(true); // collection: highlight #dex-slot-{cardId}
         setScreen({ name: "collection" });
         return;
       }
@@ -687,6 +704,7 @@ export default function App() {
                 setTutorialReplayStep(3);
                 setRevealTutPhase(null);
                 setHideRevealToast(false);
+                setStepThenActive(true);
                 setScreen({ name: "collection" });
                 return;
               }
@@ -695,6 +713,7 @@ export default function App() {
               }
               setRevealTutPhase(null);
               setHideRevealToast(false);
+              setStepThenActive(true);
               setScreen({ name: "collection" });
             })();
           }}

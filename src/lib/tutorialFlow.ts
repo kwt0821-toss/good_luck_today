@@ -46,18 +46,35 @@ export function rewardsIntroMark(
   };
 }
 
-export function mainStepMark(step: TutorialStep, phase: "base" | "then" = "base"): CoachMark {
+export function resolveTutorialTarget(target: string, vars: { cardId?: string | null } = {}): string {
+  let next = target;
+  if (vars.cardId) {
+    next = next.replaceAll("{cardId}", vars.cardId);
+  }
+  // Unresolved placeholders are not valid CSS selectors — drop them so querySelector won't throw.
+  if (next.includes("{") || next.includes("}")) {
+    return "";
+  }
+  return next;
+}
+
+export function mainStepMark(
+  step: TutorialStep,
+  phase: "base" | "then" = "base",
+  vars: { cardId?: string | null } = {},
+): CoachMark {
   if (phase === "then" && step.then && !isNcoinIntroThen(step.then)) {
     return {
       id: `step-${step.step}-then`,
-      target: step.then.target,
+      target: resolveTutorialTarget(step.then.target, vars),
       copy: step.then.copy,
       showFinger: true,
+      bubble: "above",
     };
   }
   return {
     id: `step-${step.step}`,
-    target: step.target,
+    target: resolveTutorialTarget(step.target, vars),
     copy: step.copy,
     sub: step.sub,
     showFinger: true,

@@ -44,9 +44,17 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
       return;
     }
     const measure = () => {
-      const el = document.querySelector(mark.target);
-      setRect(el?.getBoundingClientRect() ?? null);
       setFrame(fixedFrameRect());
+      if (!mark.target) {
+        setRect(null);
+        return;
+      }
+      try {
+        const el = document.querySelector(mark.target);
+        setRect(el?.getBoundingClientRect() ?? null);
+      } catch {
+        setRect(null);
+      }
     };
     measure();
     const timer = window.setInterval(measure, 400);
