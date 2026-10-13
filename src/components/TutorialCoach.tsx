@@ -128,12 +128,21 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
 
   if (!mark) return null;
 
-  // Claim-gate marks (activateTarget, no cta) only allow the hole/target — no bubble CTA.
-  const showCta = !(mark.activateTarget && !mark.cta);
-  const ctaLabel = mark.cta ?? (mark.ackOnly ? "알겠어요" : "다음");
+  // CTA only when provided, or for tap-to-advance marks (not ack/activate gates).
+  const showCta = mark.cta != null || (!mark.ackOnly && !mark.activateTarget);
+  const ctaLabel = mark.cta ?? "다음";
   const showFinger =
     mark.showFinger === true ||
     (mark.showFinger !== false && !mark.ackOnly && !mark.lines?.length);
+  const hasBubbleContent = Boolean(
+    mark.stepLabel ||
+      mark.title ||
+      mark.copy ||
+      mark.sub ||
+      mark.lines?.length ||
+      showCta ||
+      (skipInline && !mark.hideSkip),
+  );
 
   const activateOrAdvance = () => {
     if (mark.activateTarget && mark.target) {
@@ -150,76 +159,81 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
 
   return (
     <div className="tut-layer" role="dialog" aria-modal="true" aria-label="튜토리얼">
-      <div
-        className="tut-dim"
-        onClick={() => {
-          if (!mark.ackOnly && !mark.activateTarget) onAdvance();
-        }}
-      />
+      {/* When a hole exists, dim via hole box-shadow only so the cutout can receive real touches. */}
+      {hasHole || mark.dim === false ? null : (
+        <div
+          className="tut-dim"
+          onClick={() => {
+            if (!mark.ackOnly && !mark.activateTarget) onAdvance();
+          }}
+        />
+      )}
       {hasHole ? (
         <div
-          className={`tut-hole ${mark.activateTarget ? "is-activate" : ""}`}
+          className={`tut-hole ${mark.activateTarget ? "is-activate" : ""} ${mark.passThrough ? "is-pass" : ""}`}
           style={{
             left: hole.left,
             top: hole.top,
             width: hole.width,
             height: hole.height,
           }}
-          onClick={activateOrAdvance}
+          onClick={mark.passThrough ? undefined : activateOrAdvance}
         />
       ) : null}
-      {!skipInline ? (
+      {!skipInline && !mark.hideSkip ? (
         <button type="button" className="tut-skip" id="tut-skip" onClick={onSkip}>
           건너뛰기
         </button>
       ) : null}
-      <div
-        ref={setBubbleEl}
-        className={`tut-bubble ${bubbleLayout.above ? "is-above" : "is-below"} ${hasHole ? "" : "is-centered"}`}
-        style={
-          hasHole
-            ? { top: bubbleLayout.top, left: 24, right: 24 }
-            : { top: "40%", left: 24, right: 24, transform: "translateY(-50%)" }
-        }
-      >
-        {mark.stepLabel ? <p className="tut-step-label">{mark.stepLabel}</p> : null}
-        {mark.title ? <p className="tut-title">{mark.title}</p> : null}
-        {mark.copy ? <p className="tut-copy">{mark.copy}</p> : null}
-        {mark.sub ? <p className="tut-sub">{mark.sub}</p> : null}
-        {mark.lines?.length ? (
-          <ul className="tut-lines">
-            {mark.lines.map((line, index) => (
-              <li
-                key={`${line.text}-${index}`}
-                className={`tut-line ${line.muted ? "is-muted" : ""} ${line.dividerAbove ? "has-divider" : ""}`}
-              >
-                {line.icon ? (
-                  <img className="tut-line-icon" src={line.icon} alt="" width={18} height={18} />
-                ) : (
-                  <span className="tut-line-icon is-empty" />
-                )}
-                <span>{line.text}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        {showCta || skipInline ? (
-          <div className={`tut-actions ${skipInline ? "has-skip" : ""}`}>
-            {skipInline ? (
-              <button type="button" className="tut-skip-inline" id="tut-skip" onClick={onSkip}>
-                건너뛰기
-              </button>
-            ) : (
-              <span />
-            )}
-            {showCta ? (
-              <button type="button" className="tut-next" onClick={onAdvance}>
-                {ctaLabel}
-              </button>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
+      {hasBubbleContent ? (
+        <div
+          ref={setBubbleEl}
+          className={`tut-bubble ${bubbleLayout.above ? "is-above" : "is-below"} ${hasHole ? "" : "is-centered"}`}
+          style={
+            hasHole
+              ? { top: bubbleLayout.top, left: 24, right: 24 }
+              : { top: "40%", left: 24, right: 24, transform: "translateY(-50%)" }
+          }
+        >
+          {mark.stepLabel ? <p className="tut-step-label">{mark.stepLabel}</p> : null}
+          {mark.title ? <p className="tut-title">{mark.title}</p> : null}
+          {mark.copy ? <p className="tut-copy">{mark.copy}</p> : null}
+          {mark.sub ? <p className="tut-sub">{mark.sub}</p> : null}
+          {mark.lines?.length ? (
+            <ul className="tut-lines">
+              {mark.lines.map((line, index) => (
+                <li
+                  key={`${line.text}-${index}`}
+                  className={`tut-line ${line.muted ? "is-muted" : ""} ${line.dividerAbove ? "has-divider" : ""}`}
+                >
+                  {line.icon ? (
+                    <img className="tut-line-icon" src={line.icon} alt="" width={18} height={18} />
+                  ) : (
+                    <span className="tut-line-icon is-empty" />
+                  )}
+                  <span>{line.text}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {showCta || skipInline ? (
+            <div className={`tut-actions ${skipInline ? "has-skip" : ""}`}>
+              {skipInline ? (
+                <button type="button" className="tut-skip-inline" id="tut-skip" onClick={onSkip}>
+                  건너뛰기
+                </button>
+              ) : (
+                <span />
+              )}
+              {showCta ? (
+                <button type="button" className="tut-next" onClick={onAdvance}>
+                  {ctaLabel}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {showFinger && hasHole ? (
         <div
           className="tut-finger"

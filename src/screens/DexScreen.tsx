@@ -35,7 +35,7 @@ import { convertDuplicate } from "../lib/opsRewards";
 import type { OpsState } from "../lib/opsTypes";
 import "./DexScreen.css";
 
-export type DexTutorialPhase = "scroll" | "slot" | "claim" | "ncoin-after" | null;
+export type DexTutorialPhase = "scroll" | "slot" | "claim" | "toast" | "ncoin-after" | null;
 
 type DexScreenProps = {
   onBack: () => void;
@@ -99,7 +99,9 @@ export function DexScreen({
     legend: null,
   });
   const [underline, setUnderline] = useState({ left: 0, width: 56 });
-  const tutLocked = Boolean(focusCardId && tutorialPhase && tutorialPhase !== "ncoin-after");
+  const tutLocked = Boolean(
+    focusCardId && tutorialPhase && tutorialPhase !== "ncoin-after" && tutorialPhase !== "toast",
+  );
 
   const refreshClaimable = async (state: OpsState, map?: DexOwnedMap) => {
     const list = await listClaimableDexRewards(state, map);
@@ -153,7 +155,7 @@ export function DexScreen({
 
     let cancelled = false;
     setScrollLock(true);
-    const scrollMs = reduceMotion ? 0 : 600;
+    const scrollMs = reduceMotion ? 0 : 400;
 
     const run = () => {
       const el = document.getElementById(`dex-slot-${focusCardId}`);
@@ -245,6 +247,12 @@ export function DexScreen({
         focusCardId &&
         claimed.some((item) => item.cardId === focusCardId || item.id === `newCard:${focusCardId}`)
       ) {
+        const sum = summarizeClaimable(claimed);
+        showToast(
+          sum.nyangCoin > 0
+            ? `냥코인 ${sum.nyangCoin}개 + ${sum.paw}포인트 받았어요`
+            : `+${sum.paw}포인트 받았어요`,
+        );
         onTutorialClaimed?.();
         return;
       }

@@ -73,7 +73,7 @@ export type WallPlacement = {
 };
 
 export type RoomDrag =
-  | { kind: "floor"; instanceId: string; col: number; row: number }
+  | { kind: "floor"; instanceId: string; col: number; row: number; fromDrawer?: boolean }
   | { kind: "wall"; instanceId: string; wall: "L" | "R"; slot: number; band: number };
 
 export type FloorTiles = string[][];

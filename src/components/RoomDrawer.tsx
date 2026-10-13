@@ -1,3 +1,5 @@
+import { useRef } from "react";
+
 import {
   isPaintItem,
   isPlaceableDecor,
@@ -28,6 +30,11 @@ type RoomDrawerProps = {
   preferOwnedSort?: boolean;
   /** Prefer these ids first among NEW placeables (starter.drawer order). */
   preferNewIds?: string[];
+  /** Tutorial: only this item id may be grabbed; others are disabled. */
+  tutorialLockId?: string | null;
+  /** Tutorial: long-press ms to grab (0 = off). */
+  tutorialLongPressMs?: number;
+  onTutorialGrab?: (item: RoomItem, clientX: number, clientY: number) => void;
   onPick: (item: RoomItem) => void;
   onFillMode: (mode: PaintFillMode) => void;
   onEraser: () => void;
@@ -89,12 +96,18 @@ export function RoomDrawer({
   otherRoomIds,
   preferOwnedSort = false,
   preferNewIds = [],
+  tutorialLockId = null,
+  tutorialLongPressMs = 0,
+  onTutorialGrab,
   onPick,
   onFillMode,
   onEraser,
   onUndo,
   onExchange,
 }: RoomDrawerProps) {
+  const pressTimer = useRef(0);
+  const pressOrigin = useRef<{ x: number; y: number; item: RoomItem } | null>(null);
+  const grabbed = useRef(false);
   let visible = items.filter((item) => {
     if (tab === "보유") {
       if ((owned[item.id] ?? 0) < 1) return false;
@@ -207,13 +220,67 @@ export function RoomDrawer({
         {visible.map((item, index) => {
           const state = tileState(item, layout, owned, selectedId, brushId, otherRoomIds[item.id] ?? null);
           const isNew = !state.locked && !state.placedHere && !state.otherRoom;
+          const tutLockedOut = Boolean(tutorialLockId && tutorialLockId !== item.id);
+          const tutGrab = Boolean(tutorialLongPressMs > 0 && onTutorialGrab && tutorialLockId === item.id);
           return (
             <button
               key={item.id}
               id={index === 0 ? "drawer-item-0" : undefined}
               type="button"
-              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom ? "is-other" : ""} ${state.selected ? "is-selected" : ""} ${isNew ? "is-new" : ""}`}
-              onClick={() => onPick(item)}
+              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom ? "is-other" : ""} ${state.selected ? "is-selected" : ""} ${isNew ? "is-new" : ""} ${tutLockedOut ? "is-tut-locked" : ""}`}
+              disabled={tutLockedOut}
+              onClick={() => {
+                if (tutGrab) return;
+                onPick(item);
+              }}
+              onPointerDown={
+                tutGrab
+                  ? (event) => {
+                      grabbed.current = false;
+                      pressOrigin.current = { x: event.clientX, y: event.clientY, item };
+                      window.clearTimeout(pressTimer.current);
+                      pressTimer.current = window.setTimeout(() => {
+                        if (!pressOrigin.current || grabbed.current) return;
+                        grabbed.current = true;
+                        onTutorialGrab?.(item, event.clientX, event.clientY);
+                      }, tutorialLongPressMs);
+                      try {
+                        event.currentTarget.setPointerCapture(event.pointerId);
+                      } catch {
+                        // ignore
+                      }
+                    }
+                  : undefined
+              }
+              onPointerMove={
+                tutGrab
+                  ? (event) => {
+                      if (!pressOrigin.current || grabbed.current) return;
+                      const dx = event.clientX - pressOrigin.current.x;
+                      const dy = event.clientY - pressOrigin.current.y;
+                      if (Math.hypot(dx, dy) < 8) return;
+                      window.clearTimeout(pressTimer.current);
+                      grabbed.current = true;
+                      onTutorialGrab?.(pressOrigin.current.item, event.clientX, event.clientY);
+                    }
+                  : undefined
+              }
+              onPointerUp={
+                tutGrab
+                  ? () => {
+                      window.clearTimeout(pressTimer.current);
+                      pressOrigin.current = null;
+                    }
+                  : undefined
+              }
+              onPointerCancel={
+                tutGrab
+                  ? () => {
+                      window.clearTimeout(pressTimer.current);
+                      pressOrigin.current = null;
+                    }
+                  : undefined
+              }
             >
               <span className="lucky-cell-tile">
                 {item.tileImage || item.id ? (
