@@ -55,8 +55,13 @@ export function fillTutorialCopy(
   if (vars.breed != null) next = next.split("{품종}").join(vars.breed);
   if (vars.grade != null) next = next.split("{등급}").join(vars.grade);
   // Drop unresolved placeholders so we don't show raw braces.
-  next = next.replace(/\s*·\s*\{[^}]+\}/g, "").replace(/\{[^}]+\}/g, "");
-  return next.replace(/\s+/g, " ").trim();
+  next = next.replace(/[^\S\n]*·[^\S\n]*\{[^}]+\}/g, "").replace(/\{[^}]+\}/g, "");
+  // Collapse spaces/tabs but keep intentional newlines from tutorial copy.
+  return next
+    .replace(/[^\S\n]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 export function dexSlotCoachMark(

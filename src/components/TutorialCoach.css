@@ -1,8 +1,16 @@
 .tut-layer {
   position: fixed;
   inset: 0;
-  /* Above menu panel (z=90) so rewards-intro can highlight rows/sheets */
+  /* Above menu panel (z=90); below elevated pass-through targets (≈130). */
   z-index: 120;
+  pointer-events: none;
+}
+
+/* Bubble/skip/finger — separate stacking context above elevated room drawer. */
+.tut-chrome {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
   pointer-events: none;
 }
 
@@ -23,12 +31,10 @@
 }
 
 .tut-skip {
-  /* top-right below app bar — clears room edit “완료” and native nav.
-     Above tut-elevated-panel (130) / target (131) so skip stays tappable. */
+  /* top-right below app bar — clears room edit “완료” and native nav */
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 52px);
   right: 14px;
-  z-index: 140;
   pointer-events: auto;
   height: 34px;
   padding: 0 12px;
@@ -42,8 +48,6 @@
 
 .tut-bubble {
   position: fixed;
-  /* Above elevated pass-through targets (131) so copy stays readable on room drawer. */
-  z-index: 140;
   pointer-events: auto;
   padding: 14px 16px;
   border-radius: 16px;
@@ -93,6 +97,7 @@
   margin: 0;
   font-size: 15px;
   font-weight: 700;
+  white-space: pre-line;
 }
 
 .tut-sub {
@@ -177,7 +182,6 @@
 
 .tut-finger {
   position: fixed;
-  z-index: 140;
   width: 28px;
   height: 28px;
   margin: -4px 0 0 -4px;

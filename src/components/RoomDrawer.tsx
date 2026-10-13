@@ -175,7 +175,10 @@ export function RoomDrawer({
   const paintTab = tab === "벽지" || tab === "바닥";
 
   return (
-    <section className={`lucky-drawer ${paintTab ? "is-paint" : ""}`} aria-label="꾸미기 서랍">
+    <section
+      className={`lucky-drawer ${paintTab ? "is-paint" : ""} ${tutorialLockId ? "is-tutorial" : ""}`}
+      aria-label="꾸미기 서랍"
+    >
       <div className="lucky-drawer-handle" />
       <header className="lucky-drawer-head">
         <div>

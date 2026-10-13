@@ -154,14 +154,25 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
     const placeAbove =
       preferAbove ||
       (spaceBelow < bubbleH + BUBBLE_GAP && spaceAbove >= Math.min(bubbleH + BUBBLE_GAP, spaceBelow));
-    const rawTop = placeAbove
+    let rawTop = placeAbove
       ? hole.top - BUBBLE_GAP - bubbleH
       : hole.top + hole.height + BUBBLE_GAP;
+    // Room tutorial: keep copy in the stage above the bottom sheet, not on ITEMS chrome.
+    try {
+      const drawer = document.querySelector(".lucky-drawer");
+      if (drawer) {
+        const drawerTop = drawer.getBoundingClientRect().top - frame.top;
+        const aboveDrawer = drawerTop - BUBBLE_GAP - bubbleH;
+        if (aboveDrawer >= PAD_TOP) rawTop = aboveDrawer;
+      }
+    } catch {
+      // ignore
+    }
     return {
       top: Math.min(maxTop, Math.max(PAD_TOP, rawTop)),
       above: placeAbove,
     };
-  }, [mark, hole, measuredBubbleH, frame.height]);
+  }, [mark, hole, measuredBubbleH, frame]);
 
   if (!mark) return null;
 
@@ -195,102 +206,108 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   };
 
   return (
-    <div className="tut-layer" role="dialog" aria-modal="true" aria-label="튜토리얼">
-      {/* When a hole exists, dim via hole box-shadow only so the cutout can receive real touches.
-          Skip full dim while waiting for a pass-through/activate target (avoids freezing UI). */}
-      {hasHole ||
-      mark.dim === false ||
-      ((mark.passThrough || mark.activateTarget) && !hasHole) ? null : (
-        <div
-          className="tut-dim"
-          onClick={() => {
-            if (!mark.ackOnly && !mark.activateTarget) onAdvance();
-          }}
-        />
-      )}
-      {hasHole ? (
-        <div
-          className={`tut-hole ${mark.activateTarget ? "is-activate" : ""} ${mark.passThrough ? "is-pass" : ""}`}
-          style={{
-            left: hole.left,
-            top: hole.top,
-            width: hole.width,
-            height: hole.height,
-          }}
-          onClick={mark.passThrough ? undefined : activateOrAdvance}
-        />
-      ) : null}
-      {!skipInline && !mark.hideSkip ? (
-        <button type="button" className="tut-skip" id="tut-skip" onClick={onSkip}>
-          건너뛰기
-        </button>
-      ) : null}
-      {hasBubbleContent ? (
-        <div
-          ref={setBubbleEl}
-          className={`tut-bubble ${bubbleLayout.above ? "is-above" : "is-below"} ${hasHole ? "" : "is-centered"}`}
-          style={
-            hasHole
-              ? { top: bubbleLayout.top, left: 24, right: 24 }
-              : { top: "40%", left: 24, right: 24, transform: "translateY(-50%)" }
-          }
-        >
-          {mark.stepLabel ? <p className="tut-step-label">{mark.stepLabel}</p> : null}
-          {mark.title ? <p className="tut-title">{mark.title}</p> : null}
-          {mark.copy ? <p className="tut-copy">{mark.copy}</p> : null}
-          {mark.sub ? <p className="tut-sub">{mark.sub}</p> : null}
-          {mark.lines?.length ? (
-            <ul className="tut-lines">
-              {mark.lines.map((line, index) => (
-                <li
-                  key={`${line.text}-${index}`}
-                  className={`tut-line ${line.muted ? "is-muted" : ""} ${line.dividerAbove ? "has-divider" : ""}`}
-                >
-                  {line.icon ? (
-                    <img className="tut-line-icon" src={line.icon} alt="" width={18} height={18} />
-                  ) : (
-                    <span className="tut-line-icon is-empty" />
-                  )}
-                  <span>{line.text}</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {showCta || skipInline ? (
-            <div className={`tut-actions ${skipInline ? "has-skip" : ""}`}>
-              {skipInline ? (
-                <button type="button" className="tut-skip-inline" id="tut-skip" onClick={onSkip}>
-                  건너뛰기
-                </button>
-              ) : (
-                <span />
-              )}
-              {showCta ? (
-                <button type="button" className="tut-next" onClick={onAdvance}>
-                  {ctaLabel}
-                </button>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-      {showFinger && hasHole ? (
-        <div
-          className="tut-finger"
-          style={{ left: hole.left + hole.width / 2, top: hole.top + hole.height / 2 }}
-          aria-hidden="true"
-        >
-          👆
-        </div>
-      ) : null}
-    </div>
+    <>
+      {/* Dim/hole stay under elevated pass-through targets (z≈130). */}
+      <div className="tut-layer" role="presentation" aria-hidden="true">
+        {/* When a hole exists, dim via hole box-shadow only so the cutout can receive real touches.
+            Skip full dim while waiting for a pass-through/activate target (avoids freezing UI). */}
+        {hasHole ||
+        mark.dim === false ||
+        ((mark.passThrough || mark.activateTarget) && !hasHole) ? null : (
+          <div
+            className="tut-dim"
+            onClick={() => {
+              if (!mark.ackOnly && !mark.activateTarget) onAdvance();
+            }}
+          />
+        )}
+        {hasHole ? (
+          <div
+            className={`tut-hole ${mark.activateTarget ? "is-activate" : ""} ${mark.passThrough ? "is-pass" : ""}`}
+            style={{
+              left: hole.left,
+              top: hole.top,
+              width: hole.width,
+              height: hole.height,
+            }}
+            onClick={mark.passThrough ? undefined : activateOrAdvance}
+          />
+        ) : null}
+      </div>
+      {/* Chrome above elevated panels so room-drawer (z=130) cannot cover copy/skip. */}
+      <div className="tut-chrome" role="dialog" aria-modal="true" aria-label="튜토리얼">
+        {!skipInline && !mark.hideSkip ? (
+          <button type="button" className="tut-skip" id="tut-skip" onClick={onSkip}>
+            건너뛰기
+          </button>
+        ) : null}
+        {hasBubbleContent ? (
+          <div
+            ref={setBubbleEl}
+            className={`tut-bubble ${bubbleLayout.above ? "is-above" : "is-below"} ${hasHole ? "" : "is-centered"}`}
+            style={
+              hasHole
+                ? { top: bubbleLayout.top, left: 24, right: 24 }
+                : { top: "40%", left: 24, right: 24, transform: "translateY(-50%)" }
+            }
+          >
+            {mark.stepLabel ? <p className="tut-step-label">{mark.stepLabel}</p> : null}
+            {mark.title ? <p className="tut-title">{mark.title}</p> : null}
+            {mark.copy ? <p className="tut-copy">{mark.copy}</p> : null}
+            {mark.sub ? <p className="tut-sub">{mark.sub}</p> : null}
+            {mark.lines?.length ? (
+              <ul className="tut-lines">
+                {mark.lines.map((line, index) => (
+                  <li
+                    key={`${line.text}-${index}`}
+                    className={`tut-line ${line.muted ? "is-muted" : ""} ${line.dividerAbove ? "has-divider" : ""}`}
+                  >
+                    {line.icon ? (
+                      <img className="tut-line-icon" src={line.icon} alt="" width={18} height={18} />
+                    ) : (
+                      <span className="tut-line-icon is-empty" />
+                    )}
+                    <span>{line.text}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {showCta || skipInline ? (
+              <div className={`tut-actions ${skipInline ? "has-skip" : ""}`}>
+                {skipInline ? (
+                  <button type="button" className="tut-skip-inline" id="tut-skip" onClick={onSkip}>
+                    건너뛰기
+                  </button>
+                ) : (
+                  <span />
+                )}
+                {showCta ? (
+                  <button type="button" className="tut-next" onClick={onAdvance}>
+                    {ctaLabel}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+        {showFinger && hasHole ? (
+          <div
+            className="tut-finger"
+            style={{ left: hole.left + hole.width / 2, top: hole.top + hole.height / 2 }}
+            aria-hidden="true"
+          >
+            👆
+          </div>
+        ) : null}
+      </div>
+    </>
   );
 }
 
 function estimateBubbleHeight(mark: CoachMark) {
   let h = 72;
   if (mark.title) h += 28;
-  if (mark.copy) h += 28;
+  if (mark.copy) h += 28 * Math.max(1, mark.copy.split("\n").length);
   if (mark.sub) h += 22;
   if (mark.lines?.length) h += mark.lines.length * 28 + 12;
   return h;

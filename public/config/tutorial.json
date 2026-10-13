@@ -70,12 +70,12 @@
    "screen": "dex",
    "stepLabel": "STEP 3/5",
    "target": "#dex-slot-{cardId}",
-   "copy": "방금 만난 고양이가 여기 들어왔어요 · {품종} · {등급}",
+   "copy": "방금 만난 고양이가 여기 들어왔어요\n· {품종} · {등급}",
    "substeps": [
     {
      "id": "3-1",
      "target": "#dex-slot-{cardId}",
-     "copy": "방금 만난 고양이가 여기 들어왔어요 · {품종} · {등급}",
+     "copy": "방금 만난 고양이가 여기 들어왔어요\n· {품종} · {등급}",
      "cta": "다음",
      "ackOnly": true,
      "scrollIntoView": {
@@ -89,7 +89,7 @@
      "id": "3-2",
      "target": "#dex-claim-{cardId}",
      "fallbackTarget": "#dex-slot-{cardId}",
-     "copy": "코인을 톡 누르면 보상을 받아요 · 냥코인 1 + 20P",
+     "copy": "코인을 톡 누르면 보상을 받아요\n· 냥코인 1 + 20P",
      "showFinger": true,
      "claimGate": true
     },
