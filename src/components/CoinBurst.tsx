@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
+import { NCOIN_ICON } from "../lib/ncoinIcon";
 import "./CoinBurst.css";
 
 type CoinBurstProps = {
@@ -77,7 +78,12 @@ export function CoinBurst({ token, count = 10, confetti = false }: CoinBurstProp
           }
         >
           {p.kind === "coin" ? (
-            <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={16} height={16} />
+            <img
+              src={confetti ? NCOIN_ICON.xl : NCOIN_ICON.lg}
+              alt=""
+              width={confetti ? 28 : 22}
+              height={confetti ? 28 : 22}
+            />
           ) : null}
         </span>
       ))}
