@@ -57,8 +57,8 @@ export function HomeScreen({
   useRateUpTicket,
   rateUpAdSeconds = 30,
   firstDrawPending,
-  rateNormalPct,
-  rateUpPct,
+  rateNormalPct: _rateNormalPct,
+  rateUpPct: _rateUpPct,
   offerTicketShop = false,
   ticketShopPricePaw = 200,
   menuBadge = false,
@@ -160,7 +160,7 @@ export function HomeScreen({
     ? `${ticketShopPricePaw}P`
     : rateUpDisabled
       ? "내일 다시"
-      : `5성↑ ${rateNormalPct}→${rateUpPct}`;
+      : "5성↑";
   const rateUpSub = rateUpShopEntry
     ? "포인트로 사기"
     : rateUpTickets > 0

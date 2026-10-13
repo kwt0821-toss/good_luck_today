@@ -1171,7 +1171,7 @@
 .dex-claim-chip-reward {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 5px;
   flex: 0 0 auto;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -1181,6 +1181,12 @@
   width: 14px;
   height: 14px;
   object-fit: contain;
+}
+
+.dex-claim-chip-x,
+.dex-claim-chip-qty {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
 }
 
 .dex-claim-chip em {

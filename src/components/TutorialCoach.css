@@ -155,13 +155,24 @@
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  gap: 4px;
+  gap: 6px;
+}
+
+.tut-lines.is-rewards .tut-line.is-reward-qty {
+  /* Equal spacing: icon · x · number */
+  gap: 6px;
 }
 
 .tut-lines.is-rewards .tut-line-icon {
-  flex-basis: 20px;
+  flex: 0 0 20px;
   width: 20px;
   height: 20px;
+}
+
+.tut-line-x,
+.tut-line-qty {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
 }
 
 .tut-line {
