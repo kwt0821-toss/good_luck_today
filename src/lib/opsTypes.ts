@@ -246,6 +246,8 @@ export type TutorialSubstep = {
     text: string;
     autoHideMs?: number;
   };
+  /** Optional conditional lines (e.g. step 5-3 low balance hint). */
+  lines?: TutorialLine[];
   /** Room 4-1: long-press duration to pick from drawer. */
   longPressMs?: number;
   /** Room: only the highlighted drawer item may move. */

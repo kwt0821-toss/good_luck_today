@@ -65,6 +65,29 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
     };
   }, [mark]);
 
+  // Raise pass-through / activate targets above the tut overlay (WebView-safe).
+  useEffect(() => {
+    if (!mark?.target) return;
+    if (!mark.passThrough && !mark.activateTarget) return;
+    let elevated: HTMLElement | null = null;
+    let panel: HTMLElement | null = null;
+    try {
+      elevated = document.querySelector(mark.target) as HTMLElement | null;
+      panel = elevated?.closest(
+        ".menu-root, .lucky-drawer, .main-screen, .home-screen, .lucky-room",
+      ) as HTMLElement | null;
+    } catch {
+      elevated = null;
+    }
+    if (!elevated) return;
+    elevated.classList.add("tut-elevated-target");
+    panel?.classList.add("tut-elevated-panel");
+    return () => {
+      elevated?.classList.remove("tut-elevated-target");
+      panel?.classList.remove("tut-elevated-panel");
+    };
+  }, [mark]);
+
   useEffect(() => {
     if (!bubbleEl) {
       setMeasuredBubbleH(0);

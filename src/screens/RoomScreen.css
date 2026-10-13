@@ -622,6 +622,24 @@
   pointer-events: none;
 }
 
+.lucky-cell.is-tut-grab {
+  touch-action: none;
+  position: relative;
+  z-index: 131;
+}
+
+.lucky-drawer:has(.is-tut-grab),
+.lucky-drawer:has(.tut-elevated-target) {
+  z-index: 130;
+  position: relative;
+}
+
+.lucky-drawer-grid.is-scroll-locked,
+.lucky-drawer-grid.is-tut-mode.is-scroll-locked {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
 .lucky-wall-tile-layer {
   z-index: 4;
   pointer-events: none;

@@ -68,7 +68,7 @@
   {
    "step": 3,
    "screen": "dex",
-   "stepLabel": "STEP 3/4",
+   "stepLabel": "STEP 3/5",
    "target": "#dex-slot-{cardId}",
    "copy": "방금 만난 고양이가 여기 들어왔어요 · {품종} · {등급}",
    "substeps": [
@@ -111,7 +111,7 @@
   {
    "step": 4,
    "screen": "room",
-   "stepLabel": "STEP 4/4",
+   "stepLabel": "STEP 4/5",
    "target": "#drawer-item-0",
    "copy": "서랍에서 마음에 드는 아이템을 꾸욱 눌러 보세요",
    "gesture": "long-press 250ms or drag; ghost + suggestTile hint",
@@ -154,7 +154,43 @@
      }
     }
    ],
-   "action": "long-press/drag drawer → place → 완료",
+   "action": "long-press/drag drawer → place → 완료 → step 5"
+  },
+  {
+   "step": 5,
+   "screen": "main",
+   "stepLabel": "STEP 5/5",
+   "target": "#icon-menu",
+   "copy": "메뉴에서 모은 냥코인을 확인할 수 있어요",
+   "substeps": [
+    {
+     "id": "5-1",
+     "target": "#icon-menu",
+     "copy": "메뉴에서 모은 냥코인을 확인할 수 있어요",
+     "showFinger": true
+    },
+    {
+     "id": "5-2",
+     "target": "#menu-row-rewards",
+     "copy": "보상함을 눌러 보세요",
+     "showFinger": true
+    },
+    {
+     "id": "5-3",
+     "target": "#withdraw-picker",
+     "fallbackTarget": "#wallet-card",
+     "copy": "냥코인 10개부터 토스포인트로 바꿀 수 있어요 · 하루 최대 50원",
+     "cta": "알겠어요",
+     "ackOnly": true,
+     "lines": [
+      {
+       "when": "nyangCoinBalance < 10",
+       "copy": "조금만 더 모으면 받을 수 있어요"
+      }
+     ]
+    }
+   ],
+   "action": "menu → rewards → ack",
    "complete": "tutorialDone=true"
   }
  ],

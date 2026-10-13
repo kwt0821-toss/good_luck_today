@@ -66,6 +66,8 @@ import {
   roomDoneCoachMark,
   roomDragCoachMark,
   roomPickCoachMark,
+  step5CoachMark,
+  type RewardsTutPhase,
 } from "./lib/tutorialFlow";
 import type { DexTutorialPhase } from "./screens/DexScreen";
 import { DRAW_REVEAL_WAIT_MAX_MS, DrawRevealScreen } from "./screens/DrawRevealScreen";
@@ -130,6 +132,7 @@ export default function App() {
   const [stepThenActive, setStepThenActive] = useState(false);
   const [dexTutPhase, setDexTutPhase] = useState<DexTutorialPhase>(null);
   const [roomTutPhase, setRoomTutPhase] = useState<RoomTutorialPhase>(null);
+  const [rewardsTutPhase, setRewardsTutPhase] = useState<RewardsTutPhase>(null);
   const [reduceMotion, setReduceMotion] = useState(() => shouldReduceMenuMotion());
   const menuHistRef = useRef(false);
   const ncoinTimerRef = useRef(0);
@@ -302,11 +305,16 @@ export default function App() {
       if (dexTutPhase === "ncoin-after") return dexAfterClaimMark(tutorialStep);
     }
 
-    // Step 4: pick → drag → done (STEP 4/4).
+    // Step 4: pick → drag → done (STEP 4/5).
     if (tutorialStep.step === 4 && screen.name === "room") {
       if (roomTutPhase === "pick" || roomTutPhase == null) return roomPickCoachMark(tutorialStep);
       if (roomTutPhase === "drag") return roomDragCoachMark(tutorialStep);
       if (roomTutPhase === "done") return roomDoneCoachMark(tutorialStep);
+    }
+
+    // Step 5: menu → rewards row → withdraw sheet (STEP 5/5).
+    if (tutorialStep.step === 5) {
+      return step5CoachMark(tutorialStep, rewardsTutPhase ?? "menu", ops);
     }
 
     if (stepThenActive && tutorialStep.then && !isNcoinIntroThen(tutorialStep.then)) {
@@ -327,6 +335,7 @@ export default function App() {
     tutorialVars,
     dexTutPhase,
     roomTutPhase,
+    rewardsTutPhase,
   ]);
 
   const coachLockDismiss = Boolean(rewardsIntro && rewardsIntroConfig?.lockDismiss);
@@ -345,6 +354,26 @@ export default function App() {
       setHideRevealToast(false);
     }
   }, [tutorialStep, screen.name, revealTutPhase]);
+
+  // Resume / enter: seed room & rewards tutorial phases from persisted step.
+  useEffect(() => {
+    if (!tutorialStep) return;
+    if (tutorialStep.step === 4 && roomTutPhase == null && screen.name === "room") {
+      setRoomTutPhase("pick");
+    }
+    if (tutorialStep.step === 5 && rewardsTutPhase == null) {
+      setRewardsTutPhase("menu");
+      if (screen.name !== "home") setScreen({ name: "home" });
+    }
+  }, [tutorialStep, roomTutPhase, rewardsTutPhase, screen.name]);
+
+  // Step 5: menu open advances 5-1 → 5-2; rewards sheet advances 5-2 → 5-3.
+  useEffect(() => {
+    if (!tutorialStep || tutorialStep.step !== 5) return;
+    if (rewardsTutPhase === "menu" && menuOpen) {
+      setRewardsTutPhase("row");
+    }
+  }, [tutorialStep, rewardsTutPhase, menuOpen]);
 
   // Contextual rewards-intro: first of (nyangCoin≥10 from r1) or (open rewards from r3).
   useEffect(() => {
@@ -613,12 +642,16 @@ export default function App() {
       tutorialDone: true,
       tutorialStep: 99,
       tutorialInterruptions: ops.tutorialInterruptions + 1,
+      tut: { ...ops.tut, rewardsIntro: "skipped" },
     });
     setRevealTutPhase(null);
     setHideRevealToast(false);
     setStepThenActive(false);
     setDexTutPhase(null);
     setRoomTutPhase(null);
+    setRewardsTutPhase(null);
+    setMenuOpen(false);
+    setForceMenuSheet(null);
     window.clearTimeout(claimToastTimerRef.current);
   }, [ops, persistOps, tutorialReplayStep, rewardsIntro, finishRewardsIntro]);
 
@@ -701,23 +734,55 @@ export default function App() {
       return;
     }
 
-    // Step 4: pick/drag advance via RoomScreen; done CTA completes tutorial.
+    // Step 4: pick/drag via RoomScreen; done CTA → step 5 (rewards guide).
     if (tutorialStep.step === 4 && screen.name === "room") {
       if (roomTutPhase === "pick" || roomTutPhase === "drag") return;
       if (roomTutPhase === "done") {
         if (tutorialReplayStep != null) {
-          setTutorialReplayStep(null);
+          setTutorialReplayStep(5);
           setRoomTutPhase(null);
+          setRewardsTutPhase("menu");
           setStepThenActive(false);
-          setScreen({ name: "home" });
           setMenuOpen(false);
           setForceMenuSheet(null);
-          setRewardsIntro({ stepId: "r1", replay: true });
+          setScreen({ name: "home" });
           return;
         }
-        await persistOps({ ...ops, tutorialDone: true, tutorialStep: 4 });
+        await persistOps({ ...ops, tutorialStep: 5 });
         setRoomTutPhase(null);
+        setRewardsTutPhase("menu");
         setStepThenActive(false);
+        setMenuOpen(false);
+        setForceMenuSheet(null);
+        setScreen({ name: "home" });
+        return;
+      }
+      return;
+    }
+
+    // Step 5: 5-1/5-2 advance via menu taps; 5-3 CTA finishes tutorial.
+    if (tutorialStep.step === 5) {
+      if (rewardsTutPhase === "menu" || rewardsTutPhase === "row") return;
+      if (rewardsTutPhase === "sheet") {
+        if (tutorialReplayStep != null) {
+          setTutorialReplayStep(null);
+          setRewardsTutPhase(null);
+          setStepThenActive(false);
+          setMenuOpen(false);
+          setForceMenuSheet(null);
+          setScreen({ name: "home" });
+          return;
+        }
+        await persistOps({
+          ...ops,
+          tutorialDone: true,
+          tutorialStep: 5,
+          tut: { ...ops.tut, rewardsIntro: "seen" },
+        });
+        setRewardsTutPhase(null);
+        setStepThenActive(false);
+        setMenuOpen(false);
+        setForceMenuSheet(null);
         setScreen({ name: "home" });
         return;
       }
@@ -734,6 +799,13 @@ export default function App() {
       if (tutorialStep.step === 4) {
         setRoomTutPhase("pick");
         setScreen({ name: "room" });
+        return;
+      }
+      if (tutorialStep.step === 5) {
+        setRewardsTutPhase("menu");
+        setMenuOpen(false);
+        setForceMenuSheet(null);
+        setScreen({ name: "home" });
         return;
       }
       if (
@@ -753,10 +825,10 @@ export default function App() {
         setStepThenActive(false);
         setDexTutPhase(null);
         setRoomTutPhase(null);
+        setRewardsTutPhase(null);
         setScreen({ name: "home" });
         setMenuOpen(false);
         setForceMenuSheet(null);
-        setRewardsIntro({ stepId: "r1", replay: true });
         return;
       }
       const nextStep = tutorialStep.step + 1;
@@ -764,10 +836,11 @@ export default function App() {
       setStepThenActive(false);
       setDexTutPhase(nextStep === 3 ? "scroll" : null);
       setRoomTutPhase(nextStep === 4 ? "pick" : null);
+      setRewardsTutPhase(nextStep === 5 ? "menu" : null);
       setRevealTutPhase(nextStep === 2 ? "ncoin-intro" : null);
       if (nextStep === 3 || tutorialStep.screen.includes("dex")) setScreen({ name: "collection" });
       else if (tutorialStep.screen === "room" || nextStep === 4) setScreen({ name: "room" });
-      else if (tutorialStep.screen === "main" || tutorialStep.screen === "draw-reveal") {
+      else if (nextStep === 5 || tutorialStep.screen === "main" || tutorialStep.screen === "draw-reveal") {
         setScreen({ name: "home" });
       }
       return;
@@ -792,10 +865,19 @@ export default function App() {
     }
 
     if (tutorialStep.complete || tutorialStep.step >= config.tutorial.steps.length) {
-      await persistOps({ ...ops, tutorialDone: true, tutorialStep: tutorialStep.step });
+      await persistOps({
+        ...ops,
+        tutorialDone: true,
+        tutorialStep: tutorialStep.step,
+        tut:
+          tutorialStep.step >= 5
+            ? { ...ops.tut, rewardsIntro: "seen" }
+            : ops.tut,
+      });
       setStepThenActive(false);
       setDexTutPhase(null);
       setRoomTutPhase(null);
+      setRewardsTutPhase(null);
       setScreen({ name: "home" });
       return;
     }
@@ -805,10 +887,11 @@ export default function App() {
     setStepThenActive(false);
     setDexTutPhase(nextStep === 3 ? "scroll" : null);
     setRoomTutPhase(nextStep === 4 ? "pick" : null);
+    setRewardsTutPhase(nextStep === 5 ? "menu" : null);
     if (next?.screen === "room") setScreen({ name: "room" });
     else if (next?.screen.includes("dex") || tutorialStep.screen.includes("dex")) {
       setScreen({ name: "collection" });
-    } else if (next?.screen === "main" || next?.screen === "draw-reveal") {
+    } else if (next?.screen === "main" || next?.screen === "draw-reveal" || nextStep === 5) {
       setScreen({ name: "home" });
     }
   }, [
@@ -826,6 +909,7 @@ export default function App() {
     stepThenActive,
     dexTutPhase,
     roomTutPhase,
+    rewardsTutPhase,
   ]);
 
   if (bootError) {
@@ -1015,6 +1099,9 @@ export default function App() {
           setRevealTutPhase(null);
           setHideRevealToast(false);
           setRewardsIntro(null);
+          setRewardsTutPhase(null);
+          setRoomTutPhase(null);
+          setDexTutPhase(null);
           setForceMenuSheet(null);
           setTutorialReplayStep(1);
         }}
@@ -1022,6 +1109,9 @@ export default function App() {
           setTutorialReplayStep(null);
           setFeatureIntro(null);
           setRewardsIntro(null);
+          setRewardsTutPhase(null);
+          setRoomTutPhase(null);
+          setDexTutPhase(null);
           setForceMenuSheet(null);
           setRevealTutPhase(null);
           setMenuOpen(false);
@@ -1032,6 +1122,15 @@ export default function App() {
         onSheetOpen={(id) => {
           if (forceMenuSheet && id === forceMenuSheet) {
             setForceMenuSheet(null);
+          }
+          // Main tutorial step 5-2 → 5-3.
+          if (
+            id === "rewards" &&
+            tutorialStep?.step === 5 &&
+            (rewardsTutPhase === "row" || rewardsTutPhase === "menu")
+          ) {
+            setRewardsTutPhase("sheet");
+            return;
           }
           if (id !== "rewards" || !ops || !rewardsIntroConfig) return;
           if (rewardsIntro) return;
@@ -1058,6 +1157,7 @@ export default function App() {
       (rewardsIntro ||
         (tutorialStep &&
           ((screen.name === "home" && tutorialStep.screen === "main") ||
+            (tutorialStep.step === 5 && (screen.name === "home" || menuOpen)) ||
             (screen.name === "reveal" && tutorialStep.screen === "draw-reveal") ||
             (screen.name === "collection" && tutorialStep.screen.includes("dex")) ||
             (screen.name === "room" && tutorialStep.screen === "room") ||
@@ -1065,7 +1165,8 @@ export default function App() {
               (screen.name === "home" ||
                 screen.name === "collection" ||
                 screen.name === "room" ||
-                screen.name === "reveal"))))) ? (
+                screen.name === "reveal" ||
+                menuOpen))))) ? (
         <TutorialCoach
           mark={coachMark}
           onSkip={() => void skipTutorial()}

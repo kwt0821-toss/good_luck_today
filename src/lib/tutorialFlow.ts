@@ -72,7 +72,7 @@ export function dexSlotCoachMark(
     cta: sub.cta ?? "다음",
     ackOnly: sub.ackOnly !== false,
     showFinger: false,
-    stepLabel: step.stepLabel ?? "STEP 3/4",
+    stepLabel: step.stepLabel ?? "STEP 3/5",
     bubble: "above",
   };
 }
@@ -90,7 +90,7 @@ export function dexClaimCoachMark(
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     activateTarget: Boolean(sub.claimGate),
-    stepLabel: step.stepLabel ?? "STEP 3/4",
+    stepLabel: step.stepLabel ?? "STEP 3/5",
     bubble: "above",
   };
 }
@@ -107,7 +107,7 @@ export function dexAfterClaimMark(step: TutorialStep): CoachMark | null {
     cta: after.cta ?? "알겠어요",
     ackOnly: true,
     showFinger: false,
-    stepLabel: step.stepLabel ?? "STEP 3/4",
+    stepLabel: step.stepLabel ?? "STEP 3/5",
   };
 }
 
@@ -126,7 +126,7 @@ export function roomPickCoachMark(step: TutorialStep): CoachMark | null {
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     passThrough: true,
-    stepLabel: step.stepLabel ?? "STEP 4/4",
+    stepLabel: step.stepLabel ?? "STEP 4/5",
     bubble: "above",
   };
 }
@@ -156,8 +156,60 @@ export function roomDoneCoachMark(step: TutorialStep): CoachMark | null {
     activateTarget: true,
     showFinger: false,
     hideSkip: true,
-    stepLabel: step.stepLabel ?? "STEP 4/4",
+    stepLabel: step.stepLabel ?? "STEP 4/5",
     bubble: "above",
+  };
+}
+
+export type RewardsTutPhase = "menu" | "row" | "sheet" | null;
+
+export function step5CoachMark(
+  step: TutorialStep,
+  phase: RewardsTutPhase,
+  ops: OpsState,
+): CoachMark | null {
+  if (!phase) return null;
+  const id = phase === "menu" ? "5-1" : phase === "row" ? "5-2" : "5-3";
+  const sub = roomSubstep(step, id);
+  if (!sub) return null;
+  const label = step.stepLabel ?? "STEP 5/5";
+  if (phase === "menu") {
+    return {
+      id: "step-5-1",
+      target: resolveTutorialTarget(sub.target || "#icon-menu"),
+      copy: sub.copy ?? "메뉴에서 모은 냥코인을 확인할 수 있어요",
+      showFinger: true,
+      activateTarget: true,
+      ackOnly: true,
+      stepLabel: label,
+      bubble: "above",
+    };
+  }
+  if (phase === "row") {
+    return {
+      id: "step-5-2",
+      target: resolveTutorialTarget(sub.target || "#menu-row-rewards"),
+      copy: sub.copy ?? "보상함을 눌러 보세요",
+      showFinger: true,
+      ackOnly: true,
+      passThrough: true,
+      stepLabel: label,
+      bubble: "above",
+    };
+  }
+  const low = ops.nyangCoinBalance < 10;
+  const lowLine = sub.lines?.find((line) => (line.when ?? "").includes("< 10"));
+  return {
+    id: "step-5-3",
+    target: resolveTutorialTarget(sub.target || "#withdraw-picker", {}, sub.fallbackTarget),
+    copy: sub.copy ?? "냥코인 10개부터 토스포인트로 바꿀 수 있어요 · 하루 최대 50원",
+    sub: low ? (lowLine?.copy ?? lowLine?.text ?? "조금만 더 모으면 받을 수 있어요") : undefined,
+    cta: sub.cta ?? "알겠어요",
+    ackOnly: true,
+    showFinger: false,
+    stepLabel: label,
+    bubble: "above",
+    passThrough: true,
   };
 }
 

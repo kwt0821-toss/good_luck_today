@@ -67,6 +67,19 @@
   pointer-events: none;
 }
 
+/* Elevated interaction target (above tut-layer z=120) for long-press / drag. */
+.tut-elevated-target {
+  position: relative !important;
+  z-index: 131 !important;
+  touch-action: none !important;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.tut-elevated-panel {
+  z-index: 130 !important;
+}
+
 .tut-title {
   margin: 0 0 10px;
   font-size: 16px;

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import {
   isPaintItem,
@@ -108,6 +108,37 @@ export function RoomDrawer({
   const pressTimer = useRef(0);
   const pressOrigin = useRef<{ x: number; y: number; item: RoomItem } | null>(null);
   const grabbed = useRef(false);
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const scrollLocked = useRef(false);
+
+  const lockDrawerScroll = () => {
+    const grid = gridRef.current;
+    if (!grid || scrollLocked.current) return;
+    scrollLocked.current = true;
+    grid.classList.add("is-scroll-locked");
+    grid.style.overflow = "hidden";
+    grid.style.touchAction = "none";
+  };
+
+  const unlockDrawerScroll = () => {
+    const grid = gridRef.current;
+    if (!grid || !scrollLocked.current) return;
+    scrollLocked.current = false;
+    grid.classList.remove("is-scroll-locked");
+    grid.style.overflow = "";
+    grid.style.touchAction = "";
+  };
+
+  // RoomScreen fires this when a from-drawer drag ends (place or cancel).
+  useEffect(() => {
+    const onUnlock = () => unlockDrawerScroll();
+    window.addEventListener("lucky-cat:drawer-scroll-unlock", onUnlock);
+    return () => window.removeEventListener("lucky-cat:drawer-scroll-unlock", onUnlock);
+  }, []);
+
+  useEffect(() => {
+    if (!tutorialLockId) unlockDrawerScroll();
+  }, [tutorialLockId]);
   let visible = items.filter((item) => {
     if (tab === "보유") {
       if ((owned[item.id] ?? 0) < 1) return false;
@@ -216,7 +247,10 @@ export function RoomDrawer({
           </button>
         </div>
       ) : null}
-      <div className="lucky-drawer-grid">
+      <div
+        ref={gridRef}
+        className={`lucky-drawer-grid ${tutorialLockId ? "is-tut-mode" : ""}`}
+      >
         {visible.map((item, index) => {
           const state = tileState(item, layout, owned, selectedId, brushId, otherRoomIds[item.id] ?? null);
           const isNew = !state.locked && !state.placedHere && !state.otherRoom;
@@ -225,24 +259,37 @@ export function RoomDrawer({
           return (
             <button
               key={item.id}
-              id={index === 0 ? "drawer-item-0" : undefined}
+              id={
+                (tutorialLockId && item.id === tutorialLockId) || (!tutorialLockId && index === 0)
+                  ? "drawer-item-0"
+                  : undefined
+              }
               type="button"
-              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom ? "is-other" : ""} ${state.selected ? "is-selected" : ""} ${isNew ? "is-new" : ""} ${tutLockedOut ? "is-tut-locked" : ""}`}
+              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom ? "is-other" : ""} ${state.selected ? "is-selected" : ""} ${isNew ? "is-new" : ""} ${tutLockedOut ? "is-tut-locked" : ""} ${tutGrab ? "is-tut-grab" : ""}`}
               disabled={tutLockedOut}
-              onClick={() => {
-                if (tutGrab) return;
+              style={tutGrab ? { touchAction: "none", zIndex: 131, position: "relative" } : undefined}
+              onClick={(event) => {
+                if (tutGrab) {
+                  event.preventDefault();
+                  return;
+                }
                 onPick(item);
               }}
               onPointerDown={
                 tutGrab
                   ? (event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
                       grabbed.current = false;
+                      lockDrawerScroll();
                       pressOrigin.current = { x: event.clientX, y: event.clientY, item };
                       window.clearTimeout(pressTimer.current);
+                      const startX = event.clientX;
+                      const startY = event.clientY;
                       pressTimer.current = window.setTimeout(() => {
                         if (!pressOrigin.current || grabbed.current) return;
                         grabbed.current = true;
-                        onTutorialGrab?.(item, event.clientX, event.clientY);
+                        onTutorialGrab?.(item, startX, startY);
                       }, tutorialLongPressMs);
                       try {
                         event.currentTarget.setPointerCapture(event.pointerId);
@@ -259,8 +306,11 @@ export function RoomDrawer({
                       const dx = event.clientX - pressOrigin.current.x;
                       const dy = event.clientY - pressOrigin.current.y;
                       if (Math.hypot(dx, dy) < 8) return;
+                      event.preventDefault();
+                      event.stopPropagation();
                       window.clearTimeout(pressTimer.current);
                       grabbed.current = true;
+                      lockDrawerScroll();
                       onTutorialGrab?.(pressOrigin.current.item, event.clientX, event.clientY);
                     }
                   : undefined
@@ -270,6 +320,8 @@ export function RoomDrawer({
                   ? () => {
                       window.clearTimeout(pressTimer.current);
                       pressOrigin.current = null;
+                      // Keep scroll locked while world drag continues; RoomScreen unlocks via class clear on phase change.
+                      if (!grabbed.current) unlockDrawerScroll();
                     }
                   : undefined
               }
@@ -278,6 +330,8 @@ export function RoomDrawer({
                   ? () => {
                       window.clearTimeout(pressTimer.current);
                       pressOrigin.current = null;
+                      grabbed.current = false;
+                      unlockDrawerScroll();
                     }
                   : undefined
               }

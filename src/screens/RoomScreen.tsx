@@ -133,7 +133,12 @@ export function RoomScreen({
   const [dupes, setDupes] = useState<{ card: DexCard; extra: number; pick: number }[]>([]);
   const [dragging, setDragging] = useState<RoomDrag | null>(null);
   const [placeFxId, setPlaceFxId] = useState<string | null>(null);
-  const tutLock = Boolean(tutorialActive && (tutorialPhase === "pick" || tutorialPhase === "drag"));
+  // Treat null phase as pick when tutorial is active (resume / first paint).
+  const effectiveTutPhase =
+    tutorialActive && tutorialPhase == null ? "pick" : tutorialPhase;
+  const tutLock = Boolean(
+    tutorialActive && (effectiveTutPhase === "pick" || effectiveTutPhase === "drag"),
+  );
   const [shakeId, setShakeId] = useState<string | null>(null);
   const [activeWall, setActiveWall] = useState<"L" | "R">("L");
   const [brushId, setBrushId] = useState<string | null>(null);
@@ -217,19 +222,31 @@ export function RoomScreen({
   // Follow finger after grabbing from the drawer (pointer may leave the drawer cell).
   useEffect(() => {
     if (!(dragging && dragging.kind === "floor" && dragging.fromDrawer)) return;
+    // Ignore the pointerup that ends the long-press until the user has moved (or a short arm delay).
+    let armed = false;
+    const armTimer = window.setTimeout(() => {
+      armed = true;
+    }, 80);
     const onMove = (event: globalThis.PointerEvent) => {
+      armed = true;
       if (!stageRef.current) return;
       const rect = stageRef.current.getBoundingClientRect();
+      // While finger is still over the drawer, keep the suggest/spawn tile.
+      if (event.clientY > rect.bottom - 4) return;
       const tile = hitTestTile(event.clientX - rect.left, event.clientY - rect.top, mode);
       setDragging((current) =>
         current?.kind === "floor" ? { ...current, col: tile.col, row: tile.row } : current,
       );
     };
-    const onUp = () => onStagePointerUp();
+    const onUp = () => {
+      if (!armed) return;
+      onStagePointerUp();
+    };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
     return () => {
+      window.clearTimeout(armTimer);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
@@ -573,6 +590,7 @@ export function RoomScreen({
     }
     setDragging(null);
     dragOrigin.current = null;
+    window.dispatchEvent(new Event("lucky-cat:drawer-scroll-unlock"));
   };
 
   const rotateSelected = () => {
@@ -694,12 +712,17 @@ export function RoomScreen({
     const remaining = (state.owned[item.id] ?? 0) - placedCountAll(state, item.id);
     if (remaining <= 0) return;
 
+    // Prefer suggest tile — finger is still over the drawer, so hit-testing the stage
+    // would land off-grid and immediately cancel on pointerup.
     const rect = stageRef.current?.getBoundingClientRect();
-    const tile = rect
-      ? hitTestTile(clientX - rect.left, clientY - rect.top, mode)
-      : suggestTile
+    const hit =
+      rect && clientY < rect.bottom && clientY > rect.top
+        ? hitTestTile(clientX - rect.left, clientY - rect.top, mode)
+        : null;
+    const tile =
+      suggestTile != null
         ? { col: suggestTile.c, row: suggestTile.r }
-        : { col: 5, row: 2 };
+        : hit ?? { col: 5, row: 2 };
     const instanceId = newInstanceId(item.id);
     tutDrawerOrigin.current = { itemId: item.id, instanceId };
     patchLayout({
@@ -1181,7 +1204,13 @@ export function RoomScreen({
           })}
           tutorialLockId={tutLock ? suggestItemId : null}
           tutorialLongPressMs={tutLock ? 250 : 0}
-          onTutorialGrab={tutLock ? beginTutorialDrawerDrag : undefined}
+          onTutorialGrab={
+            tutLock
+              ? (item, x, y) => {
+                  beginTutorialDrawerDrag(item, x, y);
+                }
+              : undefined
+          }
           onPick={pickDrawerItem}
           onFillMode={(next) => {
             setFillMode(next);
