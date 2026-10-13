@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import type { CoachMark, FeatureIntro } from "../lib/opsTypes";
 import "./TutorialCoach.css";
@@ -7,6 +7,34 @@ const SKIP_TOP_ZONE_PT = 160;
 const BUBBLE_GAP = 16;
 const PAD_TOP = 16;
 const PAD_BOTTOM = 20;
+const NCOIN_ICON = "/assets/ncoin/ncoin-16@3x.svg";
+const PAW_ICON = "/assets/menu/icon-paw-mini.svg";
+
+/** Inline 냥코인 / 발바닥 포인트 icons wherever those words appear. */
+function TutorialRichText({ text }: { text: string }) {
+  const nodes: ReactNode[] = [];
+  const re = /(냥코인|발바닥 포인트)/g;
+  let last = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > last) {
+      nodes.push(<span key={`t-${key++}`}>{text.slice(last, match.index)}</span>);
+    }
+    const token = match[1];
+    nodes.push(
+      <span key={`i-${key++}`} className="tut-inline-token">
+        <img src={token === "냥코인" ? NCOIN_ICON : PAW_ICON} alt="" />
+        {token}
+      </span>,
+    );
+    last = match.index + token.length;
+  }
+  if (last < text.length) {
+    nodes.push(<span key={`t-${key++}`}>{text.slice(last)}</span>);
+  }
+  return <>{nodes}</>;
+}
 
 type TutorialCoachProps = {
   mark: CoachMark | null;
@@ -115,6 +143,7 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   }, [bubbleEl, mark]);
 
   const hasHole = Boolean(mark?.target && rect);
+  const blockOutside = Boolean(mark && hasHole && mark.dim !== false);
   const hole = useMemo(() => {
     // Convert viewport rects → fixed-containing-block coords (#root on desktop).
     if (!rect) {
@@ -127,6 +156,8 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
       height: rect.height + 20,
     };
   }, [rect, frame]);
+  const frameW = frame.width || window.innerWidth;
+  const frameH = frame.height || window.innerHeight;
 
   const skipInline = useMemo(() => {
     if (!rect) return false;
@@ -209,7 +240,7 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
     <>
       {/* Dim/hole stay under elevated pass-through targets (z≈130). */}
       <div className="tut-layer" role="presentation" aria-hidden="true">
-        {/* When a hole exists, dim via hole box-shadow only so the cutout can receive real touches.
+        {/* When a hole exists, dim via hole box-shadow; pads block taps outside the cutout.
             Skip full dim while waiting for a pass-through/activate target (avoids freezing UI). */}
         {hasHole ||
         mark.dim === false ||
@@ -221,6 +252,33 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
             }}
           />
         )}
+        {blockOutside ? (
+          <>
+            <div className="tut-block" style={{ left: 0, top: 0, width: frameW, height: Math.max(0, hole.top) }} />
+            <div
+              className="tut-block"
+              style={{ left: 0, top: hole.top, width: Math.max(0, hole.left), height: hole.height }}
+            />
+            <div
+              className="tut-block"
+              style={{
+                left: hole.left + hole.width,
+                top: hole.top,
+                width: Math.max(0, frameW - hole.left - hole.width),
+                height: hole.height,
+              }}
+            />
+            <div
+              className="tut-block"
+              style={{
+                left: 0,
+                top: hole.top + hole.height,
+                width: frameW,
+                height: Math.max(0, frameH - hole.top - hole.height),
+              }}
+            />
+          </>
+        ) : null}
         {hasHole ? (
           <div
             className={`tut-hole ${mark.activateTarget ? "is-activate" : ""} ${mark.passThrough ? "is-pass" : ""}`}
@@ -252,9 +310,21 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
             }
           >
             {mark.stepLabel ? <p className="tut-step-label">{mark.stepLabel}</p> : null}
-            {mark.title ? <p className="tut-title">{mark.title}</p> : null}
-            {mark.copy ? <p className="tut-copy">{mark.copy}</p> : null}
-            {mark.sub ? <p className="tut-sub">{mark.sub}</p> : null}
+            {mark.title ? (
+              <p className="tut-title">
+                <TutorialRichText text={mark.title} />
+              </p>
+            ) : null}
+            {mark.copy ? (
+              <p className="tut-copy">
+                <TutorialRichText text={mark.copy} />
+              </p>
+            ) : null}
+            {mark.sub ? (
+              <p className="tut-sub">
+                <TutorialRichText text={mark.sub} />
+              </p>
+            ) : null}
             {mark.lines?.length ? (
               <ul
                 className={`tut-lines ${
@@ -271,7 +341,9 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
                     ) : (
                       <span className="tut-line-icon is-empty" />
                     )}
-                    <span>{line.text}</span>
+                    <span>
+                      <TutorialRichText text={line.text} />
+                    </span>
                   </li>
                 ))}
               </ul>

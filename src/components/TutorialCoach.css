@@ -21,6 +21,12 @@
   pointer-events: auto;
 }
 
+/* Invisible pads around the hole — box-shadow dim is visual-only and does not capture taps. */
+.tut-block {
+  position: absolute;
+  pointer-events: auto;
+}
+
 .tut-hole {
   position: absolute;
   border-radius: 22px;
@@ -74,10 +80,11 @@
 }
 
 /* Elevated interaction target (above tut-layer z=120) for long-press / drag.
-   tut-chrome is z=140 with pointer-events:none — empty areas pass taps through. */
+   Panel is elevated for stacking but ignores taps — only the target is interactive. */
 .tut-elevated-target {
   position: relative !important;
   z-index: 131 !important;
+  pointer-events: auto !important;
   touch-action: none !important;
   -webkit-user-select: none;
   user-select: none;
@@ -85,6 +92,7 @@
 
 .tut-elevated-panel {
   z-index: 130 !important;
+  pointer-events: none !important;
 }
 
 .tut-title {
@@ -99,6 +107,21 @@
   font-size: 15px;
   font-weight: 700;
   white-space: pre-line;
+}
+
+.tut-inline-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  vertical-align: -0.15em;
+}
+
+.tut-inline-token img {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  object-fit: contain;
 }
 
 .tut-sub {

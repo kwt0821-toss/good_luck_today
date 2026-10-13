@@ -132,8 +132,6 @@ export function roomPickCoachMark(step: TutorialStep): CoachMark | null {
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     passThrough: true,
-    // No full-screen dim while #drawer-item-0 is missing (hole dims once target exists).
-    dim: false,
     stepLabel: step.stepLabel ?? "STEP 4/5",
     bubble: "above",
   };
@@ -180,8 +178,7 @@ export function roomPointsCoachMark(step: TutorialStep): CoachMark | null {
     ackOnly: true,
     showFinger: sub.showFinger !== false,
     hideSkip: true,
-    passThrough: true,
-    dim: false,
+    // Dim + block outside the chip; CTA advances (chip itself is not the action).
     stepLabel: step.stepLabel ?? "STEP 4/5",
     bubble: "above",
   };
@@ -205,7 +202,7 @@ export function step5CoachMark(
       target: resolveTutorialTarget(sub.target || "#icon-menu"),
       copy: sub.copy ?? "메뉴에서 모은 냥코인을 확인할 수 있어요",
       showFinger: true,
-      // Pass through + elevate so the real menu button stays tappable under the coach.
+      // Hole dim + outside blocks; only the elevated menu button stays tappable.
       passThrough: true,
       activateTarget: true,
       ackOnly: true,
@@ -238,7 +235,8 @@ export function step5CoachMark(
     showFinger: false,
     stepLabel: label,
     bubble: "above",
-    passThrough: true,
+    // Dim outside the withdraw/wallet card; advance via CTA only.
+    passThrough: false,
   };
 }
 
