@@ -1173,6 +1173,15 @@
   line-height: 1.35;
 }
 
+.withdraw-picker .menu-sheet-cta.is-withdraw {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 12px;
+  text-align: center;
+}
+
 .wallet-history-link {
   display: block;
   width: 100%;

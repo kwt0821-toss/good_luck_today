@@ -230,6 +230,8 @@ export type TutorialSubstep = {
   target: string;
   fallbackTarget?: string;
   copy?: string;
+  /** Smaller supporting line under copy (e.g. ※ 하루 최대 50원). */
+  sub?: string;
   title?: string;
   cta?: string;
   ackOnly?: boolean;

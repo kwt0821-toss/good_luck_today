@@ -225,11 +225,13 @@ export function step5CoachMark(
   }
   const low = ops.nyangCoinBalance < 10;
   const lowLine = sub.lines?.find((line) => (line.when ?? "").includes("< 10"));
+  const footnote = (sub.sub ?? "※ 하루 최대 50원").trim();
+  const lowHint = low ? (lowLine?.copy ?? lowLine?.text ?? "조금만 더 모으면 받을 수 있어요") : null;
   return {
     id: "step-5-3",
     target: resolveTutorialTarget(sub.target || "#withdraw-picker", {}, sub.fallbackTarget),
-    copy: sub.copy ?? "냥코인 10개부터 토스포인트로 바꿀 수 있어요\n하루 최대 50원",
-    sub: low ? (lowLine?.copy ?? lowLine?.text ?? "조금만 더 모으면 받을 수 있어요") : undefined,
+    copy: (sub.copy ?? "냥코인 10개부터 토스포인트로 바꿀 수 있어요").split("\n")[0],
+    sub: lowHint ? `${footnote}\n${lowHint}` : footnote,
     cta: sub.cta ?? "알겠어요",
     ackOnly: true,
     showFinger: false,

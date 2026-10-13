@@ -199,7 +199,8 @@
      "id": "5-3",
      "target": "#withdraw-picker",
      "fallbackTarget": "#wallet-card",
-     "copy": "냥코인 10개부터 토스포인트로 바꿀 수 있어요\n하루 최대 50원",
+     "copy": "냥코인 10개부터 토스포인트로 바꿀 수 있어요",
+     "sub": "※ 하루 최대 50원",
      "cta": "알겠어요",
      "ackOnly": true,
      "lines": [
@@ -268,7 +269,7 @@
       },
       {
        "when": "nyangCoinBalance < 10",
-       "copy": "10냥코인부터 토스포인트로 받을 수 있어요"
+       "copy": "10 냥코인부터 토스포인트로 받을 수 있어요"
       }
      ],
      "action": "ack — 실제 출금은 유저가 직접"
