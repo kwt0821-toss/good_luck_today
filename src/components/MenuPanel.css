@@ -317,6 +317,22 @@
   white-space: nowrap;
 }
 
+.menu-row-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.menu-meta-ncoin {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: -1px;
+}
+
 .menu-row-meta b {
   font-family: Poppins, sans-serif;
   font-weight: 600;

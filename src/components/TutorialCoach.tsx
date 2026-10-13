@@ -337,20 +337,32 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
                   mark.lines.every((line) => /^x\s*\d+/i.test(line.text.trim())) ? "is-rewards" : ""
                 }`}
               >
-                {mark.lines.map((line, index) => (
-                  <li
-                    key={`${line.text}-${index}`}
-                    className={`tut-line ${line.muted ? "is-muted" : ""} ${line.dividerAbove ? "has-divider" : ""}`}
-                  >
-                    {line.icon ? (
-                      <img className="tut-line-icon" src={line.icon} alt="" width={18} height={18} />
-                    ) : (
-                      <span className="tut-line-icon is-empty" />
-                    )}
-                    {/* Lines that already ship an icon skip inline token icons (no double paw/ncoin). */}
-                    <span>{line.icon ? line.text : <TutorialRichText text={line.text} />}</span>
-                  </li>
-                ))}
+                {mark.lines.map((line, index) => {
+                  const rewardMatch = line.icon
+                    ? /^x\s*(\d+)\s*$/i.exec(line.text.trim())
+                    : null;
+                  return (
+                    <li
+                      key={`${line.text}-${index}`}
+                      className={`tut-line ${line.muted ? "is-muted" : ""} ${line.dividerAbove ? "has-divider" : ""} ${rewardMatch ? "is-reward-qty" : ""}`}
+                    >
+                      {line.icon ? (
+                        <img className="tut-line-icon" src={line.icon} alt="" width={18} height={18} />
+                      ) : (
+                        <span className="tut-line-icon is-empty" />
+                      )}
+                      {/* Lines that already ship an icon skip inline token icons (no double paw/ncoin). */}
+                      {rewardMatch ? (
+                        <>
+                          <span className="tut-line-x">x</span>
+                          <span className="tut-line-qty">{rewardMatch[1]}</span>
+                        </>
+                      ) : (
+                        <span>{line.icon ? line.text : <TutorialRichText text={line.text} />}</span>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             ) : null}
             {showCta || skipInline ? (

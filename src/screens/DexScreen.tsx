@@ -389,13 +389,15 @@ export function DexScreen({
                 {claimSummary.nyangCoin > 0 ? (
                   <span className="dex-claim-chip-reward">
                     <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={14} height={14} />
-                    x {claimSummary.nyangCoin}
+                    <span className="dex-claim-chip-x">x</span>
+                    <span className="dex-claim-chip-qty">{claimSummary.nyangCoin}</span>
                   </span>
                 ) : null}
                 {claimSummary.paw > 0 ? (
                   <span className="dex-claim-chip-reward">
                     <img src="/assets/menu/icon-paw-mini.svg" alt="" width={14} height={14} />
-                    x {claimSummary.paw}
+                    <span className="dex-claim-chip-x">x</span>
+                    <span className="dex-claim-chip-qty">{claimSummary.paw}</span>
                   </span>
                 ) : null}
               </span>

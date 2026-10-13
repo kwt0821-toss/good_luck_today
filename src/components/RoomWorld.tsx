@@ -494,6 +494,15 @@ export function RoomWorld({
           className={`lucky-suggest-ghost ${reduceMotion ? "is-reduced" : ""}`}
           aria-hidden="true"
         >
+          {/* Screen-space anchor for tutorial drag-guide arrow (RoomTutDragGuide). */}
+          <div
+            id="room-suggest-target"
+            className="lucky-suggest-anchor"
+            style={{
+              left: suggestCentre.x,
+              top: suggestCentre.y,
+            }}
+          />
           <img
             className="lucky-suggest-item"
             src={roomAsset(suggestItem.tileImage ?? suggestItem.image ?? `tiles/${suggestItem.id}.png`)}
@@ -504,13 +513,7 @@ export function RoomWorld({
             }}
             draggable={false}
           />
-          <div
-            className={`lucky-suggest-finger ${reduceMotion ? "is-arrow" : ""}`}
-            style={{
-              left: suggestCentre.x,
-              top: suggestCentre.y,
-            }}
-          />
+          {/* Local finger replaced by RoomTutDragGuide path finger during tutorial. */}
         </div>
       ) : null}
 

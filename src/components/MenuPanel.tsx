@@ -55,11 +55,22 @@ type MenuPanelProps = {
 };
 
 function formatMeta(text: string) {
-  // Highlight trailing numbers / fractions for amber weight via <b>
-  const parts = text.split(/(\d+(?:\/\d+)?%?|장)/g);
-  return parts.map((part, index) =>
-    /^\d/.test(part) || part === "장" ? <b key={index}>{part}</b> : <span key={index}>{part}</span>,
-  );
+  // Replace coin emoji with the ncoin asset (emoji often tofu/breaks in in-app WebViews).
+  const withIcons = text.split(/(🪙)/g);
+  return withIcons.map((chunk, chunkIndex) => {
+    if (chunk === "🪙") {
+      return <img key={`coin-${chunkIndex}`} className="menu-meta-ncoin" src={ncoinAsset(16)} alt="" />;
+    }
+    // Highlight trailing numbers / fractions for amber weight via <b>
+    const parts = chunk.split(/(\d+(?:\/\d+)?%?|장)/g);
+    return parts.map((part, index) =>
+      /^\d/.test(part) || part === "장" ? (
+        <b key={`${chunkIndex}-${index}`}>{part}</b>
+      ) : (
+        <span key={`${chunkIndex}-${index}`}>{part}</span>
+      ),
+    );
+  });
 }
 
 export function MenuPanel({
