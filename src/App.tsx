@@ -132,6 +132,7 @@ export default function App() {
   const [stepThenActive, setStepThenActive] = useState(false);
   const [dexTutPhase, setDexTutPhase] = useState<DexTutorialPhase>(null);
   const [roomTutPhase, setRoomTutPhase] = useState<RoomTutorialPhase>(null);
+  const [roomScreenReady, setRoomScreenReady] = useState(false);
   const [rewardsTutPhase, setRewardsTutPhase] = useState<RewardsTutPhase>(null);
   const [reduceMotion, setReduceMotion] = useState(() => shouldReduceMenuMotion());
   const menuHistRef = useRef(false);
@@ -305,8 +306,9 @@ export default function App() {
       if (dexTutPhase === "ncoin-after") return dexAfterClaimMark(tutorialStep);
     }
 
-    // Step 4: pick → drag → done (STEP 4/5).
+    // Step 4: pick → drag → done (STEP 4/5). Wait until RoomScreen finishes loading.
     if (tutorialStep.step === 4 && screen.name === "room") {
+      if (!roomScreenReady) return null;
       if (roomTutPhase === "pick" || roomTutPhase == null) return roomPickCoachMark(tutorialStep);
       if (roomTutPhase === "drag") return roomDragCoachMark(tutorialStep);
       if (roomTutPhase === "done") return roomDoneCoachMark(tutorialStep);
@@ -335,6 +337,7 @@ export default function App() {
     tutorialVars,
     dexTutPhase,
     roomTutPhase,
+    roomScreenReady,
     rewardsTutPhase,
   ]);
 
@@ -366,6 +369,11 @@ export default function App() {
       if (screen.name !== "home") setScreen({ name: "home" });
     }
   }, [tutorialStep, roomTutPhase, rewardsTutPhase, screen.name]);
+
+  // Reset room-ready gate when leaving the room screen.
+  useEffect(() => {
+    if (screen.name !== "room") setRoomScreenReady(false);
+  }, [screen.name]);
 
   // Step 5: menu open advances 5-1 → 5-2; rewards sheet advances 5-2 → 5-3.
   useEffect(() => {
@@ -983,6 +991,7 @@ export default function App() {
           }
           suggestTile={tutorialStep?.screen === "room" ? (tutorialStep.suggestTile ?? null) : null}
           reduceMotion={reduceMotion}
+          onReady={() => setRoomScreenReady(true)}
           onTutorialPicked={() => {
             if (roomTutPhase === "pick") setRoomTutPhase("drag");
           }}
@@ -1160,11 +1169,11 @@ export default function App() {
             (tutorialStep.step === 5 && (screen.name === "home" || menuOpen)) ||
             (screen.name === "reveal" && tutorialStep.screen === "draw-reveal") ||
             (screen.name === "collection" && tutorialStep.screen.includes("dex")) ||
-            (screen.name === "room" && tutorialStep.screen === "room") ||
+            (screen.name === "room" && tutorialStep.screen === "room" && roomScreenReady) ||
             (tutorialReplayStep != null &&
               (screen.name === "home" ||
                 screen.name === "collection" ||
-                screen.name === "room" ||
+                (screen.name === "room" && roomScreenReady) ||
                 screen.name === "reveal" ||
                 menuOpen))))) ? (
         <TutorialCoach

@@ -66,23 +66,37 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   }, [mark]);
 
   // Raise pass-through / activate targets above the tut overlay (WebView-safe).
+  // Retry until the target mounts (e.g. room drawer after load).
   useEffect(() => {
     if (!mark?.target) return;
     if (!mark.passThrough && !mark.activateTarget) return;
     let elevated: HTMLElement | null = null;
     let panel: HTMLElement | null = null;
-    try {
-      elevated = document.querySelector(mark.target) as HTMLElement | null;
-      panel = elevated?.closest(
-        ".menu-root, .lucky-drawer, .main-screen, .home-screen, .lucky-room",
-      ) as HTMLElement | null;
-    } catch {
-      elevated = null;
-    }
-    if (!elevated) return;
-    elevated.classList.add("tut-elevated-target");
-    panel?.classList.add("tut-elevated-panel");
+    let cancelled = false;
+    let timer = 0;
+
+    const tryElevate = () => {
+      if (cancelled) return;
+      try {
+        elevated = document.querySelector(mark.target) as HTMLElement | null;
+        panel = elevated?.closest(
+          ".menu-root, .lucky-drawer, .main-screen, .home-screen, .lucky-room",
+        ) as HTMLElement | null;
+      } catch {
+        elevated = null;
+        panel = null;
+      }
+      if (!elevated) {
+        timer = window.setTimeout(tryElevate, 100);
+        return;
+      }
+      elevated.classList.add("tut-elevated-target");
+      panel?.classList.add("tut-elevated-panel");
+    };
+    tryElevate();
     return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
       elevated?.classList.remove("tut-elevated-target");
       panel?.classList.remove("tut-elevated-panel");
     };
@@ -182,8 +196,11 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
 
   return (
     <div className="tut-layer" role="dialog" aria-modal="true" aria-label="튜토리얼">
-      {/* When a hole exists, dim via hole box-shadow only so the cutout can receive real touches. */}
-      {hasHole || mark.dim === false ? null : (
+      {/* When a hole exists, dim via hole box-shadow only so the cutout can receive real touches.
+          Skip full dim while waiting for a pass-through/activate target (avoids freezing UI). */}
+      {hasHole ||
+      mark.dim === false ||
+      ((mark.passThrough || mark.activateTarget) && !hasHole) ? null : (
         <div
           className="tut-dim"
           onClick={() => {

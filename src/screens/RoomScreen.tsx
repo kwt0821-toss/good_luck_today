@@ -22,6 +22,7 @@ import {
   type RoomGridFile,
   type RoomsFile,
 } from "../lib/roomCatalog";
+import { applyOpsPrices, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import {
   canPlace,
   canPlaceWall,
@@ -94,6 +95,8 @@ type RoomScreenProps = {
   onTutorialPicked?: () => void;
   onTutorialPlaced?: () => void;
   onTutorialComplete?: () => void;
+  /** Fires once when catalog/layout/ops are ready (after loading gate). */
+  onReady?: () => void;
 };
 
 function formatPoints(value: number) {
@@ -109,6 +112,7 @@ export function RoomScreen({
   onTutorialPicked,
   onTutorialPlaced,
   onTutorialComplete,
+  onReady,
 }: RoomScreenProps) {
   const [items, setItems] = useState<RoomItem[]>([]);
   const [grid, setGrid] = useState<RoomGridFile | null>(null);
@@ -170,7 +174,6 @@ export function RoomScreen({
   useEffect(() => {
     void Promise.all([loadRoomCatalog(), loadRoomGrid(), loadRoomsFile(), loadOpsConfig()]).then(
       async ([catalog, gridFile, rooms, config]) => {
-        const { applyOpsPrices, syncRoomSaveWithOps } = await import("../lib/roomEconomy");
         const priced = await applyOpsPrices(catalog.items);
         setItems(priced);
         setGrid(gridFile);
@@ -190,6 +193,13 @@ export function RoomScreen({
     });
   }, []);
 
+  const readySent = useRef(false);
+  useEffect(() => {
+    if (!state || !roomsFile || readySent.current) return;
+    readySent.current = true;
+    onReady?.();
+  }, [state, roomsFile, onReady]);
+
   useEffect(() => {
     if (!tutorialActive || !state) return;
     setTab("보유");
@@ -201,23 +211,23 @@ export function RoomScreen({
       return "edit";
     });
     // Free starter drawer placeables (e.g. cushions) so #drawer-item-0 can target NEW.
-    void loadOpsConfig().then((config) => {
-      const gifts = new Set(config.starter.drawer);
-      setState((prev) => {
-        if (!prev) return prev;
-        const room = currentRoom(prev);
-        const nextFloor = room.floor.filter((place) => {
-          const item = itemsById.get(place.id);
-          if (!item || !gifts.has(place.id)) return true;
-          return !isPlaceableDecor(item);
-        });
-        if (nextFloor.length === room.floor.length) return prev;
-        const next = patchCurrentRoom(prev, { ...room, floor: nextFloor });
-        void saveRoomState(next);
-        return next;
+    // Reuse starterDrawerIds from the initial load (avoid a second loadOpsConfig wait).
+    if (!starterDrawerIds.length) return;
+    const gifts = new Set(starterDrawerIds);
+    setState((prev) => {
+      if (!prev) return prev;
+      const room = currentRoom(prev);
+      const nextFloor = room.floor.filter((place) => {
+        const item = itemsById.get(place.id);
+        if (!item || !gifts.has(place.id)) return true;
+        return !isPlaceableDecor(item);
       });
+      if (nextFloor.length === room.floor.length) return prev;
+      const next = patchCurrentRoom(prev, { ...room, floor: nextFloor });
+      void saveRoomState(next);
+      return next;
     });
-  }, [tutorialActive, state?.currentRoomId, itemsById]);
+  }, [tutorialActive, state?.currentRoomId, itemsById, starterDrawerIds]);
 
   // Follow finger after grabbing from the drawer (pointer may leave the drawer cell).
   useEffect(() => {
@@ -822,7 +832,7 @@ export function RoomScreen({
       points: nextPoints,
       owned: { ...state.owned, [item.id]: (state.owned[item.id] ?? 0) + 1 },
     });
-    void import("../lib/roomEconomy").then(({ spendRoomPoints }) => spendRoomPoints(nextPoints));
+    void spendRoomPoints(nextPoints);
     setBuyItem(null);
     showToast(`${item.nameKo}를 샀어요`);
   };

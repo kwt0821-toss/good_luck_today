@@ -126,6 +126,8 @@ export function roomPickCoachMark(step: TutorialStep): CoachMark | null {
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     passThrough: true,
+    // No full-screen dim while #drawer-item-0 is missing (hole dims once target exists).
+    dim: false,
     stepLabel: step.stepLabel ?? "STEP 4/5",
     bubble: "above",
   };
