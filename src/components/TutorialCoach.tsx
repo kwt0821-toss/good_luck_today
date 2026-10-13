@@ -119,6 +119,11 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
         return;
       }
       elevated.classList.add("tut-elevated-target");
+      // Absolute/fixed badges (dex claim coin) must keep their position — only
+      // static elements need relative for z-index to take effect.
+      if (getComputedStyle(elevated).position === "static") {
+        elevated.classList.add("tut-elevated-static");
+      }
       panel?.classList.add("tut-elevated-panel");
     };
     tryElevate();
@@ -126,6 +131,7 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
       cancelled = true;
       window.clearTimeout(timer);
       elevated?.classList.remove("tut-elevated-target");
+      elevated?.classList.remove("tut-elevated-static");
       panel?.classList.remove("tut-elevated-panel");
     };
   }, [mark]);
@@ -341,9 +347,8 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
                     ) : (
                       <span className="tut-line-icon is-empty" />
                     )}
-                    <span>
-                      <TutorialRichText text={line.text} />
-                    </span>
+                    {/* Lines that already ship an icon skip inline token icons (no double paw/ncoin). */}
+                    <span>{line.icon ? line.text : <TutorialRichText text={line.text} />}</span>
                   </li>
                 ))}
               </ul>

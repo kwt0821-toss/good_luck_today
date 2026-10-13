@@ -103,7 +103,13 @@ export function MenuPanel({
   withdrawAmountRef.current = withdrawAmount;
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      // Drop any open sub-sheet (e.g. rewards left open after tutorial step 5).
+      setSheet(null);
+      setSheetOpen(false);
+      setRewardsView("inbox");
+      return;
+    }
     setClosing(false);
     void buildMenuViewModel(ops).then(setModel);
     AudioManager.playSfx("sheet-open");

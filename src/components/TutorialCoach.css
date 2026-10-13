@@ -1,12 +1,12 @@
 .tut-layer {
   position: fixed;
   inset: 0;
-  /* Above menu panel (z=90); below elevated pass-through targets (≈130). */
-  z-index: 120;
+  /* Above elevated panels (≈130) so hole dim is visible over home/menu/drawer. */
+  z-index: 135;
   pointer-events: none;
 }
 
-/* Bubble/skip/finger — separate stacking context above elevated room drawer. */
+/* Bubble/skip/finger — above dim layer; empty areas pass taps through. */
 .tut-chrome {
   position: fixed;
   inset: 0;
@@ -79,15 +79,19 @@
   pointer-events: none;
 }
 
-/* Elevated interaction target (above tut-layer z=120) for long-press / drag.
-   Panel is elevated for stacking but ignores taps — only the target is interactive. */
+/* Elevated interaction target — below dim layer (135); taps reach it through .tut-hole.is-pass.
+   Do NOT force position:relative (breaks absolute badges like .dex-claim-badge). */
 .tut-elevated-target {
-  position: relative !important;
   z-index: 131 !important;
   pointer-events: auto !important;
   touch-action: none !important;
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* Only static-positioned targets need a positioning context for z-index. */
+.tut-elevated-static {
+  position: relative !important;
 }
 
 .tut-elevated-panel {
@@ -150,6 +154,7 @@
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  gap: 4px;
 }
 
 .tut-lines.is-rewards .tut-line-icon {

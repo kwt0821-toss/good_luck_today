@@ -166,7 +166,7 @@
     {
      "id": "4-4",
      "target": "#room-points-chip",
-     "copy": "발바닥 포인트로 모아 원하는 아이템을 구매할 수 있어요!",
+     "copy": "발바닥 포인트를 모아 원하는 아이템을 구매할 수 있어요!",
      "cta": "완료",
      "ackOnly": true,
      "showFinger": true
@@ -199,7 +199,7 @@
      "id": "5-3",
      "target": "#withdraw-picker",
      "fallbackTarget": "#wallet-card",
-     "copy": "냥코인 10개부터 토스포인트로 바꿀 수 있어요 · 하루 최대 50원",
+     "copy": "냥코인 10개부터 토스포인트로 바꿀 수 있어요\n하루 최대 50원",
      "cta": "알겠어요",
      "ackOnly": true,
      "lines": [

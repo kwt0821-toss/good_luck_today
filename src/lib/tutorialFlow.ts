@@ -173,7 +173,7 @@ export function roomPointsCoachMark(step: TutorialStep): CoachMark | null {
   return {
     id: "step-4-4",
     target: resolveTutorialTarget(sub.target || "#room-points-chip"),
-    copy: sub.copy ?? "발바닥 포인트로 모아 원하는 아이템을 구매할 수 있어요!",
+    copy: sub.copy ?? "발바닥 포인트를 모아 원하는 아이템을 구매할 수 있어요!",
     cta: sub.cta ?? "완료",
     ackOnly: true,
     showFinger: sub.showFinger !== false,
@@ -228,7 +228,7 @@ export function step5CoachMark(
   return {
     id: "step-5-3",
     target: resolveTutorialTarget(sub.target || "#withdraw-picker", {}, sub.fallbackTarget),
-    copy: sub.copy ?? "냥코인 10개부터 토스포인트로 바꿀 수 있어요 · 하루 최대 50원",
+    copy: sub.copy ?? "냥코인 10개부터 토스포인트로 바꿀 수 있어요\n하루 최대 50원",
     sub: low ? (lowLine?.copy ?? lowLine?.text ?? "조금만 더 모으면 받을 수 있어요") : undefined,
     cta: sub.cta ?? "알겠어요",
     ackOnly: true,
@@ -347,6 +347,9 @@ export function ncoinNextMark(then: NcoinIntroThen): CoachMark | null {
     // #btn-to-dex sits in the footer — keep the bubble above so it isn't clipped.
     bubble: "above",
     showFinger: true,
+    // No 「다음」 CTA — user taps the highlighted 도감 button.
+    ackOnly: true,
+    activateTarget: true,
   };
 }
 
