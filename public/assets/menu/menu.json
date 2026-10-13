@@ -249,7 +249,7 @@
  },
  "menuIconBadge": {
   "type": "dot",
-  "on": "#icon-menu (메인 우상단 발바닥)",
+  "on": "#btn-menu (메인 우상단 발바닥)",
   "when": "any(row.badge.type=='dot' && row.badge.when)"
  },
  "sheets": {

@@ -48,12 +48,20 @@ export function dexCardGradeLabel(card: DexCard | null | undefined): string {
 
 export function fillTutorialCopy(
   template: string,
-  vars: { cardId?: string | null; breed?: string | null; grade?: string | null } = {},
+  vars: {
+    cardId?: string | null;
+    breed?: string | null;
+    grade?: string | null;
+    dailyLimit?: number | null;
+  } = {},
 ): string {
   let next = template;
   if (vars.cardId) next = next.split("{cardId}").join(vars.cardId);
   if (vars.breed != null) next = next.split("{품종}").join(vars.breed);
   if (vars.grade != null) next = next.split("{등급}").join(vars.grade);
+  if (vars.dailyLimit != null) {
+    next = next.split("{dailyLimit}").join(String(vars.dailyLimit));
+  }
   // Drop unresolved placeholders so we don't show raw braces.
   next = next.replace(/[^\S\n]*·[^\S\n]*\{[^}]+\}/g, "").replace(/\{[^}]+\}/g, "");
   // Collapse spaces/tabs but keep intentional newlines from tutorial copy.
@@ -190,6 +198,7 @@ export function step5CoachMark(
   step: TutorialStep,
   phase: RewardsTutPhase,
   ops: OpsState,
+  dailyLimit = 50,
 ): CoachMark | null {
   if (!phase) return null;
   const id = phase === "menu" ? "5-1" : phase === "row" ? "5-2" : "5-3";
@@ -199,7 +208,7 @@ export function step5CoachMark(
   if (phase === "menu") {
     return {
       id: "step-5-1",
-      target: resolveTutorialTarget(sub.target || "#icon-menu"),
+      target: resolveTutorialTarget(sub.target || "#btn-menu"),
       copy: sub.copy ?? "메뉴에서 모은 냥코인을 확인할 수 있어요",
       showFinger: true,
       // Hole dim + outside blocks; only the elevated menu button stays tappable.
@@ -225,7 +234,7 @@ export function step5CoachMark(
   }
   const low = ops.nyangCoinBalance < 10;
   const lowLine = sub.lines?.find((line) => (line.when ?? "").includes("< 10"));
-  const footnote = (sub.sub ?? "※ 하루 최대 50원").trim();
+  const footnote = fillTutorialCopy(sub.sub ?? "※ 하루 최대 {dailyLimit}원", { dailyLimit });
   const lowHint = low ? (lowLine?.copy ?? lowLine?.text ?? "조금만 더 모으면 받을 수 있어요") : null;
   return {
     id: "step-5-3",
@@ -242,32 +251,37 @@ export function step5CoachMark(
   };
 }
 
-export function resolveRewardsIntroCopy(step: RewardsIntroStep, ops: OpsState): string {
+export function resolveRewardsIntroCopy(
+  step: RewardsIntroStep,
+  ops: OpsState,
+  dailyLimit = 50,
+): string {
   if (step.lines?.length) {
     for (const line of step.lines) {
       const when = line.when ?? "";
       if (when.includes(">=") && ops.nyangCoinBalance >= 10) {
-        return line.copy ?? line.text ?? step.copy ?? "";
+        return fillTutorialCopy(line.copy ?? line.text ?? step.copy ?? "", { dailyLimit });
       }
       if (when.includes("<") && ops.nyangCoinBalance < 10) {
-        return line.copy ?? line.text ?? step.copy ?? "";
+        return fillTutorialCopy(line.copy ?? line.text ?? step.copy ?? "", { dailyLimit });
       }
     }
   }
-  return step.copy ?? "";
+  return fillTutorialCopy(step.copy ?? "", { dailyLimit });
 }
 
 export function rewardsIntroMark(
   config: RewardsIntroConfig,
   stepId: string,
   ops: OpsState,
+  dailyLimit = 50,
 ): CoachMark | null {
   const step = config.steps.find((entry) => entry.id === stepId);
   if (!step) return null;
   return {
     id: `rewards-intro:${step.id}`,
     target: step.target,
-    copy: resolveRewardsIntroCopy(step, ops),
+    copy: resolveRewardsIntroCopy(step, ops, dailyLimit),
     bubble: step.bubble,
     showFinger: step.id !== "r4",
     ackOnly: step.id === "r3" || step.id === "r4",

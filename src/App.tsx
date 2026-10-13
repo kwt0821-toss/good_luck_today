@@ -14,6 +14,7 @@ import {
 import type { MockAdKind } from "./lib/mockAds";
 import { countClaimableDexRewards } from "./lib/dexRewards";
 import { cancelDrawReservation, preloadDrawImages, reserveDraw } from "./lib/mockDrawApi";
+import { getWithdrawRules } from "./lib/mockWallet";
 import { configureNavigationBar, haptic } from "./lib/native";
 import { loadOpsConfig } from "./lib/opsConfig";
 import {
@@ -273,9 +274,10 @@ export default function App() {
 
   const coachMark: CoachMark | null = useMemo(() => {
     if (!ops || !config) return null;
+    const dailyLimit = getWithdrawRules(config.economy).dailyLimit;
 
     if (rewardsIntro && rewardsIntroConfig) {
-      return rewardsIntroMark(rewardsIntroConfig, rewardsIntro.stepId, ops);
+      return rewardsIntroMark(rewardsIntroConfig, rewardsIntro.stepId, ops, dailyLimit);
     }
 
     if (!tutorialStep) return null;
@@ -318,7 +320,7 @@ export default function App() {
 
     // Step 5: menu → rewards row → withdraw sheet (STEP 5/5).
     if (tutorialStep.step === 5) {
-      return step5CoachMark(tutorialStep, rewardsTutPhase ?? "menu", ops);
+      return step5CoachMark(tutorialStep, rewardsTutPhase ?? "menu", ops, dailyLimit);
     }
 
     if (stepThenActive && tutorialStep.then && !isNcoinIntroThen(tutorialStep.then)) {
