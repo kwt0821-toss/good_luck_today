@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
 import { RoomBuySheet, RoomConfirm, RoomExchangeSheet, RoomUnlockSheet } from "../components/RoomDialogs";
 import { RoomDrawer } from "../components/RoomDrawer";
+import { RoomTutDragGuide } from "../components/RoomTutDragGuide";
 import { RoomWorld } from "../components/RoomWorld";
 import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
 import { loadDexOwned } from "../lib/dexCollection";
@@ -1231,6 +1232,14 @@ export function RoomScreen({
           onExchange={() => void openExchange()}
         />
       )}
+
+      {tutLock && suggestTile ? (
+        <RoomTutDragGuide
+          active
+          phase={dragging || effectiveTutPhase === "drag" ? "drag" : "pick"}
+          reduceMotion={reduceMotion}
+        />
+      ) : null}
 
       {buyItem ? (
         <RoomBuySheet item={buyItem} points={state.points} onClose={() => setBuyItem(null)} onBuy={() => buy(buyItem)} />

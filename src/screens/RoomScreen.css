@@ -481,6 +481,15 @@
   pointer-events: none;
 }
 
+.lucky-suggest-anchor {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
 .lucky-suggest-item {
   position: absolute;
   width: 110px;
