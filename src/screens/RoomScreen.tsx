@@ -83,17 +83,33 @@ const VIEW_W = 390;
 const SWIPE_THRESHOLD = 56;
 import "./RoomScreen.css";
 
+export type RoomTutorialPhase = "pick" | "drag" | "done" | null;
+
 type RoomScreenProps = {
   onBack: () => void;
   tutorialActive?: boolean;
+  tutorialPhase?: RoomTutorialPhase;
   suggestTile?: { c: number; r: number } | null;
+  reduceMotion?: boolean;
+  onTutorialPicked?: () => void;
+  onTutorialPlaced?: () => void;
+  onTutorialComplete?: () => void;
 };
 
 function formatPoints(value: number) {
   return value.toLocaleString("en-US");
 }
 
-export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null }: RoomScreenProps) {
+export function RoomScreen({
+  onBack,
+  tutorialActive = false,
+  tutorialPhase = null,
+  suggestTile = null,
+  reduceMotion = false,
+  onTutorialPicked,
+  onTutorialPlaced,
+  onTutorialComplete,
+}: RoomScreenProps) {
   const [items, setItems] = useState<RoomItem[]>([]);
   const [grid, setGrid] = useState<RoomGridFile | null>(null);
   const [roomsFile, setRoomsFile] = useState<RoomsFile | null>(null);
@@ -116,6 +132,8 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
   const [exchangeOpen, setExchangeOpen] = useState(false);
   const [dupes, setDupes] = useState<{ card: DexCard; extra: number; pick: number }[]>([]);
   const [dragging, setDragging] = useState<RoomDrag | null>(null);
+  const [placeFxId, setPlaceFxId] = useState<string | null>(null);
+  const tutLock = Boolean(tutorialActive && (tutorialPhase === "pick" || tutorialPhase === "drag"));
   const [shakeId, setShakeId] = useState<string | null>(null);
   const [activeWall, setActiveWall] = useState<"L" | "R">("L");
   const [brushId, setBrushId] = useState<string | null>(null);
@@ -129,6 +147,7 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
   const toastTimer = useRef(0);
   const longPress = useRef(0);
   const dragOrigin = useRef<FloorPlacement | WallPlacement | null>(null);
+  const tutDrawerOrigin = useRef<{ itemId: string; instanceId: string } | null>(null);
   const paintStroke = useRef<{
     dirty: boolean;
     before: { floorTiles: RoomLayoutState["floorTiles"]; wallTiles: RoomLayoutState["wallTiles"] };
@@ -194,6 +213,29 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
       });
     });
   }, [tutorialActive, state?.currentRoomId, itemsById]);
+
+  // Follow finger after grabbing from the drawer (pointer may leave the drawer cell).
+  useEffect(() => {
+    if (!(dragging && dragging.kind === "floor" && dragging.fromDrawer)) return;
+    const onMove = (event: globalThis.PointerEvent) => {
+      if (!stageRef.current) return;
+      const rect = stageRef.current.getBoundingClientRect();
+      const tile = hitTestTile(event.clientX - rect.left, event.clientY - rect.top, mode);
+      setDragging((current) =>
+        current?.kind === "floor" ? { ...current, col: tile.col, row: tile.row } : current,
+      );
+    };
+    const onUp = () => onStagePointerUp();
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bind while fromDrawer drag is active
+  }, [dragging && dragging.kind === "floor" ? dragging.fromDrawer : false, dragging?.instanceId, mode]);
 
   const showToast = (message: string) => {
     setToast(message);
@@ -416,6 +458,10 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
 
   const onItemPointerDown = (event: PointerEvent<HTMLButtonElement>, instanceId: string) => {
     if (mode !== "edit" || paintTab) return;
+    if (tutLock) {
+      // During pick/drag, only the tutorial draft (from drawer) may move.
+      if (!tutDrawerOrigin.current || tutDrawerOrigin.current.instanceId !== instanceId) return;
+    }
     event.stopPropagation();
     setSelectedId(instanceId);
     const floorPlace = layout.floor.find((item) => item.instanceId === instanceId);
@@ -487,7 +533,20 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
               entry.instanceId === place.instanceId ? { ...entry, col: dragging.col, row: dragging.row } : entry,
             ),
           });
-          AudioManager.playSfx("item-place");
+          playPlaceFx(place.instanceId);
+          if (dragging.fromDrawer || tutLock) {
+            tutDrawerOrigin.current = null;
+            onTutorialPlaced?.();
+          }
+        } else if (dragging.fromDrawer || tutDrawerOrigin.current?.instanceId === place.instanceId) {
+          // Return to drawer — remove draft placement.
+          patchLayout({
+            ...layout,
+            floor: layout.floor.filter((entry) => entry.instanceId !== place.instanceId),
+          });
+          setSelectedId(null);
+          tutDrawerOrigin.current = null;
+          showToast("여기는 자리가 없어요");
           void haptic("softMedium");
         }
       }
@@ -506,8 +565,7 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
             ),
           });
           setActiveWall(next.wall);
-          AudioManager.playSfx("item-place");
-          void haptic("softMedium");
+          playPlaceFx(place.instanceId);
         } else {
           shake(place.instanceId);
         }
@@ -617,7 +675,49 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
     setActiveWall(other);
   };
 
+  const playPlaceFx = (instanceId: string) => {
+    AudioManager.playSfx("item-place");
+    void haptic("softMedium");
+    if (reduceMotion) {
+      setPlaceFxId(instanceId);
+      window.setTimeout(() => setPlaceFxId(null), 120);
+      return;
+    }
+    setPlaceFxId(instanceId);
+    window.setTimeout(() => setPlaceFxId(null), 240);
+  };
+
+  /** Tutorial: spawn draft on floor and enter drag (from drawer long-press / drag). */
+  const beginTutorialDrawerDrag = (item: RoomItem, clientX: number, clientY: number) => {
+    if (!tutLock || isPaintItem(item) || isWallDecor(item)) return;
+    if ((state.owned[item.id] ?? 0) < 1) return;
+    const remaining = (state.owned[item.id] ?? 0) - placedCountAll(state, item.id);
+    if (remaining <= 0) return;
+
+    const rect = stageRef.current?.getBoundingClientRect();
+    const tile = rect
+      ? hitTestTile(clientX - rect.left, clientY - rect.top, mode)
+      : suggestTile
+        ? { col: suggestTile.c, row: suggestTile.r }
+        : { col: 5, row: 2 };
+    const instanceId = newInstanceId(item.id);
+    tutDrawerOrigin.current = { itemId: item.id, instanceId };
+    patchLayout({
+      ...layout,
+      floor: [
+        ...layout.floor,
+        { instanceId, id: item.id, col: tile.col, row: tile.row, orientation: "default" },
+      ],
+    });
+    setSelectedId(instanceId);
+    setDragging({ kind: "floor", instanceId, col: tile.col, row: tile.row, fromDrawer: true });
+    onTutorialPicked?.();
+    void haptic("tap");
+  };
+
   const pickDrawerItem = (item: RoomItem) => {
+    // Tutorial pick/drag phases: tap alone does not place — long-press / drag only.
+    if (tutLock) return;
     if ((state.owned[item.id] ?? 0) < 1) {
       if (item.attendanceOnly) {
         showToast("출석 체크에서만 받을 수 있어요");
@@ -794,6 +894,11 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
             id="room-done"
             className="lucky-done"
             onClick={() => {
+              if (tutorialPhase === "done") {
+                onTutorialComplete?.();
+                return;
+              }
+              if (tutLock) return;
               persist(state);
               leaveEdit(true);
             }}
@@ -916,8 +1021,22 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
                       shadowsEnabled={state.shadowsEnabled}
                       painting={active && paintTab}
                       paintHover={active && paintTab ? paintHover : null}
-                      suggestTile={active && tutorialActive ? suggestTile : null}
-                      suggestItemId={active && tutorialActive ? suggestItemId : null}
+                      suggestTile={
+                        active &&
+                        tutorialActive &&
+                        (tutorialPhase === "pick" || tutorialPhase === "drag" || !tutorialPhase)
+                          ? suggestTile
+                          : null
+                      }
+                      suggestItemId={
+                        active &&
+                        tutorialActive &&
+                        (tutorialPhase === "pick" || tutorialPhase === "drag" || !tutorialPhase)
+                          ? suggestItemId
+                          : null
+                      }
+                      reduceMotion={reduceMotion}
+                      placeFxId={placeFxId}
                       onSelect={onSelect}
                       onItemPointerDown={onItemPointerDown}
                       onFloorPointerDown={onFloorPointerDown}
@@ -1060,6 +1179,9 @@ export function RoomScreen({ onBack, tutorialActive = false, suggestTile = null 
             if (pa !== pb) return pa - pb;
             return starterDrawerIds.indexOf(a) - starterDrawerIds.indexOf(b);
           })}
+          tutorialLockId={tutLock ? suggestItemId : null}
+          tutorialLongPressMs={tutLock ? 250 : 0}
+          onTutorialGrab={tutLock ? beginTutorialDrawerDrag : undefined}
           onPick={pickDrawerItem}
           onFillMode={(next) => {
             setFillMode(next);

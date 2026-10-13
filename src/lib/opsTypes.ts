@@ -224,12 +224,13 @@ export type TutorialStepThen =
   | NcoinIntroThen
   | { screen?: string; target: string; fallbackTarget?: string; copy: string; id?: string };
 
-/** Dex step 3 sub-phases (still shown as STEP 3/4). */
-export type DexTutorialSubstep = {
-  id: "3-1" | "3-2" | string;
+/** Shared tutorial substep fields (dex step 3, room step 4). */
+export type TutorialSubstep = {
+  id: string;
   target: string;
   fallbackTarget?: string;
-  copy: string;
+  copy?: string;
+  title?: string;
   cta?: string;
   ackOnly?: boolean;
   showFinger?: boolean;
@@ -240,6 +241,25 @@ export type DexTutorialSubstep = {
     ms?: number;
   };
   pulseMs?: number;
+  toast?: {
+    id?: string;
+    text: string;
+    autoHideMs?: number;
+  };
+  /** Room 4-1: long-press duration to pick from drawer. */
+  longPressMs?: number;
+  /** Room: only the highlighted drawer item may move. */
+  lockItem?: boolean;
+  ghostFollow?: boolean;
+  dragHint?: boolean;
+  suggestTile?: { c: number; r: number };
+  invalidToast?: string;
+  placeFx?: {
+    sfx?: string;
+    bounceMs?: number;
+    sparkles?: boolean;
+  };
+  /** @deprecated prefer dedicated 3-3 substep */
   afterClaim?: {
     id: string;
     title: string;
@@ -247,6 +267,9 @@ export type DexTutorialSubstep = {
     copy?: string;
   };
 };
+
+/** @deprecated use TutorialSubstep */
+export type DexTutorialSubstep = TutorialSubstep;
 
 export type TutorialStep = {
   step: number;
@@ -266,8 +289,8 @@ export type TutorialStep = {
   gesture?: string;
   suggestTile?: { c: number; r: number };
   then?: TutorialStepThen;
-  /** Step 3: 3-1 slot highlight, 3-2 coin claim. */
-  substeps?: DexTutorialSubstep[];
+  /** Step 3: 3-1…3-3; step 4: 4-1…4-3. */
+  substeps?: TutorialSubstep[];
   complete?: string;
 };
 
@@ -317,6 +340,12 @@ export type CoachMark = {
   stepLabel?: string;
   /** Hole click activates the target element (claim badge) instead of advancing. */
   activateTarget?: boolean;
+  /** Hole lets pointers through to the real target (long-press / drag). */
+  passThrough?: boolean;
+  /** Hide the skip control (e.g. room step 4-3 completion). */
+  hideSkip?: boolean;
+  /** When false, no dim overlay (drag phase needs free interaction). */
+  dim?: boolean;
 };
 
 export type OpsTutorial = {

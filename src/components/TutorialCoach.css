@@ -63,6 +63,10 @@
   cursor: pointer;
 }
 
+.tut-hole.is-pass {
+  pointer-events: none;
+}
+
 .tut-title {
   margin: 0 0 10px;
   font-size: 16px;

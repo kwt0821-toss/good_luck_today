@@ -53,6 +53,8 @@ import type {
 import type { MenuSheetId } from "./lib/menuTypes";
 import {
   dexAfterClaimMark,
+  dexCardBreedLabel,
+  dexCardGradeLabel,
   dexClaimCoachMark,
   dexSlotCoachMark,
   getRewardsIntroConfig,
@@ -61,13 +63,16 @@ import {
   ncoinIntroMark,
   ncoinNextMark,
   rewardsIntroMark,
+  roomDoneCoachMark,
+  roomDragCoachMark,
+  roomPickCoachMark,
 } from "./lib/tutorialFlow";
 import type { DexTutorialPhase } from "./screens/DexScreen";
 import { DRAW_REVEAL_WAIT_MAX_MS, DrawRevealScreen } from "./screens/DrawRevealScreen";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { RatesGuideScreen } from "./screens/RatesGuideScreen";
-import { RoomScreen } from "./screens/RoomScreen";
+import { RoomScreen, type RoomTutorialPhase } from "./screens/RoomScreen";
 import type { Screen } from "./types";
 import "./App.css";
 
@@ -124,9 +129,11 @@ export default function App() {
   const [forceMenuSheet, setForceMenuSheet] = useState<MenuSheetId>(null);
   const [stepThenActive, setStepThenActive] = useState(false);
   const [dexTutPhase, setDexTutPhase] = useState<DexTutorialPhase>(null);
+  const [roomTutPhase, setRoomTutPhase] = useState<RoomTutorialPhase>(null);
   const [reduceMotion, setReduceMotion] = useState(() => shouldReduceMenuMotion());
   const menuHistRef = useRef(false);
   const ncoinTimerRef = useRef(0);
+  const claimToastTimerRef = useRef(0);
   const rewardsArmedRef = useRef(false);
   const [ad, setAd] = useState<AdSession | null>(null);
   const [reservation, setReservation] = useState<DrawReservation | null>(null);
@@ -250,6 +257,14 @@ export default function App() {
   const rewardsIntroConfig = config ? getRewardsIntroConfig(config.tutorial) : null;
 
   const tutorialCardId = reservation?.cardId ?? revealCard?.id ?? null;
+  const tutorialVars = useMemo(
+    () => ({
+      cardId: tutorialCardId,
+      breed: dexCardBreedLabel(revealCard),
+      grade: dexCardGradeLabel(revealCard),
+    }),
+    [tutorialCardId, revealCard],
+  );
 
   const coachMark: CoachMark | null = useMemo(() => {
     if (!ops || !config) return null;
@@ -259,7 +274,7 @@ export default function App() {
     }
 
     if (!tutorialStep) return null;
-    const vars = { cardId: tutorialCardId };
+    const vars = tutorialVars;
 
     if (tutorialStep.step === 2) {
       if (screen.name === "reveal") {
@@ -279,12 +294,19 @@ export default function App() {
       return null;
     }
 
-    // Step 3: scroll → slot highlight → claim → ncoin-after (still STEP 3/4).
+    // Step 3: scroll → slot → claim → toast → ncoin-after (still STEP 3/4).
     if (tutorialStep.step === 3 && screen.name === "collection") {
-      if (dexTutPhase === "scroll" || dexTutPhase == null) return null;
+      if (dexTutPhase === "scroll" || dexTutPhase === "toast" || dexTutPhase == null) return null;
       if (dexTutPhase === "slot") return dexSlotCoachMark(tutorialStep, vars);
       if (dexTutPhase === "claim") return dexClaimCoachMark(tutorialStep, vars);
       if (dexTutPhase === "ncoin-after") return dexAfterClaimMark(tutorialStep);
+    }
+
+    // Step 4: pick → drag → done (STEP 4/4).
+    if (tutorialStep.step === 4 && screen.name === "room") {
+      if (roomTutPhase === "pick" || roomTutPhase == null) return roomPickCoachMark(tutorialStep);
+      if (roomTutPhase === "drag") return roomDragCoachMark(tutorialStep);
+      if (roomTutPhase === "done") return roomDoneCoachMark(tutorialStep);
     }
 
     if (stepThenActive && tutorialStep.then && !isNcoinIntroThen(tutorialStep.then)) {
@@ -302,8 +324,9 @@ export default function App() {
     revealTutPhase,
     stepThenActive,
     tutorialReplayStep,
-    tutorialCardId,
+    tutorialVars,
     dexTutPhase,
+    roomTutPhase,
   ]);
 
   const coachLockDismiss = Boolean(rewardsIntro && rewardsIntroConfig?.lockDismiss);
@@ -595,6 +618,8 @@ export default function App() {
     setHideRevealToast(false);
     setStepThenActive(false);
     setDexTutPhase(null);
+    setRoomTutPhase(null);
+    window.clearTimeout(claimToastTimerRef.current);
   }, [ops, persistOps, tutorialReplayStep, rewardsIntro, finishRewardsIntro]);
 
   const onRevealToastShown = useCallback(() => {
@@ -657,17 +682,43 @@ export default function App() {
         // Waiting for coin badge tap — CTA / dim do not skip the claim.
         return;
       }
+      if (dexTutPhase === "toast") return;
       if (dexTutPhase === "ncoin-after") {
         const nextStep = 4;
         if (tutorialReplayStep != null) {
           setTutorialReplayStep(nextStep);
           setDexTutPhase(null);
+          setRoomTutPhase("pick");
           setScreen({ name: "room" });
           return;
         }
         await persistOps({ ...ops, tutorialStep: nextStep });
         setDexTutPhase(null);
+        setRoomTutPhase("pick");
         setScreen({ name: "room" });
+        return;
+      }
+      return;
+    }
+
+    // Step 4: pick/drag advance via RoomScreen; done CTA completes tutorial.
+    if (tutorialStep.step === 4 && screen.name === "room") {
+      if (roomTutPhase === "pick" || roomTutPhase === "drag") return;
+      if (roomTutPhase === "done") {
+        if (tutorialReplayStep != null) {
+          setTutorialReplayStep(null);
+          setRoomTutPhase(null);
+          setStepThenActive(false);
+          setScreen({ name: "home" });
+          setMenuOpen(false);
+          setForceMenuSheet(null);
+          setRewardsIntro({ stepId: "r1", replay: true });
+          return;
+        }
+        await persistOps({ ...ops, tutorialDone: true, tutorialStep: 4 });
+        setRoomTutPhase(null);
+        setStepThenActive(false);
+        setScreen({ name: "home" });
         return;
       }
       return;
@@ -678,6 +729,11 @@ export default function App() {
       if (tutorialStep.step === 3) {
         setDexTutPhase("scroll");
         setScreen({ name: "collection" });
+        return;
+      }
+      if (tutorialStep.step === 4) {
+        setRoomTutPhase("pick");
+        setScreen({ name: "room" });
         return;
       }
       if (
@@ -696,6 +752,7 @@ export default function App() {
         setTutorialReplayStep(null);
         setStepThenActive(false);
         setDexTutPhase(null);
+        setRoomTutPhase(null);
         setScreen({ name: "home" });
         setMenuOpen(false);
         setForceMenuSheet(null);
@@ -706,6 +763,7 @@ export default function App() {
       setTutorialReplayStep(nextStep);
       setStepThenActive(false);
       setDexTutPhase(nextStep === 3 ? "scroll" : null);
+      setRoomTutPhase(nextStep === 4 ? "pick" : null);
       setRevealTutPhase(nextStep === 2 ? "ncoin-intro" : null);
       if (nextStep === 3 || tutorialStep.screen.includes("dex")) setScreen({ name: "collection" });
       else if (tutorialStep.screen === "room" || nextStep === 4) setScreen({ name: "room" });
@@ -737,6 +795,7 @@ export default function App() {
       await persistOps({ ...ops, tutorialDone: true, tutorialStep: tutorialStep.step });
       setStepThenActive(false);
       setDexTutPhase(null);
+      setRoomTutPhase(null);
       setScreen({ name: "home" });
       return;
     }
@@ -745,6 +804,7 @@ export default function App() {
     await persistOps({ ...ops, tutorialStep: nextStep });
     setStepThenActive(false);
     setDexTutPhase(nextStep === 3 ? "scroll" : null);
+    setRoomTutPhase(nextStep === 4 ? "pick" : null);
     if (next?.screen === "room") setScreen({ name: "room" });
     else if (next?.screen.includes("dex") || tutorialStep.screen.includes("dex")) {
       setScreen({ name: "collection" });
@@ -765,6 +825,7 @@ export default function App() {
     revealTutPhase,
     stepThenActive,
     dexTutPhase,
+    roomTutPhase,
   ]);
 
   if (bootError) {
@@ -813,19 +874,40 @@ export default function App() {
             if (dexTutPhase === "scroll") setDexTutPhase("slot");
           }}
           onTutorialClaimed={() => {
-            if (dexTutPhase === "claim") setDexTutPhase("ncoin-after");
+            if (dexTutPhase !== "claim") return;
+            setDexTutPhase("toast");
+            window.clearTimeout(claimToastTimerRef.current);
+            claimToastTimerRef.current = window.setTimeout(() => {
+              setDexTutPhase("ncoin-after");
+            }, 900);
           }}
         />
       ) : null}
 
       {screen.name === "room" ? (
         <RoomScreen
-          onBack={() => setScreen({ name: "home" })}
+          onBack={() => {
+            if (roomTutPhase) return;
+            setScreen({ name: "home" });
+          }}
           tutorialActive={Boolean(
             tutorialStep?.screen === "room" &&
               (tutorialReplayStep != null || (ops && !ops.tutorialDone)),
           )}
+          tutorialPhase={
+            tutorialStep?.step === 4 || tutorialReplayStep === 4 ? roomTutPhase : null
+          }
           suggestTile={tutorialStep?.screen === "room" ? (tutorialStep.suggestTile ?? null) : null}
+          reduceMotion={reduceMotion}
+          onTutorialPicked={() => {
+            if (roomTutPhase === "pick") setRoomTutPhase("drag");
+          }}
+          onTutorialPlaced={() => {
+            if (roomTutPhase === "pick" || roomTutPhase === "drag") setRoomTutPhase("done");
+          }}
+          onTutorialComplete={() => {
+            if (roomTutPhase === "done") void advanceTutorial();
+          }}
         />
       ) : null}
 

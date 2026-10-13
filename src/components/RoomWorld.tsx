@@ -57,6 +57,8 @@ type RoomWorldProps = {
   /** Tutorial step-4 suggest target (c/r); snaps to nearest free tile if blocked. */
   suggestTile?: { c: number; r: number } | null;
   suggestItemId?: string | null;
+  reduceMotion?: boolean;
+  placeFxId?: string | null;
   onSelect: (instanceId: string | null, kind: "floor" | "wall") => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, instanceId: string) => void;
   onFloorPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
@@ -106,6 +108,7 @@ function FloorSprite({
   shaking,
   flipped,
   thumbs,
+  placeFx = false,
   onSelect,
   onItemPointerDown,
 }: {
@@ -117,6 +120,7 @@ function FloorSprite({
   shaking: boolean;
   flipped: boolean;
   thumbs: string[];
+  placeFx?: boolean;
   onSelect: (id: string) => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, id: string) => void;
 }) {
@@ -129,6 +133,7 @@ function FloorSprite({
         selected ? "is-selected" : "",
         lifted ? "is-lifted" : "",
         shaking ? "is-shake" : "",
+        placeFx ? "is-place-fx" : "",
         item.hero || item.id === "catbed_cat" ? "is-catbed" : "",
         isDecal(item) ? "is-rug" : "",
       ]
@@ -150,6 +155,7 @@ function FloorSprite({
       ) : (
         <span className="lucky-sprite-fallback">{item.nameKo}</span>
       )}
+      {placeFx ? <span className="lucky-place-sparkles" aria-hidden="true" /> : null}
       {frames && thumbs[0] ? (
         <span className={`lucky-frame-art is-${item.id}`} aria-hidden="true">
           <img src={thumbs[0]} alt="" />
@@ -273,6 +279,8 @@ export function RoomWorld({
   paintHover,
   suggestTile = null,
   suggestItemId = null,
+  reduceMotion = false,
+  placeFxId = null,
   onSelect,
   onItemPointerDown,
   onFloorPointerDown,
@@ -482,7 +490,10 @@ export function RoomWorld({
       ) : null}
 
       {mode === "edit" && resolvedSuggest && suggestItem && suggestCentre ? (
-        <div className="lucky-suggest-ghost" aria-hidden="true">
+        <div
+          className={`lucky-suggest-ghost ${reduceMotion ? "is-reduced" : ""}`}
+          aria-hidden="true"
+        >
           <img
             className="lucky-suggest-item"
             src={roomAsset(suggestItem.tileImage ?? suggestItem.image ?? `tiles/${suggestItem.id}.png`)}
@@ -494,7 +505,7 @@ export function RoomWorld({
             draggable={false}
           />
           <div
-            className="lucky-suggest-finger"
+            className={`lucky-suggest-finger ${reduceMotion ? "is-arrow" : ""}`}
             style={{
               left: suggestCentre.x,
               top: suggestCentre.y,
@@ -543,6 +554,7 @@ export function RoomWorld({
             shaking={place.instanceId === shakeId}
             flipped={place.orientation === "mirrored"}
             thumbs={frameThumbs}
+            placeFx={place.instanceId === placeFxId}
             onSelect={(id) => onSelect(id, "floor")}
             onItemPointerDown={onItemPointerDown}
           />
@@ -612,6 +624,7 @@ export function RoomWorld({
             shaking={place.instanceId === shakeId}
             flipped={!item.furniture && place.orientation === "mirrored"}
             thumbs={frameThumbs}
+            placeFx={place.instanceId === placeFxId}
             onSelect={(id) => onSelect(id, "floor")}
             onItemPointerDown={onItemPointerDown}
           />

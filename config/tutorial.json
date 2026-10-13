@@ -70,18 +70,18 @@
    "screen": "dex",
    "stepLabel": "STEP 3/4",
    "target": "#dex-slot-{cardId}",
-   "copy": "방금 만난 고양이가 여기 들어왔어요",
+   "copy": "방금 만난 고양이가 여기 들어왔어요 · {품종} · {등급}",
    "substeps": [
     {
      "id": "3-1",
      "target": "#dex-slot-{cardId}",
-     "copy": "방금 만난 고양이가 여기 들어왔어요",
+     "copy": "방금 만난 고양이가 여기 들어왔어요 · {품종} · {등급}",
      "cta": "다음",
      "ackOnly": true,
      "scrollIntoView": {
       "block": "center",
       "behavior": "smooth",
-      "ms": 600
+      "ms": 400
      },
      "pulseMs": 400
     },
@@ -91,31 +91,70 @@
      "fallbackTarget": "#dex-slot-{cardId}",
      "copy": "코인을 톡 누르면 보상을 받아요 · 냥코인 1 + 20P",
      "showFinger": true,
-     "claimGate": true,
-     "afterClaim": {
-      "id": "ncoin-first",
-      "title": "냥코인을 처음 받았어요!",
-      "cta": "알겠어요"
+     "claimGate": true
+    },
+    {
+     "id": "3-3",
+     "target": "",
+     "copy": "",
+     "title": "냥코인을 처음 받았어요!",
+     "cta": "알겠어요",
+     "ackOnly": true,
+     "toast": {
+      "text": "냥코인 1개 + 20포인트 받았어요",
+      "autoHideMs": 1600
      }
     }
    ],
-   "action": "scroll slot → pulse → claim coin → ncoin intro"
+   "action": "scroll slot → pulse → claim coin → toast → ncoin intro"
   },
   {
    "step": 4,
    "screen": "room",
+   "stepLabel": "STEP 4/4",
    "target": "#drawer-item-0",
-   "copy": "서랍에서 아이템을 꺼내 방에 놓아 보세요",
-   "gesture": "drag hint (손가락 애니메이션)",
+   "copy": "서랍에서 마음에 드는 아이템을 꾸욱 눌러 보세요",
+   "gesture": "long-press 250ms or drag; ghost + suggestTile hint",
    "suggestTile": {
     "c": 5,
     "r": 2
    },
-   "then": {
-    "target": "#room-done",
-    "copy": "다 꾸몄으면 완료를 눌러요"
-   },
-   "action": "drag + tap 완료",
+   "substeps": [
+    {
+     "id": "4-1",
+     "target": "#drawer-item-0",
+     "copy": "서랍에서 마음에 드는 아이템을 꾸욱 눌러 보세요",
+     "showFinger": true,
+     "longPressMs": 250,
+     "lockItem": true
+    },
+    {
+     "id": "4-2",
+     "target": "",
+     "copy": "",
+     "ghostFollow": true,
+     "dragHint": true,
+     "suggestTile": {
+      "c": 5,
+      "r": 2
+     },
+     "invalidToast": "여기는 자리가 없어요",
+     "lockItem": true
+    },
+    {
+     "id": "4-3",
+     "target": "#room-done",
+     "copy": "잘했어요! 다른 아이템도 자유롭게 꾸며 보세요",
+     "cta": "완료",
+     "ackOnly": true,
+     "placeFx": {
+      "sfx": "item-place",
+      "bounceMs": 240,
+      "sparkles": true
+     }
+    }
+   ],
+   "action": "long-press/drag drawer → place → 완료",
    "complete": "tutorialDone=true"
   }
  ],

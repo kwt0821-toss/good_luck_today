@@ -1,6 +1,6 @@
+import type { DexCard } from "./dexTypes";
 import type {
   CoachMark,
-  DexTutorialSubstep,
   NcoinIntroThen,
   OpsState,
   OpsTutorial,
@@ -8,6 +8,7 @@ import type {
   RewardsIntroStep,
   TutorialStep,
   TutorialStepThen,
+  TutorialSubstep,
 } from "./opsTypes";
 
 export function isNcoinIntroThen(then: TutorialStepThen | undefined): then is NcoinIntroThen {
@@ -17,20 +18,57 @@ export function isNcoinIntroThen(then: TutorialStepThen | undefined): then is Nc
 export function dexSubstep(
   step: TutorialStep | null | undefined,
   id: string,
-): DexTutorialSubstep | null {
+): TutorialSubstep | null {
   return step?.substeps?.find((entry) => entry.id === id) ?? null;
+}
+
+export function roomSubstep(
+  step: TutorialStep | null | undefined,
+  id: string,
+): TutorialSubstep | null {
+  return step?.substeps?.find((entry) => entry.id === id) ?? null;
+}
+
+/** Breed / type label for slot coach copy. */
+export function dexCardBreedLabel(card: DexCard | null | undefined): string {
+  if (!card) return "";
+  if (card.type === "breed") return card.breed?.ko ?? card.breed?.en ?? "";
+  return card.name?.ko ?? "";
+}
+
+/** Grade label: n★ for breed, type name otherwise. */
+export function dexCardGradeLabel(card: DexCard | null | undefined): string {
+  if (!card) return "";
+  if (card.type === "breed" && card.stars) return `${card.stars}★`;
+  if (card.type === "special") return "스페셜";
+  if (card.type === "character") return "캐릭터";
+  if (card.type === "legend") return "레전드";
+  return "";
+}
+
+export function fillTutorialCopy(
+  template: string,
+  vars: { cardId?: string | null; breed?: string | null; grade?: string | null } = {},
+): string {
+  let next = template;
+  if (vars.cardId) next = next.split("{cardId}").join(vars.cardId);
+  if (vars.breed != null) next = next.split("{품종}").join(vars.breed);
+  if (vars.grade != null) next = next.split("{등급}").join(vars.grade);
+  // Drop unresolved placeholders so we don't show raw braces.
+  next = next.replace(/\s*·\s*\{[^}]+\}/g, "").replace(/\{[^}]+\}/g, "");
+  return next.replace(/\s+/g, " ").trim();
 }
 
 export function dexSlotCoachMark(
   step: TutorialStep,
-  vars: { cardId?: string | null },
+  vars: { cardId?: string | null; breed?: string | null; grade?: string | null },
 ): CoachMark | null {
   const sub = dexSubstep(step, "3-1");
   if (!sub) return null;
   return {
     id: "step-3-1",
     target: resolveTutorialTarget(sub.target, vars),
-    copy: sub.copy,
+    copy: fillTutorialCopy(sub.copy ?? step.copy, vars),
     cta: sub.cta ?? "다음",
     ackOnly: sub.ackOnly !== false,
     showFinger: false,
@@ -48,7 +86,7 @@ export function dexClaimCoachMark(
   return {
     id: "step-3-2",
     target: resolveTutorialTarget(sub.target, vars, sub.fallbackTarget),
-    copy: sub.copy,
+    copy: sub.copy ?? "",
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     activateTarget: Boolean(sub.claimGate),
@@ -58,18 +96,68 @@ export function dexClaimCoachMark(
 }
 
 export function dexAfterClaimMark(step: TutorialStep): CoachMark | null {
-  const sub = dexSubstep(step, "3-2");
-  const after = sub?.afterClaim;
+  const sub = dexSubstep(step, "3-3") ?? dexSubstep(step, "3-2");
+  const after = sub?.id === "3-3" ? sub : sub?.afterClaim;
   if (!after) return null;
   return {
-    id: after.id,
+    id: "id" in after && after.id ? after.id : "ncoin-first",
     target: "",
-    title: after.title,
-    copy: after.copy,
+    title: after.title ?? "냥코인을 처음 받았어요!",
+    copy: "copy" in after ? after.copy : undefined,
     cta: after.cta ?? "알겠어요",
     ackOnly: true,
     showFinger: false,
     stepLabel: step.stepLabel ?? "STEP 3/4",
+  };
+}
+
+export function dexClaimToastText(step: TutorialStep | null | undefined): string | null {
+  const sub = dexSubstep(step, "3-3");
+  return sub?.toast?.text ?? null;
+}
+
+export function roomPickCoachMark(step: TutorialStep): CoachMark | null {
+  const sub = roomSubstep(step, "4-1");
+  if (!sub) return null;
+  return {
+    id: "step-4-1",
+    target: resolveTutorialTarget(sub.target),
+    copy: sub.copy ?? step.copy,
+    showFinger: sub.showFinger !== false,
+    ackOnly: true,
+    passThrough: true,
+    stepLabel: step.stepLabel ?? "STEP 4/4",
+    bubble: "above",
+  };
+}
+
+/** Drag phase: skip only (no dim/bubble); grid/ghost/hint live in RoomScreen. */
+export function roomDragCoachMark(step: TutorialStep): CoachMark | null {
+  const sub = roomSubstep(step, "4-2");
+  if (!sub) return null;
+  return {
+    id: "step-4-2",
+    target: "",
+    ackOnly: true,
+    showFinger: false,
+    dim: false,
+  };
+}
+
+export function roomDoneCoachMark(step: TutorialStep): CoachMark | null {
+  const sub = roomSubstep(step, "4-3");
+  if (!sub) return null;
+  return {
+    id: "step-4-3",
+    target: resolveTutorialTarget(sub.target || "#room-done"),
+    copy: sub.copy ?? "잘했어요! 다른 아이템도 자유롭게 꾸며 보세요",
+    cta: sub.cta ?? "완료",
+    ackOnly: true,
+    activateTarget: true,
+    showFinger: false,
+    hideSkip: true,
+    stepLabel: step.stepLabel ?? "STEP 4/4",
+    bubble: "above",
   };
 }
 
