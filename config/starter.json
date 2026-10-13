@@ -1,0 +1,169 @@
+{
+ "_version": "starter-1.1",
+ "startPaw": 300,
+ "firstRoom": {
+  "roomId": "moon_bedroom",
+  "floor": "floor_wood_honey",
+  "wall": {
+   "L": "wall_plum_sparkle",
+   "R": "wall_plum_sparkle"
+  },
+  "placed": [
+   {
+    "id": "catbed",
+    "hero": true,
+    "withCat": "heroCat",
+    "sprite": "catbed_cat",
+    "c": 3,
+    "r": 4,
+    "orientation": "default"
+   },
+   {
+    "id": "floorlamp",
+    "c": 0,
+    "r": 0,
+    "orientation": "default"
+   },
+   {
+    "id": "plant",
+    "c": 2,
+    "r": 0,
+    "orientation": "default"
+   },
+   {
+    "id": "pawrug",
+    "c": 3,
+    "r": 3,
+    "w": 2,
+    "d": 2
+   },
+   {
+    "id": "archwindow",
+    "wall": "L",
+    "t": 2.6,
+    "heightUnits": 92
+   },
+   {
+    "id": "cardframe",
+    "wall": "R",
+    "t": 1.0,
+    "heightUnits": 98
+   }
+  ],
+  "layoutNote": "좌표는 room-assets-v6/grid.json defaultLayout과 같은 칸 — 미배치 칸은 고양이 이동 가능"
+ },
+ "drawer": [
+  "floor_check_pink",
+  "wall_mint_gingham",
+  "cushions",
+  "yarnbasket"
+ ],
+ "attendance": {
+  "noReset": true,
+  "rule": "KST 00:00 기준 하루 1회, 누적 attendanceDays. 빠진 날 있어도 리셋 없음.",
+  "firstWeek": [
+   {
+    "day": 1,
+    "itemId": "catcactus",
+    "tier": "small"
+   },
+   {
+    "day": 2,
+    "itemId": "calendar",
+    "tier": "wall"
+   },
+   {
+    "day": 3,
+    "itemId": "starlight",
+    "tier": "small"
+   },
+   {
+    "day": 4,
+    "itemId": "bunting",
+    "tier": "wall"
+   },
+   {
+    "day": 5,
+    "itemId": "globe",
+    "tier": "small"
+   },
+   {
+    "day": 6,
+    "itemId": "fishbowl",
+    "tier": "small"
+   },
+   {
+    "day": 7,
+    "itemId": "cattower",
+    "tier": "large"
+   }
+  ],
+  "weeklyCycle": {
+   "days": [
+    {
+     "day": 1,
+     "paw": 10
+    },
+    {
+     "day": 2,
+     "paw": 15
+    },
+    {
+     "day": 3,
+     "paw": 20
+    },
+    {
+     "day": 4,
+     "paw": 25
+    },
+    {
+     "day": 5,
+     "paw": 30
+    },
+    {
+     "day": 6,
+     "paw": 40
+    }
+   ],
+   "day7": {
+    "mode": "alternate",
+    "itemBox": {
+     "pool": [
+      "catcactus",
+      "calendar",
+      "starlight",
+      "bunting",
+      "globe",
+      "fishbowl",
+      "cattower"
+     ],
+     "fallbackWhenAllOwned": {
+      "paw": 100
+     }
+    },
+    "rateUpTicket": true,
+    "note": "홀수 주기 itemBox, 짝수 주기 rateUpTicket"
+   }
+  },
+  "milestones": [
+   {
+    "days": 14,
+    "itemId": "cattower",
+    "badgeId": "badge_attend_14",
+    "labelKo": "2주 출석"
+   },
+   {
+    "days": 30,
+    "itemId": "globe",
+    "badgeId": "badge_attend_30",
+    "labelKo": "한 달 출석"
+   },
+   {
+    "days": 100,
+    "itemId": "starlight",
+    "badgeId": "badge_attend_100",
+    "labelKo": "100일 출석"
+   }
+  ]
+ }
+}

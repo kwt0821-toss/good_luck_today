@@ -1,0 +1,446 @@
+{
+ "_version": "menu-1.7 (2026-10-12)",
+ "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
+ "panel": {
+  "side": "right",
+  "widthPt": 312,
+  "openMs": 280,
+  "closeMs": 220,
+  "easingOpen": "cubic-bezier(.22,1,.36,1)",
+  "easingClose": "cubic-bezier(.4,0,1,1)",
+  "dimOpacity": 0.58,
+  "swipeToCloseThresholdPt": 80
+ },
+ "header": {
+  "title": "MENU.",
+  "subtitle": "오늘도 고양이랑 천천히 놀아요",
+  "stats": [
+   {
+    "id": "paw",
+    "label": "내 포인트",
+    "value": "user.pawBalance",
+    "format": "number(ko-KR)",
+    "icon": "icon-paw-mini.svg"
+   },
+   {
+    "id": "nyangCoin",
+    "label": "냥코인",
+    "value": "user.nyangCoinBalance",
+    "format": "number(ko-KR)",
+    "icon": "/assets/ncoin/ncoin-32.png"
+   },
+   {
+    "id": "dex",
+    "label": "도감",
+    "value": "user.dexOwned",
+    "total": "dex.totalCards",
+    "showProgressBar": true,
+    "tapTo": "dex"
+   },
+   {
+    "id": "roomLv",
+    "label": "방 레벨",
+    "value": "user.cozyLevel",
+    "format": "'Lv.'+value",
+    "source": "economy.json → cozy.levels",
+    "tapTo": "room"
+   }
+  ]
+ },
+ "sections": [
+  {
+   "id": "daily",
+   "label": "DAILY",
+   "rows": [
+    "attendance",
+    "points",
+    "exchange",
+    "ticketShop",
+    "rewards"
+   ]
+  },
+  {
+   "id": "more",
+   "label": "MORE",
+   "rows": [
+    "rates",
+    "notice",
+    "invite",
+    "settings"
+   ]
+  }
+ ],
+ "rows": {
+  "attendance": {
+   "label": "출석 체크",
+   "icon": "icon-attendance.svg",
+   "enabled": true,
+   "open": "sheet:attendance",
+   "meta": "'{n}일째 · 선물 도착' if canClaimToday else '누적 {attendanceDays}일 · 내일 또 만나요'",
+   "data": "starter.json → attendance (firstWeek / weeklyCycle / milestones)",
+   "badge": {
+    "type": "dot",
+    "when": "attendance.canClaimToday"
+   }
+  },
+  "points": {
+   "label": "포인트 받기",
+   "icon": "icon-points.svg",
+   "enabled": true,
+   "open": "action:rewardedAd(paw)",
+   "meta": "'남은 횟수 {remaining}/{economy.pawSources.rewardedAd.maxPerDay}'",
+   "data": "economy.json → pawSources.rewardedAd (pawPerAd 10, maxPerDay 10), events.weekendDoublePaw",
+   "badge": {
+    "type": "pill",
+    "text": "주말 2배",
+    "when": "events.weekendDoublePaw.enabled && today in events.weekendDoublePaw.days"
+   },
+   "disabledWhen": "remaining == 0",
+   "disabledMeta": "내일 다시 열려요",
+   "adTag": {
+    "text": "광고",
+    "style": "cream-border (main-draw-pill-ad)"
+   }
+  },
+  "exchange": {
+   "label": "중복 카드 교환",
+   "icon": "icon-exchange.svg",
+   "enabled": true,
+   "open": "sheet:exchange",
+   "meta": "'중복 {user.duplicateCount}장'",
+   "data": "economy.json → pawSources.duplicateConvert",
+   "badge": {
+    "type": "none"
+   },
+   "disabledWhen": "user.duplicateCount == 0",
+   "disabledMeta": "아직 겹친 카드가 없어요"
+  },
+  "ticketShop": {
+   "label": "뽑기권",
+   "icon": "icon-ticket.svg",
+   "enabled": true,
+   "open": "sheet:ticketShop",
+   "meta": "'보유 {rateUpTickets}장 · 오늘 {dayBought}/{dayLimit}'",
+   "data": "economy.json → shop.tickets.rateUpTicket + tickets.rateUpTicket.maxHold",
+   "badge": {
+    "type": "none"
+   }
+  },
+  "rewards": {
+   "label": "보상함",
+   "icon": "icon-rewards.svg",
+   "enabled": true,
+   "open": "sheet:rewards",
+   "meta": "'{ncoin}{nyangCoinBalance} 냥코인 · 도감 보상 {rewards.dexClaimableCount}'",
+   "data": "economy.json → dexRewards.claimMode=manual + pawSources.newCardFirstGet / setComplete",
+   "badge": {
+    "type": "dot",
+    "when": "rewards.dexClaimableCount > 0"
+   }
+  },
+  "rates": {
+   "label": "확률 안내",
+   "icon": "icon-rates.svg",
+   "enabled": true,
+   "open": "sheet:rates",
+   "meta": "5성↑·스페셜 {sum(b5,special,character,legend)}%",
+   "data": "economy.json → draws.rates_proposal.normal / rateUp / keys",
+   "badge": {
+    "type": "none"
+   },
+   "required": true,
+   "_note": "확률 공개는 필수 — enabled=false로 내리지 마세요"
+  },
+  "notice": {
+   "label": "공지·이벤트",
+   "icon": "icon-notice.svg",
+   "enabled": true,
+   "open": "sheet:notice",
+   "meta": "최신 이벤트 제목 pill (예: 주말 포인트 2배)",
+   "data": "/notices API + economy.json → events",
+   "badge": {
+    "type": "pill-new",
+    "text": "NEW",
+    "when": "latestNotice.id > user.lastSeenNoticeId"
+   }
+  },
+  "invite": {
+   "label": "친구 초대",
+   "icon": "icon-invite.svg",
+   "enabled": false,
+   "open": "sheet:invite",
+   "disabledPill": "준비 중",
+   "data": "economy.json → events.friendInvite (enabled=false)",
+   "enableWhen": "economy.events.friendInvite.enabled == true"
+  },
+  "settings": {
+   "label": "설정",
+   "icon": "icon-settings.svg",
+   "enabled": true,
+   "open": "page:settings",
+   "items": [
+    {
+     "id": "bgm",
+     "label": "배경음악(BGM)",
+     "type": "toggle",
+     "default": false,
+     "storage": "lc.audio.bgm"
+    },
+    {
+     "id": "sfx",
+     "label": "효과음",
+     "type": "toggle",
+     "default": true,
+     "storage": "lc.audio.sfx"
+    },
+    {
+     "id": "haptic",
+     "label": "진동",
+     "type": "toggle",
+     "default": true,
+     "storage": "local"
+    },
+    {
+     "id": "reduceMotion",
+     "label": "움직임 줄이기",
+     "type": "toggle",
+     "default": "prefers-reduced-motion",
+     "storage": "local"
+    },
+    {
+     "id": "replayTutorial",
+     "label": "튜토리얼 다시 보기",
+     "type": "action",
+     "action": "tutorial.replay",
+     "data": "tutorial.json (보상 재지급 없음)"
+    },
+    {
+     "id": "contact",
+     "label": "문의하기",
+     "type": "link",
+     "url": "TODO"
+    },
+    {
+     "id": "terms",
+     "label": "이용약관",
+     "type": "link",
+     "url": "TODO"
+    },
+    {
+     "id": "privacy",
+     "label": "개인정보처리방침",
+     "type": "link",
+     "url": "TODO"
+    },
+    {
+     "id": "credits",
+     "label": "오디오 크레딧",
+     "type": "link",
+     "url": "/assets/audio/LICENSES.md"
+    },
+    {
+     "id": "version",
+     "label": "버전",
+     "type": "text",
+     "value": "app.version"
+    }
+   ]
+  }
+ },
+ "menuIconBadge": {
+  "type": "dot",
+  "on": "#btn-menu (메인 우상단 발바닥)",
+  "when": "any(row.badge.type=='dot' && row.badge.when)"
+ },
+ "sheets": {
+  "attendance": {
+   "title": "출석 체크",
+   "eyebrow": "DAILY GIFT",
+   "states": {
+    "firstWeek": {
+     "when": "attendanceDays < 7 || (attendanceDays==7 && !canClaimToday && phase==firstWeek) || phase==firstWeek",
+     "mockup": "menu-screen-b.png",
+     "desc": "7일 출석하면 {day7.nameKo}가 방으로 와요.\n하루 빠져도 괜찮아요, 출석한 날만큼 이어서 받아요.",
+     "cta": "오늘 선물 받기 · {todayRewardLabel}",
+     "ctaDone": "오늘 선물 받았어요",
+     "note": "받은 아이템은 방꾸미기 서랍에 들어가요",
+     "thumbs": "gift-{itemId}.png",
+     "grid": "4col day7=span2"
+    },
+    "weeklyCycle": {
+     "when": "attendanceDays >= 7 && phase==weeklyCycle",
+     "mockup": "menu-screen-b2.png",
+     "desc": "매일 출석하면 포인트·이용권·한정 선물이 쌓여요.",
+     "cta": "오늘 출석하기 · {todayRewardLabel}",
+     "ctaDone": "오늘 출석했어요",
+     "note": "누적 출석은 빠지더라도 리셋되지 않아요",
+     "summaryCard": {
+      "title": "누적 출석",
+      "value": "{attendanceDays}일",
+      "milestone": "{milestoneLabel}까지 {daysToMilestone}일",
+      "badge": "{nextBadgeId}"
+     },
+     "weekGrid": "7 cells · cycleDay highlight"
+    }
+   },
+   "ctaDone": "오늘 선물 받았어요",
+   "thumbs": "gift-{itemId}.png"
+  },
+  "rates": {
+   "title": "확률 안내",
+   "eyebrow": "DRAW RATES",
+   "desc": "뽑기 결과는 서버에서 정해져요.\n같은 등급 안에서는 카드마다 확률이 같아요.",
+   "tabs": [
+    "일반 뽑기",
+    "확률업 뽑기"
+   ],
+   "rows": [
+    [
+     "b1",
+     "1성",
+     18
+    ],
+    [
+     "b2",
+     "2성",
+     18
+    ],
+    [
+     "b3",
+     "3성",
+     18
+    ],
+    [
+     "b4",
+     "4성",
+     18
+    ],
+    [
+     "b5",
+     "5성",
+     18
+    ],
+    [
+     "special",
+     "스페셜",
+     9
+    ],
+    [
+     "character",
+     "캐릭터",
+     4
+    ],
+    [
+     "legend",
+     "레전드",
+     4
+    ]
+   ],
+   "highlight": [
+    "b5",
+    "special",
+    "character",
+    "legend"
+   ],
+   "perCardDecimals": 3,
+   "note": "카드 1장 확률은 소수점 넷째 자리에서 반올림했어요"
+  },
+  "exchange": {
+   "title": "중복 카드 교환",
+   "eyebrow": "SWAP",
+   "desc": "겹친 카드를 포인트로 바꿔요. 카드는 1장씩 남아요.",
+   "cta": "한 번에 바꾸기 · {total}P"
+  },
+  "ticketShop": {
+   "title": "확률업 뽑기권",
+   "eyebrow": "TICKET SHOP",
+   "desc": "포인트로 광고 없이 확률업 뽑기를 해요.\n출석으로 받은 뽑기권과 보유 한도를 함께 써요.",
+   "mockup": "ticket-shop.png",
+   "cardTitle": "확률업 이용권",
+   "cardDesc": "긴 광고 없이 확률업 1회",
+   "priceLabel": "{price}P",
+   "limits": [
+    {
+     "id": "day",
+     "label": "오늘",
+     "format": "{bought}/{limit}"
+    },
+    {
+     "id": "week",
+     "label": "이번 주",
+     "format": "{bought}/{limit}"
+    },
+    {
+     "id": "hold",
+     "label": "보유",
+     "format": "{held}/{maxHold}"
+    }
+   ],
+   "balanceLabel": "내 포인트 {paw}P",
+   "ctaBuy": "{price}P로 사기",
+   "ctaDraw": "지금 확률업 뽑기",
+   "toastBought": "확률업 뽑기권을 샀어요",
+   "disabled": {
+    "paw": "포인트가 {price}P 필요해요",
+    "day": "오늘 구매 한도에 도달했어요",
+    "week": "이번 주 구매 한도에 도달했어요",
+    "hold": "보유 한도 {maxHold}장이에요"
+   },
+   "note": "주 한도는 월요일 00:00(KST)에 리셋돼요"
+  },
+  "rewards": {
+   "title": "보상함",
+   "eyebrow": "REWARDS",
+   "desc": "도감을 채우면 냥코인과 발바닥 포인트를 도감에서 받아요.",
+   "cta": "도감에서 보상 받기",
+   "wallet": {
+    "title": "내 냥코인",
+    "withdrawCta": "토스 포인트 전환",
+    "disabledHint": "10 냥코인부터 받을 수 있어요",
+    "confirmTitle": "토스포인트로 받을까요?",
+    "confirmDesc": "{amount}냥코인을 토스포인트 {amount}원으로 바꿔요.",
+    "successTitle": "토스포인트를 받았어요",
+    "successDesc": "{amount}원이 토스 포인트로 들어갔어요.",
+    "historyTitle": "받은 기록",
+    "status": {
+     "done": "완료",
+     "pending": "처리 중",
+     "failed": "실패"
+    },
+    "chipStep": 10,
+    "mockups": [
+     "menu-screen-d",
+     "menu-screen-d-low",
+     "menu-screen-d2",
+     "menu-screen-d3"
+    ],
+    "dailyLimitHint": "오늘 {remainingToday}원 더 받을 수 있어요 · 하루 최대 {dailyLimit}원",
+    "dailyDoneHint": "오늘은 다 받았어요 · 내일 00:00에 다시 받을 수 있어요",
+    "lowBalanceHint": "10 냥코인부터 받을 수 있어요 · {need}개 더 모아요",
+    "remainAfterHint": "받고 남는 {remain}냥코인은 그대로 모여요",
+    "stepper": {
+     "step": 10,
+     "minHit": 44,
+     "longPressMs": 400,
+     "repeatMs": 120
+    }
+   },
+   "dexShortcut": {
+    "label": "도감에서 받을 보상 {count}개",
+    "cta": "도감 가기 ›",
+    "when": "rewards.dexClaimableCount > 0"
+   }
+  }
+ },
+ "attendanceOnlyTag": {
+  "label": "출석 한정",
+  "style": {
+   "fontSize": 9.5,
+   "fontWeight": 700,
+   "color": "#1E1A2B",
+   "background": "#FFC48A",
+   "radius": 6,
+   "padding": "1px 6px"
+  }
+ }
+}

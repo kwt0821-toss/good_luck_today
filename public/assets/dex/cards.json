@@ -1,0 +1,1587 @@
+{
+ "version": 1,
+ "total": 107,
+ "counts": {
+  "breed": 90,
+  "special": 9,
+  "character": 4,
+  "legend": 4
+ },
+ "imageSizes": {
+  "front/back": "660x1027 (220x342pt @3x)",
+  "thumb": "188x292 (≈62.4x97pt @3x)"
+ },
+ "cards": [
+  {
+   "id": "abyssinian_1",
+   "type": "breed",
+   "breed": {
+    "id": "abyssinian",
+    "en": "Abyssinian",
+    "ko": "아비시니안"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/abyssinian_1_front.webp",
+   "back": "cards/breed/abyssinian_1_back.webp",
+   "thumb": "thumbs/breed/abyssinian_1_thumb.webp"
+  },
+  {
+   "id": "abyssinian_2",
+   "type": "breed",
+   "breed": {
+    "id": "abyssinian",
+    "en": "Abyssinian",
+    "ko": "아비시니안"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/abyssinian_2_front.webp",
+   "back": "cards/breed/abyssinian_2_back.webp",
+   "thumb": "thumbs/breed/abyssinian_2_thumb.webp"
+  },
+  {
+   "id": "abyssinian_3",
+   "type": "breed",
+   "breed": {
+    "id": "abyssinian",
+    "en": "Abyssinian",
+    "ko": "아비시니안"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/abyssinian_3_front.webp",
+   "back": "cards/breed/abyssinian_3_back.webp",
+   "thumb": "thumbs/breed/abyssinian_3_thumb.webp"
+  },
+  {
+   "id": "abyssinian_4",
+   "type": "breed",
+   "breed": {
+    "id": "abyssinian",
+    "en": "Abyssinian",
+    "ko": "아비시니안"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/abyssinian_4_front.webp",
+   "back": "cards/breed/abyssinian_4_back.webp",
+   "thumb": "thumbs/breed/abyssinian_4_thumb.webp"
+  },
+  {
+   "id": "abyssinian_5",
+   "type": "breed",
+   "breed": {
+    "id": "abyssinian",
+    "en": "Abyssinian",
+    "ko": "아비시니안"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/abyssinian_5_front.webp",
+   "back": "cards/breed/abyssinian_5_back.webp",
+   "thumb": "thumbs/breed/abyssinian_5_thumb.webp"
+  },
+  {
+   "id": "bengal_1",
+   "type": "breed",
+   "breed": {
+    "id": "bengal",
+    "en": "Bengal",
+    "ko": "벵갈"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/bengal_1_front.webp",
+   "back": "cards/breed/bengal_1_back.webp",
+   "thumb": "thumbs/breed/bengal_1_thumb.webp"
+  },
+  {
+   "id": "bengal_2",
+   "type": "breed",
+   "breed": {
+    "id": "bengal",
+    "en": "Bengal",
+    "ko": "벵갈"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/bengal_2_front.webp",
+   "back": "cards/breed/bengal_2_back.webp",
+   "thumb": "thumbs/breed/bengal_2_thumb.webp"
+  },
+  {
+   "id": "bengal_3",
+   "type": "breed",
+   "breed": {
+    "id": "bengal",
+    "en": "Bengal",
+    "ko": "벵갈"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/bengal_3_front.webp",
+   "back": "cards/breed/bengal_3_back.webp",
+   "thumb": "thumbs/breed/bengal_3_thumb.webp"
+  },
+  {
+   "id": "bengal_4",
+   "type": "breed",
+   "breed": {
+    "id": "bengal",
+    "en": "Bengal",
+    "ko": "벵갈"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/bengal_4_front.webp",
+   "back": "cards/breed/bengal_4_back.webp",
+   "thumb": "thumbs/breed/bengal_4_thumb.webp"
+  },
+  {
+   "id": "bengal_5",
+   "type": "breed",
+   "breed": {
+    "id": "bengal",
+    "en": "Bengal",
+    "ko": "벵갈"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/bengal_5_front.webp",
+   "back": "cards/breed/bengal_5_back.webp",
+   "thumb": "thumbs/breed/bengal_5_thumb.webp"
+  },
+  {
+   "id": "british_shorthair_1",
+   "type": "breed",
+   "breed": {
+    "id": "british_shorthair",
+    "en": "British Shorthair",
+    "ko": "브리티시 숏헤어"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/british_shorthair_1_front.webp",
+   "back": "cards/breed/british_shorthair_1_back.webp",
+   "thumb": "thumbs/breed/british_shorthair_1_thumb.webp"
+  },
+  {
+   "id": "british_shorthair_2",
+   "type": "breed",
+   "breed": {
+    "id": "british_shorthair",
+    "en": "British Shorthair",
+    "ko": "브리티시 숏헤어"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/british_shorthair_2_front.webp",
+   "back": "cards/breed/british_shorthair_2_back.webp",
+   "thumb": "thumbs/breed/british_shorthair_2_thumb.webp"
+  },
+  {
+   "id": "british_shorthair_3",
+   "type": "breed",
+   "breed": {
+    "id": "british_shorthair",
+    "en": "British Shorthair",
+    "ko": "브리티시 숏헤어"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/british_shorthair_3_front.webp",
+   "back": "cards/breed/british_shorthair_3_back.webp",
+   "thumb": "thumbs/breed/british_shorthair_3_thumb.webp"
+  },
+  {
+   "id": "british_shorthair_4",
+   "type": "breed",
+   "breed": {
+    "id": "british_shorthair",
+    "en": "British Shorthair",
+    "ko": "브리티시 숏헤어"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/british_shorthair_4_front.webp",
+   "back": "cards/breed/british_shorthair_4_back.webp",
+   "thumb": "thumbs/breed/british_shorthair_4_thumb.webp"
+  },
+  {
+   "id": "british_shorthair_5",
+   "type": "breed",
+   "breed": {
+    "id": "british_shorthair",
+    "en": "British Shorthair",
+    "ko": "브리티시 숏헤어"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/british_shorthair_5_front.webp",
+   "back": "cards/breed/british_shorthair_5_back.webp",
+   "thumb": "thumbs/breed/british_shorthair_5_thumb.webp"
+  },
+  {
+   "id": "cornish_rex_1",
+   "type": "breed",
+   "breed": {
+    "id": "cornish_rex",
+    "en": "Cornish Rex",
+    "ko": "코니시 렉스"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/cornish_rex_1_front.webp",
+   "back": "cards/breed/cornish_rex_1_back.webp",
+   "thumb": "thumbs/breed/cornish_rex_1_thumb.webp"
+  },
+  {
+   "id": "cornish_rex_2",
+   "type": "breed",
+   "breed": {
+    "id": "cornish_rex",
+    "en": "Cornish Rex",
+    "ko": "코니시 렉스"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/cornish_rex_2_front.webp",
+   "back": "cards/breed/cornish_rex_2_back.webp",
+   "thumb": "thumbs/breed/cornish_rex_2_thumb.webp"
+  },
+  {
+   "id": "cornish_rex_3",
+   "type": "breed",
+   "breed": {
+    "id": "cornish_rex",
+    "en": "Cornish Rex",
+    "ko": "코니시 렉스"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/cornish_rex_3_front.webp",
+   "back": "cards/breed/cornish_rex_3_back.webp",
+   "thumb": "thumbs/breed/cornish_rex_3_thumb.webp"
+  },
+  {
+   "id": "cornish_rex_4",
+   "type": "breed",
+   "breed": {
+    "id": "cornish_rex",
+    "en": "Cornish Rex",
+    "ko": "코니시 렉스"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/cornish_rex_4_front.webp",
+   "back": "cards/breed/cornish_rex_4_back.webp",
+   "thumb": "thumbs/breed/cornish_rex_4_thumb.webp"
+  },
+  {
+   "id": "cornish_rex_5",
+   "type": "breed",
+   "breed": {
+    "id": "cornish_rex",
+    "en": "Cornish Rex",
+    "ko": "코니시 렉스"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/cornish_rex_5_front.webp",
+   "back": "cards/breed/cornish_rex_5_back.webp",
+   "thumb": "thumbs/breed/cornish_rex_5_thumb.webp"
+  },
+  {
+   "id": "korean_shorthair_1",
+   "type": "breed",
+   "breed": {
+    "id": "korean_shorthair",
+    "en": "Korean Shorthair",
+    "ko": "코리안 숏헤어"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/korean_shorthair_1_front.webp",
+   "back": "cards/breed/korean_shorthair_1_back.webp",
+   "thumb": "thumbs/breed/korean_shorthair_1_thumb.webp"
+  },
+  {
+   "id": "korean_shorthair_2",
+   "type": "breed",
+   "breed": {
+    "id": "korean_shorthair",
+    "en": "Korean Shorthair",
+    "ko": "코리안 숏헤어"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/korean_shorthair_2_front.webp",
+   "back": "cards/breed/korean_shorthair_2_back.webp",
+   "thumb": "thumbs/breed/korean_shorthair_2_thumb.webp"
+  },
+  {
+   "id": "korean_shorthair_3",
+   "type": "breed",
+   "breed": {
+    "id": "korean_shorthair",
+    "en": "Korean Shorthair",
+    "ko": "코리안 숏헤어"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/korean_shorthair_3_front.webp",
+   "back": "cards/breed/korean_shorthair_3_back.webp",
+   "thumb": "thumbs/breed/korean_shorthair_3_thumb.webp"
+  },
+  {
+   "id": "korean_shorthair_4",
+   "type": "breed",
+   "breed": {
+    "id": "korean_shorthair",
+    "en": "Korean Shorthair",
+    "ko": "코리안 숏헤어"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/korean_shorthair_4_front.webp",
+   "back": "cards/breed/korean_shorthair_4_back.webp",
+   "thumb": "thumbs/breed/korean_shorthair_4_thumb.webp"
+  },
+  {
+   "id": "korean_shorthair_5",
+   "type": "breed",
+   "breed": {
+    "id": "korean_shorthair",
+    "en": "Korean Shorthair",
+    "ko": "코리안 숏헤어"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/korean_shorthair_5_front.webp",
+   "back": "cards/breed/korean_shorthair_5_back.webp",
+   "thumb": "thumbs/breed/korean_shorthair_5_thumb.webp"
+  },
+  {
+   "id": "lykoi_1",
+   "type": "breed",
+   "breed": {
+    "id": "lykoi",
+    "en": "Lykoi",
+    "ko": "라이코이"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/lykoi_1_front.webp",
+   "back": "cards/breed/lykoi_1_back.webp",
+   "thumb": "thumbs/breed/lykoi_1_thumb.webp"
+  },
+  {
+   "id": "lykoi_2",
+   "type": "breed",
+   "breed": {
+    "id": "lykoi",
+    "en": "Lykoi",
+    "ko": "라이코이"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/lykoi_2_front.webp",
+   "back": "cards/breed/lykoi_2_back.webp",
+   "thumb": "thumbs/breed/lykoi_2_thumb.webp"
+  },
+  {
+   "id": "lykoi_3",
+   "type": "breed",
+   "breed": {
+    "id": "lykoi",
+    "en": "Lykoi",
+    "ko": "라이코이"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/lykoi_3_front.webp",
+   "back": "cards/breed/lykoi_3_back.webp",
+   "thumb": "thumbs/breed/lykoi_3_thumb.webp"
+  },
+  {
+   "id": "lykoi_4",
+   "type": "breed",
+   "breed": {
+    "id": "lykoi",
+    "en": "Lykoi",
+    "ko": "라이코이"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/lykoi_4_front.webp",
+   "back": "cards/breed/lykoi_4_back.webp",
+   "thumb": "thumbs/breed/lykoi_4_thumb.webp"
+  },
+  {
+   "id": "lykoi_5",
+   "type": "breed",
+   "breed": {
+    "id": "lykoi",
+    "en": "Lykoi",
+    "ko": "라이코이"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/lykoi_5_front.webp",
+   "back": "cards/breed/lykoi_5_back.webp",
+   "thumb": "thumbs/breed/lykoi_5_thumb.webp"
+  },
+  {
+   "id": "maine_coon_1",
+   "type": "breed",
+   "breed": {
+    "id": "maine_coon",
+    "en": "Maine Coon",
+    "ko": "메인쿤"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/maine_coon_1_front.webp",
+   "back": "cards/breed/maine_coon_1_back.webp",
+   "thumb": "thumbs/breed/maine_coon_1_thumb.webp"
+  },
+  {
+   "id": "maine_coon_2",
+   "type": "breed",
+   "breed": {
+    "id": "maine_coon",
+    "en": "Maine Coon",
+    "ko": "메인쿤"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/maine_coon_2_front.webp",
+   "back": "cards/breed/maine_coon_2_back.webp",
+   "thumb": "thumbs/breed/maine_coon_2_thumb.webp"
+  },
+  {
+   "id": "maine_coon_3",
+   "type": "breed",
+   "breed": {
+    "id": "maine_coon",
+    "en": "Maine Coon",
+    "ko": "메인쿤"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/maine_coon_3_front.webp",
+   "back": "cards/breed/maine_coon_3_back.webp",
+   "thumb": "thumbs/breed/maine_coon_3_thumb.webp"
+  },
+  {
+   "id": "maine_coon_4",
+   "type": "breed",
+   "breed": {
+    "id": "maine_coon",
+    "en": "Maine Coon",
+    "ko": "메인쿤"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/maine_coon_4_front.webp",
+   "back": "cards/breed/maine_coon_4_back.webp",
+   "thumb": "thumbs/breed/maine_coon_4_thumb.webp"
+  },
+  {
+   "id": "maine_coon_5",
+   "type": "breed",
+   "breed": {
+    "id": "maine_coon",
+    "en": "Maine Coon",
+    "ko": "메인쿤"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/maine_coon_5_front.webp",
+   "back": "cards/breed/maine_coon_5_back.webp",
+   "thumb": "thumbs/breed/maine_coon_5_thumb.webp"
+  },
+  {
+   "id": "minskin_1",
+   "type": "breed",
+   "breed": {
+    "id": "minskin",
+    "en": "Minskin",
+    "ko": "민스킨"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/minskin_1_front.webp",
+   "back": "cards/breed/minskin_1_back.webp",
+   "thumb": "thumbs/breed/minskin_1_thumb.webp"
+  },
+  {
+   "id": "minskin_2",
+   "type": "breed",
+   "breed": {
+    "id": "minskin",
+    "en": "Minskin",
+    "ko": "민스킨"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/minskin_2_front.webp",
+   "back": "cards/breed/minskin_2_back.webp",
+   "thumb": "thumbs/breed/minskin_2_thumb.webp"
+  },
+  {
+   "id": "minskin_3",
+   "type": "breed",
+   "breed": {
+    "id": "minskin",
+    "en": "Minskin",
+    "ko": "민스킨"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/minskin_3_front.webp",
+   "back": "cards/breed/minskin_3_back.webp",
+   "thumb": "thumbs/breed/minskin_3_thumb.webp"
+  },
+  {
+   "id": "minskin_4",
+   "type": "breed",
+   "breed": {
+    "id": "minskin",
+    "en": "Minskin",
+    "ko": "민스킨"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/minskin_4_front.webp",
+   "back": "cards/breed/minskin_4_back.webp",
+   "thumb": "thumbs/breed/minskin_4_thumb.webp"
+  },
+  {
+   "id": "minskin_5",
+   "type": "breed",
+   "breed": {
+    "id": "minskin",
+    "en": "Minskin",
+    "ko": "민스킨"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/minskin_5_front.webp",
+   "back": "cards/breed/minskin_5_back.webp",
+   "thumb": "thumbs/breed/minskin_5_thumb.webp"
+  },
+  {
+   "id": "munchkin_1",
+   "type": "breed",
+   "breed": {
+    "id": "munchkin",
+    "en": "Munchkin",
+    "ko": "먼치킨"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/munchkin_1_front.webp",
+   "back": "cards/breed/munchkin_1_back.webp",
+   "thumb": "thumbs/breed/munchkin_1_thumb.webp"
+  },
+  {
+   "id": "munchkin_2",
+   "type": "breed",
+   "breed": {
+    "id": "munchkin",
+    "en": "Munchkin",
+    "ko": "먼치킨"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/munchkin_2_front.webp",
+   "back": "cards/breed/munchkin_2_back.webp",
+   "thumb": "thumbs/breed/munchkin_2_thumb.webp"
+  },
+  {
+   "id": "munchkin_3",
+   "type": "breed",
+   "breed": {
+    "id": "munchkin",
+    "en": "Munchkin",
+    "ko": "먼치킨"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/munchkin_3_front.webp",
+   "back": "cards/breed/munchkin_3_back.webp",
+   "thumb": "thumbs/breed/munchkin_3_thumb.webp"
+  },
+  {
+   "id": "munchkin_4",
+   "type": "breed",
+   "breed": {
+    "id": "munchkin",
+    "en": "Munchkin",
+    "ko": "먼치킨"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/munchkin_4_front.webp",
+   "back": "cards/breed/munchkin_4_back.webp",
+   "thumb": "thumbs/breed/munchkin_4_thumb.webp"
+  },
+  {
+   "id": "munchkin_5",
+   "type": "breed",
+   "breed": {
+    "id": "munchkin",
+    "en": "Munchkin",
+    "ko": "먼치킨"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/munchkin_5_front.webp",
+   "back": "cards/breed/munchkin_5_back.webp",
+   "thumb": "thumbs/breed/munchkin_5_thumb.webp"
+  },
+  {
+   "id": "norwegian_forest_1",
+   "type": "breed",
+   "breed": {
+    "id": "norwegian_forest",
+    "en": "Norwegian Forest",
+    "ko": "노르웨이 숲"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/norwegian_forest_1_front.webp",
+   "back": "cards/breed/norwegian_forest_1_back.webp",
+   "thumb": "thumbs/breed/norwegian_forest_1_thumb.webp"
+  },
+  {
+   "id": "norwegian_forest_2",
+   "type": "breed",
+   "breed": {
+    "id": "norwegian_forest",
+    "en": "Norwegian Forest",
+    "ko": "노르웨이 숲"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/norwegian_forest_2_front.webp",
+   "back": "cards/breed/norwegian_forest_2_back.webp",
+   "thumb": "thumbs/breed/norwegian_forest_2_thumb.webp"
+  },
+  {
+   "id": "norwegian_forest_3",
+   "type": "breed",
+   "breed": {
+    "id": "norwegian_forest",
+    "en": "Norwegian Forest",
+    "ko": "노르웨이 숲"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/norwegian_forest_3_front.webp",
+   "back": "cards/breed/norwegian_forest_3_back.webp",
+   "thumb": "thumbs/breed/norwegian_forest_3_thumb.webp"
+  },
+  {
+   "id": "norwegian_forest_4",
+   "type": "breed",
+   "breed": {
+    "id": "norwegian_forest",
+    "en": "Norwegian Forest",
+    "ko": "노르웨이 숲"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/norwegian_forest_4_front.webp",
+   "back": "cards/breed/norwegian_forest_4_back.webp",
+   "thumb": "thumbs/breed/norwegian_forest_4_thumb.webp"
+  },
+  {
+   "id": "norwegian_forest_5",
+   "type": "breed",
+   "breed": {
+    "id": "norwegian_forest",
+    "en": "Norwegian Forest",
+    "ko": "노르웨이 숲"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/norwegian_forest_5_front.webp",
+   "back": "cards/breed/norwegian_forest_5_back.webp",
+   "thumb": "thumbs/breed/norwegian_forest_5_thumb.webp"
+  },
+  {
+   "id": "persian_1",
+   "type": "breed",
+   "breed": {
+    "id": "persian",
+    "en": "Persian",
+    "ko": "페르시안"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/persian_1_front.webp",
+   "back": "cards/breed/persian_1_back.webp",
+   "thumb": "thumbs/breed/persian_1_thumb.webp"
+  },
+  {
+   "id": "persian_2",
+   "type": "breed",
+   "breed": {
+    "id": "persian",
+    "en": "Persian",
+    "ko": "페르시안"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/persian_2_front.webp",
+   "back": "cards/breed/persian_2_back.webp",
+   "thumb": "thumbs/breed/persian_2_thumb.webp"
+  },
+  {
+   "id": "persian_3",
+   "type": "breed",
+   "breed": {
+    "id": "persian",
+    "en": "Persian",
+    "ko": "페르시안"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/persian_3_front.webp",
+   "back": "cards/breed/persian_3_back.webp",
+   "thumb": "thumbs/breed/persian_3_thumb.webp"
+  },
+  {
+   "id": "persian_4",
+   "type": "breed",
+   "breed": {
+    "id": "persian",
+    "en": "Persian",
+    "ko": "페르시안"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/persian_4_front.webp",
+   "back": "cards/breed/persian_4_back.webp",
+   "thumb": "thumbs/breed/persian_4_thumb.webp"
+  },
+  {
+   "id": "persian_5",
+   "type": "breed",
+   "breed": {
+    "id": "persian",
+    "en": "Persian",
+    "ko": "페르시안"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/persian_5_front.webp",
+   "back": "cards/breed/persian_5_back.webp",
+   "thumb": "thumbs/breed/persian_5_thumb.webp"
+  },
+  {
+   "id": "peterbald_1",
+   "type": "breed",
+   "breed": {
+    "id": "peterbald",
+    "en": "Peterbald",
+    "ko": "피터볼드"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/peterbald_1_front.webp",
+   "back": "cards/breed/peterbald_1_back.webp",
+   "thumb": "thumbs/breed/peterbald_1_thumb.webp"
+  },
+  {
+   "id": "peterbald_2",
+   "type": "breed",
+   "breed": {
+    "id": "peterbald",
+    "en": "Peterbald",
+    "ko": "피터볼드"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/peterbald_2_front.webp",
+   "back": "cards/breed/peterbald_2_back.webp",
+   "thumb": "thumbs/breed/peterbald_2_thumb.webp"
+  },
+  {
+   "id": "peterbald_3",
+   "type": "breed",
+   "breed": {
+    "id": "peterbald",
+    "en": "Peterbald",
+    "ko": "피터볼드"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/peterbald_3_front.webp",
+   "back": "cards/breed/peterbald_3_back.webp",
+   "thumb": "thumbs/breed/peterbald_3_thumb.webp"
+  },
+  {
+   "id": "peterbald_4",
+   "type": "breed",
+   "breed": {
+    "id": "peterbald",
+    "en": "Peterbald",
+    "ko": "피터볼드"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/peterbald_4_front.webp",
+   "back": "cards/breed/peterbald_4_back.webp",
+   "thumb": "thumbs/breed/peterbald_4_thumb.webp"
+  },
+  {
+   "id": "peterbald_5",
+   "type": "breed",
+   "breed": {
+    "id": "peterbald",
+    "en": "Peterbald",
+    "ko": "피터볼드"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/peterbald_5_front.webp",
+   "back": "cards/breed/peterbald_5_back.webp",
+   "thumb": "thumbs/breed/peterbald_5_thumb.webp"
+  },
+  {
+   "id": "ragdoll_1",
+   "type": "breed",
+   "breed": {
+    "id": "ragdoll",
+    "en": "Ragdoll",
+    "ko": "랙돌"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/ragdoll_1_front.webp",
+   "back": "cards/breed/ragdoll_1_back.webp",
+   "thumb": "thumbs/breed/ragdoll_1_thumb.webp"
+  },
+  {
+   "id": "ragdoll_2",
+   "type": "breed",
+   "breed": {
+    "id": "ragdoll",
+    "en": "Ragdoll",
+    "ko": "랙돌"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/ragdoll_2_front.webp",
+   "back": "cards/breed/ragdoll_2_back.webp",
+   "thumb": "thumbs/breed/ragdoll_2_thumb.webp"
+  },
+  {
+   "id": "ragdoll_3",
+   "type": "breed",
+   "breed": {
+    "id": "ragdoll",
+    "en": "Ragdoll",
+    "ko": "랙돌"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/ragdoll_3_front.webp",
+   "back": "cards/breed/ragdoll_3_back.webp",
+   "thumb": "thumbs/breed/ragdoll_3_thumb.webp"
+  },
+  {
+   "id": "ragdoll_4",
+   "type": "breed",
+   "breed": {
+    "id": "ragdoll",
+    "en": "Ragdoll",
+    "ko": "랙돌"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/ragdoll_4_front.webp",
+   "back": "cards/breed/ragdoll_4_back.webp",
+   "thumb": "thumbs/breed/ragdoll_4_thumb.webp"
+  },
+  {
+   "id": "ragdoll_5",
+   "type": "breed",
+   "breed": {
+    "id": "ragdoll",
+    "en": "Ragdoll",
+    "ko": "랙돌"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/ragdoll_5_front.webp",
+   "back": "cards/breed/ragdoll_5_back.webp",
+   "thumb": "thumbs/breed/ragdoll_5_thumb.webp"
+  },
+  {
+   "id": "russian_blue_1",
+   "type": "breed",
+   "breed": {
+    "id": "russian_blue",
+    "en": "Russian Blue",
+    "ko": "러시안 블루"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/russian_blue_1_front.webp",
+   "back": "cards/breed/russian_blue_1_back.webp",
+   "thumb": "thumbs/breed/russian_blue_1_thumb.webp"
+  },
+  {
+   "id": "russian_blue_2",
+   "type": "breed",
+   "breed": {
+    "id": "russian_blue",
+    "en": "Russian Blue",
+    "ko": "러시안 블루"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/russian_blue_2_front.webp",
+   "back": "cards/breed/russian_blue_2_back.webp",
+   "thumb": "thumbs/breed/russian_blue_2_thumb.webp"
+  },
+  {
+   "id": "russian_blue_3",
+   "type": "breed",
+   "breed": {
+    "id": "russian_blue",
+    "en": "Russian Blue",
+    "ko": "러시안 블루"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/russian_blue_3_front.webp",
+   "back": "cards/breed/russian_blue_3_back.webp",
+   "thumb": "thumbs/breed/russian_blue_3_thumb.webp"
+  },
+  {
+   "id": "russian_blue_4",
+   "type": "breed",
+   "breed": {
+    "id": "russian_blue",
+    "en": "Russian Blue",
+    "ko": "러시안 블루"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/russian_blue_4_front.webp",
+   "back": "cards/breed/russian_blue_4_back.webp",
+   "thumb": "thumbs/breed/russian_blue_4_thumb.webp"
+  },
+  {
+   "id": "russian_blue_5",
+   "type": "breed",
+   "breed": {
+    "id": "russian_blue",
+    "en": "Russian Blue",
+    "ko": "러시안 블루"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/russian_blue_5_front.webp",
+   "back": "cards/breed/russian_blue_5_back.webp",
+   "thumb": "thumbs/breed/russian_blue_5_thumb.webp"
+  },
+  {
+   "id": "scottish_fold_1",
+   "type": "breed",
+   "breed": {
+    "id": "scottish_fold",
+    "en": "Scottish Fold",
+    "ko": "스코티시 폴드"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/scottish_fold_1_front.webp",
+   "back": "cards/breed/scottish_fold_1_back.webp",
+   "thumb": "thumbs/breed/scottish_fold_1_thumb.webp"
+  },
+  {
+   "id": "scottish_fold_2",
+   "type": "breed",
+   "breed": {
+    "id": "scottish_fold",
+    "en": "Scottish Fold",
+    "ko": "스코티시 폴드"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/scottish_fold_2_front.webp",
+   "back": "cards/breed/scottish_fold_2_back.webp",
+   "thumb": "thumbs/breed/scottish_fold_2_thumb.webp"
+  },
+  {
+   "id": "scottish_fold_3",
+   "type": "breed",
+   "breed": {
+    "id": "scottish_fold",
+    "en": "Scottish Fold",
+    "ko": "스코티시 폴드"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/scottish_fold_3_front.webp",
+   "back": "cards/breed/scottish_fold_3_back.webp",
+   "thumb": "thumbs/breed/scottish_fold_3_thumb.webp"
+  },
+  {
+   "id": "scottish_fold_4",
+   "type": "breed",
+   "breed": {
+    "id": "scottish_fold",
+    "en": "Scottish Fold",
+    "ko": "스코티시 폴드"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/scottish_fold_4_front.webp",
+   "back": "cards/breed/scottish_fold_4_back.webp",
+   "thumb": "thumbs/breed/scottish_fold_4_thumb.webp"
+  },
+  {
+   "id": "scottish_fold_5",
+   "type": "breed",
+   "breed": {
+    "id": "scottish_fold",
+    "en": "Scottish Fold",
+    "ko": "스코티시 폴드"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/scottish_fold_5_front.webp",
+   "back": "cards/breed/scottish_fold_5_back.webp",
+   "thumb": "thumbs/breed/scottish_fold_5_thumb.webp"
+  },
+  {
+   "id": "siamese_1",
+   "type": "breed",
+   "breed": {
+    "id": "siamese",
+    "en": "Siamese",
+    "ko": "샴"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/siamese_1_front.webp",
+   "back": "cards/breed/siamese_1_back.webp",
+   "thumb": "thumbs/breed/siamese_1_thumb.webp"
+  },
+  {
+   "id": "siamese_2",
+   "type": "breed",
+   "breed": {
+    "id": "siamese",
+    "en": "Siamese",
+    "ko": "샴"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/siamese_2_front.webp",
+   "back": "cards/breed/siamese_2_back.webp",
+   "thumb": "thumbs/breed/siamese_2_thumb.webp"
+  },
+  {
+   "id": "siamese_3",
+   "type": "breed",
+   "breed": {
+    "id": "siamese",
+    "en": "Siamese",
+    "ko": "샴"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/siamese_3_front.webp",
+   "back": "cards/breed/siamese_3_back.webp",
+   "thumb": "thumbs/breed/siamese_3_thumb.webp"
+  },
+  {
+   "id": "siamese_4",
+   "type": "breed",
+   "breed": {
+    "id": "siamese",
+    "en": "Siamese",
+    "ko": "샴"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/siamese_4_front.webp",
+   "back": "cards/breed/siamese_4_back.webp",
+   "thumb": "thumbs/breed/siamese_4_thumb.webp"
+  },
+  {
+   "id": "siamese_5",
+   "type": "breed",
+   "breed": {
+    "id": "siamese",
+    "en": "Siamese",
+    "ko": "샴"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/siamese_5_front.webp",
+   "back": "cards/breed/siamese_5_back.webp",
+   "thumb": "thumbs/breed/siamese_5_thumb.webp"
+  },
+  {
+   "id": "sokoke_1",
+   "type": "breed",
+   "breed": {
+    "id": "sokoke",
+    "en": "Sokoke",
+    "ko": "소코케"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/sokoke_1_front.webp",
+   "back": "cards/breed/sokoke_1_back.webp",
+   "thumb": "thumbs/breed/sokoke_1_thumb.webp"
+  },
+  {
+   "id": "sokoke_2",
+   "type": "breed",
+   "breed": {
+    "id": "sokoke",
+    "en": "Sokoke",
+    "ko": "소코케"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/sokoke_2_front.webp",
+   "back": "cards/breed/sokoke_2_back.webp",
+   "thumb": "thumbs/breed/sokoke_2_thumb.webp"
+  },
+  {
+   "id": "sokoke_3",
+   "type": "breed",
+   "breed": {
+    "id": "sokoke",
+    "en": "Sokoke",
+    "ko": "소코케"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/sokoke_3_front.webp",
+   "back": "cards/breed/sokoke_3_back.webp",
+   "thumb": "thumbs/breed/sokoke_3_thumb.webp"
+  },
+  {
+   "id": "sokoke_4",
+   "type": "breed",
+   "breed": {
+    "id": "sokoke",
+    "en": "Sokoke",
+    "ko": "소코케"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/sokoke_4_front.webp",
+   "back": "cards/breed/sokoke_4_back.webp",
+   "thumb": "thumbs/breed/sokoke_4_thumb.webp"
+  },
+  {
+   "id": "sokoke_5",
+   "type": "breed",
+   "breed": {
+    "id": "sokoke",
+    "en": "Sokoke",
+    "ko": "소코케"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/sokoke_5_front.webp",
+   "back": "cards/breed/sokoke_5_back.webp",
+   "thumb": "thumbs/breed/sokoke_5_thumb.webp"
+  },
+  {
+   "id": "sphynx_1",
+   "type": "breed",
+   "breed": {
+    "id": "sphynx",
+    "en": "Sphynx",
+    "ko": "스핑크스"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 1,
+   "front": "cards/breed/sphynx_1_front.webp",
+   "back": "cards/breed/sphynx_1_back.webp",
+   "thumb": "thumbs/breed/sphynx_1_thumb.webp"
+  },
+  {
+   "id": "sphynx_2",
+   "type": "breed",
+   "breed": {
+    "id": "sphynx",
+    "en": "Sphynx",
+    "ko": "스핑크스"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 2,
+   "front": "cards/breed/sphynx_2_front.webp",
+   "back": "cards/breed/sphynx_2_back.webp",
+   "thumb": "thumbs/breed/sphynx_2_thumb.webp"
+  },
+  {
+   "id": "sphynx_3",
+   "type": "breed",
+   "breed": {
+    "id": "sphynx",
+    "en": "Sphynx",
+    "ko": "스핑크스"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 3,
+   "front": "cards/breed/sphynx_3_front.webp",
+   "back": "cards/breed/sphynx_3_back.webp",
+   "thumb": "thumbs/breed/sphynx_3_thumb.webp"
+  },
+  {
+   "id": "sphynx_4",
+   "type": "breed",
+   "breed": {
+    "id": "sphynx",
+    "en": "Sphynx",
+    "ko": "스핑크스"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 4,
+   "front": "cards/breed/sphynx_4_front.webp",
+   "back": "cards/breed/sphynx_4_back.webp",
+   "thumb": "thumbs/breed/sphynx_4_thumb.webp"
+  },
+  {
+   "id": "sphynx_5",
+   "type": "breed",
+   "breed": {
+    "id": "sphynx",
+    "en": "Sphynx",
+    "ko": "스핑크스"
+   },
+   "name": null,
+   "nameTemp": false,
+   "stars": 5,
+   "front": "cards/breed/sphynx_5_front.webp",
+   "back": "cards/breed/sphynx_5_back.webp",
+   "thumb": "thumbs/breed/sphynx_5_thumb.webp"
+  },
+  {
+   "id": "nyang",
+   "type": "special",
+   "breed": null,
+   "name": {
+    "ko": "냥냥냥"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/special/nyang_front.webp",
+   "back": "cards/special/nyang_back.webp",
+   "thumb": "thumbs/special/nyang_thumb.webp"
+  },
+  {
+   "id": "nyangpunch",
+   "type": "special",
+   "breed": null,
+   "name": {
+    "ko": "냥냥펀치"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/special/nyangpunch_front.webp",
+   "back": "cards/special/nyangpunch_back.webp",
+   "thumb": "thumbs/special/nyangpunch_thumb.webp"
+  },
+  {
+   "id": "selfie",
+   "type": "special",
+   "breed": null,
+   "name": {
+    "ko": "셀카냥"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/special/selfie_front.webp",
+   "back": "cards/special/selfie_back.webp",
+   "thumb": "thumbs/special/selfie_thumb.webp"
+  },
+  {
+   "id": "hunt",
+   "type": "special",
+   "breed": null,
+   "name": {
+    "ko": "사냥 본능"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/special/hunt_front.webp",
+   "back": "cards/special/hunt_back.webp",
+   "thumb": "thumbs/special/hunt_thumb.webp"
+  },
+  {
+   "id": "hangang",
+   "type": "special",
+   "breed": null,
+   "name": {
+    "ko": "꽁꽁 한강냥"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/special/hangang_front.webp",
+   "back": "cards/special/hangang_back.webp",
+   "thumb": "thumbs/special/hangang_thumb.webp"
+  },
+  {
+   "id": "fallingcat",
+   "type": "special",
+   "breed": null,
+   "name": {
+    "ko": "떨어지는 고양이"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/special/fallingcat_front.webp",
+   "back": "cards/special/fallingcat_back.webp",
+   "thumb": "thumbs/special/fallingcat_thumb.webp"
+  },
+  {
+   "id": "vetshot",
+   "type": "special",
+   "breed": null,
+   "name": {
+    "ko": "주사 맞은 냥"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/special/vetshot_front.webp",
+   "back": "cards/special/vetshot_back.webp",
+   "thumb": "thumbs/special/vetshot_thumb.webp"
+  },
+  {
+   "id": "liquidcat",
+   "type": "special",
+   "breed": null,
+   "name": {
+    "ko": "액체 고양이"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/special/liquidcat_front.webp",
+   "back": "cards/special/liquidcat_back.webp",
+   "thumb": "thumbs/special/liquidcat_thumb.webp"
+  },
+  {
+   "id": "musclecat",
+   "type": "special",
+   "breed": null,
+   "name": {
+    "ko": "근육냥"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/special/musclecat_front.webp",
+   "back": "cards/special/musclecat_back.webp",
+   "thumb": "thumbs/special/musclecat_thumb.webp"
+  },
+  {
+   "id": "tomjerry",
+   "type": "character",
+   "breed": null,
+   "name": {
+    "ko": "톰과 제리"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/character/tomjerry_front.webp",
+   "back": "cards/character/tomjerry_back.webp",
+   "thumb": "thumbs/character/tomjerry_thumb.webp"
+  },
+  {
+   "id": "meowth",
+   "type": "character",
+   "breed": null,
+   "name": {
+    "ko": "나옹이"
+   },
+   "nameTemp": false,
+   "stars": null,
+   "front": "cards/character/meowth_front.webp",
+   "back": "cards/character/meowth_back.webp",
+   "thumb": "thumbs/character/meowth_thumb.webp"
+  },
+  {
+   "id": "doraemon",
+   "type": "character",
+   "breed": null,
+   "name": {
+    "ko": "하늘 나는 냥"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/character/doraemon_front.webp",
+   "back": "cards/character/doraemon_back.webp",
+   "thumb": "thumbs/character/doraemon_thumb.webp"
+  },
+  {
+   "id": "luna",
+   "type": "character",
+   "breed": null,
+   "name": {
+    "ko": "달빛 고양이"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/character/luna_front.webp",
+   "back": "cards/character/luna_back.webp",
+   "thumb": "thumbs/character/luna_thumb.webp"
+  },
+  {
+   "id": "sabertooth",
+   "type": "legend",
+   "breed": null,
+   "name": {
+    "ko": "검치호"
+   },
+   "nameTemp": false,
+   "stars": null,
+   "front": "cards/legend/sabertooth_front.webp",
+   "back": "cards/legend/sabertooth_back.webp",
+   "thumb": "thumbs/legend/sabertooth_thumb.webp"
+  },
+  {
+   "id": "lionking",
+   "type": "legend",
+   "breed": null,
+   "name": {
+    "ko": "진짜 킹냥이"
+   },
+   "nameTemp": false,
+   "stars": null,
+   "front": "cards/legend/lionking_front.webp",
+   "back": "cards/legend/lionking_back.webp",
+   "thumb": "thumbs/legend/lionking_thumb.webp"
+  },
+  {
+   "id": "tiger",
+   "type": "legend",
+   "breed": null,
+   "name": {
+    "ko": "호랑이와 하룻강아지"
+   },
+   "nameTemp": true,
+   "stars": null,
+   "front": "cards/legend/tiger_front.webp",
+   "back": "cards/legend/tiger_back.webp",
+   "thumb": "thumbs/legend/tiger_thumb.webp"
+  },
+  {
+   "id": "baekho",
+   "type": "legend",
+   "breed": null,
+   "name": {
+    "ko": "수호신 백호"
+   },
+   "nameTemp": false,
+   "stars": null,
+   "front": "cards/legend/baekho_front.webp",
+   "back": "cards/legend/baekho_back.webp",
+   "thumb": "thumbs/legend/baekho_thumb.webp"
+  }
+ ]
+}

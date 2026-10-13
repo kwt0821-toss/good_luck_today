@@ -1,0 +1,411 @@
+/* Ported from docs/draw-reveal/draw-reveal.html — Concept B night tokens */
+
+.draw-reveal-screen {
+  position: relative;
+  width: 100%;
+  max-width: 390px;
+  height: 100%;
+  min-height: 0;
+  margin: 0 auto;
+  overflow: hidden;
+  user-select: none;
+  cursor: pointer;
+  background: radial-gradient(120% 70% at 50% 46%, #3a2f55 0%, #221d38 45%, #14132a 100%);
+  color: #f3e9d7;
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  --g1: rgba(255, 240, 215, 0.38);
+  --g2: rgba(255, 220, 180, 0.12);
+  --acc: #f3e9d7;
+  display: flex;
+  flex-direction: column;
+}
+
+.draw-reveal-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+.draw-reveal-content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 24px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  box-sizing: border-box;
+}
+
+.draw-reveal-head {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 3;
+}
+
+.draw-reveal-head .t {
+  font-family: Poppins, "Noto Sans KR", sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.5px;
+  color: #f3e9d7;
+}
+
+.draw-reveal-head .t small {
+  display: block;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: rgba(243, 233, 215, 0.6);
+  margin-top: 2px;
+}
+
+.draw-reveal-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(243, 233, 215, 0.35);
+  font-size: 10.5px;
+  color: #f3e9d7;
+}
+
+.draw-reveal-chip i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffb36b;
+  box-shadow: 0 0 6px #ffb36b;
+}
+
+.draw-reveal-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 160px;
+  width: 100%;
+  margin: 8px 0 0;
+}
+
+.draw-reveal-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(420px, 120%);
+  height: min(420px, 120%);
+  margin: 0;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--g1) 0%, var(--g2) 36%, transparent 68%);
+  will-change: transform, opacity;
+}
+
+.draw-reveal-rays {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(640px, 160%);
+  height: min(640px, 160%);
+  margin: 0;
+  translate: -50% -50%;
+  border-radius: 50%;
+  opacity: 0;
+  -webkit-mask: radial-gradient(circle, #000 18%, transparent 62%);
+  mask: radial-gradient(circle, #000 18%, transparent 62%);
+  will-change: transform, opacity;
+}
+
+.draw-reveal-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+}
+
+.draw-reveal-cardbox {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(236px, 62%);
+  aspect-ratio: 236 / 367;
+  height: auto;
+  max-height: 92%;
+  margin: 0;
+  translate: -50% -50%;
+  perspective: 1100px;
+  will-change: transform;
+}
+
+.draw-reveal-shadow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(220px, 58%);
+  height: 22px;
+  margin: 0;
+  translate: -50% calc(min(186px, 42%) + 8px);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  filter: blur(10px);
+  opacity: 0.6;
+}
+
+.draw-reveal-inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.draw-reveal-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+.draw-reveal-face img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  background: #1c1830;
+}
+
+.draw-reveal-face.is-rear {
+  transform: rotateY(180deg);
+}
+
+.draw-reveal-holo {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: color-dodge;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(255, 120, 170, 0.55) 34%,
+    rgba(255, 226, 120, 0.55) 42%,
+    rgba(120, 255, 200, 0.55) 50%,
+    rgba(120, 180, 255, 0.55) 58%,
+    rgba(200, 130, 255, 0.5) 66%,
+    transparent 80%
+  );
+  background-size: 300% 100%;
+}
+
+.draw-reveal-badge {
+  position: absolute;
+  left: -12px;
+  top: -14px;
+  z-index: 5;
+  padding: 6px 11px 5px;
+  border-radius: 999px;
+  font-family: Poppins, "Noto Sans KR", sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: #2a1e10;
+  background: linear-gradient(135deg, #ffe29a, #ffb36b);
+  box-shadow: 0 0 18px rgba(255, 196, 138, 0.7), 0 4px 10px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: scale(0.4) rotate(-10deg);
+}
+
+.draw-reveal-dup {
+  position: absolute;
+  left: 50%;
+  top: -16px;
+  z-index: 5;
+  transform: translateX(-50%) scale(0.6);
+  white-space: nowrap;
+  max-width: min(320px, 92vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #f3e9d7;
+  background: rgba(30, 26, 52, 0.85);
+  border: 1px solid rgba(255, 196, 138, 0.6);
+  opacity: 0;
+}
+
+.draw-reveal-dup b {
+  color: #ffc48a;
+}
+
+.draw-reveal-footer {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+
+.draw-reveal-info {
+  flex: 0 0 auto;
+  text-align: center;
+  opacity: 0;
+  margin-top: 6px;
+  padding: 0 4px;
+}
+
+.draw-reveal-info .n {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f3e9d7;
+}
+
+.draw-reveal-info .s {
+  margin-top: 4px;
+  font-family: Poppins, "Noto Sans KR", sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  color: var(--acc);
+}
+
+.draw-reveal-info .h {
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: rgba(243, 233, 215, 0.5);
+}
+
+.draw-reveal-btns {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+  margin-top: 14px;
+}
+
+.draw-reveal-btn {
+  height: 52px;
+  border-radius: 16px;
+  border: 0;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.draw-reveal-btn.is-primary {
+  background: linear-gradient(180deg, #ffd3a0, #ffb36b);
+  color: #2a1e10;
+  box-shadow: 0 8px 22px rgba(255, 179, 107, 0.28);
+}
+
+.draw-reveal-btn.is-secondary {
+  background: rgba(243, 233, 215, 0.08);
+  color: #f3e9d7;
+  border: 1px solid rgba(243, 233, 215, 0.28);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.draw-reveal-btn.is-secondary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.draw-reveal-btn em {
+  font-style: normal;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: rgba(243, 233, 215, 0.14);
+  color: rgba(243, 233, 215, 0.85);
+}
+
+.draw-reveal-toast {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 12px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 16px;
+  background: #1c1830;
+  border: 1px solid rgba(243, 233, 215, 0.22);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  color: #f3e9d7;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: pre-line;
+  opacity: 0;
+  transform: translateY(-24px);
+  pointer-events: none;
+}
+
+.draw-reveal-toast .ic {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: rgba(255, 226, 154, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.draw-reveal-toast .ic img {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.draw-reveal-toast b {
+  color: #ffc48a;
+}
+
+.draw-reveal-wait {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 140px;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(243, 233, 215, 0.75);
+  z-index: 5;
+}
+
+.draw-reveal-wait button {
+  margin-top: 10px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(243, 233, 215, 0.3);
+  background: rgba(243, 233, 215, 0.08);
+  color: #f3e9d7;
+  font: inherit;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draw-reveal-rays,
+  .draw-reveal-fx {
+    display: none !important;
+  }
+}
