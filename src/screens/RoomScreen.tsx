@@ -22,6 +22,7 @@ import {
   type RoomGridFile,
   type RoomsFile,
 } from "../lib/roomCatalog";
+import { applyOpsPrices, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import {
   canPlace,
   canPlaceWall,
@@ -83,7 +84,7 @@ const VIEW_W = 390;
 const SWIPE_THRESHOLD = 56;
 import "./RoomScreen.css";
 
-export type RoomTutorialPhase = "pick" | "drag" | "done" | null;
+export type RoomTutorialPhase = "pick" | "drag" | "done" | "points" | null;
 
 type RoomScreenProps = {
   onBack: () => void;
@@ -94,6 +95,8 @@ type RoomScreenProps = {
   onTutorialPicked?: () => void;
   onTutorialPlaced?: () => void;
   onTutorialComplete?: () => void;
+  /** Fires once when catalog/layout/ops are ready (after loading gate). */
+  onReady?: () => void;
 };
 
 function formatPoints(value: number) {
@@ -109,6 +112,7 @@ export function RoomScreen({
   onTutorialPicked,
   onTutorialPlaced,
   onTutorialComplete,
+  onReady,
 }: RoomScreenProps) {
   const [items, setItems] = useState<RoomItem[]>([]);
   const [grid, setGrid] = useState<RoomGridFile | null>(null);
@@ -133,7 +137,12 @@ export function RoomScreen({
   const [dupes, setDupes] = useState<{ card: DexCard; extra: number; pick: number }[]>([]);
   const [dragging, setDragging] = useState<RoomDrag | null>(null);
   const [placeFxId, setPlaceFxId] = useState<string | null>(null);
-  const tutLock = Boolean(tutorialActive && (tutorialPhase === "pick" || tutorialPhase === "drag"));
+  // Treat null phase as pick when tutorial is active (resume / first paint).
+  const effectiveTutPhase =
+    tutorialActive && tutorialPhase == null ? "pick" : tutorialPhase;
+  const tutLock = Boolean(
+    tutorialActive && (effectiveTutPhase === "pick" || effectiveTutPhase === "drag"),
+  );
   const [shakeId, setShakeId] = useState<string | null>(null);
   const [activeWall, setActiveWall] = useState<"L" | "R">("L");
   const [brushId, setBrushId] = useState<string | null>(null);
@@ -165,7 +174,6 @@ export function RoomScreen({
   useEffect(() => {
     void Promise.all([loadRoomCatalog(), loadRoomGrid(), loadRoomsFile(), loadOpsConfig()]).then(
       async ([catalog, gridFile, rooms, config]) => {
-        const { applyOpsPrices, syncRoomSaveWithOps } = await import("../lib/roomEconomy");
         const priced = await applyOpsPrices(catalog.items);
         setItems(priced);
         setGrid(gridFile);
@@ -185,6 +193,13 @@ export function RoomScreen({
     });
   }, []);
 
+  const readySent = useRef(false);
+  useEffect(() => {
+    if (!state || !roomsFile || readySent.current) return;
+    readySent.current = true;
+    onReady?.();
+  }, [state, roomsFile, onReady]);
+
   useEffect(() => {
     if (!tutorialActive || !state) return;
     setTab("보유");
@@ -196,40 +211,52 @@ export function RoomScreen({
       return "edit";
     });
     // Free starter drawer placeables (e.g. cushions) so #drawer-item-0 can target NEW.
-    void loadOpsConfig().then((config) => {
-      const gifts = new Set(config.starter.drawer);
-      setState((prev) => {
-        if (!prev) return prev;
-        const room = currentRoom(prev);
-        const nextFloor = room.floor.filter((place) => {
-          const item = itemsById.get(place.id);
-          if (!item || !gifts.has(place.id)) return true;
-          return !isPlaceableDecor(item);
-        });
-        if (nextFloor.length === room.floor.length) return prev;
-        const next = patchCurrentRoom(prev, { ...room, floor: nextFloor });
-        void saveRoomState(next);
-        return next;
+    // Reuse starterDrawerIds from the initial load (avoid a second loadOpsConfig wait).
+    if (!starterDrawerIds.length) return;
+    const gifts = new Set(starterDrawerIds);
+    setState((prev) => {
+      if (!prev) return prev;
+      const room = currentRoom(prev);
+      const nextFloor = room.floor.filter((place) => {
+        const item = itemsById.get(place.id);
+        if (!item || !gifts.has(place.id)) return true;
+        return !isPlaceableDecor(item);
       });
+      if (nextFloor.length === room.floor.length) return prev;
+      const next = patchCurrentRoom(prev, { ...room, floor: nextFloor });
+      void saveRoomState(next);
+      return next;
     });
-  }, [tutorialActive, state?.currentRoomId, itemsById]);
+  }, [tutorialActive, state?.currentRoomId, itemsById, starterDrawerIds]);
 
   // Follow finger after grabbing from the drawer (pointer may leave the drawer cell).
   useEffect(() => {
     if (!(dragging && dragging.kind === "floor" && dragging.fromDrawer)) return;
+    // Ignore the pointerup that ends the long-press until the user has moved (or a short arm delay).
+    let armed = false;
+    const armTimer = window.setTimeout(() => {
+      armed = true;
+    }, 80);
     const onMove = (event: globalThis.PointerEvent) => {
+      armed = true;
       if (!stageRef.current) return;
       const rect = stageRef.current.getBoundingClientRect();
+      // While finger is still over the drawer, keep the suggest/spawn tile.
+      if (event.clientY > rect.bottom - 4) return;
       const tile = hitTestTile(event.clientX - rect.left, event.clientY - rect.top, mode);
       setDragging((current) =>
         current?.kind === "floor" ? { ...current, col: tile.col, row: tile.row } : current,
       );
     };
-    const onUp = () => onStagePointerUp();
+    const onUp = () => {
+      if (!armed) return;
+      onStagePointerUp();
+    };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
     return () => {
+      window.clearTimeout(armTimer);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
@@ -573,6 +600,7 @@ export function RoomScreen({
     }
     setDragging(null);
     dragOrigin.current = null;
+    window.dispatchEvent(new Event("lucky-cat:drawer-scroll-unlock"));
   };
 
   const rotateSelected = () => {
@@ -694,12 +722,17 @@ export function RoomScreen({
     const remaining = (state.owned[item.id] ?? 0) - placedCountAll(state, item.id);
     if (remaining <= 0) return;
 
+    // Prefer suggest tile — finger is still over the drawer, so hit-testing the stage
+    // would land off-grid and immediately cancel on pointerup.
     const rect = stageRef.current?.getBoundingClientRect();
-    const tile = rect
-      ? hitTestTile(clientX - rect.left, clientY - rect.top, mode)
-      : suggestTile
+    const hit =
+      rect && clientY < rect.bottom && clientY > rect.top
+        ? hitTestTile(clientX - rect.left, clientY - rect.top, mode)
+        : null;
+    const tile =
+      suggestTile != null
         ? { col: suggestTile.c, row: suggestTile.r }
-        : { col: 5, row: 2 };
+        : hit ?? { col: 5, row: 2 };
     const instanceId = newInstanceId(item.id);
     tutDrawerOrigin.current = { itemId: item.id, instanceId };
     patchLayout({
@@ -799,7 +832,7 @@ export function RoomScreen({
       points: nextPoints,
       owned: { ...state.owned, [item.id]: (state.owned[item.id] ?? 0) + 1 },
     });
-    void import("../lib/roomEconomy").then(({ spendRoomPoints }) => spendRoomPoints(nextPoints));
+    void spendRoomPoints(nextPoints);
     setBuyItem(null);
     showToast(`${item.nameKo}를 샀어요`);
   };
@@ -894,7 +927,7 @@ export function RoomScreen({
             id="room-done"
             className="lucky-done"
             onClick={() => {
-              if (tutorialPhase === "done") {
+              if (tutorialPhase === "done" || tutorialPhase === "points") {
                 onTutorialComplete?.();
                 return;
               }
@@ -1181,7 +1214,13 @@ export function RoomScreen({
           })}
           tutorialLockId={tutLock ? suggestItemId : null}
           tutorialLongPressMs={tutLock ? 250 : 0}
-          onTutorialGrab={tutLock ? beginTutorialDrawerDrag : undefined}
+          onTutorialGrab={
+            tutLock
+              ? (item, x, y) => {
+                  beginTutorialDrawerDrag(item, x, y);
+                }
+              : undefined
+          }
           onPick={pickDrawerItem}
           onFillMode={(next) => {
             setFillMode(next);

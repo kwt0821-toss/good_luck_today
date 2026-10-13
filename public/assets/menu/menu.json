@@ -249,7 +249,7 @@
  },
  "menuIconBadge": {
   "type": "dot",
-  "on": "#icon-menu (메인 우상단 발바닥)",
+  "on": "#btn-menu (메인 우상단 발바닥)",
   "when": "any(row.badge.type=='dot' && row.badge.when)"
  },
  "sheets": {
@@ -395,8 +395,8 @@
    "cta": "도감에서 보상 받기",
    "wallet": {
     "title": "내 냥코인",
-    "withdrawCta": "토스포인트로 받기 · {amount}원",
-    "disabledHint": "10냥코인부터 받을 수 있어요",
+    "withdrawCta": "토스 포인트 전환",
+    "disabledHint": "10 냥코인부터 받을 수 있어요",
     "confirmTitle": "토스포인트로 받을까요?",
     "confirmDesc": "{amount}냥코인을 토스포인트 {amount}원으로 바꿔요.",
     "successTitle": "토스포인트를 받았어요",
@@ -416,7 +416,7 @@
     ],
     "dailyLimitHint": "오늘 {remainingToday}원 더 받을 수 있어요 · 하루 최대 {dailyLimit}원",
     "dailyDoneHint": "오늘은 다 받았어요 · 내일 00:00에 다시 받을 수 있어요",
-    "lowBalanceHint": "10냥코인부터 받을 수 있어요 · {need}개 더 모아요",
+    "lowBalanceHint": "10 냥코인부터 받을 수 있어요 · {need}개 더 모아요",
     "remainAfterHint": "받고 남는 {remain}냥코인은 그대로 모여요",
     "stepper": {
      "step": 10,

@@ -323,8 +323,12 @@ export async function countClaimableDexRewards(state: OpsState): Promise<number>
   return (await listClaimableDexRewards(state)).length;
 }
 
+/** Accessible label for the claim-all chip (UI uses icons + x N). */
 export function dexClaimChipLabel(count: number, nyangCoin: number, paw: number) {
-  return `받을 보상 ${count}개 · 냥코인 ${nyangCoin} + ${paw}P`;
+  const parts = [`받을 보상 ${count}개`];
+  if (nyangCoin > 0) parts.push(`냥코인 x ${nyangCoin}`);
+  if (paw > 0) parts.push(`발바닥 포인트 x ${paw}`);
+  return parts.join(" · ");
 }
 
 /** @deprecated legacy inbox path — prefer postDexRewardsClaim */

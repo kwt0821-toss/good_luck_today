@@ -218,7 +218,7 @@ export function HomeScreen({
         </h1>
         <button
           type="button"
-          id="icon-menu"
+          id="btn-menu"
           className="main-nav-btn main-menu-btn"
           aria-label="메뉴"
           onClick={popThen(onOpenMenu)}

@@ -1,8 +1,16 @@
 .tut-layer {
   position: fixed;
   inset: 0;
-  /* Above menu panel (z=90) so rewards-intro can highlight rows/sheets */
-  z-index: 120;
+  /* Above elevated panels (≈130) so hole dim is visible over home/menu/drawer. */
+  z-index: 135;
+  pointer-events: none;
+}
+
+/* Bubble/skip/finger — above dim layer; empty areas pass taps through. */
+.tut-chrome {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
   pointer-events: none;
 }
 
@@ -10,6 +18,12 @@
   position: absolute;
   inset: 0;
   background: rgba(10, 8, 20, 0.62);
+  pointer-events: auto;
+}
+
+/* Invisible pads around the hole — box-shadow dim is visual-only and does not capture taps. */
+.tut-block {
+  position: absolute;
   pointer-events: auto;
 }
 
@@ -27,7 +41,6 @@
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 52px);
   right: 14px;
-  z-index: 121;
   pointer-events: auto;
   height: 34px;
   padding: 0 12px;
@@ -41,7 +54,6 @@
 
 .tut-bubble {
   position: fixed;
-  z-index: 121;
   pointer-events: auto;
   padding: 14px 16px;
   border-radius: 16px;
@@ -67,6 +79,26 @@
   pointer-events: none;
 }
 
+/* Elevated interaction target — below dim layer (135); taps reach it through .tut-hole.is-pass.
+   Do NOT force position:relative (breaks absolute badges like .dex-claim-badge). */
+.tut-elevated-target {
+  z-index: 131 !important;
+  pointer-events: auto !important;
+  touch-action: none !important;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Only static-positioned targets need a positioning context for z-index. */
+.tut-elevated-static {
+  position: relative !important;
+}
+
+.tut-elevated-panel {
+  z-index: 130 !important;
+  pointer-events: none !important;
+}
+
 .tut-title {
   margin: 0 0 10px;
   font-size: 16px;
@@ -78,12 +110,29 @@
   margin: 0;
   font-size: 15px;
   font-weight: 700;
+  white-space: pre-line;
+}
+
+.tut-inline-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  vertical-align: -0.15em;
+}
+
+.tut-inline-token img {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  object-fit: contain;
 }
 
 .tut-sub {
   margin: 6px 0 0;
   font-size: 12px;
   color: rgba(243, 233, 215, 0.7);
+  white-space: pre-line;
 }
 
 .tut-lines {
@@ -93,6 +142,26 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.tut-lines.is-rewards {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.tut-lines.is-rewards .tut-line {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  gap: 4px;
+}
+
+.tut-lines.is-rewards .tut-line-icon {
+  flex-basis: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 .tut-line {
@@ -162,7 +231,6 @@
 
 .tut-finger {
   position: fixed;
-  z-index: 122;
   width: 28px;
   height: 28px;
   margin: -4px 0 0 -4px;

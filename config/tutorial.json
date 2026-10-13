@@ -1,5 +1,5 @@
 {
- "_version": "tutorial-1.5",
+ "_version": "tutorial-1.6",
  "maxDurationSec": 60,
  "style": "coach marks (dim + 하이라이트 원/라운드 사각 + 말풍선)",
  "skip": {
@@ -68,14 +68,14 @@
   {
    "step": 3,
    "screen": "dex",
-   "stepLabel": "STEP 3/4",
+   "stepLabel": "STEP 3/5",
    "target": "#dex-slot-{cardId}",
-   "copy": "방금 만난 고양이가 여기 들어왔어요 · {품종} · {등급}",
+   "copy": "방금 만난 고양이가 여기 들어왔어요",
    "substeps": [
     {
      "id": "3-1",
      "target": "#dex-slot-{cardId}",
-     "copy": "방금 만난 고양이가 여기 들어왔어요 · {품종} · {등급}",
+     "copy": "방금 만난 고양이가 여기 들어왔어요",
      "cta": "다음",
      "ackOnly": true,
      "scrollIntoView": {
@@ -89,7 +89,17 @@
      "id": "3-2",
      "target": "#dex-claim-{cardId}",
      "fallbackTarget": "#dex-slot-{cardId}",
-     "copy": "코인을 톡 누르면 보상을 받아요 · 냥코인 1 + 20P",
+     "copy": "코인을 톡 누르면 보상을 받아요",
+     "lines": [
+      {
+       "icon": "/assets/ncoin/ncoin-16@3x.svg",
+       "text": "x 1"
+      },
+      {
+       "icon": "/assets/menu/icon-paw-mini.svg",
+       "text": "x 20"
+      }
+     ],
      "showFinger": true,
      "claimGate": true
     },
@@ -111,7 +121,7 @@
   {
    "step": 4,
    "screen": "room",
-   "stepLabel": "STEP 4/4",
+   "stepLabel": "STEP 4/5",
    "target": "#drawer-item-0",
    "copy": "서랍에서 마음에 드는 아이템을 꾸욱 눌러 보세요",
    "gesture": "long-press 250ms or drag; ghost + suggestTile hint",
@@ -143,18 +153,65 @@
     },
     {
      "id": "4-3",
-     "target": "#room-done",
+     "target": "",
      "copy": "잘했어요! 다른 아이템도 자유롭게 꾸며 보세요",
-     "cta": "완료",
+     "cta": "다음",
      "ackOnly": true,
      "placeFx": {
       "sfx": "item-place",
       "bounceMs": 240,
       "sparkles": true
      }
+    },
+    {
+     "id": "4-4",
+     "target": "#room-points-chip",
+     "copy": "발바닥 포인트를 모아 원하는 아이템을 구매할 수 있어요!",
+     "cta": "완료",
+     "ackOnly": true,
+     "showFinger": true
     }
    ],
-   "action": "long-press/drag drawer → place → 완료",
+   "action": "long-press/drag drawer → place → points tip → 완료 → step 5"
+  },
+  {
+   "step": 5,
+   "screen": "main",
+   "stepLabel": "STEP 5/5",
+   "target": "#btn-menu",
+   "copy": "메뉴에서 모은 냥코인을 확인할 수 있어요",
+   "substeps": [
+    {
+     "id": "5-1",
+     "target": "#btn-menu",
+     "copy": "메뉴에서 모은 냥코인을 확인할 수 있어요",
+     "showFinger": true,
+     "bubble": "below"
+    },
+    {
+     "id": "5-2",
+     "target": "#menu-row-rewards",
+     "copy": "보상함을 눌러 보세요",
+     "showFinger": true,
+     "bubble": "below"
+    },
+    {
+     "id": "5-3",
+     "target": "#withdraw-picker",
+     "fallbackTarget": "#wallet-card",
+     "copy": "냥코인 10개부터 토스포인트로 바꿀 수 있어요",
+     "sub": "※ 하루 최대 {dailyLimit}원",
+     "cta": "알겠어요",
+     "ackOnly": true,
+     "lines": [
+      {
+       "when": "nyangCoinBalance < 10",
+       "copy": "조금만 더 모으면 받을 수 있어요"
+      }
+     ]
+    }
+   ],
+   "action": "menu → rewards → ack",
    "complete": "tutorialDone=true"
   }
  ],
@@ -180,7 +237,7 @@
    "steps": [
     {
      "id": "r1",
-     "target": "#icon-menu",
+     "target": "#btn-menu",
      "copy": "메뉴에서 보상함을 열 수 있어요",
      "action": "tap → open menu"
     },
@@ -200,11 +257,11 @@
      "id": "r4",
      "target": "#withdraw-picker",
      "bubble": "above",
-     "copy": "−/+로 금액을 골라요 · 하루 최대 50원까지 받을 수 있어요",
+     "copy": "−/+로 금액을 골라요 · 하루 최대 {dailyLimit}원까지 받을 수 있어요",
      "lines": [
       {
        "when": "nyangCoinBalance >= 10 && remainingToday >= 10",
-       "copy": "−/+로 금액을 골라요 · 하루 최대 50원까지 받을 수 있어요"
+       "copy": "−/+로 금액을 골라요 · 하루 최대 {dailyLimit}원까지 받을 수 있어요"
       },
       {
        "when": "nyangCoinBalance >= 10 && remainingToday < 10",
@@ -212,7 +269,7 @@
       },
       {
        "when": "nyangCoinBalance < 10",
-       "copy": "10냥코인부터 토스포인트로 받을 수 있어요"
+       "copy": "10 냥코인부터 토스포인트로 받을 수 있어요"
       }
      ],
      "action": "ack — 실제 출금은 유저가 직접"
@@ -246,7 +303,7 @@
    {
     "day": 4,
     "id": "intro-paw-ads",
-    "target": "#icon-menu",
+    "target": "#btn-menu",
     "copy": "메뉴 › 포인트 받기에서 광고 보고 포인트 10개 받아요 (하루 10번까지)"
    },
    {

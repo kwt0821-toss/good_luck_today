@@ -103,7 +103,13 @@ export function MenuPanel({
   withdrawAmountRef.current = withdrawAmount;
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      // Drop any open sub-sheet (e.g. rewards left open after tutorial step 5).
+      setSheet(null);
+      setSheetOpen(false);
+      setRewardsView("inbox");
+      return;
+    }
     setClosing(false);
     void buildMenuViewModel(ops).then(setModel);
     AudioManager.playSfx("sheet-open");
@@ -939,7 +945,7 @@ export function MenuPanel({
                           const walletCopy = model.menu.sheets.rewards.wallet;
                           const hint = lowBalance
                             ? (walletCopy?.lowBalanceHint ??
-                                "10냥코인부터 받을 수 있어요 · {need}개 더 모아요").replace(
+                                "10 냥코인부터 받을 수 있어요 · {need}개 더 모아요").replace(
                                 "{need}",
                                 String(needMore),
                               )
@@ -950,11 +956,7 @@ export function MenuPanel({
                                   "오늘 {remainingToday}원 더 받을 수 있어요 · 하루 최대 {dailyLimit}원")
                                   .replace("{remainingToday}", String(remainingToday))
                                   .replace("{dailyLimit}", String(dailyLimit));
-                          const cta = stepperDisabled
-                            ? lowBalance
-                              ? (walletCopy?.disabledHint ?? "10냥코인부터 받을 수 있어요")
-                              : (walletCopy?.dailyDoneHint ?? "오늘은 다 받았어요")
-                            : `토스포인트로 받기 · ${withdrawAmount}원`;
+                          const cta = walletCopy?.withdrawCta ?? "토스 포인트 전환";
                           return (
                             <>
                               <div
@@ -1014,8 +1016,7 @@ export function MenuPanel({
                               <button
                                 type="button"
                                 id="btn-withdraw"
-                                className="menu-sheet-cta"
-                                style={{ marginTop: 12 }}
+                                className="menu-sheet-cta is-withdraw"
                                 disabled={stepperDisabled || withdrawAmount < min}
                                 onClick={() => setRewardsView("confirm")}
                               >

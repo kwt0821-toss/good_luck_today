@@ -48,15 +48,28 @@ export function dexCardGradeLabel(card: DexCard | null | undefined): string {
 
 export function fillTutorialCopy(
   template: string,
-  vars: { cardId?: string | null; breed?: string | null; grade?: string | null } = {},
+  vars: {
+    cardId?: string | null;
+    breed?: string | null;
+    grade?: string | null;
+    dailyLimit?: number | null;
+  } = {},
 ): string {
   let next = template;
   if (vars.cardId) next = next.split("{cardId}").join(vars.cardId);
   if (vars.breed != null) next = next.split("{품종}").join(vars.breed);
   if (vars.grade != null) next = next.split("{등급}").join(vars.grade);
+  if (vars.dailyLimit != null) {
+    next = next.split("{dailyLimit}").join(String(vars.dailyLimit));
+  }
   // Drop unresolved placeholders so we don't show raw braces.
-  next = next.replace(/\s*·\s*\{[^}]+\}/g, "").replace(/\{[^}]+\}/g, "");
-  return next.replace(/\s+/g, " ").trim();
+  next = next.replace(/[^\S\n]*·[^\S\n]*\{[^}]+\}/g, "").replace(/\{[^}]+\}/g, "");
+  // Collapse spaces/tabs but keep intentional newlines from tutorial copy.
+  return next
+    .replace(/[^\S\n]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 export function dexSlotCoachMark(
@@ -72,7 +85,7 @@ export function dexSlotCoachMark(
     cta: sub.cta ?? "다음",
     ackOnly: sub.ackOnly !== false,
     showFinger: false,
-    stepLabel: step.stepLabel ?? "STEP 3/4",
+    stepLabel: step.stepLabel ?? "STEP 3/5",
     bubble: "above",
   };
 }
@@ -87,10 +100,11 @@ export function dexClaimCoachMark(
     id: "step-3-2",
     target: resolveTutorialTarget(sub.target, vars, sub.fallbackTarget),
     copy: sub.copy ?? "",
+    lines: sub.lines,
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     activateTarget: Boolean(sub.claimGate),
-    stepLabel: step.stepLabel ?? "STEP 3/4",
+    stepLabel: step.stepLabel ?? "STEP 3/5",
     bubble: "above",
   };
 }
@@ -107,7 +121,7 @@ export function dexAfterClaimMark(step: TutorialStep): CoachMark | null {
     cta: after.cta ?? "알겠어요",
     ackOnly: true,
     showFinger: false,
-    stepLabel: step.stepLabel ?? "STEP 3/4",
+    stepLabel: step.stepLabel ?? "STEP 3/5",
   };
 }
 
@@ -126,7 +140,7 @@ export function roomPickCoachMark(step: TutorialStep): CoachMark | null {
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     passThrough: true,
-    stepLabel: step.stepLabel ?? "STEP 4/4",
+    stepLabel: step.stepLabel ?? "STEP 4/5",
     bubble: "above",
   };
 }
@@ -149,44 +163,125 @@ export function roomDoneCoachMark(step: TutorialStep): CoachMark | null {
   if (!sub) return null;
   return {
     id: "step-4-3",
-    target: resolveTutorialTarget(sub.target || "#room-done"),
+    target: "",
     copy: sub.copy ?? "잘했어요! 다른 아이템도 자유롭게 꾸며 보세요",
-    cta: sub.cta ?? "완료",
+    cta: sub.cta ?? "다음",
     ackOnly: true,
-    activateTarget: true,
     showFinger: false,
     hideSkip: true,
-    stepLabel: step.stepLabel ?? "STEP 4/4",
+    dim: false,
+    stepLabel: step.stepLabel ?? "STEP 4/5",
+  };
+}
+
+/** After decorate tip: highlight the drawer paw-points chip. */
+export function roomPointsCoachMark(step: TutorialStep): CoachMark | null {
+  const sub = roomSubstep(step, "4-4");
+  if (!sub) return null;
+  return {
+    id: "step-4-4",
+    target: resolveTutorialTarget(sub.target || "#room-points-chip"),
+    copy: sub.copy ?? "발바닥 포인트를 모아 원하는 아이템을 구매할 수 있어요!",
+    cta: sub.cta ?? "완료",
+    ackOnly: true,
+    showFinger: sub.showFinger !== false,
+    hideSkip: true,
+    // Dim + block outside the chip; CTA advances (chip itself is not the action).
+    stepLabel: step.stepLabel ?? "STEP 4/5",
     bubble: "above",
   };
 }
 
-export function resolveRewardsIntroCopy(step: RewardsIntroStep, ops: OpsState): string {
+export type RewardsTutPhase = "menu" | "row" | "sheet" | null;
+
+export function step5CoachMark(
+  step: TutorialStep,
+  phase: RewardsTutPhase,
+  ops: OpsState,
+  dailyLimit = 50,
+): CoachMark | null {
+  if (!phase) return null;
+  const id = phase === "menu" ? "5-1" : phase === "row" ? "5-2" : "5-3";
+  const sub = roomSubstep(step, id);
+  if (!sub) return null;
+  const label = step.stepLabel ?? "STEP 5/5";
+  if (phase === "menu") {
+    return {
+      id: "step-5-1",
+      target: resolveTutorialTarget(sub.target || "#btn-menu"),
+      copy: sub.copy ?? "메뉴에서 모은 냥코인을 확인할 수 있어요",
+      showFinger: true,
+      // Hole dim + outside blocks; only the elevated menu button stays tappable.
+      passThrough: true,
+      activateTarget: true,
+      ackOnly: true,
+      stepLabel: label,
+      // Menu sits at the top — keep copy below so it doesn't cover the button.
+      bubble: sub.bubble ?? "below",
+    };
+  }
+  if (phase === "row") {
+    return {
+      id: "step-5-2",
+      target: resolveTutorialTarget(sub.target || "#menu-row-rewards"),
+      copy: sub.copy ?? "보상함을 눌러 보세요",
+      showFinger: true,
+      ackOnly: true,
+      passThrough: true,
+      stepLabel: label,
+      bubble: sub.bubble ?? "below",
+    };
+  }
+  const low = ops.nyangCoinBalance < 10;
+  const lowLine = sub.lines?.find((line) => (line.when ?? "").includes("< 10"));
+  const footnote = fillTutorialCopy(sub.sub ?? "※ 하루 최대 {dailyLimit}원", { dailyLimit });
+  const lowHint = low ? (lowLine?.copy ?? lowLine?.text ?? "조금만 더 모으면 받을 수 있어요") : null;
+  return {
+    id: "step-5-3",
+    target: resolveTutorialTarget(sub.target || "#withdraw-picker", {}, sub.fallbackTarget),
+    copy: (sub.copy ?? "냥코인 10개부터 토스포인트로 바꿀 수 있어요").split("\n")[0],
+    sub: lowHint ? `${footnote}\n${lowHint}` : footnote,
+    cta: sub.cta ?? "알겠어요",
+    ackOnly: true,
+    showFinger: false,
+    stepLabel: label,
+    bubble: "above",
+    // Dim outside the withdraw/wallet card; advance via CTA only.
+    passThrough: false,
+  };
+}
+
+export function resolveRewardsIntroCopy(
+  step: RewardsIntroStep,
+  ops: OpsState,
+  dailyLimit = 50,
+): string {
   if (step.lines?.length) {
     for (const line of step.lines) {
       const when = line.when ?? "";
       if (when.includes(">=") && ops.nyangCoinBalance >= 10) {
-        return line.copy ?? line.text ?? step.copy ?? "";
+        return fillTutorialCopy(line.copy ?? line.text ?? step.copy ?? "", { dailyLimit });
       }
       if (when.includes("<") && ops.nyangCoinBalance < 10) {
-        return line.copy ?? line.text ?? step.copy ?? "";
+        return fillTutorialCopy(line.copy ?? line.text ?? step.copy ?? "", { dailyLimit });
       }
     }
   }
-  return step.copy ?? "";
+  return fillTutorialCopy(step.copy ?? "", { dailyLimit });
 }
 
 export function rewardsIntroMark(
   config: RewardsIntroConfig,
   stepId: string,
   ops: OpsState,
+  dailyLimit = 50,
 ): CoachMark | null {
   const step = config.steps.find((entry) => entry.id === stepId);
   if (!step) return null;
   return {
     id: `rewards-intro:${step.id}`,
     target: step.target,
-    copy: resolveRewardsIntroCopy(step, ops),
+    copy: resolveRewardsIntroCopy(step, ops, dailyLimit),
     bubble: step.bubble,
     showFinger: step.id !== "r4",
     ackOnly: step.id === "r3" || step.id === "r4",
@@ -268,6 +363,9 @@ export function ncoinNextMark(then: NcoinIntroThen): CoachMark | null {
     // #btn-to-dex sits in the footer — keep the bubble above so it isn't clipped.
     bubble: "above",
     showFinger: true,
+    // No 「다음」 CTA — user taps the highlighted 도감 button.
+    ackOnly: true,
+    activateTarget: true,
   };
 }
 

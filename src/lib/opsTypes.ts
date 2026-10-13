@@ -230,6 +230,8 @@ export type TutorialSubstep = {
   target: string;
   fallbackTarget?: string;
   copy?: string;
+  /** Smaller supporting line under copy (e.g. ※ 하루 최대 50원). */
+  sub?: string;
   title?: string;
   cta?: string;
   ackOnly?: boolean;
@@ -246,6 +248,10 @@ export type TutorialSubstep = {
     text: string;
     autoHideMs?: number;
   };
+  /** Optional conditional lines (e.g. step 5-3 low balance hint). */
+  lines?: TutorialLine[];
+  /** Prefer bubble above/below the hole. */
+  bubble?: "above" | "below";
   /** Room 4-1: long-press duration to pick from drawer. */
   longPressMs?: number;
   /** Room: only the highlighted drawer item may move. */
@@ -289,7 +295,7 @@ export type TutorialStep = {
   gesture?: string;
   suggestTile?: { c: number; r: number };
   then?: TutorialStepThen;
-  /** Step 3: 3-1…3-3; step 4: 4-1…4-3. */
+  /** Step 3: 3-1…3-3; step 4: 4-1…4-4. */
   substeps?: TutorialSubstep[];
   complete?: string;
 };
