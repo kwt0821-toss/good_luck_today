@@ -186,7 +186,7 @@ export function RoomDrawer({
             ITEMS <span>꾸미기 서랍</span>
           </h2>
         </div>
-        <span className="lucky-points-chip">
+        <span className="lucky-points-chip" id="room-points-chip">
           <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />
           {points.toLocaleString("en-US")}
         </span>

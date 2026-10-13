@@ -92,6 +92,7 @@ export function dexClaimCoachMark(
     id: "step-3-2",
     target: resolveTutorialTarget(sub.target, vars, sub.fallbackTarget),
     copy: sub.copy ?? "",
+    lines: sub.lines,
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     activateTarget: Boolean(sub.claimGate),
@@ -156,13 +157,31 @@ export function roomDoneCoachMark(step: TutorialStep): CoachMark | null {
   if (!sub) return null;
   return {
     id: "step-4-3",
-    target: resolveTutorialTarget(sub.target || "#room-done"),
+    target: "",
     copy: sub.copy ?? "잘했어요! 다른 아이템도 자유롭게 꾸며 보세요",
-    cta: sub.cta ?? "완료",
+    cta: sub.cta ?? "다음",
     ackOnly: true,
-    activateTarget: true,
     showFinger: false,
     hideSkip: true,
+    dim: false,
+    stepLabel: step.stepLabel ?? "STEP 4/5",
+  };
+}
+
+/** After decorate tip: highlight the drawer paw-points chip. */
+export function roomPointsCoachMark(step: TutorialStep): CoachMark | null {
+  const sub = roomSubstep(step, "4-4");
+  if (!sub) return null;
+  return {
+    id: "step-4-4",
+    target: resolveTutorialTarget(sub.target || "#room-points-chip"),
+    copy: sub.copy ?? "발바닥 포인트로 모아 원하는 아이템을 구매할 수 있어요!",
+    cta: sub.cta ?? "완료",
+    ackOnly: true,
+    showFinger: sub.showFinger !== false,
+    hideSkip: true,
+    passThrough: true,
+    dim: false,
     stepLabel: step.stepLabel ?? "STEP 4/5",
     bubble: "above",
   };
@@ -186,10 +205,13 @@ export function step5CoachMark(
       target: resolveTutorialTarget(sub.target || "#icon-menu"),
       copy: sub.copy ?? "메뉴에서 모은 냥코인을 확인할 수 있어요",
       showFinger: true,
+      // Pass through + elevate so the real menu button stays tappable under the coach.
+      passThrough: true,
       activateTarget: true,
       ackOnly: true,
       stepLabel: label,
-      bubble: "above",
+      // Menu sits at the top — keep copy below so it doesn't cover the button.
+      bubble: sub.bubble ?? "below",
     };
   }
   if (phase === "row") {
@@ -201,7 +223,7 @@ export function step5CoachMark(
       ackOnly: true,
       passThrough: true,
       stepLabel: label,
-      bubble: "above",
+      bubble: sub.bubble ?? "below",
     };
   }
   const low = ops.nyangCoinBalance < 10;

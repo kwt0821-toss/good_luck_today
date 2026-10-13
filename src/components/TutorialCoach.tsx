@@ -256,7 +256,11 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
             {mark.copy ? <p className="tut-copy">{mark.copy}</p> : null}
             {mark.sub ? <p className="tut-sub">{mark.sub}</p> : null}
             {mark.lines?.length ? (
-              <ul className="tut-lines">
+              <ul
+                className={`tut-lines ${
+                  mark.lines.every((line) => /^x\s*\d+/i.test(line.text.trim())) ? "is-rewards" : ""
+                }`}
+              >
                 {mark.lines.map((line, index) => (
                   <li
                     key={`${line.text}-${index}`}

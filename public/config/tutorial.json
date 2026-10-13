@@ -70,12 +70,12 @@
    "screen": "dex",
    "stepLabel": "STEP 3/5",
    "target": "#dex-slot-{cardId}",
-   "copy": "방금 만난 고양이가 여기 들어왔어요\n· {품종} · {등급}",
+   "copy": "방금 만난 고양이가 여기 들어왔어요",
    "substeps": [
     {
      "id": "3-1",
      "target": "#dex-slot-{cardId}",
-     "copy": "방금 만난 고양이가 여기 들어왔어요\n· {품종} · {등급}",
+     "copy": "방금 만난 고양이가 여기 들어왔어요",
      "cta": "다음",
      "ackOnly": true,
      "scrollIntoView": {
@@ -89,7 +89,17 @@
      "id": "3-2",
      "target": "#dex-claim-{cardId}",
      "fallbackTarget": "#dex-slot-{cardId}",
-     "copy": "코인을 톡 누르면 보상을 받아요\n· 냥코인 1 + 20P",
+     "copy": "코인을 톡 누르면 보상을 받아요",
+     "lines": [
+      {
+       "icon": "/assets/ncoin/ncoin-16@3x.svg",
+       "text": "x 1"
+      },
+      {
+       "icon": "/assets/menu/icon-paw-mini.svg",
+       "text": "x 20"
+      }
+     ],
      "showFinger": true,
      "claimGate": true
     },
@@ -143,18 +153,26 @@
     },
     {
      "id": "4-3",
-     "target": "#room-done",
+     "target": "",
      "copy": "잘했어요! 다른 아이템도 자유롭게 꾸며 보세요",
-     "cta": "완료",
+     "cta": "다음",
      "ackOnly": true,
      "placeFx": {
       "sfx": "item-place",
       "bounceMs": 240,
       "sparkles": true
      }
+    },
+    {
+     "id": "4-4",
+     "target": "#room-points-chip",
+     "copy": "발바닥 포인트로 모아 원하는 아이템을 구매할 수 있어요!",
+     "cta": "완료",
+     "ackOnly": true,
+     "showFinger": true
     }
    ],
-   "action": "long-press/drag drawer → place → 완료 → step 5"
+   "action": "long-press/drag drawer → place → points tip → 완료 → step 5"
   },
   {
    "step": 5,
@@ -167,13 +185,15 @@
      "id": "5-1",
      "target": "#icon-menu",
      "copy": "메뉴에서 모은 냥코인을 확인할 수 있어요",
-     "showFinger": true
+     "showFinger": true,
+     "bubble": "below"
     },
     {
      "id": "5-2",
      "target": "#menu-row-rewards",
      "copy": "보상함을 눌러 보세요",
-     "showFinger": true
+     "showFinger": true,
+     "bubble": "below"
     },
     {
      "id": "5-3",

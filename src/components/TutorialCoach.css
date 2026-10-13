@@ -73,7 +73,8 @@
   pointer-events: none;
 }
 
-/* Elevated interaction target (above tut-layer z=120) for long-press / drag. */
+/* Elevated interaction target (above tut-layer z=120) for long-press / drag.
+   tut-chrome is z=140 with pointer-events:none — empty areas pass taps through. */
 .tut-elevated-target {
   position: relative !important;
   z-index: 131 !important;
@@ -113,6 +114,25 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.tut-lines.is-rewards {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.tut-lines.is-rewards .tut-line {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.tut-lines.is-rewards .tut-line-icon {
+  flex-basis: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 .tut-line {

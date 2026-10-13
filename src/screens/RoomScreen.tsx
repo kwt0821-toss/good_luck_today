@@ -84,7 +84,7 @@ const VIEW_W = 390;
 const SWIPE_THRESHOLD = 56;
 import "./RoomScreen.css";
 
-export type RoomTutorialPhase = "pick" | "drag" | "done" | null;
+export type RoomTutorialPhase = "pick" | "drag" | "done" | "points" | null;
 
 type RoomScreenProps = {
   onBack: () => void;
@@ -927,7 +927,7 @@ export function RoomScreen({
             id="room-done"
             className="lucky-done"
             onClick={() => {
-              if (tutorialPhase === "done") {
+              if (tutorialPhase === "done" || tutorialPhase === "points") {
                 onTutorialComplete?.();
                 return;
               }
