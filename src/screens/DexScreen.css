@@ -1159,10 +1159,28 @@
   cursor: pointer;
 }
 
-.dex-claim-chip span {
+.dex-claim-chip-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dex-claim-chip-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 auto;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.dex-claim-chip-reward img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
 }
 
 .dex-claim-chip em {

@@ -377,10 +377,27 @@ export function DexScreen({
               id="dex-claim-all"
               className="dex-claim-chip"
               disabled={claimBusy || tutLocked}
+              aria-label={dexClaimChipLabel(
+                claimSummary.count,
+                claimSummary.nyangCoin,
+                claimSummary.paw,
+              )}
               onClick={() => void runClaim("all")}
             >
-              <span>
-                {dexClaimChipLabel(claimSummary.count, claimSummary.nyangCoin, claimSummary.paw)}
+              <span className="dex-claim-chip-copy">
+                <span>받을 보상 {claimSummary.count}개</span>
+                {claimSummary.nyangCoin > 0 ? (
+                  <span className="dex-claim-chip-reward">
+                    <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={14} height={14} />
+                    x {claimSummary.nyangCoin}
+                  </span>
+                ) : null}
+                {claimSummary.paw > 0 ? (
+                  <span className="dex-claim-chip-reward">
+                    <img src="/assets/menu/icon-paw-mini.svg" alt="" width={14} height={14} />
+                    x {claimSummary.paw}
+                  </span>
+                ) : null}
               </span>
               <em>모두 받기</em>
             </button>
