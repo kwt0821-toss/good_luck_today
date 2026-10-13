@@ -36,16 +36,21 @@ summary {
 
 button:focus,
 a:focus,
-[role="button"]:focus {
-  outline: none;
-}
-
-/* Keyboard only — avoid the yellow/orange mobile WebView focus ring on tap. */
+[role="button"]:focus,
 button:focus-visible,
 a:focus-visible,
 [role="button"]:focus-visible {
-  outline: 2px solid rgba(255, 196, 138, 0.65);
-  outline-offset: 2px;
+  outline: none;
+}
+
+/* Desktop keyboard only — never show a focus ring after touch taps in Toss WebView. */
+@media (hover: hover) and (pointer: fine) {
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid rgba(255, 196, 138, 0.65);
+    outline-offset: 2px;
+  }
 }
 
 button {

@@ -170,6 +170,13 @@
   font-size: 14px;
   white-space: nowrap;
   cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dex-tab:focus,
+.dex-tab:focus-visible {
+  outline: none;
 }
 
 .dex-tab sup {
@@ -289,8 +296,9 @@
 
 .dex-breed-slots {
   display: flex;
-  gap: clamp(4px, 2vw, 8px);
+  gap: clamp(2px, 1.2vw, 8px);
   margin-top: 10px;
+  width: 100%;
   max-width: 100%;
   justify-content: space-between;
 }
@@ -379,7 +387,10 @@
 }
 
 .dex-slot-breed {
-  width: min(62px, 18vw);
+  flex: 1 1 0;
+  width: auto;
+  max-width: 62px;
+  min-width: 0;
   height: auto;
   aspect-ratio: 62 / 97;
   border-radius: 6px;
