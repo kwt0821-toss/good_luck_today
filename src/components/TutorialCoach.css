@@ -23,11 +23,12 @@
 }
 
 .tut-skip {
-  /* top-right below app bar — clears room edit “완료” and native nav */
+  /* top-right below app bar — clears room edit “완료” and native nav.
+     Above tut-elevated-panel (130) / target (131) so skip stays tappable. */
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 52px);
   right: 14px;
-  z-index: 121;
+  z-index: 140;
   pointer-events: auto;
   height: 34px;
   padding: 0 12px;
@@ -41,7 +42,8 @@
 
 .tut-bubble {
   position: fixed;
-  z-index: 121;
+  /* Above elevated pass-through targets (131) so copy stays readable on room drawer. */
+  z-index: 140;
   pointer-events: auto;
   padding: 14px 16px;
   border-radius: 16px;
@@ -175,7 +177,7 @@
 
 .tut-finger {
   position: fixed;
-  z-index: 122;
+  z-index: 140;
   width: 28px;
   height: 28px;
   margin: -4px 0 0 -4px;
