@@ -1,6 +1,8 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
 import { isInTossApp } from "./native";
+import { loadOpsConfig } from "./opsConfig";
+import { loadOpsState } from "./opsStorage";
 import type { OpsStarter, OpsState } from "./opsTypes";
 import type { GridLayoutEntry, RoomDefinition, RoomGridFile, RoomsFile } from "./roomCatalog";
 import { defaultRoomId } from "./roomCatalog";
@@ -446,9 +448,11 @@ export async function loadRoomState(
       unlocked: stored.unlocked.length ? stored.unlocked : [defaultRoomId(roomsFile)],
     };
   }
-  const mock = mockState(items, roomsFile, grid);
-  await writeKey(ROOM_KEY, JSON.stringify(mock));
-  return mock;
+  // Fresh install: starter room + ops inventory (not the design mock catalog).
+  const [config, ops] = await Promise.all([loadOpsConfig(), loadOpsState()]);
+  const fresh = newUserRoomState(items, roomsFile, ops, grid, config.starter);
+  await writeKey(ROOM_KEY, JSON.stringify(fresh));
+  return fresh;
 }
 
 export async function saveRoomState(state: RoomSaveState): Promise<void> {

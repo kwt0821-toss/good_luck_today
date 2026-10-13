@@ -9,6 +9,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overflow-x: hidden;
   overscroll-behavior: none;
   color: var(--cream);
   font-family: "Noto Sans KR", "Toss Product Sans", sans-serif;
@@ -87,9 +88,12 @@
 
 .dex-logo {
   display: block;
-  width: 287px;
-  height: 46px;
+  width: min(287px, 100%);
+  height: auto;
+  max-height: 46px;
   margin: 0 0 20px -2px;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .dex-progress-row {
@@ -199,7 +203,8 @@
 .dex-body {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   margin: 18px -24px 0;
@@ -284,8 +289,10 @@
 
 .dex-breed-slots {
   display: flex;
-  gap: 8px;
+  gap: clamp(4px, 2vw, 8px);
   margin-top: 10px;
+  max-width: 100%;
+  justify-content: space-between;
 }
 
 .dex-note {
@@ -297,19 +304,30 @@
 
 .dex-grid {
   display: grid;
+  width: 100%;
+  max-width: 100%;
+  justify-content: center;
 }
 
 .dex-grid-special,
 .dex-grid-character {
-  grid-template-columns: repeat(3, 106px);
-  column-gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: clamp(8px, 3vw, 12px);
   row-gap: 18px;
 }
 
 .dex-grid-legend {
-  grid-template-columns: repeat(2, 150px);
-  column-gap: 42px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(16px, 8vw, 42px);
   row-gap: 20px;
+}
+
+.dex-cell {
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .dex-cell-name {
@@ -319,6 +337,9 @@
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.2px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dex-cell-name.is-locked {
@@ -347,25 +368,36 @@
   cursor: pointer;
   background: transparent;
   flex: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  max-width: 100%;
+}
+
+.dex-slot:focus,
+.dex-slot:focus-visible {
+  outline: none;
 }
 
 .dex-slot-breed {
-  width: 62px;
-  height: 97px;
+  width: min(62px, 18vw);
+  height: auto;
+  aspect-ratio: 62 / 97;
   border-radius: 6px;
 }
 
 .dex-slot-special,
 .dex-slot-character,
 .dex-slot-soon {
-  width: 106px;
-  height: 165px;
+  width: min(106px, 100%);
+  height: auto;
+  aspect-ratio: 106 / 165;
   border-radius: 9px;
 }
 
 .dex-slot-legend {
-  width: 150px;
-  height: 233px;
+  width: min(150px, 100%);
+  height: auto;
+  aspect-ratio: 150 / 233;
   border-radius: 12px;
   padding: 2px;
   background: linear-gradient(135deg, #f5d27a, #c9972e 35%, #fae296 55%, #c9972e 75%, #f5d27a);

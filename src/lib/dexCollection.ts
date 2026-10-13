@@ -32,12 +32,6 @@ export const MOCK_DEX_OWNED: DexOwnedRecord[] = [
   { id: "baekho", firstSeen: "2026-10-08", count: 1, isNew: false },
 ];
 
-function toMap(records: DexOwnedRecord[]): DexOwnedMap {
-  const next: DexOwnedMap = {};
-  for (const record of records) next[record.id] = record;
-  return next;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -102,9 +96,10 @@ export async function loadDexOwned(): Promise<DexOwnedMap> {
     const stored = parseOwned(raw);
     if (stored) return stored;
   }
-  const mock = toMap(MOCK_DEX_OWNED);
-  await writeKey(DEX_KEY, JSON.stringify(mock));
-  return mock;
+  // Fresh install: empty collection. MOCK_DEX_OWNED is design preview data only.
+  const empty: DexOwnedMap = {};
+  await writeKey(DEX_KEY, JSON.stringify(empty));
+  return empty;
 }
 
 export async function saveDexOwned(owned: DexOwnedMap): Promise<void> {

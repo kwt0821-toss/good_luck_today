@@ -45,16 +45,6 @@ function easeSpin(t: number): number {
   return 3 * u * u * x * y1 + 3 * u * x * x * y2 + x * x * x;
 }
 
-function bounceScale(t: number, from = LIFT_SCALE): number {
-  // from → 0.985 → 1
-  if (t < 0.55) {
-    const p = t / 0.55;
-    return from + (0.985 - from) * (1 - (1 - p) * (1 - p));
-  }
-  const p = (t - 0.55) / 0.45;
-  return 0.985 + (1 - 0.985) * (1 - (1 - p) * (1 - p));
-}
-
 function isBackFace(angle: number): boolean {
   const normalized = ((Math.round(angle / 180) % 2) + 2) % 2;
   return normalized === 1;
