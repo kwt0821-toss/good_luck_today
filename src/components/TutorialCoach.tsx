@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
+import { ncoinIcon } from "../lib/ncoinIcon";
 import type { CoachMark, FeatureIntro } from "../lib/opsTypes";
 import "./TutorialCoach.css";
 
@@ -7,7 +8,6 @@ const SKIP_TOP_ZONE_PT = 160;
 const BUBBLE_GAP = 16;
 const PAD_TOP = 16;
 const PAD_BOTTOM = 20;
-const NCOIN_ICON = "/assets/ncoin/ncoin-16@3x.svg";
 const PAW_ICON = "/assets/menu/icon-paw-mini.svg";
 
 /** Inline 냥코인 / 발바닥 포인트 icons wherever those words appear. */
@@ -24,7 +24,7 @@ function TutorialRichText({ text }: { text: string }) {
     const token = match[1];
     nodes.push(
       <span key={`i-${key++}`} className="tut-inline-token">
-        <img src={token === "냥코인" ? NCOIN_ICON : PAW_ICON} alt="" />
+        <img src={token === "냥코인" ? ncoinIcon(16) : PAW_ICON} alt="" />
         {token}
       </span>,
     );

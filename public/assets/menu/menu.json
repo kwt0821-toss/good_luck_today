@@ -27,7 +27,7 @@
     "label": "냥코인",
     "value": "user.nyangCoinBalance",
     "format": "number(ko-KR)",
-    "icon": "/assets/ncoin/ncoin-16@3x.svg"
+    "icon": "/assets/ncoin/ncoin-32.png"
    },
    {
     "id": "dex",
@@ -131,7 +131,7 @@
    "icon": "icon-rewards.svg",
    "enabled": true,
    "open": "sheet:rewards",
-   "meta": "'🪙{nyangCoinBalance} 냥코인 · 도감 보상 {rewards.dexClaimableCount}'",
+   "meta": "'{ncoin}{nyangCoinBalance} 냥코인 · 도감 보상 {rewards.dexClaimableCount}'",
    "data": "economy.json → dexRewards.claimMode=manual + pawSources.newCardFirstGet / setComplete",
    "badge": {
     "type": "dot",

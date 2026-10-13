@@ -88,8 +88,8 @@ icon-attendance / points / exchange / rewards / rates / notice / invite / settin
 | 요소 | 값 |
 |---|---|
 | 헤더 스탯 | 4칸: 포인트 · 냥코인 · 도감 · 방 레벨 |
-| 보상함 행 meta | `🪙{잔액} 냥코인 · 받을 보상 {n}` |
-| 지갑 카드 | 잔액 + ncoin-24@3x, 10단위 칩(최대 기본 선택) |
+| 보상함 행 meta | `{ncoin}{잔액} 냥코인 · 받을 보상 {n}` |
+| 지갑 카드 | 잔액 + ncoin-64.png, 10단위 칩(최대 기본 선택) |
 | CTA | `토스 포인트 전환` (가운데 정렬) / 10 미만 시 비활성 + 힌트 "10 냥코인부터 받을 수 있어요" |
 | 출금 | 클라이언트는 POST `/wallet/withdraw` 만 호출 (토스 지급 API 직접 호출 금지) |
 | 기록 | GET `/wallet/history` — 완료 / 처리 중 / 실패 |

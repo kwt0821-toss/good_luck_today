@@ -27,7 +27,3 @@ export function menuAsset(relative: string): string {
   if (relative.startsWith("/assets/")) return relative;
   return `/assets/menu/${relative.replace(/^\//, "")}`;
 }
-
-export function ncoinAsset(size: 16 | 24 = 16): string {
-  return `/assets/ncoin/ncoin-${size}@3x.svg`;
-}

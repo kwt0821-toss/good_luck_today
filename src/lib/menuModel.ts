@@ -127,8 +127,8 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     } else if (id === "rewards") {
       meta =
         dexClaimableCount > 0
-          ? `🪙${ops.nyangCoinBalance} 냥코인 · 도감 보상 ${dexClaimableCount}`
-          : `🪙${ops.nyangCoinBalance} 냥코인`;
+          ? `{ncoin}${ops.nyangCoinBalance} 냥코인 · 도감 보상 ${dexClaimableCount}`
+          : `{ncoin}${ops.nyangCoinBalance} 냥코인`;
       if (dexClaimableCount > 0) badge = { type: "dot" };
     } else if (id === "rates") {
       meta = `5성↑·스페셜 ${highlightPct}%`;

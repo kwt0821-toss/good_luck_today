@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { AudioManager } from "../audio/AudioManager";
 import { duplicateRevealCopy, newCardRevealCopy } from "../lib/dexRewards";
 import type { DexCard } from "../lib/dexTypes";
+import { ncoinIcon } from "../lib/ncoinIcon";
 import type { DrawReservation } from "../lib/opsTypes";
 import "./DrawRevealScreen.css";
 
@@ -563,7 +564,7 @@ export function DrawRevealScreen({
           }}
         >
           <div className="ic" aria-hidden="true">
-            <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={18} height={18} />
+            <img src={ncoinIcon(18)} alt="" width={18} height={18} />
           </div>
           <div>
             {toastText ?? (

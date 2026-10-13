@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
 import { CoinBurst } from "../components/CoinBurst";
+import { ncoinIcon } from "../lib/ncoinIcon";
 import { DexCardSlot } from "../components/DexCardSlot";
 import { DexDetailSheet } from "../components/DexDetailSheet";
 import {
@@ -388,7 +389,7 @@ export function DexScreen({
                 <span>받을 보상 {claimSummary.count}개</span>
                 {claimSummary.nyangCoin > 0 ? (
                   <span className="dex-claim-chip-reward">
-                    <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={14} height={14} />
+                    <img src={ncoinIcon(14)} alt="" width={14} height={14} />
                     <span className="dex-claim-chip-x">x</span>
                     <span className="dex-claim-chip-qty">{claimSummary.nyangCoin}</span>
                   </span>
@@ -597,7 +598,7 @@ export function DexScreen({
             <div className="dex-celebrate-loot">
               {celebrate.nyangCoin > 0 ? (
                 <span>
-                  <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={18} height={18} />
+                  <img src={ncoinIcon(18)} alt="" width={18} height={18} />
                   냥코인 +{celebrate.nyangCoin}
                 </span>
               ) : null}
@@ -621,7 +622,7 @@ export function DexScreen({
       {floatingToast ? (
         <div className="draw-reveal-toast dex-floating-toast" id="dex-toast" role="status">
           <div className="ic" aria-hidden="true">
-            <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={18} height={18} />
+            <img src={ncoinIcon(18)} alt="" width={18} height={18} />
           </div>
           <div>{floatingToast}</div>
         </div>

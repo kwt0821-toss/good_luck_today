@@ -14,12 +14,18 @@
   position: absolute;
   left: var(--x);
   top: var(--y);
-  width: 16px;
-  height: 16px;
-  margin: -8px 0 0 -8px;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
   animation: coin-burst-fly 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   animation-delay: var(--delay);
   opacity: 0;
+}
+
+.coin-burst.is-confetti .coin-burst-p.is-coin {
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
 }
 
 .coin-burst-p.is-dot {

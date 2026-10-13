@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointer
 import { AudioManager } from "../audio/AudioManager";
 import { isDevBuild } from "../lib/devMode";
 import { resetToNewUserState } from "../lib/devReset";
-import { menuAsset, ncoinAsset } from "../lib/menuConfig";
+import { menuAsset } from "../lib/menuConfig";
+import { NCOIN_ICON, ncoinIcon } from "../lib/ncoinIcon";
 import {
   attendanceSheetState,
   buildMenuViewModel,
@@ -55,11 +56,18 @@ type MenuPanelProps = {
 };
 
 function formatMeta(text: string) {
-  // Replace coin emoji with the ncoin asset (emoji often tofu/breaks in in-app WebViews).
-  const withIcons = text.split(/(🪙)/g);
+  // `{ncoin}` → shared PNG icon (see NCOIN_ICON).
+  const withIcons = text.split(/(\{ncoin\})/g);
   return withIcons.map((chunk, chunkIndex) => {
-    if (chunk === "🪙") {
-      return <img key={`coin-${chunkIndex}`} className="menu-meta-ncoin" src={ncoinAsset(16)} alt="" />;
+    if (chunk === "{ncoin}") {
+      return (
+        <img
+          key={`coin-${chunkIndex}`}
+          className="menu-meta-ncoin"
+          src={ncoinIcon(12)}
+          alt=""
+        />
+      );
     }
     // Highlight trailing numbers / fractions for amber weight via <b>
     const parts = chunk.split(/(\d+(?:\/\d+)?%?|장)/g);
@@ -479,7 +487,7 @@ export function MenuPanel({
                 </div>
                 <button type="button" className="menu-stat is-tap" onClick={() => openSheet("rewards")}>
                   <div className="menu-stat-value">
-                    <img src={ncoinAsset(16)} alt="" />
+                    <img src={ncoinIcon(14)} alt="" />
                     {model.nyangCoinBalance.toLocaleString("ko-KR")}
                   </div>
                   <div className="menu-stat-label">냥코인</div>
@@ -906,7 +914,7 @@ export function MenuPanel({
                     )
                   ) : rewardsView === "success" ? (
                     <div className="wallet-success">
-                      <img src={ncoinAsset(24)} alt="" />
+                      <img src={NCOIN_ICON.lg} alt="" width={64} height={64} />
                       <h4>
                         {lastWithdraw?.status === "pending"
                           ? "처리 중이에요"
@@ -923,7 +931,7 @@ export function MenuPanel({
                     </div>
                   ) : rewardsView === "confirm" ? (
                     <div className="wallet-success">
-                      <img src={ncoinAsset(24)} alt="" />
+                      <img src={NCOIN_ICON.lg} alt="" width={64} height={64} />
                       <h4>{model.menu.sheets.rewards.wallet?.confirmTitle ?? "토스포인트로 받을까요?"}</h4>
                       <p>
                         {withdrawAmount}냥코인을 토스포인트 {withdrawAmount}원으로 바꿔요.
@@ -936,7 +944,7 @@ export function MenuPanel({
                           {model.menu.sheets.rewards.wallet?.title ?? "내 냥코인"}
                         </div>
                         <div className="wallet-card-value">
-                          <img src={ncoinAsset(24)} alt="" />
+                          <img src={ncoinIcon(24)} alt="" width={24} height={24} />
                           {model.nyangCoinBalance.toLocaleString("ko-KR")}
                           <small>냥코인</small>
                         </div>

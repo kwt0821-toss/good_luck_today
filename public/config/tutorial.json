@@ -38,7 +38,7 @@
     "title": "냥코인을 모아요",
     "lines": [
      {
-      "icon": "/assets/ncoin/ncoin-16@3x.svg",
+      "icon": "/assets/ncoin/ncoin-64.png",
       "text": "새 카드를 뽑으면 냥코인을 받아요"
      },
      {
@@ -92,7 +92,7 @@
      "copy": "코인을 톡 누르면 보상을 받아요",
      "lines": [
       {
-       "icon": "/assets/ncoin/ncoin-16@3x.svg",
+       "icon": "/assets/ncoin/ncoin-64.png",
        "text": "x 1"
       },
       {

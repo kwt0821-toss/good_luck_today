@@ -4,6 +4,7 @@ import { BottomSheet, Button, FixedBottomCTA, Text, Top } from "@toss/tds-mobile
 import { CatPortrait } from "../components/CatPortrait";
 import { GradeBadge } from "../components/GradeBadge";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { ncoinIcon } from "../lib/ncoinIcon";
 import { MAX_DAILY_REROLLS } from "../lib/user";
 import type { Cat, DrawResult } from "../types";
 
@@ -52,7 +53,10 @@ export function ResultScreen({
 
       <div className="reward-banner" role="status">
         <div className="reward-pills">
-          <span className="reward-pill is-point">냥코인 +{result.earnedTossPoints}</span>
+          <span className="reward-pill is-point">
+            <img src={ncoinIcon(16)} alt="" width={16} height={16} />
+            냥코인 +{result.earnedTossPoints}
+          </span>
           <span className="reward-pill is-jelly">핑크젤리 +{result.earnedPinkJelly}</span>
         </div>
         <p>

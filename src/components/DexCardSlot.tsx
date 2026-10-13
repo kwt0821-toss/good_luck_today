@@ -1,5 +1,6 @@
 import { dexAsset } from "../lib/dexCatalog";
 import type { DexCard, DexOwnedRecord } from "../lib/dexTypes";
+import { ncoinIcon } from "../lib/ncoinIcon";
 
 type SlotKind = "breed" | "special" | "character" | "legend" | "soon";
 
@@ -106,7 +107,7 @@ export function DexCardSlot({
             }
           }}
         >
-          <img src="/assets/ncoin/ncoin-16@3x.svg" alt="" width={14} height={14} />
+          <img src={ncoinIcon(14)} alt="" width={14} height={14} />
         </span>
       ) : null}
     </button>
