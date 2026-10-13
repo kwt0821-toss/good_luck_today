@@ -1,8 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-  <ellipse cx="8.2" cy="12.2" rx="4.1" ry="4.4" fill="#221E3A" stroke="#F3EBD7" stroke-width="1.7"/>
-  <ellipse cx="13.4" cy="7.4" rx="4.2" ry="4.5" fill="#221E3A" stroke="#F3EBD7" stroke-width="1.7"/>
-  <ellipse cx="19.8" cy="7.4" rx="4.2" ry="4.5" fill="#221E3A" stroke="#F3EBD7" stroke-width="1.7"/>
-  <ellipse cx="24.8" cy="12.2" rx="4.1" ry="4.4" fill="#221E3A" stroke="#F3EBD7" stroke-width="1.7"/>
-  <ellipse cx="16.5" cy="21.2" rx="8.2" ry="7.4" fill="#221E3A" stroke="#F3EBD7" stroke-width="1.8"/>
-  <ellipse cx="16.5" cy="22.2" rx="4.6" ry="4.2" fill="#E7A3B0"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="-20 -20 40 40"><g fill="none" stroke="#F3E9D7" stroke-width="2.6"><ellipse cx="0" cy="7" rx="9" ry="7.6"/><circle cx="-10.5" cy="-4.5" r="3.8"/><circle cx="-4" cy="-11" r="3.8"/><circle cx="4" cy="-11" r="3.8"/><circle cx="10.5" cy="-4.5" r="3.8"/></g><ellipse cx="0" cy="7.5" rx="3.6" ry="2.6" fill="#F4A9A8"/></svg>

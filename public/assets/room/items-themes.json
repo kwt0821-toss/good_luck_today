@@ -1,0 +1,3527 @@
+{
+ "_version": "themes-v1 — 고양이 카페 + 벚꽃 온실 정원 (adds to room-assets-v5 / v5-tiles; v5 ids unchanged)",
+ "_placeholders": "price, ownedDefault, nameKo, unlock rules, COZY Lv and hint copy are PLACEHOLDERS",
+ "categories": [
+  "가구",
+  "소품",
+  "벽 꾸미기",
+  "벽지",
+  "바닥",
+  "카드액자"
+ ],
+ "themes": {
+  "moon_bedroom": "달밤 침실 (v5 items)",
+  "cat_cafe": "고양이 카페",
+  "sakura_greenhouse": "벚꽃 온실 정원"
+ },
+ "crossThemeRule": "every item/tile may be placed in ANY room; theme is only a shop/drawer filter tag",
+ "rules": {
+  "furniture": "draw so anchorFootprintCenterPx lands on footprint centre P(c+w/2,r+d/2), P(c,r)=(1920+(c-r)*78, 900+(c+r)*39) world px. Default faces +row (back to right wall, row 0); _m faces +col (back to left wall). Rotate = swap image + footprint. All edges are exactly ±26.57° (2:1).",
+  "wall": "front/_L/_R images are already at world display size. _L/_R are sheared x′=0.894x, y′=y∓0.5x′. Position: base P(0,t) (left) / P(t,0) (right), raised heightUnits×3 px, image centred there.",
+  "tiles": "same as v5-tiles tileRules (floor 160×82 iso by parity; wall strips 82×493, right strips pre-shaded ×0.88).",
+  "scale": "1×1 furniture ≈ 0.72–0.84 tile width; small props (소품) intentionally smaller (0.45–0.7). Nothing larger than 2×2.",
+  "sorting": "floor items depth (c+w-1)+(r+d-1), tie c-r; floor-decal (picnic_blanket) first; shadows under everything except koi_pond/picnic_blanket."
+ },
+ "items": [
+  {
+   "id": "counter_register",
+   "nameKo": "계산대",
+   "category": "가구",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 320,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/counter_register.png",
+   "thumb": "themes/cat_cafe/thumbs/counter_register.png",
+   "imageSizePx": [
+    127,
+    160
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/counter_register.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      63.3,
+      123.2
+     ],
+     "anchorBackCornerPx": [
+      63.3,
+      84.2
+     ],
+     "size": [
+      127,
+      160
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/counter_register_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      63.7,
+      123.2
+     ],
+     "anchorBackCornerPx": [
+      63.7,
+      84.2
+     ],
+     "size": [
+      127,
+      160
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": {
+    "iterations": 4,
+    "residualDeg": 0.31
+   }
+  },
+  {
+   "id": "espresso_counter",
+   "nameKo": "에스프레소 머신",
+   "category": "가구",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 360,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/espresso_counter.png",
+   "thumb": "themes/cat_cafe/thumbs/espresso_counter.png",
+   "imageSizePx": [
+    125,
+    162
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/espresso_counter.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      63.5,
+      122.4
+     ],
+     "anchorBackCornerPx": [
+      63.5,
+      83.4
+     ],
+     "size": [
+      125,
+      162
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/espresso_counter_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      61.5,
+      122.4
+     ],
+     "anchorBackCornerPx": [
+      61.5,
+      83.4
+     ],
+     "size": [
+      125,
+      162
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": {
+    "iterations": 8,
+    "residualDeg": 0.0
+   }
+  },
+  {
+   "id": "cake_showcase",
+   "nameKo": "케이크 쇼케이스",
+   "category": "가구",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 340,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/cake_showcase.png",
+   "thumb": "themes/cat_cafe/thumbs/cake_showcase.png",
+   "imageSizePx": [
+    131,
+    136
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/cake_showcase.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      67.0,
+      100.8
+     ],
+     "anchorBackCornerPx": [
+      67.0,
+      61.8
+     ],
+     "size": [
+      131,
+      136
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/cake_showcase_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      64.0,
+      100.8
+     ],
+     "anchorBackCornerPx": [
+      64.0,
+      61.8
+     ],
+     "size": [
+      131,
+      136
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": {
+    "iterations": 10,
+    "residualDeg": 0.56
+   }
+  },
+  {
+   "id": "cafe_table",
+   "nameKo": "원형 카페 테이블",
+   "category": "가구",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 180,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/cafe_table.png",
+   "thumb": "themes/cat_cafe/thumbs/cafe_table.png",
+   "imageSizePx": [
+    113,
+    112
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/cafe_table.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      54.7,
+      86.7
+     ],
+     "anchorBackCornerPx": [
+      54.7,
+      47.7
+     ],
+     "size": [
+      113,
+      112
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/cafe_table_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      58.3,
+      86.7
+     ],
+     "anchorBackCornerPx": [
+      58.3,
+      47.7
+     ],
+     "size": [
+      113,
+      112
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)"
+  },
+  {
+   "id": "heart_chair",
+   "nameKo": "하트 의자",
+   "category": "가구",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/heart_chair.png",
+   "thumb": "themes/cat_cafe/thumbs/heart_chair.png",
+   "imageSizePx": [
+    87,
+    137
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/heart_chair.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      45.4,
+      112.4
+     ],
+     "anchorBackCornerPx": [
+      45.4,
+      73.4
+     ],
+     "size": [
+      87,
+      137
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/heart_chair_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      41.6,
+      112.4
+     ],
+     "anchorBackCornerPx": [
+      41.6,
+      73.4
+     ],
+     "size": [
+      87,
+      137
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      1.0,
+      0.0
+     ],
+     [
+      0.0,
+      1.0
+     ]
+    ],
+    "scaleToPreviousHeight": 0.901,
+    "edgesBeforeDeg": [
+     26.6,
+     -24.6
+    ],
+    "edgesAfterDeg": [
+     null,
+     -29.1
+    ],
+    "note": "registration only (organic/round silhouette)"
+   }
+  },
+  {
+   "id": "bar_stool",
+   "nameKo": "바 스툴",
+   "category": "가구",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 90,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/bar_stool.png",
+   "thumb": "themes/cat_cafe/thumbs/bar_stool.png",
+   "imageSizePx": [
+    71,
+    115
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/bar_stool.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      38.2,
+      89.6
+     ],
+     "anchorBackCornerPx": [
+      38.2,
+      50.6
+     ],
+     "size": [
+      71,
+      115
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/bar_stool_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      32.8,
+      89.6
+     ],
+     "anchorBackCornerPx": [
+      32.8,
+      50.6
+     ],
+     "size": [
+      71,
+      115
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)"
+  },
+  {
+   "id": "chalk_stand",
+   "nameKo": "칠판 입간판",
+   "category": "소품",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 80,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/chalk_stand.png",
+   "thumb": "themes/cat_cafe/thumbs/chalk_stand.png",
+   "imageSizePx": [
+    82,
+    136
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/chalk_stand.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      38.4,
+      102.7
+     ],
+     "anchorBackCornerPx": [
+      38.4,
+      63.7
+     ],
+     "size": [
+      82,
+      136
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/chalk_stand_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      43.6,
+      102.7
+     ],
+     "anchorBackCornerPx": [
+      43.6,
+      63.7
+     ],
+     "size": [
+      82,
+      136
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.866,
+      0.0
+     ],
+     [
+      0.1443,
+      1.1547
+     ]
+    ],
+    "scaleToPreviousHeight": 0.845,
+    "edgesBeforeDeg": [
+     14.0,
+     null
+    ],
+    "edgesAfterDeg": [
+     25.1,
+     null
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
+  },
+  {
+   "id": "bread_rack",
+   "nameKo": "빵 진열대",
+   "category": "가구",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 260,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/bread_rack.png",
+   "thumb": "themes/cat_cafe/thumbs/bread_rack.png",
+   "imageSizePx": [
+    118,
+    143
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/bread_rack.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      58.8,
+      107.5
+     ],
+     "anchorBackCornerPx": [
+      58.8,
+      68.5
+     ],
+     "size": [
+      118,
+      143
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/bread_rack_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      59.2,
+      107.5
+     ],
+     "anchorBackCornerPx": [
+      59.2,
+      68.5
+     ],
+     "size": [
+      118,
+      143
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": {
+    "iterations": 3,
+    "residualDeg": 0.39
+   }
+  },
+  {
+   "id": "bean_sack",
+   "nameKo": "커피콩 자루",
+   "category": "소품",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 70,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/bean_sack.png",
+   "thumb": "themes/cat_cafe/thumbs/bean_sack.png",
+   "imageSizePx": [
+    87,
+    96
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/bean_sack.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      45.8,
+      73.1
+     ],
+     "anchorBackCornerPx": [
+      45.8,
+      34.1
+     ],
+     "size": [
+      87,
+      96
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/bean_sack_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      41.2,
+      73.1
+     ],
+     "anchorBackCornerPx": [
+      41.2,
+      34.1
+     ],
+     "size": [
+      87,
+      96
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)"
+  },
+  {
+   "id": "olive_tree",
+   "nameKo": "올리브 나무",
+   "category": "소품",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 150,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/olive_tree.png",
+   "thumb": "themes/cat_cafe/thumbs/olive_tree.png",
+   "imageSizePx": [
+    97,
+    145
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/olive_tree.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      51.2,
+      119.7
+     ],
+     "anchorBackCornerPx": [
+      51.2,
+      80.7
+     ],
+     "size": [
+      97,
+      145
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/olive_tree_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      45.8,
+      119.7
+     ],
+     "anchorBackCornerPx": [
+      45.8,
+      80.7
+     ],
+     "size": [
+      97,
+      145
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)"
+  },
+  {
+   "id": "cup_cattower",
+   "nameKo": "컵 캣타워",
+   "category": "가구",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 380,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/cup_cattower.png",
+   "thumb": "themes/cat_cafe/thumbs/cup_cattower.png",
+   "imageSizePx": [
+    99,
+    166
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/cup_cattower.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      47.3,
+      127.4
+     ],
+     "anchorBackCornerPx": [
+      47.3,
+      88.4
+     ],
+     "size": [
+      99,
+      166
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/cup_cattower_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      51.7,
+      127.4
+     ],
+     "anchorBackCornerPx": [
+      51.7,
+      88.4
+     ],
+     "size": [
+      99,
+      166
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)"
+  },
+  {
+   "id": "window_bench",
+   "nameKo": "창가 벤치 소파",
+   "category": "가구",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    2,
+    1
+   ],
+   "price": 420,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/window_bench.png",
+   "thumb": "themes/cat_cafe/thumbs/window_bench.png",
+   "imageSizePx": [
+    185,
+    202
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/window_bench.png",
+     "footprint": [
+      2,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      92.6,
+      148.7
+     ],
+     "anchorBackCornerPx": [
+      53.6,
+      90.2
+     ],
+     "size": [
+      185,
+      202
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/window_bench_m.png",
+     "footprint": [
+      1,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      92.4,
+      148.7
+     ],
+     "anchorBackCornerPx": [
+      131.4,
+      90.2
+     ],
+     "size": [
+      185,
+      202
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-2x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": {
+    "iterations": 9,
+    "residualDeg": 0.32
+   }
+  },
+  {
+   "id": "mug_cart",
+   "nameKo": "머그 카트",
+   "category": "가구",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 220,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/mug_cart.png",
+   "thumb": "themes/cat_cafe/thumbs/mug_cart.png",
+   "imageSizePx": [
+    106,
+    134
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/mug_cart.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      53.4,
+      100.4
+     ],
+     "anchorBackCornerPx": [
+      53.4,
+      61.4
+     ],
+     "size": [
+      106,
+      134
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/mug_cart_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      52.6,
+      100.4
+     ],
+     "anchorBackCornerPx": [
+      52.6,
+      61.4
+     ],
+     "size": [
+      106,
+      134
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": {
+    "iterations": 5,
+    "residualDeg": 0.4
+   }
+  },
+  {
+   "id": "cookie_jar",
+   "nameKo": "쿠키 병",
+   "category": "소품",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 60,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/cookie_jar.png",
+   "thumb": "themes/cat_cafe/thumbs/cookie_jar.png",
+   "imageSizePx": [
+    75,
+    120
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/cookie_jar.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      38.6,
+      97.9
+     ],
+     "anchorBackCornerPx": [
+      38.6,
+      58.9
+     ],
+     "size": [
+      75,
+      120
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/cookie_jar_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      36.4,
+      97.9
+     ],
+     "anchorBackCornerPx": [
+      36.4,
+      58.9
+     ],
+     "size": [
+      75,
+      120
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)"
+  },
+  {
+   "id": "catface_lamp",
+   "nameKo": "냥이 얼굴 조명",
+   "category": "소품",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 140,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/catface_lamp.png",
+   "thumb": "themes/cat_cafe/thumbs/catface_lamp.png",
+   "imageSizePx": [
+    80,
+    138
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/catface_lamp.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      42.2,
+      111.8
+     ],
+     "anchorBackCornerPx": [
+      42.2,
+      72.8
+     ],
+     "size": [
+      80,
+      138
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/catface_lamp_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      37.8,
+      111.8
+     ],
+     "anchorBackCornerPx": [
+      37.8,
+      72.8
+     ],
+     "size": [
+      80,
+      138
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)",
+   "flag": "frontal sign face (angle-neutral, round-group correction)"
+  },
+  {
+   "id": "food_vending",
+   "nameKo": "간식 자판기",
+   "category": "가구",
+   "theme": "cat_cafe",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 400,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/food_vending.png",
+   "thumb": "themes/cat_cafe/thumbs/food_vending.png",
+   "imageSizePx": [
+    115,
+    160
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/cat_cafe/items/food_vending.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      58.6,
+      119.1
+     ],
+     "anchorBackCornerPx": [
+      58.6,
+      80.1
+     ],
+     "size": [
+      115,
+      160
+     ]
+    },
+    "mirrored": {
+     "image": "themes/cat_cafe/items/food_vending_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      56.4,
+      119.1
+     ],
+     "anchorBackCornerPx": [
+      56.4,
+      80.1
+     ],
+     "size": [
+      115,
+      160
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": {
+    "iterations": 8,
+    "residualDeg": 0.0
+   }
+  },
+  {
+   "id": "sakura_tree",
+   "nameKo": "벚꽃 나무",
+   "category": "가구",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    2,
+    2
+   ],
+   "price": 520,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/sakura_tree.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/sakura_tree.png",
+   "imageSizePx": [
+    218,
+    253
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/sakura_tree.png",
+     "footprint": [
+      2,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      107.9,
+      209.0
+     ],
+     "anchorBackCornerPx": [
+      107.9,
+      131.0
+     ],
+     "size": [
+      218,
+      253
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/sakura_tree_m.png",
+     "footprint": [
+      2,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      110.1,
+      209.0
+     ],
+     "anchorBackCornerPx": [
+      110.1,
+      131.0
+     ],
+     "size": [
+      218,
+      253
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-2x2.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)"
+  },
+  {
+   "id": "garden_bench",
+   "nameKo": "화이트 정원 벤치",
+   "category": "가구",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    2,
+    1
+   ],
+   "price": 300,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/garden_bench.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/garden_bench.png",
+   "imageSizePx": [
+    185,
+    209
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/garden_bench.png",
+     "footprint": [
+      2,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      92.3,
+      156.6
+     ],
+     "anchorBackCornerPx": [
+      53.3,
+      98.1
+     ],
+     "size": [
+      185,
+      209
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/garden_bench_m.png",
+     "footprint": [
+      1,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      92.7,
+      156.6
+     ],
+     "anchorBackCornerPx": [
+      131.7,
+      98.1
+     ],
+     "size": [
+      185,
+      209
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-2x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.9515,
+      0.0
+     ],
+     [
+      0.1425,
+      1.051
+     ]
+    ],
+    "scaleToPreviousHeight": 1.384,
+    "edgesBeforeDeg": [
+     17.6,
+     -30.5
+    ],
+    "edgesAfterDeg": [
+     27.0,
+     -23.0
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
+  },
+  {
+   "id": "koi_pond",
+   "nameKo": "잉어 연못",
+   "category": "가구",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    2,
+    2
+   ],
+   "price": 480,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/koi_pond.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/koi_pond.png",
+   "imageSizePx": [
+    242,
+    139
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/koi_pond.png",
+     "footprint": [
+      2,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      122.0,
+      95.5
+     ],
+     "anchorBackCornerPx": [
+      122.0,
+      17.5
+     ],
+     "size": [
+      242,
+      139
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/koi_pond_m.png",
+     "footprint": [
+      2,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      120.0,
+      95.5
+     ],
+     "anchorBackCornerPx": [
+      120.0,
+      17.5
+     ],
+     "size": [
+      242,
+      139
+     ]
+    }
+   },
+   "shadow": null,
+   "shadowScale": 1.0,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)",
+   "flag": "front rim reconstructed by ellipse fit; tiny nub on left rim"
+  },
+  {
+   "id": "tulip_planter",
+   "nameKo": "튤립 화분상자",
+   "category": "소품",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 110,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/tulip_planter.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/tulip_planter.png",
+   "imageSizePx": [
+    121,
+    126
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/tulip_planter.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.8,
+      93.8
+     ],
+     "anchorBackCornerPx": [
+      62.8,
+      54.8
+     ],
+     "size": [
+      121,
+      126
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/tulip_planter_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      58.2,
+      93.8
+     ],
+     "anchorBackCornerPx": [
+      58.2,
+      54.8
+     ],
+     "size": [
+      121,
+      126
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFit": {
+    "iterations": 5,
+    "residualDeg": 0.0
+   }
+  },
+  {
+   "id": "tea_table_white",
+   "nameKo": "화이트 티테이블",
+   "category": "가구",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 160,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/tea_table_white.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/tea_table_white.png",
+   "imageSizePx": [
+    102,
+    120
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/tea_table_white.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      50.0,
+      99.3
+     ],
+     "anchorBackCornerPx": [
+      50.0,
+      60.3
+     ],
+     "size": [
+      102,
+      120
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/tea_table_white_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      52.0,
+      99.3
+     ],
+     "anchorBackCornerPx": [
+      52.0,
+      60.3
+     ],
+     "size": [
+      102,
+      120
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)"
+  },
+  {
+   "id": "garden_swing",
+   "nameKo": "정원 그네",
+   "category": "가구",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    2,
+    1
+   ],
+   "price": 460,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/garden_swing.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/garden_swing.png",
+   "imageSizePx": [
+    185,
+    243
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/garden_swing.png",
+     "footprint": [
+      2,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      88.6,
+      184.1
+     ],
+     "anchorBackCornerPx": [
+      49.6,
+      125.6
+     ],
+     "size": [
+      185,
+      243
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/garden_swing_m.png",
+     "footprint": [
+      1,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      96.4,
+      184.1
+     ],
+     "anchorBackCornerPx": [
+      135.4,
+      125.6
+     ],
+     "size": [
+      185,
+      243
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-2x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": {
+    "iterations": 4,
+    "residualDeg": 0.42
+   },
+   "flag": "frontal frame (residual 0.42°, acceptable)"
+  },
+  {
+   "id": "watering_can",
+   "nameKo": "물뿌리개",
+   "category": "소품",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 50,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/watering_can.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/watering_can.png",
+   "imageSizePx": [
+    78,
+    61
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/watering_can.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      40.2,
+      48.7
+     ],
+     "anchorBackCornerPx": [
+      40.2,
+      9.7
+     ],
+     "size": [
+      78,
+      61
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/watering_can_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      37.8,
+      48.7
+     ],
+     "anchorBackCornerPx": [
+      37.8,
+      9.7
+     ],
+     "size": [
+      78,
+      61
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)"
+  },
+  {
+   "id": "stone_lantern",
+   "nameKo": "돌 등롱",
+   "category": "소품",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 150,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/stone_lantern.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/stone_lantern.png",
+   "imageSizePx": [
+    74,
+    139
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/stone_lantern.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      38.1,
+      107.4
+     ],
+     "anchorBackCornerPx": [
+      38.1,
+      68.4
+     ],
+     "size": [
+      74,
+      139
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/stone_lantern_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      35.9,
+      107.4
+     ],
+     "anchorBackCornerPx": [
+      35.9,
+      68.4
+     ],
+     "size": [
+      74,
+      139
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFit": {
+    "iterations": 4,
+    "residualDeg": 0.0
+   }
+  },
+  {
+   "id": "flower_wheelbarrow",
+   "nameKo": "꽃 수레",
+   "category": "소품",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 170,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/flower_wheelbarrow.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/flower_wheelbarrow.png",
+   "imageSizePx": [
+    115,
+    105
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/flower_wheelbarrow.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      48.5,
+      79.7
+     ],
+     "anchorBackCornerPx": [
+      48.5,
+      40.7
+     ],
+     "size": [
+      115,
+      105
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/flower_wheelbarrow_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      66.5,
+      79.7
+     ],
+     "anchorBackCornerPx": [
+      66.5,
+      40.7
+     ],
+     "size": [
+      115,
+      105
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFit": {
+    "iterations": 6,
+    "residualDeg": 0.35
+   }
+  },
+  {
+   "id": "hydrangea",
+   "nameKo": "수국 화분",
+   "category": "소품",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 110,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/hydrangea.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/hydrangea.png",
+   "imageSizePx": [
+    96,
+    104
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/hydrangea.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      50.0,
+      84.0
+     ],
+     "anchorBackCornerPx": [
+      50.0,
+      45.0
+     ],
+     "size": [
+      96,
+      104
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/hydrangea_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      46.0,
+      84.0
+     ],
+     "anchorBackCornerPx": [
+      46.0,
+      45.0
+     ],
+     "size": [
+      96,
+      104
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)"
+  },
+  {
+   "id": "bird_bath",
+   "nameKo": "새 물그릇",
+   "category": "소품",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 130,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/bird_bath.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/bird_bath.png",
+   "imageSizePx": [
+    84,
+    106
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/bird_bath.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      41.8,
+      83.7
+     ],
+     "anchorBackCornerPx": [
+      41.8,
+      44.7
+     ],
+     "size": [
+      84,
+      106
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/bird_bath_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      42.2,
+      83.7
+     ],
+     "anchorBackCornerPx": [
+      42.2,
+      44.7
+     ],
+     "size": [
+      84,
+      106
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFit": "sheet-average correction (round/organic item, no straight edges)"
+  },
+  {
+   "id": "picnic_blanket",
+   "nameKo": "피크닉 매트",
+   "category": "가구",
+   "theme": "sakura_greenhouse",
+   "placement": "floor-decal",
+   "footprint": [
+    2,
+    2
+   ],
+   "price": 240,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/picnic_blanket.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/picnic_blanket.png",
+   "imageSizePx": [
+    293,
+    192
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/picnic_blanket.png",
+     "footprint": [
+      2,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      146.5,
+      118.5
+     ],
+     "anchorBackCornerPx": [
+      146.5,
+      40.5
+     ],
+     "size": [
+      293,
+      192
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/picnic_blanket_m.png",
+     "footprint": [
+      2,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      146.5,
+      118.5
+     ],
+     "anchorBackCornerPx": [
+      146.5,
+      40.5
+     ],
+     "size": [
+      293,
+      192
+     ]
+    }
+   },
+   "shadow": null,
+   "shadowScale": 1.0,
+   "angleFit": {
+    "iterations": 6,
+    "residualDeg": 0.0
+   },
+   "note": "flat ground item: draw before other floor items (like the rug decal); other items may NOT stand on it in the default layouts",
+   "flag": "blanket redrawn in code (sheet blanket edges unusable); basket from sheet"
+  },
+  {
+   "id": "mini_bridge",
+   "nameKo": "미니 다리",
+   "category": "가구",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    2,
+    1
+   ],
+   "price": 280,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/mini_bridge.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/mini_bridge.png",
+   "imageSizePx": [
+    177,
+    188
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/mini_bridge.png",
+     "footprint": [
+      2,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      86.2,
+      124.0
+     ],
+     "anchorBackCornerPx": [
+      47.2,
+      65.5
+     ],
+     "size": [
+      177,
+      188
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/mini_bridge_m.png",
+     "footprint": [
+      1,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      90.8,
+      124.0
+     ],
+     "anchorBackCornerPx": [
+      129.8,
+      65.5
+     ],
+     "size": [
+      177,
+      188
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-2x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.8694,
+      0.0
+     ],
+     [
+      -0.0793,
+      1.1503
+     ]
+    ],
+    "scaleToPreviousHeight": 1.324,
+    "edgesBeforeDeg": [
+     23.7,
+     -21.4
+    ],
+    "edgesAfterDeg": [
+     26.2,
+     -24.0
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
+  },
+  {
+   "id": "flower_arch",
+   "nameKo": "꽃 아치",
+   "category": "가구",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 260,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/flower_arch.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/flower_arch.png",
+   "imageSizePx": [
+    131,
+    150
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/flower_arch.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      65.8,
+      122.6
+     ],
+     "anchorBackCornerPx": [
+      65.8,
+      83.6
+     ],
+     "size": [
+      131,
+      150
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/flower_arch_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      65.2,
+      122.6
+     ],
+     "anchorBackCornerPx": [
+      65.2,
+      83.6
+     ],
+     "size": [
+      131,
+      150
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      1.0,
+      0.0
+     ],
+     [
+      0.0,
+      1.0
+     ]
+    ],
+    "scaleToPreviousHeight": 1.007,
+    "edgesBeforeDeg": [
+     25.6,
+     -32.3
+    ],
+    "edgesAfterDeg": [
+     25.0,
+     -20.2
+    ],
+    "note": "registration only (organic/round silhouette)"
+   }
+  },
+  {
+   "id": "cat_hammock",
+   "nameKo": "냥이 해먹",
+   "category": "가구",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    2,
+    1
+   ],
+   "price": 380,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/cat_hammock.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/cat_hammock.png",
+   "imageSizePx": [
+    188,
+    215
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/cat_hammock.png",
+     "footprint": [
+      2,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      96.3,
+      162.2
+     ],
+     "anchorBackCornerPx": [
+      57.3,
+      103.7
+     ],
+     "size": [
+      188,
+      215
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/cat_hammock_m.png",
+     "footprint": [
+      1,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      91.7,
+      162.2
+     ],
+     "anchorBackCornerPx": [
+      130.7,
+      103.7
+     ],
+     "size": [
+      188,
+      215
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-2x1.png (v5 package)",
+   "shadowScale": 1.0,
+   "angleFit": {
+    "iterations": 8,
+    "residualDeg": 0.34
+   },
+   "flag": "frontal frame (residual 0.34°, acceptable)"
+  },
+  {
+   "id": "succulent_stand",
+   "nameKo": "다육이 선반",
+   "category": "소품",
+   "theme": "sakura_greenhouse",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/succulent_stand.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/succulent_stand.png",
+   "imageSizePx": [
+    118,
+    94
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/sakura_greenhouse/items/succulent_stand.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      57.1,
+      64.3
+     ],
+     "anchorBackCornerPx": [
+      57.1,
+      25.3
+     ],
+     "size": [
+      118,
+      94
+     ]
+    },
+    "mirrored": {
+     "image": "themes/sakura_greenhouse/items/succulent_stand_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      60.9,
+      64.3
+     ],
+     "anchorBackCornerPx": [
+      60.9,
+      25.3
+     ],
+     "size": [
+      118,
+      94
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png (v5 package)",
+   "shadowScale": 0.8,
+   "angleFit": {
+    "iterations": 4,
+    "residualDeg": 0.0
+   }
+  },
+  {
+   "id": "menu_board",
+   "nameKo": "메뉴 보드",
+   "category": "벽 꾸미기",
+   "theme": "cat_cafe",
+   "placement": "wall",
+   "footprint": null,
+   "price": 160,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/menu_board.png",
+   "thumb": "themes/cat_cafe/thumbs/menu_board.png",
+   "imageSizePx": [
+    158,
+    108
+   ],
+   "displayWidthTiles": 1.0,
+   "wallSpanTiles": 0.894,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/cat_cafe/items/menu_board.png",
+    "leftWall": "themes/cat_cafe/items/menu_board_L.png",
+    "rightWall": "themes/cat_cafe/items/menu_board_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     158,
+     108
+    ],
+    "leftWall": [
+     142,
+     162
+    ],
+    "rightWall": [
+     144,
+     163
+    ]
+   }
+  },
+  {
+   "id": "cat_clock_cafe",
+   "nameKo": "냥이 벽시계",
+   "category": "벽 꾸미기",
+   "theme": "cat_cafe",
+   "placement": "wall",
+   "footprint": null,
+   "price": 180,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/cat_clock_cafe.png",
+   "thumb": "themes/cat_cafe/thumbs/cat_clock_cafe.png",
+   "imageSizePx": [
+    99,
+    105
+   ],
+   "displayWidthTiles": 0.62,
+   "wallSpanTiles": 0.554,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/cat_cafe/items/cat_clock_cafe.png",
+    "leftWall": "themes/cat_cafe/items/cat_clock_cafe_L.png",
+    "rightWall": "themes/cat_cafe/items/cat_clock_cafe_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     99,
+     105
+    ],
+    "leftWall": [
+     90,
+     125
+    ],
+    "rightWall": [
+     90,
+     125
+    ]
+   }
+  },
+  {
+   "id": "mug_shelf",
+   "nameKo": "머그 선반",
+   "category": "벽 꾸미기",
+   "theme": "cat_cafe",
+   "placement": "wall",
+   "footprint": null,
+   "price": 140,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/mug_shelf.png",
+   "thumb": "themes/cat_cafe/thumbs/mug_shelf.png",
+   "imageSizePx": [
+    159,
+    65
+   ],
+   "displayWidthTiles": 1.0,
+   "wallSpanTiles": 0.894,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/cat_cafe/items/mug_shelf.png",
+    "leftWall": "themes/cat_cafe/items/mug_shelf_L.png",
+    "rightWall": "themes/cat_cafe/items/mug_shelf_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     159,
+     65
+    ],
+    "leftWall": [
+     143,
+     119
+    ],
+    "rightWall": [
+     143,
+     118
+    ]
+   }
+  },
+  {
+   "id": "pendant_lamps",
+   "nameKo": "펜던트 조명",
+   "category": "벽 꾸미기",
+   "theme": "cat_cafe",
+   "placement": "wallTop",
+   "footprint": null,
+   "price": 220,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/pendant_lamps.png",
+   "thumb": "themes/cat_cafe/thumbs/pendant_lamps.png",
+   "imageSizePx": [
+    181,
+    124
+   ],
+   "displayWidthTiles": 1.15,
+   "wallSpanTiles": 1.028,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/cat_cafe/items/pendant_lamps.png",
+    "leftWall": "themes/cat_cafe/items/pendant_lamps_L.png",
+    "rightWall": "themes/cat_cafe/items/pendant_lamps_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     181,
+     124
+    ],
+    "leftWall": [
+     164,
+     175
+    ],
+    "rightWall": [
+     163,
+     174
+    ]
+   },
+   "note": "hangs from the wall top: use heightUnits ≈ 124 so the cords meet the ceiling line"
+  },
+  {
+   "id": "cup_neon",
+   "nameKo": "커피잔 네온",
+   "category": "벽 꾸미기",
+   "theme": "cat_cafe",
+   "placement": "wall",
+   "footprint": null,
+   "price": 240,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/cup_neon.png",
+   "thumb": "themes/cat_cafe/thumbs/cup_neon.png",
+   "imageSizePx": [
+    114,
+    123
+   ],
+   "displayWidthTiles": 0.72,
+   "wallSpanTiles": 0.644,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/cat_cafe/items/cup_neon.png",
+    "leftWall": "themes/cat_cafe/items/cup_neon_L.png",
+    "rightWall": "themes/cat_cafe/items/cup_neon_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     114,
+     123
+    ],
+    "leftWall": [
+     102,
+     135
+    ],
+    "rightWall": [
+     102,
+     133
+    ]
+   }
+  },
+  {
+   "id": "awning",
+   "nameKo": "줄무늬 차양",
+   "category": "벽 꾸미기",
+   "theme": "cat_cafe",
+   "placement": "wall",
+   "footprint": null,
+   "price": 200,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/awning.png",
+   "thumb": "themes/cat_cafe/thumbs/awning.png",
+   "imageSizePx": [
+    221,
+    97
+   ],
+   "displayWidthTiles": 1.4,
+   "wallSpanTiles": 1.252,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/cat_cafe/items/awning.png",
+    "leftWall": "themes/cat_cafe/items/awning_L.png",
+    "rightWall": "themes/cat_cafe/items/awning_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     221,
+     97
+    ],
+    "leftWall": [
+     198,
+     176
+    ],
+    "rightWall": [
+     198,
+     177
+    ]
+   }
+  },
+  {
+   "id": "latte_art_frame",
+   "nameKo": "라떼아트 액자",
+   "category": "벽 꾸미기",
+   "theme": "cat_cafe",
+   "placement": "wall",
+   "footprint": null,
+   "price": 120,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/latte_art_frame.png",
+   "thumb": "themes/cat_cafe/thumbs/latte_art_frame.png",
+   "imageSizePx": [
+    124,
+    97
+   ],
+   "displayWidthTiles": 0.78,
+   "wallSpanTiles": 0.697,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/cat_cafe/items/latte_art_frame.png",
+    "leftWall": "themes/cat_cafe/items/latte_art_frame_L.png",
+    "rightWall": "themes/cat_cafe/items/latte_art_frame_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     124,
+     97
+    ],
+    "leftWall": [
+     112,
+     148
+    ],
+    "rightWall": [
+     114,
+     147
+    ]
+   }
+  },
+  {
+   "id": "paw_garland",
+   "nameKo": "발바닥 가랜드",
+   "category": "벽 꾸미기",
+   "theme": "cat_cafe",
+   "placement": "wallTop",
+   "footprint": null,
+   "price": 110,
+   "ownedDefault": false,
+   "image": "themes/cat_cafe/items/paw_garland.png",
+   "thumb": "themes/cat_cafe/thumbs/paw_garland.png",
+   "imageSizePx": [
+    244,
+    95
+   ],
+   "displayWidthTiles": 1.55,
+   "wallSpanTiles": 1.386,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/cat_cafe/items/paw_garland.png",
+    "leftWall": "themes/cat_cafe/items/paw_garland_L.png",
+    "rightWall": "themes/cat_cafe/items/paw_garland_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     244,
+     95
+    ],
+    "leftWall": [
+     218,
+     173
+    ],
+    "rightWall": [
+     220,
+     172
+    ]
+   }
+  },
+  {
+   "id": "greenhouse_window",
+   "nameKo": "온실 아치창",
+   "category": "벽 꾸미기",
+   "theme": "sakura_greenhouse",
+   "placement": "wall",
+   "footprint": null,
+   "price": 260,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/greenhouse_window.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/greenhouse_window.png",
+   "imageSizePx": [
+    158,
+    157
+   ],
+   "displayWidthTiles": 1.0,
+   "wallSpanTiles": 0.894,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/sakura_greenhouse/items/greenhouse_window.png",
+    "leftWall": "themes/sakura_greenhouse/items/greenhouse_window_L.png",
+    "rightWall": "themes/sakura_greenhouse/items/greenhouse_window_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     158,
+     157
+    ],
+    "leftWall": [
+     143,
+     200
+    ],
+    "rightWall": [
+     143,
+     205
+    ]
+   }
+  },
+  {
+   "id": "hanging_basket",
+   "nameKo": "행잉 바스켓",
+   "category": "벽 꾸미기",
+   "theme": "sakura_greenhouse",
+   "placement": "wall",
+   "footprint": null,
+   "price": 150,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/hanging_basket.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/hanging_basket.png",
+   "imageSizePx": [
+    115,
+    145
+   ],
+   "displayWidthTiles": 0.72,
+   "wallSpanTiles": 0.644,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/sakura_greenhouse/items/hanging_basket.png",
+    "leftWall": "themes/sakura_greenhouse/items/hanging_basket_L.png",
+    "rightWall": "themes/sakura_greenhouse/items/hanging_basket_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     115,
+     145
+    ],
+    "leftWall": [
+     104,
+     160
+    ],
+    "rightWall": [
+     105,
+     160
+    ]
+   }
+  },
+  {
+   "id": "ivy_garland",
+   "nameKo": "아이비 가랜드",
+   "category": "벽 꾸미기",
+   "theme": "sakura_greenhouse",
+   "placement": "wallTop",
+   "footprint": null,
+   "price": 120,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/ivy_garland.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/ivy_garland.png",
+   "imageSizePx": [
+    244,
+    85
+   ],
+   "displayWidthTiles": 1.55,
+   "wallSpanTiles": 1.386,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/sakura_greenhouse/items/ivy_garland.png",
+    "leftWall": "themes/sakura_greenhouse/items/ivy_garland_L.png",
+    "rightWall": "themes/sakura_greenhouse/items/ivy_garland_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     244,
+     85
+    ],
+    "leftWall": [
+     220,
+     162
+    ],
+    "rightWall": [
+     219,
+     177
+    ]
+   }
+  },
+  {
+   "id": "bird_house",
+   "nameKo": "새집",
+   "category": "벽 꾸미기",
+   "theme": "sakura_greenhouse",
+   "placement": "wall",
+   "footprint": null,
+   "price": 130,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/bird_house.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/bird_house.png",
+   "imageSizePx": [
+    99,
+    112
+   ],
+   "displayWidthTiles": 0.62,
+   "wallSpanTiles": 0.554,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/sakura_greenhouse/items/bird_house.png",
+    "leftWall": "themes/sakura_greenhouse/items/bird_house_L.png",
+    "rightWall": "themes/sakura_greenhouse/items/bird_house_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     99,
+     112
+    ],
+    "leftWall": [
+     89,
+     131
+    ],
+    "rightWall": [
+     89,
+     131
+    ]
+   }
+  },
+  {
+   "id": "sakura_branch",
+   "nameKo": "벚꽃 가지",
+   "category": "벽 꾸미기",
+   "theme": "sakura_greenhouse",
+   "placement": "wall",
+   "footprint": null,
+   "price": 180,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/sakura_branch.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/sakura_branch.png",
+   "imageSizePx": [
+    175,
+    105
+   ],
+   "displayWidthTiles": 1.1,
+   "wallSpanTiles": 0.983,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/sakura_greenhouse/items/sakura_branch.png",
+    "leftWall": "themes/sakura_greenhouse/items/sakura_branch_L.png",
+    "rightWall": "themes/sakura_greenhouse/items/sakura_branch_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     175,
+     105
+    ],
+    "leftWall": [
+     157,
+     174
+    ],
+    "rightWall": [
+     157,
+     144
+    ]
+   }
+  },
+  {
+   "id": "tool_rack",
+   "nameKo": "정원 도구걸이",
+   "category": "벽 꾸미기",
+   "theme": "sakura_greenhouse",
+   "placement": "wall",
+   "footprint": null,
+   "price": 140,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/tool_rack.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/tool_rack.png",
+   "imageSizePx": [
+    146,
+    119
+   ],
+   "displayWidthTiles": 0.92,
+   "wallSpanTiles": 0.822,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/sakura_greenhouse/items/tool_rack.png",
+    "leftWall": "themes/sakura_greenhouse/items/tool_rack_L.png",
+    "rightWall": "themes/sakura_greenhouse/items/tool_rack_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     146,
+     119
+    ],
+    "leftWall": [
+     132,
+     154
+    ],
+    "rightWall": [
+     131,
+     154
+    ]
+   }
+  },
+  {
+   "id": "butterflies",
+   "nameKo": "나비 장식",
+   "category": "벽 꾸미기",
+   "theme": "sakura_greenhouse",
+   "placement": "wall",
+   "footprint": null,
+   "price": 100,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/butterflies.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/butterflies.png",
+   "imageSizePx": [
+    136,
+    82
+   ],
+   "displayWidthTiles": 0.85,
+   "wallSpanTiles": 0.76,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/sakura_greenhouse/items/butterflies.png",
+    "leftWall": "themes/sakura_greenhouse/items/butterflies_L.png",
+    "rightWall": "themes/sakura_greenhouse/items/butterflies_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     136,
+     82
+    ],
+    "leftWall": [
+     122,
+     111
+    ],
+    "rightWall": [
+     123,
+     119
+    ]
+   }
+  },
+  {
+   "id": "flower_wreath",
+   "nameKo": "꽃 리스",
+   "category": "벽 꾸미기",
+   "theme": "sakura_greenhouse",
+   "placement": "wall",
+   "footprint": null,
+   "price": 120,
+   "ownedDefault": false,
+   "image": "themes/sakura_greenhouse/items/flower_wreath.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/flower_wreath.png",
+   "imageSizePx": [
+    108,
+    99
+   ],
+   "displayWidthTiles": 0.68,
+   "wallSpanTiles": 0.608,
+   "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
+   "orientations": {
+    "front": "themes/sakura_greenhouse/items/flower_wreath.png",
+    "leftWall": "themes/sakura_greenhouse/items/flower_wreath_L.png",
+    "rightWall": "themes/sakura_greenhouse/items/flower_wreath_R.png"
+   },
+   "orientationSizes": {
+    "front": [
+     108,
+     99
+    ],
+    "leftWall": [
+     98,
+     114
+    ],
+    "rightWall": [
+     100,
+     114
+    ]
+   }
+  },
+  {
+   "id": "floor_latte_herring",
+   "textureId": "latte_herring",
+   "nameKo": "라떼 헤링본",
+   "category": "바닥",
+   "theme": "cat_cafe",
+   "placement": "floorTile",
+   "price": 0,
+   "ownedDefault": true,
+   "isDefault": true,
+   "texture": "themes/cat_cafe/floor/flat/latte_herring.png",
+   "thumb": "themes/cat_cafe/floor/thumb/latte_herring.png",
+   "drawerThumb": "themes/cat_cafe/floor/drawer/latte_herring.png",
+   "isoTiles": {
+    "00": "themes/cat_cafe/floor/iso/latte_herring_00.png",
+    "01": "themes/cat_cafe/floor/iso/latte_herring_01.png",
+    "10": "themes/cat_cafe/floor/iso/latte_herring_10.png",
+    "11": "themes/cat_cafe/floor/iso/latte_herring_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/cat_cafe/floor/iso-grout/latte_herring_00.png",
+    "01": "themes/cat_cafe/floor/iso-grout/latte_herring_01.png",
+    "10": "themes/cat_cafe/floor/iso-grout/latte_herring_10.png",
+    "11": "themes/cat_cafe/floor/iso-grout/latte_herring_11.png"
+   },
+   "groutColor": "#A87D58",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_cocoa_check",
+   "textureId": "cocoa_check",
+   "nameKo": "코코아 체크",
+   "category": "바닥",
+   "theme": "cat_cafe",
+   "placement": "floorTile",
+   "price": 180,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "themes/cat_cafe/floor/flat/cocoa_check.png",
+   "thumb": "themes/cat_cafe/floor/thumb/cocoa_check.png",
+   "drawerThumb": "themes/cat_cafe/floor/drawer/cocoa_check.png",
+   "isoTiles": {
+    "00": "themes/cat_cafe/floor/iso/cocoa_check_00.png",
+    "01": "themes/cat_cafe/floor/iso/cocoa_check_01.png",
+    "10": "themes/cat_cafe/floor/iso/cocoa_check_10.png",
+    "11": "themes/cat_cafe/floor/iso/cocoa_check_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/cat_cafe/floor/iso-grout/cocoa_check_00.png",
+    "01": "themes/cat_cafe/floor/iso-grout/cocoa_check_01.png",
+    "10": "themes/cat_cafe/floor/iso-grout/cocoa_check_10.png",
+    "11": "themes/cat_cafe/floor/iso-grout/cocoa_check_11.png"
+   },
+   "groutColor": "#7A5442",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_terracotta_hex",
+   "textureId": "terracotta_hex",
+   "nameKo": "테라코타 육각",
+   "category": "바닥",
+   "theme": "cat_cafe",
+   "placement": "floorTile",
+   "price": 220,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/cat_cafe/floor/flat/terracotta_hex.png",
+   "thumb": "themes/cat_cafe/floor/thumb/terracotta_hex.png",
+   "drawerThumb": "themes/cat_cafe/floor/drawer/terracotta_hex.png",
+   "isoTiles": {
+    "00": "themes/cat_cafe/floor/iso/terracotta_hex_00.png",
+    "01": "themes/cat_cafe/floor/iso/terracotta_hex_01.png",
+    "10": "themes/cat_cafe/floor/iso/terracotta_hex_10.png",
+    "11": "themes/cat_cafe/floor/iso/terracotta_hex_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/cat_cafe/floor/iso-grout/terracotta_hex_00.png",
+    "01": "themes/cat_cafe/floor/iso-grout/terracotta_hex_01.png",
+    "10": "themes/cat_cafe/floor/iso-grout/terracotta_hex_10.png",
+    "11": "themes/cat_cafe/floor/iso-grout/terracotta_hex_11.png"
+   },
+   "groutColor": "#E6C9B0",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_cream_terrazzo",
+   "textureId": "cream_terrazzo",
+   "nameKo": "크림 테라조",
+   "category": "바닥",
+   "theme": "cat_cafe",
+   "placement": "floorTile",
+   "price": 200,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "themes/cat_cafe/floor/flat/cream_terrazzo.png",
+   "thumb": "themes/cat_cafe/floor/thumb/cream_terrazzo.png",
+   "drawerThumb": "themes/cat_cafe/floor/drawer/cream_terrazzo.png",
+   "isoTiles": {
+    "00": "themes/cat_cafe/floor/iso/cream_terrazzo_00.png",
+    "01": "themes/cat_cafe/floor/iso/cream_terrazzo_01.png",
+    "10": "themes/cat_cafe/floor/iso/cream_terrazzo_10.png",
+    "11": "themes/cat_cafe/floor/iso/cream_terrazzo_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/cat_cafe/floor/iso-grout/cream_terrazzo_00.png",
+    "01": "themes/cat_cafe/floor/iso-grout/cream_terrazzo_01.png",
+    "10": "themes/cat_cafe/floor/iso-grout/cream_terrazzo_10.png",
+    "11": "themes/cat_cafe/floor/iso-grout/cream_terrazzo_11.png"
+   },
+   "groutColor": "#D6C2AE",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_mint_tile",
+   "textureId": "mint_tile",
+   "nameKo": "민트 타일",
+   "category": "바닥",
+   "theme": "cat_cafe",
+   "placement": "floorTile",
+   "price": 200,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/cat_cafe/floor/flat/mint_tile.png",
+   "thumb": "themes/cat_cafe/floor/thumb/mint_tile.png",
+   "drawerThumb": "themes/cat_cafe/floor/drawer/mint_tile.png",
+   "isoTiles": {
+    "00": "themes/cat_cafe/floor/iso/mint_tile_00.png",
+    "01": "themes/cat_cafe/floor/iso/mint_tile_01.png",
+    "10": "themes/cat_cafe/floor/iso/mint_tile_10.png",
+    "11": "themes/cat_cafe/floor/iso/mint_tile_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/cat_cafe/floor/iso-grout/mint_tile_00.png",
+    "01": "themes/cat_cafe/floor/iso-grout/mint_tile_01.png",
+    "10": "themes/cat_cafe/floor/iso-grout/mint_tile_10.png",
+    "11": "themes/cat_cafe/floor/iso-grout/mint_tile_11.png"
+   },
+   "groutColor": "#E9F3EC",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_cocoa_plank",
+   "textureId": "cocoa_plank",
+   "nameKo": "코코아 원목",
+   "category": "바닥",
+   "theme": "cat_cafe",
+   "placement": "floorTile",
+   "price": 240,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/cat_cafe/floor/flat/cocoa_plank.png",
+   "thumb": "themes/cat_cafe/floor/thumb/cocoa_plank.png",
+   "drawerThumb": "themes/cat_cafe/floor/drawer/cocoa_plank.png",
+   "isoTiles": {
+    "00": "themes/cat_cafe/floor/iso/cocoa_plank_00.png",
+    "01": "themes/cat_cafe/floor/iso/cocoa_plank_01.png",
+    "10": "themes/cat_cafe/floor/iso/cocoa_plank_10.png",
+    "11": "themes/cat_cafe/floor/iso/cocoa_plank_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/cat_cafe/floor/iso-grout/cocoa_plank_00.png",
+    "01": "themes/cat_cafe/floor/iso-grout/cocoa_plank_01.png",
+    "10": "themes/cat_cafe/floor/iso-grout/cocoa_plank_10.png",
+    "11": "themes/cat_cafe/floor/iso-grout/cocoa_plank_11.png"
+   },
+   "groutColor": "#5C3A28",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "wall_pink_brick",
+   "textureId": "pink_brick",
+   "nameKo": "핑크 벽돌",
+   "category": "벽지",
+   "theme": "cat_cafe",
+   "placement": "wallColumn",
+   "price": 0,
+   "ownedDefault": true,
+   "isDefault": true,
+   "texture": "themes/cat_cafe/wall/flat/pink_brick.png",
+   "thumb": "themes/cat_cafe/wall/thumb/pink_brick.png",
+   "drawerThumb": "themes/cat_cafe/wall/drawer/pink_brick.png",
+   "columnsL": [
+    "themes/cat_cafe/wall/L/pink_brick_0.png",
+    "themes/cat_cafe/wall/L/pink_brick_1.png",
+    "themes/cat_cafe/wall/L/pink_brick_2.png",
+    "themes/cat_cafe/wall/L/pink_brick_3.png",
+    "themes/cat_cafe/wall/L/pink_brick_4.png",
+    "themes/cat_cafe/wall/L/pink_brick_5.png",
+    "themes/cat_cafe/wall/L/pink_brick_6.png",
+    "themes/cat_cafe/wall/L/pink_brick_7.png"
+   ],
+   "columnsR": [
+    "themes/cat_cafe/wall/R/pink_brick_0.png",
+    "themes/cat_cafe/wall/R/pink_brick_1.png",
+    "themes/cat_cafe/wall/R/pink_brick_2.png",
+    "themes/cat_cafe/wall/R/pink_brick_3.png",
+    "themes/cat_cafe/wall/R/pink_brick_4.png",
+    "themes/cat_cafe/wall/R/pink_brick_5.png",
+    "themes/cat_cafe/wall/R/pink_brick_6.png",
+    "themes/cat_cafe/wall/R/pink_brick_7.png"
+   ]
+  },
+  {
+   "id": "wall_latte_stripe",
+   "textureId": "latte_stripe",
+   "nameKo": "라떼 줄무늬",
+   "category": "벽지",
+   "theme": "cat_cafe",
+   "placement": "wallColumn",
+   "price": 150,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "themes/cat_cafe/wall/flat/latte_stripe.png",
+   "thumb": "themes/cat_cafe/wall/thumb/latte_stripe.png",
+   "drawerThumb": "themes/cat_cafe/wall/drawer/latte_stripe.png",
+   "columnsL": [
+    "themes/cat_cafe/wall/L/latte_stripe_0.png",
+    "themes/cat_cafe/wall/L/latte_stripe_1.png",
+    "themes/cat_cafe/wall/L/latte_stripe_2.png",
+    "themes/cat_cafe/wall/L/latte_stripe_3.png",
+    "themes/cat_cafe/wall/L/latte_stripe_4.png",
+    "themes/cat_cafe/wall/L/latte_stripe_5.png",
+    "themes/cat_cafe/wall/L/latte_stripe_6.png",
+    "themes/cat_cafe/wall/L/latte_stripe_7.png"
+   ],
+   "columnsR": [
+    "themes/cat_cafe/wall/R/latte_stripe_0.png",
+    "themes/cat_cafe/wall/R/latte_stripe_1.png",
+    "themes/cat_cafe/wall/R/latte_stripe_2.png",
+    "themes/cat_cafe/wall/R/latte_stripe_3.png",
+    "themes/cat_cafe/wall/R/latte_stripe_4.png",
+    "themes/cat_cafe/wall/R/latte_stripe_5.png",
+    "themes/cat_cafe/wall/R/latte_stripe_6.png",
+    "themes/cat_cafe/wall/R/latte_stripe_7.png"
+   ]
+  },
+  {
+   "id": "wall_mint_wainscot",
+   "textureId": "mint_wainscot",
+   "nameKo": "민트 웨인스코팅",
+   "category": "벽지",
+   "theme": "cat_cafe",
+   "placement": "wallColumn",
+   "price": 220,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "themes/cat_cafe/wall/flat/mint_wainscot.png",
+   "thumb": "themes/cat_cafe/wall/thumb/mint_wainscot.png",
+   "drawerThumb": "themes/cat_cafe/wall/drawer/mint_wainscot.png",
+   "columnsL": [
+    "themes/cat_cafe/wall/L/mint_wainscot_0.png",
+    "themes/cat_cafe/wall/L/mint_wainscot_1.png",
+    "themes/cat_cafe/wall/L/mint_wainscot_2.png",
+    "themes/cat_cafe/wall/L/mint_wainscot_3.png",
+    "themes/cat_cafe/wall/L/mint_wainscot_4.png",
+    "themes/cat_cafe/wall/L/mint_wainscot_5.png",
+    "themes/cat_cafe/wall/L/mint_wainscot_6.png",
+    "themes/cat_cafe/wall/L/mint_wainscot_7.png"
+   ],
+   "columnsR": [
+    "themes/cat_cafe/wall/R/mint_wainscot_0.png",
+    "themes/cat_cafe/wall/R/mint_wainscot_1.png",
+    "themes/cat_cafe/wall/R/mint_wainscot_2.png",
+    "themes/cat_cafe/wall/R/mint_wainscot_3.png",
+    "themes/cat_cafe/wall/R/mint_wainscot_4.png",
+    "themes/cat_cafe/wall/R/mint_wainscot_5.png",
+    "themes/cat_cafe/wall/R/mint_wainscot_6.png",
+    "themes/cat_cafe/wall/R/mint_wainscot_7.png"
+   ]
+  },
+  {
+   "id": "wall_coffee_bean",
+   "textureId": "coffee_bean",
+   "nameKo": "커피콩 패턴",
+   "category": "벽지",
+   "theme": "cat_cafe",
+   "placement": "wallColumn",
+   "price": 200,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/cat_cafe/wall/flat/coffee_bean.png",
+   "thumb": "themes/cat_cafe/wall/thumb/coffee_bean.png",
+   "drawerThumb": "themes/cat_cafe/wall/drawer/coffee_bean.png",
+   "columnsL": [
+    "themes/cat_cafe/wall/L/coffee_bean_0.png",
+    "themes/cat_cafe/wall/L/coffee_bean_1.png",
+    "themes/cat_cafe/wall/L/coffee_bean_2.png",
+    "themes/cat_cafe/wall/L/coffee_bean_3.png",
+    "themes/cat_cafe/wall/L/coffee_bean_4.png",
+    "themes/cat_cafe/wall/L/coffee_bean_5.png",
+    "themes/cat_cafe/wall/L/coffee_bean_6.png",
+    "themes/cat_cafe/wall/L/coffee_bean_7.png"
+   ],
+   "columnsR": [
+    "themes/cat_cafe/wall/R/coffee_bean_0.png",
+    "themes/cat_cafe/wall/R/coffee_bean_1.png",
+    "themes/cat_cafe/wall/R/coffee_bean_2.png",
+    "themes/cat_cafe/wall/R/coffee_bean_3.png",
+    "themes/cat_cafe/wall/R/coffee_bean_4.png",
+    "themes/cat_cafe/wall/R/coffee_bean_5.png",
+    "themes/cat_cafe/wall/R/coffee_bean_6.png",
+    "themes/cat_cafe/wall/R/coffee_bean_7.png"
+   ]
+  },
+  {
+   "id": "wall_tiny_cups",
+   "textureId": "tiny_cups",
+   "nameKo": "크림 컵 무늬",
+   "category": "벽지",
+   "theme": "cat_cafe",
+   "placement": "wallColumn",
+   "price": 200,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/cat_cafe/wall/flat/tiny_cups.png",
+   "thumb": "themes/cat_cafe/wall/thumb/tiny_cups.png",
+   "drawerThumb": "themes/cat_cafe/wall/drawer/tiny_cups.png",
+   "columnsL": [
+    "themes/cat_cafe/wall/L/tiny_cups_0.png",
+    "themes/cat_cafe/wall/L/tiny_cups_1.png",
+    "themes/cat_cafe/wall/L/tiny_cups_2.png",
+    "themes/cat_cafe/wall/L/tiny_cups_3.png",
+    "themes/cat_cafe/wall/L/tiny_cups_4.png",
+    "themes/cat_cafe/wall/L/tiny_cups_5.png",
+    "themes/cat_cafe/wall/L/tiny_cups_6.png",
+    "themes/cat_cafe/wall/L/tiny_cups_7.png"
+   ],
+   "columnsR": [
+    "themes/cat_cafe/wall/R/tiny_cups_0.png",
+    "themes/cat_cafe/wall/R/tiny_cups_1.png",
+    "themes/cat_cafe/wall/R/tiny_cups_2.png",
+    "themes/cat_cafe/wall/R/tiny_cups_3.png",
+    "themes/cat_cafe/wall/R/tiny_cups_4.png",
+    "themes/cat_cafe/wall/R/tiny_cups_5.png",
+    "themes/cat_cafe/wall/R/tiny_cups_6.png",
+    "themes/cat_cafe/wall/R/tiny_cups_7.png"
+   ]
+  },
+  {
+   "id": "wall_chalk_cream",
+   "textureId": "chalk_cream",
+   "nameKo": "칠판 하프월",
+   "category": "벽지",
+   "theme": "cat_cafe",
+   "placement": "wallColumn",
+   "price": 260,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/cat_cafe/wall/flat/chalk_cream.png",
+   "thumb": "themes/cat_cafe/wall/thumb/chalk_cream.png",
+   "drawerThumb": "themes/cat_cafe/wall/drawer/chalk_cream.png",
+   "columnsL": [
+    "themes/cat_cafe/wall/L/chalk_cream_0.png",
+    "themes/cat_cafe/wall/L/chalk_cream_1.png",
+    "themes/cat_cafe/wall/L/chalk_cream_2.png",
+    "themes/cat_cafe/wall/L/chalk_cream_3.png",
+    "themes/cat_cafe/wall/L/chalk_cream_4.png",
+    "themes/cat_cafe/wall/L/chalk_cream_5.png",
+    "themes/cat_cafe/wall/L/chalk_cream_6.png",
+    "themes/cat_cafe/wall/L/chalk_cream_7.png"
+   ],
+   "columnsR": [
+    "themes/cat_cafe/wall/R/chalk_cream_0.png",
+    "themes/cat_cafe/wall/R/chalk_cream_1.png",
+    "themes/cat_cafe/wall/R/chalk_cream_2.png",
+    "themes/cat_cafe/wall/R/chalk_cream_3.png",
+    "themes/cat_cafe/wall/R/chalk_cream_4.png",
+    "themes/cat_cafe/wall/R/chalk_cream_5.png",
+    "themes/cat_cafe/wall/R/chalk_cream_6.png",
+    "themes/cat_cafe/wall/R/chalk_cream_7.png"
+   ]
+  },
+  {
+   "id": "floor_grass",
+   "textureId": "grass",
+   "nameKo": "폭신 잔디",
+   "category": "바닥",
+   "theme": "sakura_greenhouse",
+   "placement": "floorTile",
+   "price": 0,
+   "ownedDefault": true,
+   "isDefault": true,
+   "texture": "themes/sakura_greenhouse/floor/flat/grass.png",
+   "thumb": "themes/sakura_greenhouse/floor/thumb/grass.png",
+   "drawerThumb": "themes/sakura_greenhouse/floor/drawer/grass.png",
+   "isoTiles": {
+    "00": "themes/sakura_greenhouse/floor/iso/grass_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso/grass_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso/grass_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso/grass_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/sakura_greenhouse/floor/iso-grout/grass_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso-grout/grass_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso-grout/grass_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso-grout/grass_11.png"
+   },
+   "groutColor": "#86BD74",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_stone_path",
+   "textureId": "stone_path",
+   "nameKo": "징검돌 길",
+   "category": "바닥",
+   "theme": "sakura_greenhouse",
+   "placement": "floorTile",
+   "price": 200,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "themes/sakura_greenhouse/floor/flat/stone_path.png",
+   "thumb": "themes/sakura_greenhouse/floor/thumb/stone_path.png",
+   "drawerThumb": "themes/sakura_greenhouse/floor/drawer/stone_path.png",
+   "isoTiles": {
+    "00": "themes/sakura_greenhouse/floor/iso/stone_path_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso/stone_path_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso/stone_path_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso/stone_path_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/sakura_greenhouse/floor/iso-grout/stone_path_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso-grout/stone_path_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso-grout/stone_path_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso-grout/stone_path_11.png"
+   },
+   "groutColor": "#86BD74",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_light_deck",
+   "textureId": "light_deck",
+   "nameKo": "라이트 데크",
+   "category": "바닥",
+   "theme": "sakura_greenhouse",
+   "placement": "floorTile",
+   "price": 220,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "themes/sakura_greenhouse/floor/flat/light_deck.png",
+   "thumb": "themes/sakura_greenhouse/floor/thumb/light_deck.png",
+   "drawerThumb": "themes/sakura_greenhouse/floor/drawer/light_deck.png",
+   "isoTiles": {
+    "00": "themes/sakura_greenhouse/floor/iso/light_deck_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso/light_deck_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso/light_deck_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso/light_deck_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/sakura_greenhouse/floor/iso-grout/light_deck_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso-grout/light_deck_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso-grout/light_deck_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso-grout/light_deck_11.png"
+   },
+   "groutColor": "#A98559",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_petal_grass",
+   "textureId": "petal_grass",
+   "nameKo": "벚꽃잎 잔디",
+   "category": "바닥",
+   "theme": "sakura_greenhouse",
+   "placement": "floorTile",
+   "price": 240,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/sakura_greenhouse/floor/flat/petal_grass.png",
+   "thumb": "themes/sakura_greenhouse/floor/thumb/petal_grass.png",
+   "drawerThumb": "themes/sakura_greenhouse/floor/drawer/petal_grass.png",
+   "isoTiles": {
+    "00": "themes/sakura_greenhouse/floor/iso/petal_grass_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso/petal_grass_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso/petal_grass_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso/petal_grass_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/sakura_greenhouse/floor/iso-grout/petal_grass_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso-grout/petal_grass_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso-grout/petal_grass_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso-grout/petal_grass_11.png"
+   },
+   "groutColor": "#86BD74",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_pebble_mosaic",
+   "textureId": "pebble_mosaic",
+   "nameKo": "조약돌 모자이크",
+   "category": "바닥",
+   "theme": "sakura_greenhouse",
+   "placement": "floorTile",
+   "price": 260,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/sakura_greenhouse/floor/flat/pebble_mosaic.png",
+   "thumb": "themes/sakura_greenhouse/floor/thumb/pebble_mosaic.png",
+   "drawerThumb": "themes/sakura_greenhouse/floor/drawer/pebble_mosaic.png",
+   "isoTiles": {
+    "00": "themes/sakura_greenhouse/floor/iso/pebble_mosaic_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso/pebble_mosaic_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso/pebble_mosaic_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso/pebble_mosaic_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/sakura_greenhouse/floor/iso-grout/pebble_mosaic_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso-grout/pebble_mosaic_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso-grout/pebble_mosaic_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso-grout/pebble_mosaic_11.png"
+   },
+   "groutColor": "#BDB4A6",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_moss_tile",
+   "textureId": "moss_tile",
+   "nameKo": "이끼 돌타일",
+   "category": "바닥",
+   "theme": "sakura_greenhouse",
+   "placement": "floorTile",
+   "price": 240,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/sakura_greenhouse/floor/flat/moss_tile.png",
+   "thumb": "themes/sakura_greenhouse/floor/thumb/moss_tile.png",
+   "drawerThumb": "themes/sakura_greenhouse/floor/drawer/moss_tile.png",
+   "isoTiles": {
+    "00": "themes/sakura_greenhouse/floor/iso/moss_tile_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso/moss_tile_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso/moss_tile_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso/moss_tile_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "themes/sakura_greenhouse/floor/iso-grout/moss_tile_00.png",
+    "01": "themes/sakura_greenhouse/floor/iso-grout/moss_tile_01.png",
+    "10": "themes/sakura_greenhouse/floor/iso-grout/moss_tile_10.png",
+    "11": "themes/sakura_greenhouse/floor/iso-grout/moss_tile_11.png"
+   },
+   "groutColor": "#7FA45F",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "wall_glass_pane",
+   "textureId": "glass_pane",
+   "nameKo": "온실 유리창",
+   "category": "벽지",
+   "theme": "sakura_greenhouse",
+   "placement": "wallColumn",
+   "price": 0,
+   "ownedDefault": true,
+   "isDefault": true,
+   "texture": "themes/sakura_greenhouse/wall/flat/glass_pane.png",
+   "thumb": "themes/sakura_greenhouse/wall/thumb/glass_pane.png",
+   "drawerThumb": "themes/sakura_greenhouse/wall/drawer/glass_pane.png",
+   "columnsL": [
+    "themes/sakura_greenhouse/wall/L/glass_pane_0.png",
+    "themes/sakura_greenhouse/wall/L/glass_pane_1.png",
+    "themes/sakura_greenhouse/wall/L/glass_pane_2.png",
+    "themes/sakura_greenhouse/wall/L/glass_pane_3.png",
+    "themes/sakura_greenhouse/wall/L/glass_pane_4.png",
+    "themes/sakura_greenhouse/wall/L/glass_pane_5.png",
+    "themes/sakura_greenhouse/wall/L/glass_pane_6.png",
+    "themes/sakura_greenhouse/wall/L/glass_pane_7.png"
+   ],
+   "columnsR": [
+    "themes/sakura_greenhouse/wall/R/glass_pane_0.png",
+    "themes/sakura_greenhouse/wall/R/glass_pane_1.png",
+    "themes/sakura_greenhouse/wall/R/glass_pane_2.png",
+    "themes/sakura_greenhouse/wall/R/glass_pane_3.png",
+    "themes/sakura_greenhouse/wall/R/glass_pane_4.png",
+    "themes/sakura_greenhouse/wall/R/glass_pane_5.png",
+    "themes/sakura_greenhouse/wall/R/glass_pane_6.png",
+    "themes/sakura_greenhouse/wall/R/glass_pane_7.png"
+   ]
+  },
+  {
+   "id": "wall_sakura_branch_wall",
+   "textureId": "sakura_branch_wall",
+   "nameKo": "벚꽃 가지",
+   "category": "벽지",
+   "theme": "sakura_greenhouse",
+   "placement": "wallColumn",
+   "price": 220,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "themes/sakura_greenhouse/wall/flat/sakura_branch_wall.png",
+   "thumb": "themes/sakura_greenhouse/wall/thumb/sakura_branch_wall.png",
+   "drawerThumb": "themes/sakura_greenhouse/wall/drawer/sakura_branch_wall.png",
+   "columnsL": [
+    "themes/sakura_greenhouse/wall/L/sakura_branch_wall_0.png",
+    "themes/sakura_greenhouse/wall/L/sakura_branch_wall_1.png",
+    "themes/sakura_greenhouse/wall/L/sakura_branch_wall_2.png",
+    "themes/sakura_greenhouse/wall/L/sakura_branch_wall_3.png",
+    "themes/sakura_greenhouse/wall/L/sakura_branch_wall_4.png",
+    "themes/sakura_greenhouse/wall/L/sakura_branch_wall_5.png",
+    "themes/sakura_greenhouse/wall/L/sakura_branch_wall_6.png",
+    "themes/sakura_greenhouse/wall/L/sakura_branch_wall_7.png"
+   ],
+   "columnsR": [
+    "themes/sakura_greenhouse/wall/R/sakura_branch_wall_0.png",
+    "themes/sakura_greenhouse/wall/R/sakura_branch_wall_1.png",
+    "themes/sakura_greenhouse/wall/R/sakura_branch_wall_2.png",
+    "themes/sakura_greenhouse/wall/R/sakura_branch_wall_3.png",
+    "themes/sakura_greenhouse/wall/R/sakura_branch_wall_4.png",
+    "themes/sakura_greenhouse/wall/R/sakura_branch_wall_5.png",
+    "themes/sakura_greenhouse/wall/R/sakura_branch_wall_6.png",
+    "themes/sakura_greenhouse/wall/R/sakura_branch_wall_7.png"
+   ]
+  },
+  {
+   "id": "wall_ivy_trellis",
+   "textureId": "ivy_trellis",
+   "nameKo": "아이비 트렐리스",
+   "category": "벽지",
+   "theme": "sakura_greenhouse",
+   "placement": "wallColumn",
+   "price": 220,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/sakura_greenhouse/wall/flat/ivy_trellis.png",
+   "thumb": "themes/sakura_greenhouse/wall/thumb/ivy_trellis.png",
+   "drawerThumb": "themes/sakura_greenhouse/wall/drawer/ivy_trellis.png",
+   "columnsL": [
+    "themes/sakura_greenhouse/wall/L/ivy_trellis_0.png",
+    "themes/sakura_greenhouse/wall/L/ivy_trellis_1.png",
+    "themes/sakura_greenhouse/wall/L/ivy_trellis_2.png",
+    "themes/sakura_greenhouse/wall/L/ivy_trellis_3.png",
+    "themes/sakura_greenhouse/wall/L/ivy_trellis_4.png",
+    "themes/sakura_greenhouse/wall/L/ivy_trellis_5.png",
+    "themes/sakura_greenhouse/wall/L/ivy_trellis_6.png",
+    "themes/sakura_greenhouse/wall/L/ivy_trellis_7.png"
+   ],
+   "columnsR": [
+    "themes/sakura_greenhouse/wall/R/ivy_trellis_0.png",
+    "themes/sakura_greenhouse/wall/R/ivy_trellis_1.png",
+    "themes/sakura_greenhouse/wall/R/ivy_trellis_2.png",
+    "themes/sakura_greenhouse/wall/R/ivy_trellis_3.png",
+    "themes/sakura_greenhouse/wall/R/ivy_trellis_4.png",
+    "themes/sakura_greenhouse/wall/R/ivy_trellis_5.png",
+    "themes/sakura_greenhouse/wall/R/ivy_trellis_6.png",
+    "themes/sakura_greenhouse/wall/R/ivy_trellis_7.png"
+   ]
+  },
+  {
+   "id": "wall_sky_cloud",
+   "textureId": "sky_cloud",
+   "nameKo": "하늘 구름",
+   "category": "벽지",
+   "theme": "sakura_greenhouse",
+   "placement": "wallColumn",
+   "price": 200,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "themes/sakura_greenhouse/wall/flat/sky_cloud.png",
+   "thumb": "themes/sakura_greenhouse/wall/thumb/sky_cloud.png",
+   "drawerThumb": "themes/sakura_greenhouse/wall/drawer/sky_cloud.png",
+   "columnsL": [
+    "themes/sakura_greenhouse/wall/L/sky_cloud_0.png",
+    "themes/sakura_greenhouse/wall/L/sky_cloud_1.png",
+    "themes/sakura_greenhouse/wall/L/sky_cloud_2.png",
+    "themes/sakura_greenhouse/wall/L/sky_cloud_3.png",
+    "themes/sakura_greenhouse/wall/L/sky_cloud_4.png",
+    "themes/sakura_greenhouse/wall/L/sky_cloud_5.png",
+    "themes/sakura_greenhouse/wall/L/sky_cloud_6.png",
+    "themes/sakura_greenhouse/wall/L/sky_cloud_7.png"
+   ],
+   "columnsR": [
+    "themes/sakura_greenhouse/wall/R/sky_cloud_0.png",
+    "themes/sakura_greenhouse/wall/R/sky_cloud_1.png",
+    "themes/sakura_greenhouse/wall/R/sky_cloud_2.png",
+    "themes/sakura_greenhouse/wall/R/sky_cloud_3.png",
+    "themes/sakura_greenhouse/wall/R/sky_cloud_4.png",
+    "themes/sakura_greenhouse/wall/R/sky_cloud_5.png",
+    "themes/sakura_greenhouse/wall/R/sky_cloud_6.png",
+    "themes/sakura_greenhouse/wall/R/sky_cloud_7.png"
+   ]
+  },
+  {
+   "id": "wall_sage_panel",
+   "textureId": "sage_panel",
+   "nameKo": "세이지 패널",
+   "category": "벽지",
+   "theme": "sakura_greenhouse",
+   "placement": "wallColumn",
+   "price": 180,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/sakura_greenhouse/wall/flat/sage_panel.png",
+   "thumb": "themes/sakura_greenhouse/wall/thumb/sage_panel.png",
+   "drawerThumb": "themes/sakura_greenhouse/wall/drawer/sage_panel.png",
+   "columnsL": [
+    "themes/sakura_greenhouse/wall/L/sage_panel_0.png",
+    "themes/sakura_greenhouse/wall/L/sage_panel_1.png",
+    "themes/sakura_greenhouse/wall/L/sage_panel_2.png",
+    "themes/sakura_greenhouse/wall/L/sage_panel_3.png",
+    "themes/sakura_greenhouse/wall/L/sage_panel_4.png",
+    "themes/sakura_greenhouse/wall/L/sage_panel_5.png",
+    "themes/sakura_greenhouse/wall/L/sage_panel_6.png",
+    "themes/sakura_greenhouse/wall/L/sage_panel_7.png"
+   ],
+   "columnsR": [
+    "themes/sakura_greenhouse/wall/R/sage_panel_0.png",
+    "themes/sakura_greenhouse/wall/R/sage_panel_1.png",
+    "themes/sakura_greenhouse/wall/R/sage_panel_2.png",
+    "themes/sakura_greenhouse/wall/R/sage_panel_3.png",
+    "themes/sakura_greenhouse/wall/R/sage_panel_4.png",
+    "themes/sakura_greenhouse/wall/R/sage_panel_5.png",
+    "themes/sakura_greenhouse/wall/R/sage_panel_6.png",
+    "themes/sakura_greenhouse/wall/R/sage_panel_7.png"
+   ]
+  },
+  {
+   "id": "wall_white_lattice",
+   "textureId": "white_lattice",
+   "nameKo": "화이트 격자",
+   "category": "벽지",
+   "theme": "sakura_greenhouse",
+   "placement": "wallColumn",
+   "price": 200,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/sakura_greenhouse/wall/flat/white_lattice.png",
+   "thumb": "themes/sakura_greenhouse/wall/thumb/white_lattice.png",
+   "drawerThumb": "themes/sakura_greenhouse/wall/drawer/white_lattice.png",
+   "columnsL": [
+    "themes/sakura_greenhouse/wall/L/white_lattice_0.png",
+    "themes/sakura_greenhouse/wall/L/white_lattice_1.png",
+    "themes/sakura_greenhouse/wall/L/white_lattice_2.png",
+    "themes/sakura_greenhouse/wall/L/white_lattice_3.png",
+    "themes/sakura_greenhouse/wall/L/white_lattice_4.png",
+    "themes/sakura_greenhouse/wall/L/white_lattice_5.png",
+    "themes/sakura_greenhouse/wall/L/white_lattice_6.png",
+    "themes/sakura_greenhouse/wall/L/white_lattice_7.png"
+   ],
+   "columnsR": [
+    "themes/sakura_greenhouse/wall/R/white_lattice_0.png",
+    "themes/sakura_greenhouse/wall/R/white_lattice_1.png",
+    "themes/sakura_greenhouse/wall/R/white_lattice_2.png",
+    "themes/sakura_greenhouse/wall/R/white_lattice_3.png",
+    "themes/sakura_greenhouse/wall/R/white_lattice_4.png",
+    "themes/sakura_greenhouse/wall/R/white_lattice_5.png",
+    "themes/sakura_greenhouse/wall/R/white_lattice_6.png",
+    "themes/sakura_greenhouse/wall/R/white_lattice_7.png"
+   ]
+  }
+ ]
+}

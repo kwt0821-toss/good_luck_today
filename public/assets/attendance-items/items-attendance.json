@@ -1,0 +1,443 @@
+{
+ "_version": "attendance-items-1.0 (2026-10-11)",
+ "_note": "출석 전용 아이템 레지스트리. room-assets-v6/items.json과 같은 스키마 — 방 렌더러에서 items.json과 합쳐서 써요. 이미지 경로는 이 폴더 기준. 기존 아이템 아트를 색만 바꾼 변형이에요(baseArtFrom).",
+ "basePath": "attendance-items/",
+ "items": [
+  {
+   "id": "att_moon_cactus",
+   "nameKo": "달빛 냥이 선인장",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_moon_cactus.png",
+   "imageSizePx": [
+    97,
+    142
+   ],
+   "tileImage": "tiles/att_moon_cactus.png",
+   "displayWidthTiles": 0.234,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "catcactus",
+   "attendanceRole": "firstWeek:1"
+  },
+  {
+   "id": "att_stamp_calendar",
+   "nameKo": "출석 도장 달력",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_stamp_calendar.png",
+   "imageSizePx": [
+    122,
+    140
+   ],
+   "tileImage": "tiles/att_stamp_calendar.png",
+   "displayWidthTiles": 0.55,
+   "wallSpanTiles": 0.55,
+   "orientations": {
+    "front": "items/att_stamp_calendar.png",
+    "leftWall": "items/att_stamp_calendar_L.png",
+    "rightWall": "items/att_stamp_calendar_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -5.92,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
+   },
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "calendar",
+   "attendanceRole": "firstWeek:2"
+  },
+  {
+   "id": "att_pink_starlight",
+   "nameKo": "핑크 별 수면등",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_pink_starlight.png",
+   "imageSizePx": [
+    115,
+    141
+   ],
+   "tileImage": "tiles/att_pink_starlight.png",
+   "displayWidthTiles": 0.45,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "starlight",
+   "attendanceRole": "firstWeek:3"
+  },
+  {
+   "id": "att_night_bunting",
+   "nameKo": "밤하늘 가랜드",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_night_bunting.png",
+   "imageSizePx": [
+    233,
+    107
+   ],
+   "tileImage": "tiles/att_night_bunting.png",
+   "displayWidthTiles": 1.5,
+   "wallSpanTiles": 1.5,
+   "orientations": {
+    "front": "items/att_night_bunting.png",
+    "leftWall": "items/att_night_bunting_L.png",
+    "rightWall": "items/att_night_bunting_R.png"
+   },
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "bunting",
+   "attendanceRole": "firstWeek:4"
+  },
+  {
+   "id": "att_moon_globe",
+   "nameKo": "달빛 지구본",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_moon_globe.png",
+   "imageSizePx": [
+    106,
+    145
+   ],
+   "tileImage": "tiles/att_moon_globe.png",
+   "displayWidthTiles": 0.45,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "globe",
+   "attendanceRole": "firstWeek:5"
+  },
+  {
+   "id": "att_sakura_fishbowl",
+   "nameKo": "벚꽃 금붕어 어항",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_sakura_fishbowl.png",
+   "imageSizePx": [
+    122,
+    135
+   ],
+   "tileImage": "tiles/att_sakura_fishbowl.png",
+   "displayWidthTiles": 0.27,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "fishbowl",
+   "attendanceRole": "firstWeek:6"
+  },
+  {
+   "id": "att_moon_cattower",
+   "nameKo": "달밤 캣타워",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_moon_cattower.png",
+   "imageSizePx": [
+    130,
+    159
+   ],
+   "tileImage": "tiles/att_moon_cattower.png",
+   "orientations": {
+    "default": {
+     "image": "items/att_moon_cattower.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      66.0,
+      129.0
+     ],
+     "anchorBackCornerPx": [
+      66,
+      90
+     ],
+     "size": [
+      130,
+      159
+     ]
+    },
+    "mirrored": {
+     "image": "items/att_moon_cattower_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      63.0,
+      129.0
+     ],
+     "anchorBackCornerPx": [
+      63,
+      90
+     ],
+     "size": [
+      130,
+      159
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "cattower",
+   "attendanceRole": "firstWeek:7"
+  },
+  {
+   "id": "att_lav_moonlamp",
+   "nameKo": "라벤더 달 무드등",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_lav_moonlamp.png",
+   "imageSizePx": [
+    110,
+    139
+   ],
+   "tileImage": "tiles/att_lav_moonlamp.png",
+   "displayWidthTiles": 0.27,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "moonlamp",
+   "attendanceRole": "weeklyBox"
+  },
+  {
+   "id": "att_rose_gramophone",
+   "nameKo": "로즈 축음기",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_rose_gramophone.png",
+   "imageSizePx": [
+    93,
+    180
+   ],
+   "tileImage": "tiles/att_rose_gramophone.png",
+   "displayWidthTiles": 0.467,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.8936,
+      0.0
+     ],
+     [
+      0.1127,
+      1.1191
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   },
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "gramophone",
+   "attendanceRole": "weeklyBox"
+  },
+  {
+   "id": "att_mint_yarnbasket",
+   "nameKo": "민트 털실 바구니",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_mint_yarnbasket.png",
+   "imageSizePx": [
+    132,
+    114
+   ],
+   "tileImage": "tiles/att_mint_yarnbasket.png",
+   "displayWidthTiles": 0.54,
+   "shadow": "shadows/shadow-1x1.png",
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "yarnbasket",
+   "attendanceRole": "weeklyBox"
+  },
+  {
+   "id": "att_lav_cushions",
+   "nameKo": "파스텔 방석 더미",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_lav_cushions.png",
+   "imageSizePx": [
+    127,
+    145
+   ],
+   "tileImage": "tiles/att_lav_cushions.png",
+   "displayWidthTiles": 0.512,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9469,
+      0.0
+     ],
+     [
+      0.1303,
+      1.0561
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   },
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "cushions",
+   "attendanceRole": "weeklyBox"
+  },
+  {
+   "id": "att_sky_catclock",
+   "nameKo": "하늘빛 냥이 벽시계",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_sky_catclock.png",
+   "imageSizePx": [
+    115,
+    151
+   ],
+   "tileImage": "tiles/att_sky_catclock.png",
+   "displayWidthTiles": 0.52,
+   "wallSpanTiles": 0.52,
+   "orientations": {
+    "front": "items/att_sky_catclock.png",
+    "leftWall": "items/att_sky_catclock_L.png",
+    "rightWall": "items/att_sky_catclock_R.png"
+   },
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "catclock",
+   "attendanceRole": "weeklyBox"
+  },
+  {
+   "id": "att_m30_goldneon",
+   "nameKo": "30일 골드 하트 네온",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_m30_goldneon.png",
+   "imageSizePx": [
+    109,
+    105
+   ],
+   "tileImage": "tiles/att_m30_goldneon.png",
+   "displayWidthTiles": 0.6,
+   "wallSpanTiles": 0.6,
+   "orientations": {
+    "front": "items/att_m30_goldneon.png",
+    "leftWall": "items/att_m30_goldneon_L.png",
+    "rightWall": "items/att_m30_goldneon_R.png"
+   },
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "heartneon",
+   "attendanceRole": "milestone:30"
+  },
+  {
+   "id": "att_m100_nightlamp",
+   "nameKo": "100일 별밤 벽등",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": null,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/att_m100_nightlamp.png",
+   "imageSizePx": [
+    117,
+    120
+   ],
+   "tileImage": "tiles/att_m100_nightlamp.png",
+   "displayWidthTiles": 0.5,
+   "wallSpanTiles": 0.5,
+   "orientations": {
+    "front": "items/att_m100_nightlamp.png",
+    "leftWall": "items/att_m100_nightlamp_L.png",
+    "rightWall": "items/att_m100_nightlamp_R.png"
+   },
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "baseArtFrom": "starlamp",
+   "attendanceRole": "milestone:100"
+  }
+ ]
+}

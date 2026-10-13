@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="216" height="300" viewBox="116 10 216 300">
+  <!-- combined reference (tail + body). Place at stage (116,10). Without the card the tail base is visible. -->
+  <g id="cat-tail">
+    <path d="M 262 300 Q 312 300 316 262 Q 320 230 296 228" fill="none" stroke="#4A3428" stroke-width="17" stroke-linecap="round"/>
+    <path d="M 262 300 Q 312 300 316 262 Q 320 230 296 228" fill="none" stroke="#F7CD9F" stroke-width="10" stroke-linecap="round"/>
+    <path d="M 309 243 L 320 249 M 314 272 L 324 271" stroke="#E2975A" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <!-- the face-down card goes HERE in the app (between tail and body) -->
+  <g id="cat-body">
+    <g transform="translate(195,92)">
+      <path d="M -60 -14 L -54 -66 Q -52 -76 -43 -70 L -14 -48 Z" fill="#F7CD9F" stroke="#4A3428" stroke-width="4.5" stroke-linejoin="round"/>
+      <path d="M 60 -14 L 54 -66 Q 52 -76 43 -70 L 14 -48 Z" fill="#F7CD9F" stroke="#4A3428" stroke-width="4.5" stroke-linejoin="round"/>
+      <path d="M -50 -58 L -30 -45 L -52 -34 Z" fill="#F4A9A8"/><path d="M 50 -58 L 30 -45 L 52 -34 Z" fill="#F4A9A8"/>
+      <path d="M -72 6 Q -74 -54 0 -56 Q 74 -54 72 6 Q 70 42 0 44 Q -70 42 -72 6 Z" fill="#F7CD9F" stroke="#4A3428" stroke-width="4.5"/>
+      <g stroke="#E2975A" stroke-width="5" stroke-linecap="round"><path d="M -11 -50 L -11 -36"/><path d="M 0 -53 L 0 -37"/><path d="M 11 -50 L 11 -36"/></g>
+      <g fill="none" stroke="#4A3428" stroke-width="4" stroke-linecap="round">
+        <path d="M -40 2 Q -31 10 -22 2"/><path d="M 22 2 Q 31 10 40 2"/>
+        <path d="M -9 14 Q -4.5 20 0 14 Q 4.5 20 9 14" stroke-width="3.4"/>
+      </g>
+      <ellipse cx="-46" cy="17" rx="10" ry="6" fill="#F4A9A8"/><ellipse cx="46" cy="17" rx="10" ry="6" fill="#F4A9A8"/>
+    </g>
+    <g stroke="#4A3428" stroke-width="4.5" fill="#FFF3E2"><ellipse cx="146" cy="138" rx="22" ry="15"/><ellipse cx="244" cy="136" rx="22" ry="15"/></g>
+    <g stroke="#4A3428" stroke-width="2.6" stroke-linecap="round"><path d="M 140 145 L 140 151 M 152 145 L 152 151"/><path d="M 238 143 L 238 149 M 250 143 L 250 149"/></g>
+  </g>
+</svg>

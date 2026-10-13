@@ -1,0 +1,485 @@
+{
+ "_version": "menu-1.6 (2026-10-12)",
+ "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
+ "panel": {
+  "side": "right",
+  "widthPt": 312,
+  "openMs": 280,
+  "closeMs": 220,
+  "easingOpen": "cubic-bezier(.22,1,.36,1)",
+  "easingClose": "cubic-bezier(.4,0,1,1)",
+  "dimOpacity": 0.58,
+  "swipeToCloseThresholdPt": 80
+ },
+ "header": {
+  "title": "MENU.",
+  "subtitle": "오늘도 고양이랑 천천히 놀아요",
+  "stats": [
+   {
+    "id": "paw",
+    "label": "포인트",
+    "value": "user.pawBalance",
+    "format": "number(ko-KR)",
+    "icon": "icon-paw-mini.svg"
+   },
+   {
+    "id": "nyangCoin",
+    "label": "냥코인",
+    "value": "user.nyangCoinBalance",
+    "format": "number(ko-KR)",
+    "icon": "ncoin-16@3x.png (14pt)",
+    "tapTo": "sheet:rewards",
+    "note": "4칸 통계(포인트·냥코인·도감·방 레벨), 숫자 14px"
+   },
+   {
+    "id": "dex",
+    "label": "도감",
+    "value": "user.dexOwned",
+    "total": "dex.totalCards",
+    "showProgressBar": true,
+    "tapTo": "dex"
+   },
+   {
+    "id": "roomLv",
+    "label": "방 레벨",
+    "value": "user.cozyLevel",
+    "format": "'Lv.'+value",
+    "source": "economy.json → cozy.levels",
+    "tapTo": "room"
+   }
+  ]
+ },
+ "sections": [
+  {
+   "id": "daily",
+   "label": "DAILY",
+   "rows": [
+    "attendance",
+    "points",
+    "exchange",
+    "tickets",
+    "rewards"
+   ]
+  },
+  {
+   "id": "more",
+   "label": "MORE",
+   "rows": [
+    "rates",
+    "notice",
+    "invite",
+    "settings"
+   ]
+  }
+ ],
+ "rows": {
+  "attendance": {
+   "label": "출석 체크",
+   "icon": "icon-attendance.svg",
+   "enabled": true,
+   "open": "sheet:attendance",
+   "meta": "firstWeek(누적 1~7일): '{attendanceDays+1}일째 · 선물 도착' / 이후: '누적 {attendanceDays}일 · {nextMilestone.days}일까지 {left}일' — 오늘 받았으면 '내일 또 만나요'",
+   "data": "starter.json → attendance (firstWeek, weeklyCycle, milestones, noReset), prices.json → attendanceOnly",
+   "badge": {
+    "type": "dot",
+    "when": "attendance.canClaimToday"
+   },
+   "domId": "#menu-row-attendance"
+  },
+  "points": {
+   "label": "포인트 받기",
+   "icon": "icon-points.svg",
+   "enabled": true,
+   "open": "action:rewardedAd(paw)",
+   "meta": "'남은 횟수 {remaining}/{economy.pawSources.rewardedAd.maxPerDay}'",
+   "data": "economy.json → pawSources.rewardedAd (pawPerAd 10, maxPerDay 10), events.weekendDoublePaw",
+   "badge": {
+    "type": "pill",
+    "text": "주말 2배",
+    "when": "events.weekendDoublePaw.enabled && today in events.weekendDoublePaw.days"
+   },
+   "disabledWhen": "remaining == 0",
+   "disabledMeta": "내일 다시 열려요",
+   "domId": "#menu-row-points"
+  },
+  "exchange": {
+   "label": "중복 카드 교환",
+   "icon": "icon-exchange.svg",
+   "enabled": true,
+   "open": "sheet:exchange",
+   "meta": "'중복 {user.duplicateCount}장'",
+   "data": "economy.json → pawSources.duplicateConvert",
+   "badge": {
+    "type": "none"
+   },
+   "disabledWhen": "user.duplicateCount == 0",
+   "disabledMeta": "아직 겹친 카드가 없어요",
+   "domId": "#menu-row-exchange"
+  },
+  "rewards": {
+   "label": "보상함",
+   "icon": "icon-rewards.svg",
+   "enabled": true,
+   "open": "sheet:rewards",
+   "meta": "'{icon:ncoin 14pt}{user.nyangCoinBalance} 냥코인' (+ ' · 도감 보상 {dex.unclaimedCount}' 있을 때)",
+   "data": "economy.json → pawSources.newCardFirstGet, setComplete (nyangCoin, paw), nyangCoin.withdraw; 유저 API nyangCoinBalance",
+   "badge": {
+    "type": "dot",
+    "when": "user.nyangCoinBalance >= 10 (하루 1번) — 도감 보상 점은 메인 도감 아이콘에 표시"
+   },
+   "domId": "#menu-row-rewards"
+  },
+  "rates": {
+   "label": "확률 안내",
+   "icon": "icon-rates.svg",
+   "enabled": true,
+   "open": "sheet:rates",
+   "meta": "5성↑·스페셜 {sum(b5,special,character,legend)}%",
+   "data": "economy.json → draws.rates_proposal.normal / rateUp / keys",
+   "badge": {
+    "type": "none"
+   },
+   "required": true,
+   "_note": "확률 공개는 필수 — enabled=false로 내리지 마세요",
+   "domId": "#menu-row-rates"
+  },
+  "notice": {
+   "label": "공지·이벤트",
+   "icon": "icon-notice.svg",
+   "enabled": true,
+   "open": "sheet:notice",
+   "meta": "최신 이벤트 제목 pill (예: 주말 포인트 2배)",
+   "data": "/notices API + economy.json → events",
+   "badge": {
+    "type": "pill-new",
+    "text": "NEW",
+    "when": "latestNotice.id > user.lastSeenNoticeId"
+   },
+   "domId": "#menu-row-notice"
+  },
+  "invite": {
+   "label": "친구 초대",
+   "icon": "icon-invite.svg",
+   "enabled": false,
+   "open": "sheet:invite",
+   "disabledPill": "준비 중",
+   "data": "economy.json → events.friendInvite (enabled=false)",
+   "enableWhen": "economy.events.friendInvite.enabled == true",
+   "domId": "#menu-row-invite"
+  },
+  "settings": {
+   "label": "설정",
+   "icon": "icon-settings.svg",
+   "enabled": true,
+   "open": "page:settings",
+   "items": [
+    {
+     "id": "bgm",
+     "label": "배경음악(BGM)",
+     "type": "toggle",
+     "default": false,
+     "storage": "localStorage lc.audio.bgm",
+     "effect": "ON → 첫 탭 이후 현재 화면 BGM 800ms 페이드인 / OFF → 400ms 페이드아웃",
+     "ref": "audio-assets/sounds.json"
+    },
+    {
+     "id": "sfx",
+     "label": "효과음",
+     "type": "toggle",
+     "default": true,
+     "storage": "localStorage lc.audio.sfx",
+     "ref": "audio-assets/sounds.json"
+    },
+    {
+     "id": "haptic",
+     "label": "진동",
+     "type": "toggle",
+     "default": true,
+     "storage": "local"
+    },
+    {
+     "id": "reduceMotion",
+     "label": "움직임 줄이기",
+     "type": "toggle",
+     "default": "prefers-reduced-motion",
+     "storage": "local"
+    },
+    {
+     "id": "replayTutorial",
+     "label": "튜토리얼 다시 보기",
+     "type": "action",
+     "action": "tutorial.replay",
+     "data": "tutorial.json steps(ncoin-intro 포함) + contextual.rewards-intro (보상 재지급 없음)"
+    },
+    {
+     "id": "contact",
+     "label": "문의하기",
+     "type": "link",
+     "url": "TODO"
+    },
+    {
+     "id": "terms",
+     "label": "이용약관",
+     "type": "link",
+     "url": "TODO"
+    },
+    {
+     "id": "privacy",
+     "label": "개인정보처리방침",
+     "type": "link",
+     "url": "TODO"
+    },
+    {
+     "id": "version",
+     "label": "버전",
+     "type": "text",
+     "value": "app.version"
+    }
+   ],
+   "domId": "#menu-row-settings"
+  },
+  "tickets": {
+   "label": "뽑기권",
+   "icon": "icon-ticket.svg",
+   "enabled": true,
+   "open": "sheet:ticketShop",
+   "domId": "#menu-row-tickets",
+   "meta": "'보유 {held}/3 · 이번 주 {weekBought}/7'",
+   "data": "economy.json → shop.tickets.rateUpTicket, tickets.rateUpTicket.maxHold",
+   "badge": {
+    "type": "none"
+   }
+  }
+ },
+ "menuIconBadge": {
+  "type": "dot",
+  "on": "#icon-menu (메인 우상단 발바닥)",
+  "when": "any(row.badge.type=='dot' && row.badge.when) (도감 보상 점은 메인 도감 아이콘이 따로 가짐)"
+ },
+ "sheets": {
+  "attendance": {
+   "states": {
+    "firstWeek": {
+     "when": "attendanceDays < 7 (또는 오늘 7일차 받기 전)",
+     "eyebrow": "DAILY GIFT · WEEK 01",
+     "title": "출석 체크",
+     "titleTag": "출석 한정",
+     "desc": "7일 출석하면 {firstWeek[6].nameKo}가 방으로 와요.\n하루 빠져도 괜찮아요, 출석한 날만큼 이어서 받아요.",
+     "cells": "firstWeek 7칸 (DAY 7은 2칸, \"출석 한정\" 태그)",
+     "cta": "오늘 선물 받기 · {todayItem.nameKo}",
+     "note": "출석 선물은 상점에서 팔지 않는 출석 한정 아이템이에요",
+     "mock": "menu-screen-b.png"
+    },
+    "weeklyCycle": {
+     "when": "attendanceDays >= 7",
+     "eyebrow": "DAILY GIFT",
+     "title": "출석 체크",
+     "desc": "출석은 누적으로 쌓여요. 하루 빠져도 이어서 받아요.",
+     "cumulativeCard": {
+      "big": "{attendanceDays}",
+      "caption": "DAYS",
+      "milestone": "{nextMilestone.titleKo}까지 {nextMilestone.days - attendanceDays}일",
+      "sub": "{milestoneItem.nameKo} + 배지 [출석 한정]",
+      "badgeImage": "badge-att-{days}.svg",
+      "progress": "attendanceDays / nextMilestone.days",
+      "afterLast": "모든 기념 보상을 받았으면 카드는 누적 일수만 보여 줘요"
+     },
+     "weekLabel": "이번 주 출석 · WEEK {cycleNo:02} · DAY {cycleDay}/7",
+     "cells": "weeklyCycle.days 1~6 = icon-paw-coin.svg + \"+{paw}P\", DAY 7 = itemBox(icon-att-box.svg \"출석 선물 상자\") 또는 rateUpTicket(icon-ticket.svg \"확률업 뽑기권\") — 다음 주기 보상을 sub로 안내",
+     "cta": "오늘 {paw}포인트 받기 | 오늘 선물 상자 열기 | 오늘 뽑기권 받기",
+     "note": "7일차 보상은 주마다 선물 상자와 확률업 뽑기권이 번갈아 와요",
+     "mock": "menu-screen-b2.png"
+    }
+   },
+   "ctaDone": "오늘 출석 완료! 내일 또 만나요",
+   "milestoneToast": "{days}일 출석 기념! {itemNameKo}와 배지를 받았어요",
+   "boxAllOwnedToast": "상자를 다 모았어요! 대신 100포인트를 드려요",
+   "thumbs": "gift-{itemId}.png (출석 한정 아이템 타일)",
+   "note": "받은 아이템은 방꾸미기 서랍에 들어가요"
+  },
+  "rates": {
+   "title": "확률 안내",
+   "eyebrow": "DRAW RATES",
+   "desc": "뽑기 결과는 서버에서 정해져요.\n같은 등급 안에서는 카드마다 확률이 같아요.",
+   "tabs": [
+    "일반 뽑기",
+    "확률업 뽑기"
+   ],
+   "rows": [
+    [
+     "b1",
+     "1성",
+     18
+    ],
+    [
+     "b2",
+     "2성",
+     18
+    ],
+    [
+     "b3",
+     "3성",
+     18
+    ],
+    [
+     "b4",
+     "4성",
+     18
+    ],
+    [
+     "b5",
+     "5성",
+     18
+    ],
+    [
+     "special",
+     "스페셜",
+     9
+    ],
+    [
+     "character",
+     "캐릭터",
+     4
+    ],
+    [
+     "legend",
+     "레전드",
+     4
+    ]
+   ],
+   "highlight": [
+    "b5",
+    "special",
+    "character",
+    "legend"
+   ],
+   "perCardDecimals": 3,
+   "note": "카드 1장 확률은 소수점 넷째 자리에서 반올림했어요"
+  },
+  "exchange": {
+   "title": "중복 카드 교환",
+   "eyebrow": "SWAP",
+   "desc": "겹친 카드를 포인트로 바꿔요. 카드는 1장씩 남아요.",
+   "cta": "한 번에 바꾸기 · {total}P"
+  },
+  "rewards": {
+   "title": "보상함",
+   "eyebrow": "REWARDS",
+   "desc": "도감에서 받은 냥코인이 여기 모여요. 10개씩 토스포인트로 받을 수 있어요.",
+   "wallet": {
+    "label": "내 냥코인",
+    "rateText": "1냥코인 = 토스포인트 1원",
+    "historyLink": "받은 기록 ›",
+    "pickLabel": "얼마나 받을까요?",
+    "unit": "economy.nyangCoin.withdraw.unit (10)",
+    "chips": "10 단위, max = floor(balance/10)*10 기본 선택 + '최대' 태그. 최대가 50 초과면 10·20·50·(100)·최대",
+    "cta": "토스포인트로 받기 · {amount}원",
+    "remainderNote": "10냥코인 단위로 받아요 · 남는 {balance-amount}냥코인은 그대로 모여요",
+    "disabled": {
+     "when": "balance < 10",
+     "cta": "토스포인트로 받기 (비활성)",
+     "hint": "10냥코인부터 받을 수 있어요 · {10-balance}개 더 모으면 돼요",
+     "chips": "모두 비활성"
+    }
+   },
+   "list": {
+    "type": "shortcut",
+    "title": "도감에서 받을 보상 {n}개",
+    "sub": "냥코인 {c} + {p}P",
+    "cta": "도감 가기 ›",
+    "emptyText": "받을 도감 보상을 모두 받았어요",
+    "decision": "받기는 도감 한 곳에서만 (보상함에 '모두 받기'를 두지 않음): 받는 순간의 카드·세트 축하 연출을 도감에서 보여 주고, 두 곳에서 같은 보상을 받는 혼동·중복 요청을 막아요."
+   },
+   "note": "토스포인트는 서버에서 확인한 뒤 내 토스 계정으로 보내 드려요",
+   "confirm": {
+    "eyebrow": "WITHDRAW",
+    "title": "토스포인트로 받을까요?",
+    "desc": "내 토스 계정으로 바로 보내 드려요.",
+    "rows": [
+     "받는 곳: 토스포인트 (내 토스 계정)",
+     "받고 남는 냥코인: {rest}"
+    ],
+    "cancel": "취소",
+    "ok": "{amount}원 받기",
+    "note": "받은 토스포인트는 냥코인으로 되돌릴 수 없어요"
+   },
+   "success": {
+    "eyebrow": "DONE",
+    "title": "토스포인트 {amount}원을 받았어요",
+    "sub": "남은 냥코인은 계속 모여요",
+    "balancePill": "지금 {balance} 냥코인",
+    "cta": "확인",
+    "sfx": "sfx-reward-coin"
+   },
+   "history": {
+    "title": "받은 기록",
+    "range": "최근 1년",
+    "states": {
+     "done": "완료 · 토스포인트로 받았어요",
+     "pending": "처리 중 · 확인 중이에요 · 곧 다시 확인해요",
+     "failed": "실패 · 보내지 못해 냥코인을 돌려드렸어요"
+    }
+   },
+   "errors": {
+    "network": "잠시 후 다시 시도해 주세요 (같은 requestId로 재시도)",
+    "pending": "처리 중이에요. 기록에서 결과를 확인해요"
+   },
+   "screens": [
+    "menu-screen-d.png",
+    "menu-screen-d-low.png",
+    "menu-screen-d2.png",
+    "menu-screen-d3.png"
+   ],
+   "domIds": {
+    "wallet": "#wallet-card",
+    "picker": "#withdraw-picker (라벨+칩+받기 버튼 감싸는 div)",
+    "withdrawButton": "#btn-withdraw",
+    "history": "#btn-wallet-history",
+    "dexShortcut": "#btn-rewards-to-dex"
+   },
+   "tutorial": "tutorial.json contextual.rewards-intro (r2~r4 대상이 위 id)"
+  },
+  "ticketShop": {
+   "eyebrow": "TICKET",
+   "title": "뽑기권",
+   "desc": "모은 포인트로 광고 없이 확률업 뽑기를 해요.",
+   "card": {
+    "name": "확률업 뽑기권",
+    "sub": "광고 없이 확률업 1회 · 5성↑ {rateUpPct}%",
+    "price": "{pricePaw}P",
+    "limits": [
+     "이번 주 {weekBought}/{weeklyCap}",
+     "오늘 {dayBought}/{dailyCap}",
+     "보유 {held}/{maxHold}"
+    ]
+   },
+   "balance": "내 포인트 {paw}",
+   "cta": "{pricePaw}P로 사기",
+   "ctaUseNow": "사고 바로 뽑기",
+   "disabled": {
+    "noPaw": "포인트가 {short}P 부족해요",
+    "weekCap": "이번 주는 다 샀어요 · 월요일에 다시 열려요",
+    "dayCap": "오늘은 다 샀어요",
+    "hold": "뽑기권은 3장까지 가질 수 있어요"
+   },
+   "note": "포인트는 방꾸미기에도 써요. 꼭 필요한 만큼만 사요",
+   "toast": "확률업 뽑기권 1장을 샀어요 · 남은 포인트 {paw}",
+   "entryPoints": [
+    "메인 확률업 버튼 (오늘 광고 확률업을 썼고 뽑기권 0장일 때 → 이 시트)",
+    "메뉴 › 뽑기권 행"
+   ],
+   "mockup": "ticket-shop.png"
+  }
+ },
+ "attendanceOnlyTag": {
+  "text": "출석 한정",
+  "style": "pill 8.5px 700, bg #C9B6F2, text #1E1A2B, radius 999, padding 1×6",
+  "showIn": [
+   "출석 시트",
+   "방꾸미기 서랍",
+   "상점(목록에는 안 나오지만 보유 아이템 상세)",
+   "아이템 상세"
+  ],
+  "when": "item.attendanceOnly == true"
+ }
+}

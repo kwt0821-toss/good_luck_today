@@ -1,316 +1,2785 @@
 {
- "_placeholders": "price (all values), ownedDefault for locked items, footprints of sofa/scratcher/bookshelf/tent, wall slots, Korean names of window/wallpaper/floor, frame art are PLACEHOLDERS",
+ "_placeholders": "price (all), ownedDefault (locked = has price list entry), Korean names, wall categories are PLACEHOLDERS; tile prices/ownedDefault and tile Korean names are PLACEHOLDERS too",
  "categories": [
   "가구",
   "소품",
+  "벽 꾸미기",
   "벽지",
   "바닥",
   "카드액자"
  ],
- "footprintNote": "[w,h] = tiles along col axis × row axis at rotation 0; rotate swaps to [h,w] and mirrors the sprite",
- "imageNote": "image = world sprite at 3x world px (draw at sprite size × screen.ptPerWorldPx); tileImage = drawer icon SVG (fit in 56×58 pt). anchorOffsetWorldPx = sprite top-left minus footprint centre (world px).",
+ "footprintNote": "[w,d] tiles; rotate swaps to [d,w] and mirrors the sprite. Nothing is bigger than 2×2.",
+ "scaleRule": "furniture: sprite-sheet floor tile mapped by affine onto a 2:1 diamond = footprint × 1.2 (1×1 items) or 2×2 (sofa, bed), centred on the footprint centre; this puts each item's own base on its footprint tiles. Use anchorFootprintCenterPx: draw sprite so that pixel lands on the footprint centre (world 3x px). decor: bottom-centre anchor, width = displayWidthTiles × 156 px. wall: pre-sheared _L/_R images (x-compress 0.894, shear ∓0.5).",
+ "heroCat": {
+  "id": "catbed_cat",
+  "nameKo": "잠자는 냥이",
+  "image": "items/hero/catbed_cat.png",
+  "tileImage": "tiles/catbed_cat.png",
+  "footprint": [
+   1,
+   1
+  ],
+  "shadow": "shadows/shadow-1x1.png",
+  "note": "Cat asleep on its cushion. Front-facing round sprite (angle-neutral). Bottom-centre anchor like decor; displayWidthTiles 0.83. Not purchasable."
+ },
  "items": [
-  {
-   "id": "sofa",
-   "nameKo": "소파",
-   "category": "가구",
-   "footprint": [
-    2,
-    1
-   ],
-   "placement": "floor",
-   "price": 800,
-   "ownedDefault": false,
-   "image": null,
-   "tileImage": "items/tiles/tile-sofa.svg",
-   "_note": "world sprite TODO (only drawer tile exists); footprint placeholder"
-  },
   {
    "id": "cattower",
    "nameKo": "캣타워",
    "category": "가구",
+   "placement": "floor",
    "footprint": [
     1,
     1
    ],
-   "placement": "floor",
    "price": 300,
    "ownedDefault": true,
-   "tileImage": "items/tiles/tile-cattower.svg",
-   "image": "items/cattower@3x.webp",
-   "imagePng": "items/cattower@3x.png",
-   "spriteWorldPx": [
-    181,
-    263
+   "placedDefault": true,
+   "image": "items/furniture/cattower.png",
+   "imageSizePx": [
+    130,
+    159
    ],
-   "anchorOffsetWorldPx": [
-    -92.0,
-    -245.0
-   ]
+   "tileImage": "tiles/cattower.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/cattower.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      66.0,
+      129.0
+     ],
+     "anchorBackCornerPx": [
+      66,
+      90
+     ],
+     "size": [
+      130,
+      159
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/cattower_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      63.0,
+      129.0
+     ],
+     "anchorBackCornerPx": [
+      63,
+      90
+     ],
+     "size": [
+      130,
+      159
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png"
   },
   {
    "id": "catbed",
-   "nameKo": "쿠션 침대",
+   "nameKo": "동글 쿠션 침대",
    "category": "가구",
-   "footprint": [
-    2,
-    2
-   ],
    "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
    "price": 300,
    "ownedDefault": true,
-   "tileImage": "items/tiles/tile-catbed.svg",
-   "_note": "sprite includes the sleeping cat; for the live cat, see room-spec (breathing reuse)",
-   "image": "items/catbed@3x.webp",
-   "imagePng": "items/catbed@3x.png",
-   "spriteWorldPx": [
-    266,
-    218
+   "placedDefault": false,
+   "image": "items/furniture/catbed.png",
+   "imageSizePx": [
+    137,
+    112
    ],
-   "anchorOffsetWorldPx": [
-    -129.5,
-    -162.8
-   ]
+   "tileImage": "tiles/catbed.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/catbed.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      68.0,
+      85.0
+     ],
+     "anchorBackCornerPx": [
+      68,
+      46
+     ],
+     "size": [
+      137,
+      112
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/catbed_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      68.0,
+      85.0
+     ],
+     "anchorBackCornerPx": [
+      68,
+      46
+     ],
+     "size": [
+      137,
+      112
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png"
   },
   {
    "id": "floorlamp",
    "nameKo": "플로어 램프",
    "category": "가구",
+   "placement": "floor",
    "footprint": [
     1,
     1
    ],
-   "placement": "floor",
-   "price": 250,
+   "price": 300,
    "ownedDefault": true,
-   "tileImage": "items/tiles/tile-floorlamp.svg",
-   "glow": "world/lamp-glow-additive.webp",
-   "image": "items/floorlamp@3x.webp",
-   "imagePng": "items/floorlamp@3x.png",
-   "spriteWorldPx": [
-    120,
-    328
+   "placedDefault": true,
+   "image": "items/furniture/floorlamp.png",
+   "imageSizePx": [
+    76,
+    157
    ],
-   "anchorOffsetWorldPx": [
-    -64.0,
-    -305.0
-   ]
+   "tileImage": "tiles/floorlamp.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/floorlamp.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      38.0,
+      136.0
+     ],
+     "anchorBackCornerPx": [
+      38,
+      97
+     ],
+     "size": [
+      76,
+      157
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/floorlamp_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      37.0,
+      136.0
+     ],
+     "anchorBackCornerPx": [
+      37,
+      97
+     ],
+     "size": [
+      76,
+      157
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png"
   },
   {
    "id": "cabinet",
-   "nameKo": "수납장",
+   "nameKo": "발바닥 서랍장",
    "category": "가구",
-   "footprint": [
-    2,
-    1
-   ],
    "placement": "floor",
-   "price": 350,
-   "ownedDefault": true,
-   "tileImage": "items/tiles/tile-cabinet.svg",
-   "_note": "sprite has fishbowl + moon lamp baked on top",
-   "image": "items/cabinet@3x.webp",
-   "imagePng": "items/cabinet@3x.png",
-   "spriteWorldPx": [
-    266,
-    286
-   ],
-   "anchorOffsetWorldPx": [
-    -135.0,
-    -195.0
-   ]
-  },
-  {
-   "id": "scratcher",
-   "nameKo": "스크래처",
-   "category": "가구",
-   "footprint": [
-    2,
-    1
-   ],
-   "placement": "floor",
-   "price": 200,
-   "ownedDefault": true,
-   "image": null,
-   "tileImage": "items/tiles/tile-scratcher.svg",
-   "_note": "owned but no world sprite yet (mockup drawer shows 배치 중 though it is not in the room — treat as 보유 in default layout)"
-  },
-  {
-   "id": "bookshelf",
-   "nameKo": "책장",
-   "category": "가구",
    "footprint": [
     1,
     1
    ],
+   "price": 300,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/furniture/cabinet.png",
+   "imageSizePx": [
+    122,
+    157
+   ],
+   "tileImage": "tiles/cabinet.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/cabinet.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      61.4,
+      113.8
+     ],
+     "anchorBackCornerPx": [
+      61.4,
+      74.8
+     ],
+     "size": [
+      122,
+      157
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/cabinet_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      60.6,
+      113.8
+     ],
+     "anchorBackCornerPx": [
+      60.6,
+      74.8
+     ],
+     "size": [
+      122,
+      157
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.8931,
+      0.0
+     ],
+     [
+      0.1247,
+      1.1197
+     ]
+    ],
+    "scaleToPreviousHeight": 1.047,
+    "edgesBeforeDeg": [
+     15.7,
+     -27.8
+    ],
+    "edgesAfterDeg": [
+     26.2,
+     -26.6
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
+  },
+  {
+   "id": "sofa",
+   "nameKo": "핑크 소파",
+   "category": "가구",
    "placement": "floor",
-   "price": 450,
-   "ownedDefault": false,
-   "image": null,
-   "tileImage": "items/tiles/tile-bookshelf.svg",
-   "_note": "world sprite TODO"
+   "footprint": [
+    2,
+    1
+   ],
+   "price": 300,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/furniture/sofa.png",
+   "imageSizePx": [
+    224,
+    235
+   ],
+   "tileImage": "tiles/sofa.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/sofa.png",
+     "footprint": [
+      2,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      113.0,
+      167.4
+     ],
+     "anchorBackCornerPx": [
+      74.0,
+      108.9
+     ],
+     "size": [
+      224,
+      235
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/sofa_m.png",
+     "footprint": [
+      1,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      111.0,
+      167.4
+     ],
+     "anchorBackCornerPx": [
+      150.0,
+      108.9
+     ],
+     "size": [
+      224,
+      235
+     ]
+    }
+   },
+   "sheetTileScale": 2,
+   "shadow": "shadows/shadow-2x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.889,
+      0.0
+     ],
+     [
+      0.1462,
+      1.1249
+     ]
+    ],
+    "scaleToPreviousHeight": 1.599,
+    "edgesBeforeDeg": [
+     14.2,
+     -28.7
+    ],
+    "edgesAfterDeg": [
+     27.0,
+     -28.6
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
+  },
+  {
+   "id": "scratcher",
+   "nameKo": "스크래처 언덕",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 300,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/furniture/scratcher.png",
+   "imageSizePx": [
+    130,
+    121
+   ],
+   "tileImage": "tiles/scratcher.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/scratcher.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      66.9,
+      86.0
+     ],
+     "anchorBackCornerPx": [
+      66.9,
+      45.2
+     ],
+     "size": [
+      130,
+      121
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/scratcher_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      63.1,
+      86.0
+     ],
+     "anchorBackCornerPx": [
+      63.1,
+      45.2
+     ],
+     "size": [
+      130,
+      121
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9562,
+      0.0
+     ],
+     [
+      0.0598,
+      1.0458
+     ]
+    ],
+    "note": "x′=a·x, y′=c·x+d·y applied to the v5 default sprite; _m = horizontal mirror of the corrected default"
+   }
+  },
+  {
+   "id": "bookshelf",
+   "nameKo": "민트 책장",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 300,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/furniture/bookshelf.png",
+   "imageSizePx": [
+    111,
+    163
+   ],
+   "tileImage": "tiles/bookshelf.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/bookshelf.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      56.9,
+      118.7
+     ],
+     "anchorBackCornerPx": [
+      56.9,
+      79.7
+     ],
+     "size": [
+      111,
+      163
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/bookshelf_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      54.1,
+      118.7
+     ],
+     "anchorBackCornerPx": [
+      54.1,
+      79.7
+     ],
+     "size": [
+      111,
+      163
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.876,
+      0.0
+     ],
+     [
+      0.1075,
+      1.1415
+     ]
+    ],
+    "scaleToPreviousHeight": 1.0,
+    "edgesBeforeDeg": [
+     16.6,
+     -27.3
+    ],
+    "edgesAfterDeg": [
+     27.0,
+     -27.8
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
   },
   {
    "id": "tent",
-   "nameKo": "숨숨집",
+   "nameKo": "냥귀 숨숨집",
    "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 300,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/furniture/tent.png",
+   "imageSizePx": [
+    115,
+    122
+   ],
+   "tileImage": "tiles/tent.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/tent.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      58.5,
+      92.8
+     ],
+     "anchorBackCornerPx": [
+      58.5,
+      49.2
+     ],
+     "size": [
+      115,
+      122
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/tent_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      56.5,
+      92.8
+     ],
+     "anchorBackCornerPx": [
+      56.5,
+      49.2
+     ],
+     "size": [
+      115,
+      122
+     ]
+    }
+   },
+   "sheetTileScale": 1.118,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "new art sheet 595aff65…jpg (v6.1)",
+    "registration": "cream sheet tile L/B/R → 2:1 diamond ×1.2 (verticals kept vertical, least squares)",
+    "affine": [
+     [
+      0.945,
+      0.0
+     ],
+     [
+      0.2028,
+      1.0582
+     ]
+    ],
+    "scaleToPreviousSize": 0.931,
+    "note": "then uniformly scaled about the footprint centre so the on-screen height matches the previous sprite"
+   }
+  },
+  {
+   "id": "teatable",
+   "nameKo": "꽃병 티 테이블",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 300,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/furniture/teatable.png",
+   "imageSizePx": [
+    115,
+    116
+   ],
+   "tileImage": "tiles/teatable.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/teatable.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      59.0,
+      92.0
+     ],
+     "anchorBackCornerPx": [
+      59,
+      53
+     ],
+     "size": [
+      115,
+      116
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/teatable_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      54.0,
+      92.0
+     ],
+     "anchorBackCornerPx": [
+      54,
+      53
+     ],
+     "size": [
+      114,
+      116
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "desk",
+   "nameKo": "노트북 책상",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 300,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/furniture/desk.png",
+   "imageSizePx": [
+    129,
+    147
+   ],
+   "tileImage": "tiles/desk.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/desk.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      64.4,
+      105.2
+     ],
+     "anchorBackCornerPx": [
+      64.4,
+      66.2
+     ],
+     "size": [
+      129,
+      147
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/desk_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      64.6,
+      105.2
+     ],
+     "anchorBackCornerPx": [
+      64.6,
+      66.2
+     ],
+     "size": [
+      129,
+      147
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.9118,
+      0.0
+     ],
+     [
+      0.1185,
+      1.0967
+     ]
+    ],
+    "scaleToPreviousHeight": 0.993,
+    "edgesBeforeDeg": [
+     17.4,
+     -27.9
+    ],
+    "edgesAfterDeg": [
+     27.1,
+     -26.1
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
+  },
+  {
+   "id": "beanbag",
+   "nameKo": "빈백",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 300,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/furniture/beanbag.png",
+   "imageSizePx": [
+    129,
+    112
+   ],
+   "tileImage": "tiles/beanbag.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/beanbag.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      68.0,
+      84.0
+     ],
+     "anchorBackCornerPx": [
+      68,
+      45
+     ],
+     "size": [
+      129,
+      112
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/beanbag_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      60.0,
+      84.0
+     ],
+     "anchorBackCornerPx": [
+      60,
+      45
+     ],
+     "size": [
+      129,
+      112
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "radioclock",
+   "nameKo": "냥이 라디오 시계",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 380,
+   "ownedDefault": false,
+   "placedDefault": true,
+   "image": "items/furniture/radioclock.png",
+   "imageSizePx": [
+    112,
+    119
+   ],
+   "tileImage": "tiles/radioclock.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/radioclock.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      55.6,
+      90.5
+     ],
+     "anchorBackCornerPx": [
+      55.6,
+      51.5
+     ],
+     "size": [
+      112,
+      119
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/radioclock_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      56.4,
+      90.5
+     ],
+     "anchorBackCornerPx": [
+      56.4,
+      51.5
+     ],
+     "size": [
+      112,
+      119
+     ]
+    }
+   },
+   "sheetTileScale": 1.058,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      1.0,
+      0.0
+     ],
+     [
+      0.0,
+      1.0
+     ]
+    ],
+    "scaleToPreviousHeight": 1.026,
+    "edgesBeforeDeg": [
+     31.0,
+     -32.6
+    ],
+    "edgesAfterDeg": [
+     29.2,
+     -35.8
+    ],
+    "note": "registration only (organic/round silhouette)"
+   }
+  },
+  {
+   "id": "bed",
+   "nameKo": "퀼트 침대",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    2
+   ],
+   "price": 300,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/furniture/bed.png",
+   "imageSizePx": [
+    269,
+    225
+   ],
+   "tileImage": "tiles/bed.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/bed.png",
+     "footprint": [
+      1,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      139.7,
+      156.1
+     ],
+     "anchorBackCornerPx": [
+      178.4,
+      98.8
+     ],
+     "size": [
+      269,
+      225
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/bed_m.png",
+     "footprint": [
+      2,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      129.3,
+      156.1
+     ],
+     "anchorBackCornerPx": [
+      90.6,
+      98.8
+     ],
+     "size": [
+      269,
+      225
+     ]
+    }
+   },
+   "sheetTileScale": 2,
+   "shadow": "shadows/shadow-1x2.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9916,
+      0.0
+     ],
+     [
+      0.042,
+      1.0084
+     ]
+    ],
+    "note": "x′=a·x, y′=c·x+d·y applied to the v5 default sprite; _m = horizontal mirror of the corrected default"
+   }
+  },
+  {
+   "id": "fridge",
+   "nameKo": "민트 냉장고",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 520,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/furniture/fridge.png",
+   "imageSizePx": [
+    97,
+    154
+   ],
+   "tileImage": "tiles/fridge.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/fridge.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      49.7,
+      118.8
+     ],
+     "anchorBackCornerPx": [
+      49.7,
+      75.6
+     ],
+     "size": [
+      97,
+      154
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/fridge_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      47.3,
+      118.8
+     ],
+     "anchorBackCornerPx": [
+      47.3,
+      75.6
+     ],
+     "size": [
+      97,
+      154
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9035,
+      0.0
+     ],
+     [
+      0.1006,
+      1.1068
+     ]
+    ],
+    "note": "x′=a·x, y′=c·x+d·y applied to the v5 default sprite; _m = horizontal mirror of the corrected default"
+   }
+  },
+  {
+   "id": "feeder",
+   "nameKo": "물고기 급식대",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 300,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/furniture/feeder.png",
+   "imageSizePx": [
+    131,
+    121
+   ],
+   "tileImage": "tiles/feeder.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/feeder.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      63.7,
+      83.7
+     ],
+     "anchorBackCornerPx": [
+      63.7,
+      41.0
+     ],
+     "size": [
+      131,
+      121
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/feeder_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      67.3,
+      83.7
+     ],
+     "anchorBackCornerPx": [
+      67.3,
+      41.0
+     ],
+     "size": [
+      131,
+      121
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9129,
+      0.0
+     ],
+     [
+      0.0913,
+      1.0954
+     ]
+    ],
+    "note": "x′=a·x, y′=c·x+d·y applied to the v5 default sprite; _m = horizontal mirror of the corrected default"
+   }
+  },
+  {
+   "id": "catchair",
+   "nameKo": "냥귀 안락의자",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 300,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/furniture/catchair.png",
+   "imageSizePx": [
+    126,
+    150
+   ],
+   "tileImage": "tiles/catchair.png",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/catchair.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      67.2,
+      108.6
+     ],
+     "anchorBackCornerPx": [
+      67.2,
+      69.6
+     ],
+     "size": [
+      126,
+      150
+     ]
+    },
+    "mirrored": {
+     "image": "items/furniture/catchair_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      58.8,
+      108.6
+     ],
+     "anchorBackCornerPx": [
+      58.8,
+      69.6
+     ],
+     "size": [
+      126,
+      150
+     ]
+    }
+   },
+   "sheetTileScale": 1.2,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "source": "redrawn sheet 49b50976…jpg (redraw-11, 2026-10-11)",
+    "registration": "cream sheet tile L/B/R → exact 2:1 diamond (least squares, verticals vertical)",
+    "affine": [
+     [
+      0.9217,
+      0.0
+     ],
+     [
+      0.0871,
+      1.085
+     ]
+    ],
+    "scaleToPreviousHeight": 1.007,
+    "edgesBeforeDeg": [
+     18.0,
+     -26.6
+    ],
+    "edgesAfterDeg": [
+     25.3,
+     -26.6
+    ],
+    "note": "edge-measured shear fix to ±26.57°"
+   }
+  },
+  {
+   "id": "plant",
+   "nameKo": "발바닥 화분",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/decor/plant.png",
+   "imageSizePx": [
+    113,
+    151
+   ],
+   "tileImage": "tiles/plant.png",
+   "displayWidthTiles": 0.468,
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "monstera",
+   "nameKo": "몬스테라",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/decor/monstera.png",
+   "imageSizePx": [
+    129,
+    151
+   ],
+   "tileImage": "tiles/monstera.png",
+   "displayWidthTiles": 0.648,
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "fishbowl",
+   "nameKo": "금붕어 어항",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/decor/fishbowl.png",
+   "imageSizePx": [
+    122,
+    135
+   ],
+   "tileImage": "tiles/fishbowl.png",
+   "displayWidthTiles": 0.27,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "moonlamp",
+   "nameKo": "달 무드등",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/decor/moonlamp.png",
+   "imageSizePx": [
+    110,
+    139
+   ],
+   "tileImage": "tiles/moonlamp.png",
+   "displayWidthTiles": 0.27,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "yarnbasket",
+   "nameKo": "털실 바구니",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/decor/yarnbasket.png",
+   "imageSizePx": [
+    132,
+    114
+   ],
+   "tileImage": "tiles/yarnbasket.png",
+   "displayWidthTiles": 0.54,
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "cushions",
+   "nameKo": "방석 더미",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/decor/cushions.png",
+   "imageSizePx": [
+    127,
+    145
+   ],
+   "tileImage": "tiles/cushions.png",
+   "displayWidthTiles": 0.512,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9469,
+      0.0
+     ],
+     [
+      0.1303,
+      1.0561
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   }
+  },
+  {
+   "id": "pawrug",
+   "nameKo": "발바닥 러그",
+   "category": "소품",
+   "placement": "floor-decal",
    "footprint": [
     2,
     2
    ],
-   "placement": "floor",
-   "price": 600,
-   "ownedDefault": false,
-   "image": null,
-   "tileImage": "items/tiles/tile-tent.svg",
-   "_note": "world sprite TODO"
-  },
-  {
-   "id": "plant",
-   "nameKo": "화분",
-   "category": "소품",
-   "footprint": [
-    1,
-    1
-   ],
-   "placement": "floor",
    "price": 120,
    "ownedDefault": true,
-   "tileImage": "items/tiles/tile-plant.svg",
-   "image": "items/plant@3x.webp",
-   "imagePng": "items/plant@3x.png",
-   "spriteWorldPx": [
-    142,
-    234
+   "placedDefault": true,
+   "image": "items/decor/pawrug.png",
+   "imageSizePx": [
+    168,
+    104
    ],
-   "anchorOffsetWorldPx": [
-    -73.0,
-    -225.0
-   ]
+   "tileImage": "tiles/pawrug.png",
+   "displayWidthTiles": 1.575,
+   "decal": true,
+   "projection": "top-down circle → exact iso: (u,v)→(x,y)=((u−v)·78,(u+v)·39) px per tile, radius 0.96 tile",
+   "shadow": null
   },
   {
-   "id": "yarn",
-   "nameKo": "털실 공",
+   "id": "xmastree",
+   "nameKo": "미니 트리",
    "category": "소품",
+   "placement": "floor",
    "footprint": [
     1,
     1
    ],
-   "placement": "floor",
-   "price": 50,
-   "ownedDefault": true,
-   "tileImage": "items/tiles/tile-yarn.svg",
-   "stackable": true,
-   "_note": "tiny prop: may share a tile with nothing else; vector alt items/yarn-vector.svg",
-   "image": "items/yarn@3x.webp",
-   "imagePng": "items/yarn@3x.png",
-   "spriteWorldPx": [
-    49,
-    50
+   "price": 300,
+   "ownedDefault": false,
+   "placedDefault": true,
+   "image": "items/decor/xmastree.png",
+   "imageSizePx": [
+    100,
+    155
    ],
-   "anchorOffsetWorldPx": [
-    -23.0,
-    -33.0
-   ]
+   "tileImage": "tiles/xmastree.png",
+   "displayWidthTiles": 0.54,
+   "shadow": "shadows/shadow-1x1.png"
   },
   {
-   "id": "rug",
-   "nameKo": "러그",
+   "id": "maneki",
+   "nameKo": "마네키네코",
    "category": "소품",
-   "footprint": [
-    3,
-    3
-   ],
    "placement": "floor",
-   "layer": "decal",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 350,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/decor/maneki.png",
+   "imageSizePx": [
+    98,
+    100
+   ],
+   "tileImage": "tiles/maneki.png",
+   "displayWidthTiles": 0.628,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "orientations": {
+    "default": {
+     "image": "items/decor/maneki.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      48.4,
+      71.2
+     ],
+     "anchorBackCornerPx": [
+      48.4,
+      41.3
+     ],
+     "size": [
+      98,
+      100
+     ]
+    },
+    "mirrored": {
+     "image": "items/decor/maneki_m.png",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      49.6,
+      71.2
+     ],
+     "anchorBackCornerPx": [
+      49.6,
+      41.3
+     ],
+     "size": [
+      98,
+      100
+     ]
+    }
+   },
+   "sheetTileScale": 0.767,
+   "angleFixV6": {
+    "source": "new art sheet 595aff65…jpg (v6.1)",
+    "registration": "cream sheet tile L/B/R → 2:1 diamond ×1.2 (verticals kept vertical, least squares)",
+    "affine": [
+     [
+      0.9762,
+      0.0
+     ],
+     [
+      0.007,
+      1.0243
+     ]
+    ],
+    "scaleToPreviousSize": 0.639,
+    "note": "then uniformly scaled about the footprint centre so the on-screen height matches the previous sprite"
+   },
+   "note": "Registered like furniture (has orientations + anchors; draw 1:1 at the footprint-centre anchor). displayWidthTiles kept for the decor/onTop rule."
+  },
+  {
+   "id": "gramophone",
+   "nameKo": "축음기",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": true,
+   "placedDefault": false,
+   "image": "items/decor/gramophone.png",
+   "imageSizePx": [
+    93,
+    180
+   ],
+   "tileImage": "tiles/gramophone.png",
+   "displayWidthTiles": 0.467,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.8936,
+      0.0
+     ],
+     [
+      0.1127,
+      1.1191
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   }
+  },
+  {
+   "id": "globe",
+   "nameKo": "지구본",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 220,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/decor/globe.png",
+   "imageSizePx": [
+    106,
+    145
+   ],
+   "tileImage": "tiles/globe.png",
+   "displayWidthTiles": 0.45,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "catcactus",
+   "nameKo": "냥이 선인장",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/decor/catcactus.png",
+   "imageSizePx": [
+    97,
+    142
+   ],
+   "tileImage": "tiles/catcactus.png",
+   "displayWidthTiles": 0.234,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "archmirror",
+   "nameKo": "아치 거울",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 260,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/decor/archmirror.png",
+   "imageSizePx": [
+    109,
+    159
+   ],
+   "tileImage": "tiles/archmirror.png",
+   "displayWidthTiles": 0.521,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9559,
+      0.0
+     ],
+     [
+      0.1713,
+      1.0461
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   }
+  },
+  {
+   "id": "aquarium",
+   "nameKo": "수족관 장",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/decor/aquarium.png",
+   "imageSizePx": [
+    118,
+    165
+   ],
+   "tileImage": "tiles/aquarium.png",
+   "displayWidthTiles": 0.597,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9198,
+      0.0
+     ],
+     [
+      0.1102,
+      1.0872
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   }
+  },
+  {
+   "id": "starlight",
+   "nameKo": "별 수면등",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 180,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/decor/starlight.png",
+   "imageSizePx": [
+    115,
+    141
+   ],
+   "tileImage": "tiles/starlight.png",
+   "displayWidthTiles": 0.45,
+   "canSitOnSurface": true,
+   "shadow": "shadows/shadow-1x1.png"
+  },
+  {
+   "id": "gifts",
+   "nameKo": "선물 상자",
+   "category": "소품",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 150,
+   "ownedDefault": false,
+   "placedDefault": true,
+   "image": "items/decor/gifts.png",
+   "imageSizePx": [
+    148,
+    178
+   ],
+   "tileImage": "tiles/gifts.png",
+   "displayWidthTiles": 0.543,
+   "shadow": "shadows/shadow-1x1.png",
+   "angleFixV6": {
+    "affine": [
+     [
+      0.9124,
+      0.0
+     ],
+     [
+      0.1107,
+      1.096
+     ]
+    ],
+    "note": "displayWidthTiles scaled with the new image width so the on-screen size matches"
+   }
+  },
+  {
+   "id": "archwindow",
+   "nameKo": "커튼 창문",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 150,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/wall/archwindow.png",
+   "imageSizePx": [
+    147,
+    144
+   ],
+   "tileImage": "tiles/archwindow.png",
+   "displayWidthTiles": 1.45,
+   "wallSpanTiles": 1.45,
+   "orientations": {
+    "front": "items/wall/archwindow.png",
+    "leftWall": "items/wall/archwindow_L.png",
+    "rightWall": "items/wall/archwindow_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -6.61,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
+   }
+  },
+  {
+   "id": "porthole",
+   "nameKo": "동그란 창",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 260,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/wall/porthole.png",
+   "imageSizePx": [
+    134,
+    125
+   ],
+   "tileImage": "tiles/porthole.png",
+   "displayWidthTiles": 0.8,
+   "wallSpanTiles": 0.8,
+   "orientations": {
+    "front": "items/wall/porthole.png",
+    "leftWall": "items/wall/porthole_L.png",
+    "rightWall": "items/wall/porthole_R.png"
+   }
+  },
+  {
+   "id": "squareframe",
+   "nameKo": "네모 액자",
+   "category": "카드액자",
+   "placement": "wall",
+   "footprint": null,
+   "price": 150,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/wall/squareframe.png",
+   "imageSizePx": [
+    126,
+    138
+   ],
+   "tileImage": "tiles/squareframe.png",
+   "displayWidthTiles": 0.6,
+   "wallSpanTiles": 0.6,
+   "orientations": {
+    "front": "items/wall/squareframe.png",
+    "leftWall": "items/wall/squareframe_L.png",
+    "rightWall": "items/wall/squareframe_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -5.83,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
+   }
+  },
+  {
+   "id": "cardframe",
+   "nameKo": "리본 카드 액자",
+   "category": "카드액자",
+   "placement": "wall",
+   "footprint": null,
+   "price": 150,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/wall/cardframe.png",
+   "imageSizePx": [
+    128,
+    179
+   ],
+   "tileImage": "tiles/cardframe.png",
+   "displayWidthTiles": 0.5,
+   "wallSpanTiles": 0.5,
+   "orientations": {
+    "front": "items/wall/cardframe.png",
+    "leftWall": "items/wall/cardframe_L.png",
+    "rightWall": "items/wall/cardframe_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -4.69,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
+   }
+  },
+  {
+   "id": "catclock",
+   "nameKo": "냥이 벽시계",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 150,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/wall/catclock.png",
+   "imageSizePx": [
+    115,
+    151
+   ],
+   "tileImage": "tiles/catclock.png",
+   "displayWidthTiles": 0.52,
+   "wallSpanTiles": 0.52,
+   "orientations": {
+    "front": "items/wall/catclock.png",
+    "leftWall": "items/wall/catclock_L.png",
+    "rightWall": "items/wall/catclock_R.png"
+   }
+  },
+  {
+   "id": "fairylights",
+   "nameKo": "꼬마전구",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 150,
+   "ownedDefault": true,
+   "placedDefault": false,
+   "image": "items/wall/fairylights.png",
+   "imageSizePx": [
+    217,
+    93
+   ],
+   "tileImage": "tiles/fairylights.png",
+   "displayWidthTiles": 1.6,
+   "wallSpanTiles": 1.6,
+   "orientations": {
+    "front": "items/wall/fairylights.png",
+    "leftWall": "items/wall/fairylights_L.png",
+    "rightWall": "items/wall/fairylights_R.png"
+   }
+  },
+  {
+   "id": "wallshelf",
+   "nameKo": "화분 선반",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 150,
+   "ownedDefault": true,
+   "placedDefault": false,
+   "image": "items/wall/wallshelf.png",
+   "imageSizePx": [
+    172,
+    139
+   ],
+   "tileImage": "tiles/wallshelf.png",
+   "displayWidthTiles": 0.85,
+   "wallSpanTiles": 0.85,
+   "orientations": {
+    "front": "items/wall/wallshelf.png",
+    "leftWall": "items/wall/wallshelf_L.png",
+    "rightWall": "items/wall/wallshelf_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -7.28,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
+   }
+  },
+  {
+   "id": "bunting",
+   "nameKo": "발바닥 가랜드",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 150,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/wall/bunting.png",
+   "imageSizePx": [
+    233,
+    107
+   ],
+   "tileImage": "tiles/bunting.png",
+   "displayWidthTiles": 1.5,
+   "wallSpanTiles": 1.5,
+   "orientations": {
+    "front": "items/wall/bunting.png",
+    "leftWall": "items/wall/bunting_L.png",
+    "rightWall": "items/wall/bunting_R.png"
+   }
+  },
+  {
+   "id": "starlamp",
+   "nameKo": "별 벽등",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 150,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/wall/starlamp.png",
+   "imageSizePx": [
+    117,
+    120
+   ],
+   "tileImage": "tiles/starlamp.png",
+   "displayWidthTiles": 0.5,
+   "wallSpanTiles": 0.5,
+   "orientations": {
+    "front": "items/wall/starlamp.png",
+    "leftWall": "items/wall/starlamp_L.png",
+    "rightWall": "items/wall/starlamp_R.png"
+   }
+  },
+  {
+   "id": "earmirror",
+   "nameKo": "냥귀 거울",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 280,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/wall/earmirror.png",
+   "imageSizePx": [
+    116,
+    143
+   ],
+   "tileImage": "tiles/earmirror.png",
+   "displayWidthTiles": 0.58,
+   "wallSpanTiles": 0.58,
+   "orientations": {
+    "front": "items/wall/earmirror.png",
+    "leftWall": "items/wall/earmirror_L.png",
+    "rightWall": "items/wall/earmirror_R.png"
+   }
+  },
+  {
+   "id": "moonmobile",
+   "nameKo": "달 모빌",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 240,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/wall/moonmobile.png",
+   "imageSizePx": [
+    170,
+    134
+   ],
+   "tileImage": "tiles/moonmobile.png",
+   "displayWidthTiles": 0.9,
+   "wallSpanTiles": 0.9,
+   "orientations": {
+    "front": "items/wall/moonmobile.png",
+    "leftWall": "items/wall/moonmobile_L.png",
+    "rightWall": "items/wall/moonmobile_R.png"
+   }
+  },
+  {
+   "id": "corkboard",
+   "nameKo": "메모 보드",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 200,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/wall/corkboard.png",
+   "imageSizePx": [
+    184,
+    143
+   ],
+   "tileImage": "tiles/corkboard.png",
+   "displayWidthTiles": 0.95,
+   "wallSpanTiles": 0.95,
+   "orientations": {
+    "front": "items/wall/corkboard.png",
+    "leftWall": "items/wall/corkboard_L.png",
+    "rightWall": "items/wall/corkboard_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -4.48,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
+   }
+  },
+  {
+   "id": "catsteps",
+   "nameKo": "캣 스텝",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 150,
+   "ownedDefault": true,
+   "placedDefault": true,
+   "image": "items/wall/catsteps.png",
+   "imageSizePx": [
+    171,
+    131
+   ],
+   "tileImage": "tiles/catsteps.png",
+   "displayWidthTiles": 1.0,
+   "wallSpanTiles": 1.0,
+   "orientations": {
+    "front": "items/wall/catsteps.png",
+    "leftWall": "items/wall/catsteps_L.png",
+    "rightWall": "items/wall/catsteps_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -6.52,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
+   }
+  },
+  {
+   "id": "heartneon",
+   "nameKo": "하트 네온",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 320,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/wall/heartneon.png",
+   "imageSizePx": [
+    109,
+    105
+   ],
+   "tileImage": "tiles/heartneon.png",
+   "displayWidthTiles": 0.6,
+   "wallSpanTiles": 0.6,
+   "orientations": {
+    "front": "items/wall/heartneon.png",
+    "leftWall": "items/wall/heartneon_L.png",
+    "rightWall": "items/wall/heartneon_R.png"
+   }
+  },
+  {
+   "id": "dreamcatcher",
+   "nameKo": "드림캐처",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 180,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/wall/dreamcatcher.png",
+   "imageSizePx": [
+    98,
+    178
+   ],
+   "tileImage": "tiles/dreamcatcher.png",
+   "displayWidthTiles": 0.45,
+   "wallSpanTiles": 0.45,
+   "orientations": {
+    "front": "items/wall/dreamcatcher.png",
+    "leftWall": "items/wall/dreamcatcher_L.png",
+    "rightWall": "items/wall/dreamcatcher_R.png"
+   }
+  },
+  {
+   "id": "calendar",
+   "nameKo": "발바닥 달력",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "footprint": null,
+   "price": 120,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "image": "items/wall/calendar.png",
+   "imageSizePx": [
+    122,
+    140
+   ],
+   "tileImage": "tiles/calendar.png",
+   "displayWidthTiles": 0.55,
+   "wallSpanTiles": 0.55,
+   "orientations": {
+    "front": "items/wall/calendar.png",
+    "leftWall": "items/wall/calendar_L.png",
+    "rightWall": "items/wall/calendar_R.png"
+   },
+   "angleFixV6": {
+    "frontDeskewDeg": -5.92,
+    "note": "front art de-skewed so its horizontals are horizontal, then _L/_R re-sheared exactly (x′=0.894x, y′=y∓0.5x′)"
+   }
+  },
+  {
+   "id": "floor_wood_honey",
+   "textureId": "wood_honey",
+   "nameKo": "꿀빛 원목",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 0,
+   "ownedDefault": true,
+   "isDefault": true,
+   "texture": "floor/flat/wood_honey.png",
+   "thumb": "floor/thumb/wood_honey.png",
+   "isoTiles": {
+    "00": "floor/iso/wood_honey_00.png",
+    "01": "floor/iso/wood_honey_01.png",
+    "10": "floor/iso/wood_honey_10.png",
+    "11": "floor/iso/wood_honey_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/wood_honey_00.png",
+    "01": "floor/iso-grout/wood_honey_01.png",
+    "10": "floor/iso-grout/wood_honey_10.png",
+    "11": "floor/iso-grout/wood_honey_11.png"
+   },
+   "groutColor": "#8E603F",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_wood_oak",
+   "textureId": "wood_oak",
+   "nameKo": "밝은 오크",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 180,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "floor/flat/wood_oak.png",
+   "thumb": "floor/thumb/wood_oak.png",
+   "isoTiles": {
+    "00": "floor/iso/wood_oak_00.png",
+    "01": "floor/iso/wood_oak_01.png",
+    "10": "floor/iso/wood_oak_10.png",
+    "11": "floor/iso/wood_oak_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/wood_oak_00.png",
+    "01": "floor/iso-grout/wood_oak_01.png",
+    "10": "floor/iso-grout/wood_oak_10.png",
+    "11": "floor/iso-grout/wood_oak_11.png"
+   },
+   "groutColor": "#B38D63",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_check_pink",
+   "textureId": "check_pink",
+   "nameKo": "핑크 체크",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 150,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "floor/flat/check_pink.png",
+   "thumb": "floor/thumb/check_pink.png",
+   "isoTiles": {
+    "00": "floor/iso/check_pink_00.png",
+    "01": "floor/iso/check_pink_01.png",
+    "10": "floor/iso/check_pink_10.png",
+    "11": "floor/iso/check_pink_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/check_pink_00.png",
+    "01": "floor/iso-grout/check_pink_01.png",
+    "10": "floor/iso-grout/check_pink_10.png",
+    "11": "floor/iso-grout/check_pink_11.png"
+   },
+   "groutColor": "#D9A0AE",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_check_mint",
+   "textureId": "check_mint",
+   "nameKo": "민트 체크",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 150,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "floor/flat/check_mint.png",
+   "thumb": "floor/thumb/check_mint.png",
+   "isoTiles": {
+    "00": "floor/iso/check_mint_00.png",
+    "01": "floor/iso/check_mint_01.png",
+    "10": "floor/iso/check_mint_10.png",
+    "11": "floor/iso/check_mint_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/check_mint_00.png",
+    "01": "floor/iso-grout/check_mint_01.png",
+    "10": "floor/iso-grout/check_mint_10.png",
+    "11": "floor/iso-grout/check_mint_11.png"
+   },
+   "groutColor": "#93C9B3",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_herring_lav",
+   "textureId": "herring_lav",
+   "nameKo": "라벤더 헤링본",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 300,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "floor/flat/herring_lav.png",
+   "thumb": "floor/thumb/herring_lav.png",
+   "isoTiles": {
+    "00": "floor/iso/herring_lav_00.png",
+    "01": "floor/iso/herring_lav_01.png",
+    "10": "floor/iso/herring_lav_10.png",
+    "11": "floor/iso/herring_lav_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/herring_lav_00.png",
+    "01": "floor/iso-grout/herring_lav_01.png",
+    "10": "floor/iso-grout/herring_lav_10.png",
+    "11": "floor/iso-grout/herring_lav_11.png"
+   },
+   "groutColor": "#9A82C2",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_marble_cream",
+   "textureId": "marble_cream",
+   "nameKo": "크림 대리석",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 260,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "floor/flat/marble_cream.png",
+   "thumb": "floor/thumb/marble_cream.png",
+   "isoTiles": {
+    "00": "floor/iso/marble_cream_00.png",
+    "01": "floor/iso/marble_cream_01.png",
+    "10": "floor/iso/marble_cream_10.png",
+    "11": "floor/iso/marble_cream_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/marble_cream_00.png",
+    "01": "floor/iso-grout/marble_cream_01.png",
+    "10": "floor/iso-grout/marble_cream_10.png",
+    "11": "floor/iso-grout/marble_cream_11.png"
+   },
+   "groutColor": "#CDB8A3",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_paw_tile",
+   "textureId": "paw_tile",
+   "nameKo": "발바닥 타일",
+   "category": "바닥",
+   "placement": "floorTile",
    "price": 200,
    "ownedDefault": true,
-   "tileImage": "items/tiles/tile-rug.svg",
-   "_note": "decal: drawn under shadows/items, does NOT block tiles",
-   "image": "items/rug@3x.webp",
-   "imagePng": "items/rug@3x.png",
-   "spriteWorldPx": [
-    338,
-    172
-   ],
-   "anchorOffsetWorldPx": [
-    -169.0,
-    -86.0
-   ]
+   "isDefault": false,
+   "texture": "floor/flat/paw_tile.png",
+   "thumb": "floor/thumb/paw_tile.png",
+   "isoTiles": {
+    "00": "floor/iso/paw_tile_00.png",
+    "01": "floor/iso/paw_tile_01.png",
+    "10": "floor/iso/paw_tile_10.png",
+    "11": "floor/iso/paw_tile_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/paw_tile_00.png",
+    "01": "floor/iso-grout/paw_tile_01.png",
+    "10": "floor/iso-grout/paw_tile_10.png",
+    "11": "floor/iso-grout/paw_tile_11.png"
+   },
+   "groutColor": "#E3AE98",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
   },
   {
-   "id": "window",
-   "nameKo": "달밤 창문",
-   "category": "소품",
-   "footprint": [
-    3,
-    1
-   ],
-   "placement": "wall",
-   "wall": "L",
-   "price": 300,
-   "ownedDefault": true,
-   "tileImage": null,
-   "_note": "tile icon TODO; wall slot approx.",
-   "image": "items/window@3x.webp",
-   "imagePng": "items/window@3x.png",
-   "spriteWorldPx": [
-    230,
-    341
-   ],
-   "wallPosWorldPx": [
-    1699,
-    549
-   ]
-  },
-  {
-   "id": "frames",
-   "nameKo": "카드 액자 세트",
-   "category": "카드액자",
-   "footprint": [
-    3,
-    1
-   ],
-   "placement": "wall",
-   "wall": "R",
-   "price": 0,
-   "ownedDefault": true,
-   "tileImage": "items/tiles/tile-frame.svg",
-   "_note": "frames should show the user's collected cards (replace the art in code); current sprite shows concept art",
-   "image": "items/frames@3x.webp",
-   "imagePng": "items/frames@3x.png",
-   "spriteWorldPx": [
-    309,
-    246
-   ],
-   "wallPosWorldPx": [
-    1968,
-    594
-   ]
-  },
-  {
-   "id": "wallpaper-plum-sparkle",
-   "nameKo": "별빛 자두 벽지",
-   "category": "벽지",
-   "footprint": null,
-   "placement": "wallpaper",
-   "price": 0,
-   "ownedDefault": true,
-   "image": "world/room-walls.svg",
-   "tileImage": null,
-   "_note": "default wallpaper; others TODO"
-  },
-  {
-   "id": "floor-honey-check",
-   "nameKo": "꿀빛 원목 바닥",
+   "id": "floor_star_navy",
+   "textureId": "star_navy",
+   "nameKo": "별가루 네이비",
    "category": "바닥",
-   "footprint": null,
-   "placement": "floor-skin",
+   "placement": "floorTile",
+   "price": 280,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "floor/flat/star_navy.png",
+   "thumb": "floor/thumb/star_navy.png",
+   "isoTiles": {
+    "00": "floor/iso/star_navy_00.png",
+    "01": "floor/iso/star_navy_01.png",
+    "10": "floor/iso/star_navy_10.png",
+    "11": "floor/iso/star_navy_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/star_navy_00.png",
+    "01": "floor/iso-grout/star_navy_01.png",
+    "10": "floor/iso-grout/star_navy_10.png",
+    "11": "floor/iso-grout/star_navy_11.png"
+   },
+   "groutColor": "#1F2347",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_carpet_pink",
+   "textureId": "carpet_pink",
+   "nameKo": "몽글 핑크 카펫",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 240,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "floor/flat/carpet_pink.png",
+   "thumb": "floor/thumb/carpet_pink.png",
+   "isoTiles": {
+    "00": "floor/iso/carpet_pink_00.png",
+    "01": "floor/iso/carpet_pink_01.png",
+    "10": "floor/iso/carpet_pink_10.png",
+    "11": "floor/iso/carpet_pink_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/carpet_pink_00.png",
+    "01": "floor/iso-grout/carpet_pink_01.png",
+    "10": "floor/iso-grout/carpet_pink_10.png",
+    "11": "floor/iso-grout/carpet_pink_11.png"
+   },
+   "groutColor": "#D894A8",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_meadow",
+   "textureId": "meadow",
+   "nameKo": "초록 들판",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 220,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "floor/flat/meadow.png",
+   "thumb": "floor/thumb/meadow.png",
+   "isoTiles": {
+    "00": "floor/iso/meadow_00.png",
+    "01": "floor/iso/meadow_01.png",
+    "10": "floor/iso/meadow_10.png",
+    "11": "floor/iso/meadow_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/meadow_00.png",
+    "01": "floor/iso-grout/meadow_01.png",
+    "10": "floor/iso-grout/meadow_10.png",
+    "11": "floor/iso-grout/meadow_11.png"
+   },
+   "groutColor": "#7DAF6E",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_cloud",
+   "textureId": "cloud",
+   "nameKo": "구름 타일",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 260,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "floor/flat/cloud.png",
+   "thumb": "floor/thumb/cloud.png",
+   "isoTiles": {
+    "00": "floor/iso/cloud_00.png",
+    "01": "floor/iso/cloud_01.png",
+    "10": "floor/iso/cloud_10.png",
+    "11": "floor/iso/cloud_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/cloud_00.png",
+    "01": "floor/iso-grout/cloud_01.png",
+    "10": "floor/iso-grout/cloud_10.png",
+    "11": "floor/iso-grout/cloud_11.png"
+   },
+   "groutColor": "#A5C4E4",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_terrazzo",
+   "textureId": "terrazzo",
+   "nameKo": "파스텔 테라조",
+   "category": "바닥",
+   "placement": "floorTile",
+   "price": 240,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "floor/flat/terrazzo.png",
+   "thumb": "floor/thumb/terrazzo.png",
+   "isoTiles": {
+    "00": "floor/iso/terrazzo_00.png",
+    "01": "floor/iso/terrazzo_01.png",
+    "10": "floor/iso/terrazzo_10.png",
+    "11": "floor/iso/terrazzo_11.png"
+   },
+   "isoTilesGrout": {
+    "00": "floor/iso-grout/terrazzo_00.png",
+    "01": "floor/iso-grout/terrazzo_01.png",
+    "10": "floor/iso-grout/terrazzo_10.png",
+    "11": "floor/iso-grout/terrazzo_11.png"
+   },
+   "groutColor": "#D6C2AE",
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "wall_plum_sparkle",
+   "textureId": "plum_sparkle",
+   "nameKo": "플럼 반짝이",
+   "category": "벽지",
+   "placement": "wallColumn",
    "price": 0,
    "ownedDefault": true,
-   "image": "world/room-floor.svg",
-   "tileImage": null,
-   "_note": "default floor; others TODO"
+   "isDefault": true,
+   "texture": "wall/flat/plum_sparkle.png",
+   "thumb": "wall/thumb/plum_sparkle.png",
+   "columnsL": [
+    "wall/L/plum_sparkle_0.png",
+    "wall/L/plum_sparkle_1.png",
+    "wall/L/plum_sparkle_2.png",
+    "wall/L/plum_sparkle_3.png",
+    "wall/L/plum_sparkle_4.png",
+    "wall/L/plum_sparkle_5.png",
+    "wall/L/plum_sparkle_6.png",
+    "wall/L/plum_sparkle_7.png"
+   ],
+   "columnsR": [
+    "wall/R/plum_sparkle_0.png",
+    "wall/R/plum_sparkle_1.png",
+    "wall/R/plum_sparkle_2.png",
+    "wall/R/plum_sparkle_3.png",
+    "wall/R/plum_sparkle_4.png",
+    "wall/R/plum_sparkle_5.png",
+    "wall/R/plum_sparkle_6.png",
+    "wall/R/plum_sparkle_7.png"
+   ]
+  },
+  {
+   "id": "wall_lav_stripe",
+   "textureId": "lav_stripe",
+   "nameKo": "라벤더 줄무늬",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 150,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "wall/flat/lav_stripe.png",
+   "thumb": "wall/thumb/lav_stripe.png",
+   "columnsL": [
+    "wall/L/lav_stripe_0.png",
+    "wall/L/lav_stripe_1.png",
+    "wall/L/lav_stripe_2.png",
+    "wall/L/lav_stripe_3.png",
+    "wall/L/lav_stripe_4.png",
+    "wall/L/lav_stripe_5.png",
+    "wall/L/lav_stripe_6.png",
+    "wall/L/lav_stripe_7.png"
+   ],
+   "columnsR": [
+    "wall/R/lav_stripe_0.png",
+    "wall/R/lav_stripe_1.png",
+    "wall/R/lav_stripe_2.png",
+    "wall/R/lav_stripe_3.png",
+    "wall/R/lav_stripe_4.png",
+    "wall/R/lav_stripe_5.png",
+    "wall/R/lav_stripe_6.png",
+    "wall/R/lav_stripe_7.png"
+   ]
+  },
+  {
+   "id": "wall_pink_polka",
+   "textureId": "pink_polka",
+   "nameKo": "핑크 도트",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 150,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "wall/flat/pink_polka.png",
+   "thumb": "wall/thumb/pink_polka.png",
+   "columnsL": [
+    "wall/L/pink_polka_0.png",
+    "wall/L/pink_polka_1.png",
+    "wall/L/pink_polka_2.png",
+    "wall/L/pink_polka_3.png",
+    "wall/L/pink_polka_4.png",
+    "wall/L/pink_polka_5.png",
+    "wall/L/pink_polka_6.png",
+    "wall/L/pink_polka_7.png"
+   ],
+   "columnsR": [
+    "wall/R/pink_polka_0.png",
+    "wall/R/pink_polka_1.png",
+    "wall/R/pink_polka_2.png",
+    "wall/R/pink_polka_3.png",
+    "wall/R/pink_polka_4.png",
+    "wall/R/pink_polka_5.png",
+    "wall/R/pink_polka_6.png",
+    "wall/R/pink_polka_7.png"
+   ]
+  },
+  {
+   "id": "wall_mint_gingham",
+   "textureId": "mint_gingham",
+   "nameKo": "민트 깅엄",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 180,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "wall/flat/mint_gingham.png",
+   "thumb": "wall/thumb/mint_gingham.png",
+   "columnsL": [
+    "wall/L/mint_gingham_0.png",
+    "wall/L/mint_gingham_1.png",
+    "wall/L/mint_gingham_2.png",
+    "wall/L/mint_gingham_3.png",
+    "wall/L/mint_gingham_4.png",
+    "wall/L/mint_gingham_5.png",
+    "wall/L/mint_gingham_6.png",
+    "wall/L/mint_gingham_7.png"
+   ],
+   "columnsR": [
+    "wall/R/mint_gingham_0.png",
+    "wall/R/mint_gingham_1.png",
+    "wall/R/mint_gingham_2.png",
+    "wall/R/mint_gingham_3.png",
+    "wall/R/mint_gingham_4.png",
+    "wall/R/mint_gingham_5.png",
+    "wall/R/mint_gingham_6.png",
+    "wall/R/mint_gingham_7.png"
+   ]
+  },
+  {
+   "id": "wall_cream_cats",
+   "textureId": "cream_cats",
+   "nameKo": "크림 냥이",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 220,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "wall/flat/cream_cats.png",
+   "thumb": "wall/thumb/cream_cats.png",
+   "columnsL": [
+    "wall/L/cream_cats_0.png",
+    "wall/L/cream_cats_1.png",
+    "wall/L/cream_cats_2.png",
+    "wall/L/cream_cats_3.png",
+    "wall/L/cream_cats_4.png",
+    "wall/L/cream_cats_5.png",
+    "wall/L/cream_cats_6.png",
+    "wall/L/cream_cats_7.png"
+   ],
+   "columnsR": [
+    "wall/R/cream_cats_0.png",
+    "wall/R/cream_cats_1.png",
+    "wall/R/cream_cats_2.png",
+    "wall/R/cream_cats_3.png",
+    "wall/R/cream_cats_4.png",
+    "wall/R/cream_cats_5.png",
+    "wall/R/cream_cats_6.png",
+    "wall/R/cream_cats_7.png"
+   ]
+  },
+  {
+   "id": "wall_night_sky",
+   "textureId": "night_sky",
+   "nameKo": "밤하늘 별빛",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 260,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "wall/flat/night_sky.png",
+   "thumb": "wall/thumb/night_sky.png",
+   "columnsL": [
+    "wall/L/night_sky_0.png",
+    "wall/L/night_sky_1.png",
+    "wall/L/night_sky_2.png",
+    "wall/L/night_sky_3.png",
+    "wall/L/night_sky_4.png",
+    "wall/L/night_sky_5.png",
+    "wall/L/night_sky_6.png",
+    "wall/L/night_sky_7.png"
+   ],
+   "columnsR": [
+    "wall/R/night_sky_0.png",
+    "wall/R/night_sky_1.png",
+    "wall/R/night_sky_2.png",
+    "wall/R/night_sky_3.png",
+    "wall/R/night_sky_4.png",
+    "wall/R/night_sky_5.png",
+    "wall/R/night_sky_6.png",
+    "wall/R/night_sky_7.png"
+   ]
+  },
+  {
+   "id": "wall_peach_hearts",
+   "textureId": "peach_hearts",
+   "nameKo": "피치 하트",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 180,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "wall/flat/peach_hearts.png",
+   "thumb": "wall/thumb/peach_hearts.png",
+   "columnsL": [
+    "wall/L/peach_hearts_0.png",
+    "wall/L/peach_hearts_1.png",
+    "wall/L/peach_hearts_2.png",
+    "wall/L/peach_hearts_3.png",
+    "wall/L/peach_hearts_4.png",
+    "wall/L/peach_hearts_5.png",
+    "wall/L/peach_hearts_6.png",
+    "wall/L/peach_hearts_7.png"
+   ],
+   "columnsR": [
+    "wall/R/peach_hearts_0.png",
+    "wall/R/peach_hearts_1.png",
+    "wall/R/peach_hearts_2.png",
+    "wall/R/peach_hearts_3.png",
+    "wall/R/peach_hearts_4.png",
+    "wall/R/peach_hearts_5.png",
+    "wall/R/peach_hearts_6.png",
+    "wall/R/peach_hearts_7.png"
+   ]
+  },
+  {
+   "id": "wall_wainscot",
+   "textureId": "wainscot",
+   "nameKo": "원목 웨인스코팅",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 300,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "wall/flat/wainscot.png",
+   "thumb": "wall/thumb/wainscot.png",
+   "columnsL": [
+    "wall/L/wainscot_0.png",
+    "wall/L/wainscot_1.png",
+    "wall/L/wainscot_2.png",
+    "wall/L/wainscot_3.png",
+    "wall/L/wainscot_4.png",
+    "wall/L/wainscot_5.png",
+    "wall/L/wainscot_6.png",
+    "wall/L/wainscot_7.png"
+   ],
+   "columnsR": [
+    "wall/R/wainscot_0.png",
+    "wall/R/wainscot_1.png",
+    "wall/R/wainscot_2.png",
+    "wall/R/wainscot_3.png",
+    "wall/R/wainscot_4.png",
+    "wall/R/wainscot_5.png",
+    "wall/R/wainscot_6.png",
+    "wall/R/wainscot_7.png"
+   ]
+  },
+  {
+   "id": "wall_cloud_wall",
+   "textureId": "cloud_wall",
+   "nameKo": "몽실 구름",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 220,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "wall/flat/cloud_wall.png",
+   "thumb": "wall/thumb/cloud_wall.png",
+   "columnsL": [
+    "wall/L/cloud_wall_0.png",
+    "wall/L/cloud_wall_1.png",
+    "wall/L/cloud_wall_2.png",
+    "wall/L/cloud_wall_3.png",
+    "wall/L/cloud_wall_4.png",
+    "wall/L/cloud_wall_5.png",
+    "wall/L/cloud_wall_6.png",
+    "wall/L/cloud_wall_7.png"
+   ],
+   "columnsR": [
+    "wall/R/cloud_wall_0.png",
+    "wall/R/cloud_wall_1.png",
+    "wall/R/cloud_wall_2.png",
+    "wall/R/cloud_wall_3.png",
+    "wall/R/cloud_wall_4.png",
+    "wall/R/cloud_wall_5.png",
+    "wall/R/cloud_wall_6.png",
+    "wall/R/cloud_wall_7.png"
+   ]
+  },
+  {
+   "id": "wall_paw_wall",
+   "textureId": "paw_wall",
+   "nameKo": "발바닥 벽지",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 200,
+   "ownedDefault": true,
+   "isDefault": false,
+   "texture": "wall/flat/paw_wall.png",
+   "thumb": "wall/thumb/paw_wall.png",
+   "columnsL": [
+    "wall/L/paw_wall_0.png",
+    "wall/L/paw_wall_1.png",
+    "wall/L/paw_wall_2.png",
+    "wall/L/paw_wall_3.png",
+    "wall/L/paw_wall_4.png",
+    "wall/L/paw_wall_5.png",
+    "wall/L/paw_wall_6.png",
+    "wall/L/paw_wall_7.png"
+   ],
+   "columnsR": [
+    "wall/R/paw_wall_0.png",
+    "wall/R/paw_wall_1.png",
+    "wall/R/paw_wall_2.png",
+    "wall/R/paw_wall_3.png",
+    "wall/R/paw_wall_4.png",
+    "wall/R/paw_wall_5.png",
+    "wall/R/paw_wall_6.png",
+    "wall/R/paw_wall_7.png"
+   ]
+  },
+  {
+   "id": "wall_sage_leaf",
+   "textureId": "sage_leaf",
+   "nameKo": "세이지 잎사귀",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 220,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "wall/flat/sage_leaf.png",
+   "thumb": "wall/thumb/sage_leaf.png",
+   "columnsL": [
+    "wall/L/sage_leaf_0.png",
+    "wall/L/sage_leaf_1.png",
+    "wall/L/sage_leaf_2.png",
+    "wall/L/sage_leaf_3.png",
+    "wall/L/sage_leaf_4.png",
+    "wall/L/sage_leaf_5.png",
+    "wall/L/sage_leaf_6.png",
+    "wall/L/sage_leaf_7.png"
+   ],
+   "columnsR": [
+    "wall/R/sage_leaf_0.png",
+    "wall/R/sage_leaf_1.png",
+    "wall/R/sage_leaf_2.png",
+    "wall/R/sage_leaf_3.png",
+    "wall/R/sage_leaf_4.png",
+    "wall/R/sage_leaf_5.png",
+    "wall/R/sage_leaf_6.png",
+    "wall/R/sage_leaf_7.png"
+   ]
+  },
+  {
+   "id": "wall_moon_navy",
+   "textureId": "moon_navy",
+   "nameKo": "달과 별",
+   "category": "벽지",
+   "placement": "wallColumn",
+   "price": 280,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "wall/flat/moon_navy.png",
+   "thumb": "wall/thumb/moon_navy.png",
+   "columnsL": [
+    "wall/L/moon_navy_0.png",
+    "wall/L/moon_navy_1.png",
+    "wall/L/moon_navy_2.png",
+    "wall/L/moon_navy_3.png",
+    "wall/L/moon_navy_4.png",
+    "wall/L/moon_navy_5.png",
+    "wall/L/moon_navy_6.png",
+    "wall/L/moon_navy_7.png"
+   ],
+   "columnsR": [
+    "wall/R/moon_navy_0.png",
+    "wall/R/moon_navy_1.png",
+    "wall/R/moon_navy_2.png",
+    "wall/R/moon_navy_3.png",
+    "wall/R/moon_navy_4.png",
+    "wall/R/moon_navy_5.png",
+    "wall/R/moon_navy_6.png",
+    "wall/R/moon_navy_7.png"
+   ]
   }
- ]
+ ],
+ "_version": "v6 — v5 items (angle-fixed) + 24 tile textures",
+ "orientationNote": "Sheet default faces +row (down-left) with its back to the RIGHT wall (row 0). The mirrored image (_m) faces +col (down-right), back to the LEFT wall (col 0). Rotate = swap default/mirrored and swap footprint [w,d]. Round decor is angle-neutral; flip it freely.",
+ "rotation": "2-direction: rotate = swap image default <-> mirrored (_m, horizontal flip) and swap footprint [w,d]. True 4-direction rotation would need back-view art, which is NOT included.",
+ "shadowRule": "Shadows are not baked. The app draws shadows/shadow-{w}x{d}.png centred on the footprint centre under each floor item (decor: same sprite at 80% scale; rug/decals: none). Toggle freely.",
+ "formats": "every image ships as .png and .webp (same name).",
+ "tileRules": {
+  "floor": "per tile (col,row): draw isoTiles[(col%2)(row%2)] with its top-left at world px (1920+(col-row)*78-80, 900+(col+row)*39-2). Image 160×82 = 156×78 diamond + 2 px bleed each side. Every texture repeats every 2 tiles, so the parity variant keeps planks/herringbone/checker continuous across neighbours; all 4 variants are always shipped.",
+  "wall": "left wall column i (i=0 at back corner, along col 0 / rows): draw columnsL[i] at (1920-(i+1)*78-2, 450+i*39-2). Right wall column i (along row 0 / cols): columnsR[i] at (1920+i*78-2, 450+i*39-2). Strip 82×493 = 78-px column × 450-px wall (+39 px slope) + 2 px bleed. Right-wall strips are pre-shaded ×0.88 like the default room.",
+  "drawOrder": "draw floor tiles row-major in any order (no overlap except 2 px bleed, same texture under bleed); then room-frame-{view|edit}; then items as before."
+ }
 }
