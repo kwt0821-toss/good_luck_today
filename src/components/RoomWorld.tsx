@@ -26,7 +26,13 @@ import {
   wallPlaceFromSlot,
   wallSpriteRect,
 } from "../lib/roomLayout";
-import { floorTileRect, floorTileSrc, wallStripPoints, wallStripRect, wallStripSrc } from "../lib/roomTiles";
+import {
+  floorTileRect,
+  floorTileSrc,
+  paintSkinType,
+  wallStripRect,
+  wallStripSrc,
+} from "../lib/roomTiles";
 import type {
   FloorPlacement,
   PaintTarget,
@@ -54,6 +60,14 @@ type RoomWorldProps = {
   shadowsEnabled: boolean;
   painting: boolean;
   paintHover: PaintTarget | null;
+  /** Live wallpaper/floor texture preview (replaces yellow paint overlays). */
+  paintPreview?: {
+    itemId: string;
+    paintKind: "floor" | "wall";
+    target: PaintTarget;
+    fillAll: boolean;
+    valid: boolean;
+  } | null;
   /** Tutorial step-4 suggest target (c/r); snaps to nearest free tile if blocked. */
   suggestTile?: { c: number; r: number } | null;
   suggestItemId?: string | null;
@@ -287,7 +301,8 @@ export function RoomWorld({
   shakeId,
   shadowsEnabled,
   painting,
-  paintHover,
+  paintHover: _paintHover,
+  paintPreview = null,
   suggestTile = null,
   suggestItemId = null,
   reduceMotion = false,
@@ -298,6 +313,21 @@ export function RoomWorld({
   onItemPointerDown,
   onFloorPointerDown,
 }: RoomWorldProps) {
+  const paintSkin = paintPreview ? paintSkinType(paintPreview.itemId) : null;
+  const isPaintFloorCell = (col: number, row: number) => {
+    if (!paintPreview || paintPreview.paintKind !== "floor" || !paintSkin) return false;
+    if (paintPreview.fillAll) return true;
+    return paintPreview.target.kind === "floor" && paintPreview.target.col === col && paintPreview.target.row === row;
+  };
+  const isPaintWallCell = (wall: "L" | "R", index: number) => {
+    if (!paintPreview || paintPreview.paintKind !== "wall" || !paintSkin) return false;
+    if (paintPreview.fillAll) return true;
+    return (
+      paintPreview.target.kind === "wall" &&
+      paintPreview.target.wall === wall &&
+      paintPreview.target.index === index
+    );
+  };
   // Roaming is the room's main delight — keep walking even when the OS asks to
   // reduce motion (CSS breathing/float still respect prefers-reduced-motion).
   const { view: catView, motionRef: catMotionRef, tap: tapCat } = useRoomCat({
@@ -440,11 +470,15 @@ export function RoomWorld({
         {layout.floorTiles.map((row, r) =>
           row.map((id, c) => {
             const rect = floorTileRect(c, r);
+            const previewing = isPaintFloorCell(c, r);
+            const skin = previewing && paintSkin ? paintSkin : id;
             return (
               <img
                 key={`ft-${c}-${r}`}
-                className="lucky-floor-tile"
-                src={roomAsset(floorTileSrc(id, c, r))}
+                className={`lucky-floor-tile ${previewing ? "is-paint-preview" : ""} ${
+                  previewing && paintPreview && !paintPreview.valid ? "is-paint-invalid" : ""
+                } ${previewing && reduceMotion ? "is-reduced" : ""}`}
+                src={roomAsset(floorTileSrc(skin, c, r))}
                 alt=""
                 draggable={false}
                 style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
@@ -457,11 +491,15 @@ export function RoomWorld({
         {(["L", "R"] as const).flatMap((wall) =>
           layout.wallTiles[wall].map((id, index) => {
             const rect = wallStripRect(wall, index);
+            const previewing = isPaintWallCell(wall, index);
+            const skin = previewing && paintSkin ? paintSkin : id;
             return (
               <img
                 key={`wt-${wall}-${index}`}
-                className={`lucky-wall-tile is-${wall}`}
-                src={roomAsset(wallStripSrc(id, wall, index))}
+                className={`lucky-wall-tile is-${wall} ${previewing ? "is-paint-preview" : ""} ${
+                  previewing && paintPreview && !paintPreview.valid ? "is-paint-invalid" : ""
+                } ${previewing && reduceMotion ? "is-reduced" : ""}`}
+                src={roomAsset(wallStripSrc(skin, wall, index))}
                 alt=""
                 draggable={false}
                 style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
@@ -478,14 +516,19 @@ export function RoomWorld({
             <TilePoly key={`h-${tile.col}-${tile.row}`} col={tile.col} row={tile.row} tone="hint" />
           ))}
           {selectedTiles.map((tile) => (
-            <TilePoly key={`s-${tile.col}-${tile.row}`} col={tile.col} row={tile.row} tone="selected" />
+            <TilePoly
+              key={`s-${tile.col}-${tile.row}`}
+              col={tile.col}
+              row={tile.row}
+              tone={previewGhost && previewInvalid ? "invalid" : "selected"}
+            />
           ))}
           {dragTiles.map((tile) => (
             <TilePoly
               key={`d-${tile.col}-${tile.row}`}
               col={tile.col}
               row={tile.row}
-              tone={tile.valid ? "valid" : "invalid"}
+              tone={tile.valid && !(previewGhost && previewInvalid) ? "valid" : "invalid"}
             />
           ))}
           {resolvedSuggest ? (
@@ -495,9 +538,6 @@ export function RoomWorld({
               row={resolvedSuggest.row}
               tone="suggest"
             />
-          ) : null}
-          {paintHover?.kind === "floor" ? (
-            <TilePoly key="paint-floor" col={paintHover.col} row={paintHover.row} tone="paint" />
           ) : null}
         </svg>
       ) : null}
@@ -546,12 +586,6 @@ export function RoomWorld({
               tone={wallPreviewOk ? "valid" : "invalid"}
             />
           ))}
-        </svg>
-      ) : null}
-
-      {mode === "edit" && paintHover?.kind === "wall" ? (
-        <svg className="lucky-world-layer lucky-paint-layer" viewBox={`0 0 ${WORLD_W} ${WORLD_H}`}>
-          <polygon className="lucky-tile is-paint is-wall" points={wallStripPoints(paintHover.wall, paintHover.index)} />
         </svg>
       ) : null}
 

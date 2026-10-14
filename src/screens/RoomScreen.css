@@ -426,16 +426,139 @@
   display: block;
 }
 
-.lucky-paint-layer {
-  z-index: 4;
-  pointer-events: none;
-  overflow: visible;
+.lucky-floor-tile.is-paint-preview,
+.lucky-wall-tile.is-paint-preview {
+  animation: lucky-paint-breathe 1.2s ease-in-out infinite;
+  z-index: 1;
 }
 
-.lucky-tile.is-paint {
-  fill: rgba(255, 196, 138, 0.32);
-  stroke: #ffc48a;
-  stroke-width: 6;
+.lucky-floor-tile.is-paint-preview.is-reduced,
+.lucky-wall-tile.is-paint-preview.is-reduced {
+  animation: none;
+  opacity: 0.92;
+}
+
+.lucky-floor-tile.is-paint-preview.is-paint-invalid,
+.lucky-wall-tile.is-paint-preview.is-paint-invalid {
+  filter: saturate(0.7) sepia(0.35) hue-rotate(-20deg);
+}
+
+@keyframes lucky-paint-breathe {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lucky-floor-tile.is-paint-preview,
+  .lucky-wall-tile.is-paint-preview {
+    animation: none;
+    opacity: 0.92;
+  }
+}
+
+.lucky-paint-dock {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 428px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: rgba(28, 24, 46, 0.96);
+  border: 1px solid rgba(243, 233, 215, 0.16);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.lucky-room:has(.lucky-drawer.is-expanded) .lucky-paint-dock {
+  bottom: 568px;
+}
+
+.lucky-room:has(.lucky-drawer.is-tutorial) .lucky-paint-dock {
+  bottom: 308px;
+}
+
+.lucky-paint-dock-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lucky-paint-dock-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lucky-paint-dock-status {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(243, 233, 215, 0.62);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lucky-paint-dock-status.is-invalid,
+.lucky-paint-dock.is-invalid .lucky-paint-dock-status {
+  color: #ffb4b4;
+}
+
+.lucky-paint-dock-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lucky-paint-dock-actions button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 17px;
+  background: rgba(243, 233, 215, 0.08);
+  color: #fff4e4;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.lucky-paint-dock-actions button.is-text {
+  font-size: 11px;
+  letter-spacing: -0.02em;
+}
+
+.lucky-paint-dock-actions button.is-confirm {
+  background: #3ecf8e;
+  color: #102418;
+}
+
+.lucky-paint-dock-actions button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.lucky-paint-dock.is-invalid .lucky-paint-dock-actions button.is-confirm {
+  background: rgba(255, 90, 90, 0.35);
+  color: #fff4e4;
 }
 
 .lucky-world.is-painting .lucky-sprite {
@@ -469,6 +592,7 @@
   fill: rgba(255, 196, 138, 0.55);
   stroke: #ffc48a;
   stroke-width: 6;
+  stroke-dasharray: 15 9;
 }
 
 .lucky-tile.is-invalid {
@@ -1113,6 +1237,11 @@
   white-space: nowrap;
 }
 
+.lucky-placement-hud.is-flipped .lucky-placement-toolbar {
+  top: auto;
+  bottom: -52px;
+}
+
 .lucky-placement-toolbar::after {
   content: "";
   position: absolute;
@@ -1122,6 +1251,11 @@
   height: 10px;
   background: rgba(28, 24, 46, 0.94);
   transform: translateX(-50%) rotate(45deg);
+}
+
+.lucky-placement-hud.is-flipped .lucky-placement-toolbar::after {
+  bottom: auto;
+  top: -6px;
 }
 
 .lucky-placement-toolbar button {

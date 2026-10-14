@@ -63,7 +63,7 @@ import {
   validateWallPreview,
   type PlacementPreview,
 } from "../lib/roomPlacement";
-import { paintTargetAnchor, paintTargetLabel } from "../lib/roomTiles";
+import { paintTargetLabel } from "../lib/roomTiles";
 import type { OpsEconomy, PriceTier } from "../lib/opsTypes";
 import type {
   FloorPlacement,
@@ -1166,17 +1166,26 @@ export function RoomScreen({
         : preview?.kind === "paint"
           ? null
           : selected ?? null;
-  const hud =
-    preview?.kind === "paint" && previewItem
-      ? {
-          left: screen.left + paintTargetAnchor(preview.target).x * screen.scale - 40,
-          top: screen.top + paintTargetAnchor(preview.target).y * screen.scale - 56,
-          width: 80,
-          height: 48,
-        }
+  const rawHud =
+    preview?.kind === "paint"
+      ? null
       : previewItem && hudPlace
         ? selectionHud(previewItem, hudPlace, layout, itemsById, screen)
         : null;
+  // Keep furniture floating toolbar inside the stage; flip below the sprite when it
+  // would collide with the top safe/header band, and clamp horizontally.
+  const hud = rawHud
+    ? (() => {
+        const TOOLBAR_H = 52;
+        const SAFE_TOP = 96;
+        const MARGIN = 8;
+        const viewW = typeof window !== "undefined" ? window.innerWidth : 390;
+        const flipped = rawHud.top - TOOLBAR_H < SAFE_TOP;
+        const width = rawHud.width;
+        const left = Math.min(Math.max(MARGIN, rawHud.left), Math.max(MARGIN, viewW - width - MARGIN));
+        return { ...rawHud, left, flipped };
+      })()
+    : null;
 
   return (
     <div
@@ -1399,6 +1408,17 @@ export function RoomScreen({
                       paintHover={
                         active && (paintTab || preview?.kind === "paint") ? paintHover : null
                       }
+                      paintPreview={
+                        active && preview?.kind === "paint"
+                          ? {
+                              itemId: preview.itemId,
+                              paintKind: preview.paintKind,
+                              target: preview.target,
+                              fillAll: preview.fillAll,
+                              valid: preview.valid,
+                            }
+                          : null
+                      }
                       suggestTile={
                         active &&
                         tutorialActive &&
@@ -1435,24 +1455,65 @@ export function RoomScreen({
         </div>
       </div>
 
-      {mode === "edit" && preview?.kind === "paint" && paintHover ? (
+      {mode === "edit" && preview?.kind === "paint" && previewItem ? (
         <div
-          className={`lucky-paint-hud ${preview.valid ? "" : "is-invalid"}`}
-          style={{
-            left: screen.left + paintTargetAnchor(paintHover).x * screen.scale,
-            top: screen.top + paintTargetAnchor(paintHover).y * screen.scale,
-          }}
+          className={`lucky-paint-dock ${preview.valid ? "" : "is-invalid"} ${
+            preview.fillAll ? "is-fill-all" : ""
+          }`}
+          role="toolbar"
+          aria-label="벽지·바닥 미리보기"
         >
-          <span>
-            {preview.reason ??
-              paintTargetLabel(paintHover, itemsById.get(preview.itemId) ?? null)}
-          </span>
+          <div className="lucky-paint-dock-copy">
+            <strong className="lucky-paint-dock-name">{previewItem.nameKo}</strong>
+            <span className={`lucky-paint-dock-status ${preview.valid ? "" : "is-invalid"}`}>
+              {preview.reason ??
+                (preview.fillAll
+                  ? preview.paintKind === "floor"
+                    ? "모든 바닥 칸 미리보기"
+                    : "모든 벽 칸 미리보기"
+                  : paintTargetLabel(preview.target, previewItem))}
+            </span>
+          </div>
+          <div className="lucky-paint-dock-actions">
+            <button
+              type="button"
+              aria-label="취소"
+              disabled={tutLock}
+              onClick={() => {
+                if (tutLock) return;
+                const cleared = cancelPreview(layout);
+                patchLayoutLocal(cleared);
+              }}
+            >
+              ✕
+            </button>
+            <button
+              type="button"
+              className="is-text"
+              disabled={!preview.valid && !preview.fillAll}
+              onClick={togglePaintFillAll}
+            >
+              {preview.fillAll ? "한 칸만" : "전체 바꾸기"}
+            </button>
+            <button
+              type="button"
+              id="placement-confirm"
+              className="is-confirm"
+              aria-label="확정"
+              disabled={!preview.valid || committing}
+              onClick={() => void confirmPreview()}
+            >
+              ✓
+            </button>
+          </div>
         </div>
       ) : null}
 
-      {mode === "edit" && preview && hud && previewItem ? (
+      {mode === "edit" && preview && preview.kind !== "paint" && hud && previewItem ? (
         <div
-          className={`lucky-select-hud lucky-placement-hud ${preview.valid ? "" : "is-invalid"}`}
+          className={`lucky-select-hud lucky-placement-hud ${preview.valid ? "" : "is-invalid"} ${
+            hud.flipped ? "is-flipped" : ""
+          }`}
           style={{ left: hud.left, top: hud.top, width: hud.width, height: hud.height }}
         >
           <div className="lucky-select-box">
@@ -1461,7 +1522,7 @@ export function RoomScreen({
             <i />
             <i />
           </div>
-          {previewHudMode === "toolbar" || preview.kind === "paint" ? (
+          {previewHudMode === "toolbar" ? (
             <div className="lucky-placement-toolbar" role="toolbar" aria-label="배치 미리보기">
               <button
                 type="button"
@@ -1480,17 +1541,7 @@ export function RoomScreen({
                   ⟳
                 </button>
               ) : null}
-              {preview.kind === "paint" ? (
-                <button
-                  type="button"
-                  className="is-text"
-                  disabled={!preview.valid}
-                  onClick={togglePaintFillAll}
-                >
-                  {preview.fillAll ? "한 칸만" : "전체 바꾸기"}
-                </button>
-              ) : null}
-              {preview.kind !== "paint" && preview.origin === "placed" ? (
+              {preview.origin === "placed" ? (
                 <button type="button" className="is-text" onClick={() => void putPreviewBack()}>
                   서랍에 넣기
                 </button>

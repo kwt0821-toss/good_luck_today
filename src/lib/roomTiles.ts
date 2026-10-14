@@ -142,6 +142,10 @@ export function paintTargetAnchor(target: PaintTarget) {
   return { x: rect.x + rect.w / 2 + 24, y: rect.y + 70 };
 }
 
+export function paintSkinType(itemId: string) {
+  return itemId.replace(/^(floor_|wall_)/, "");
+}
+
 export function applyPaint(
   floor: FloorTiles,
   walls: WallTiles,
@@ -149,6 +153,7 @@ export function applyPaint(
   id: string,
   fillAll: boolean,
 ): { floor: FloorTiles; walls: WallTiles; changed: boolean } {
+  const skin = paintSkinType(id);
   const nextFloor = cloneFloorTiles(floor);
   const nextWalls = cloneWallTiles(walls);
   let changed = false;
@@ -156,25 +161,28 @@ export function applyPaint(
     if (fillAll) {
       for (let row = 0; row < GRID; row += 1) {
         for (let col = 0; col < GRID; col += 1) {
-          if (nextFloor[row][col] !== id) {
-            nextFloor[row][col] = id;
+          if (nextFloor[row][col] !== skin) {
+            nextFloor[row][col] = skin;
             changed = true;
           }
         }
       }
-    } else if (nextFloor[target.row]?.[target.col] !== undefined && nextFloor[target.row][target.col] !== id) {
-      nextFloor[target.row][target.col] = id;
+    } else if (nextFloor[target.row]?.[target.col] !== undefined && nextFloor[target.row][target.col] !== skin) {
+      nextFloor[target.row][target.col] = skin;
       changed = true;
     }
   } else if (fillAll) {
-    for (let i = 0; i < WALL_STRIPS; i += 1) {
-      if (nextWalls[target.wall][i] !== id) {
-        nextWalls[target.wall][i] = id;
-        changed = true;
+    // Fill every wall strip on both faces (matches commitPlacement).
+    for (const wall of ["L", "R"] as const) {
+      for (let i = 0; i < WALL_STRIPS; i += 1) {
+        if (nextWalls[wall][i] !== skin) {
+          nextWalls[wall][i] = skin;
+          changed = true;
+        }
       }
     }
-  } else if (nextWalls[target.wall][target.index] !== id) {
-    nextWalls[target.wall][target.index] = id;
+  } else if (nextWalls[target.wall][target.index] !== skin) {
+    nextWalls[target.wall][target.index] = skin;
     changed = true;
   }
   return { floor: nextFloor, walls: nextWalls, changed };

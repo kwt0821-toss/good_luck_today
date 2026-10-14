@@ -318,7 +318,7 @@ export async function commitPlacement(args: {
         };
       }
     } else {
-      const next = applyPaint(room.floorTiles, room.wallTiles, preview.target, preview.itemId, false);
+      const next = applyPaint(room.floorTiles, room.wallTiles, preview.target, type, false);
       nextState = {
         ...state,
         rooms: {
