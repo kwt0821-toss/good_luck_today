@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
-import { isDevBuild } from "../lib/devMode";
+import { isDevBuild, progressResetUnlockedByDefault } from "../lib/devMode";
 import { resetToNewUserState } from "../lib/devReset";
 import { menuAsset } from "../lib/menuConfig";
 import { NCOIN_ICON, ncoinIcon } from "../lib/ncoinIcon";
@@ -107,6 +107,10 @@ export function MenuPanel({
   const [popDay, setPopDay] = useState<number | null>(null);
   const [creditsText, setCreditsText] = useState<string | null>(null);
   const [devResetting, setDevResetting] = useState(false);
+  const [progressResetVisible, setProgressResetVisible] = useState(() =>
+    progressResetUnlockedByDefault(),
+  );
+  const versionTapRef = useRef({ count: 0, timer: 0 });
   const [rewardsView, setRewardsView] = useState<RewardsView>("inbox");
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
@@ -1124,7 +1128,28 @@ export function MenuPanel({
                         return (
                           <div key={item.id} className="settings-row">
                             <span>{item.label}</span>
-                            <span>v1.0.0{isDevBuild ? " · DEV" : ""}</span>
+                            <button
+                              type="button"
+                              className="link settings-version-tap"
+                              aria-label="앱 버전"
+                              onClick={() => {
+                                if (progressResetVisible) return;
+                                const stamp = versionTapRef.current;
+                                window.clearTimeout(stamp.timer);
+                                stamp.count += 1;
+                                if (stamp.count >= 7) {
+                                  stamp.count = 0;
+                                  setProgressResetVisible(true);
+                                  showToast("진행도 초기화가 열렸어요");
+                                  return;
+                                }
+                                stamp.timer = window.setTimeout(() => {
+                                  stamp.count = 0;
+                                }, 1800);
+                              }}
+                            >
+                              v1.0.0{isDevBuild ? " · DEV" : ""}
+                            </button>
                           </div>
                         );
                       }
@@ -1168,33 +1193,35 @@ export function MenuPanel({
                         </button>
                       </div>
                     ) : null}
-                    <div className="settings-row settings-row-dev">
-                      <button
-                        type="button"
-                        className="link is-danger"
-                        disabled={devResetting}
-                        onClick={() => {
-                          if (devResetting) return;
-                          const ok = window.confirm(
-                            "신규 유저 상태로 초기화할까요?\n도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워져요.",
-                          );
-                          if (!ok) return;
-                          setDevResetting(true);
-                          void resetToNewUserState()
-                            .then((next) => {
-                              onOpsChange(next);
-                              onDevResetNewUser?.();
-                              window.location.assign("/");
-                            })
-                            .catch(() => {
-                              setDevResetting(false);
-                              showToast("초기화에 실패했어요");
-                            });
-                        }}
-                      >
-                        {devResetting ? "초기화 중…" : "진행도 초기화"}
-                      </button>
-                    </div>
+                    {progressResetVisible ? (
+                      <div className="settings-row settings-row-dev">
+                        <button
+                          type="button"
+                          className="link is-danger"
+                          disabled={devResetting}
+                          onClick={() => {
+                            if (devResetting) return;
+                            const ok = window.confirm(
+                              "신규 유저 상태로 초기화할까요?\n도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워져요.",
+                            );
+                            if (!ok) return;
+                            setDevResetting(true);
+                            void resetToNewUserState()
+                              .then((next) => {
+                                onOpsChange(next);
+                                onDevResetNewUser?.();
+                                window.location.assign("/");
+                              })
+                              .catch(() => {
+                                setDevResetting(false);
+                                showToast("초기화에 실패했어요");
+                              });
+                          }}
+                        >
+                          {devResetting ? "초기화 중…" : "진행도 초기화"}
+                        </button>
+                      </div>
+                    ) : null}
                     {creditsText ? (
                       <pre className="menu-credits">{creditsText}</pre>
                     ) : null}
