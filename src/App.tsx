@@ -313,7 +313,7 @@ export default function App() {
     if (tutorialStep.step === 4 && screen.name === "room") {
       if (!roomScreenReady) return null;
       if (roomTutPhase === "pick" || roomTutPhase == null) return roomPickCoachMark(tutorialStep);
-      if (roomTutPhase === "preview" || roomTutPhase === "drag") return roomDragCoachMark(tutorialStep);
+      if (roomTutPhase === "preview" || roomTutPhase === "drag") return roomPreviewCoachMark(tutorialStep);
       if (roomTutPhase === "done") return roomDoneCoachMark(tutorialStep);
       if (roomTutPhase === "points") return roomPointsCoachMark(tutorialStep);
     }
