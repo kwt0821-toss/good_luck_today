@@ -1,0 +1,38 @@
+<!-- 냥 알림: 컨테이너는 헤더 바로 아래, 한 번에 1개 -->
+<div id="ny-live" aria-live="polite" aria-atomic="true"></div>
+<div id="ny-live-alert" aria-live="assertive" aria-atomic="true"></div>
+
+<!-- 1) snackbar (kind: success | reward | info | error) -->
+<div class="ny-snack ny-reward in" role="status" style="top:115px">
+  <div class="ic"><img src="ncoin.png" alt=""></div>
+  <div class="tx"><div class="t">냥코인 <b>1개</b> 받았어요</div><div class="s">도감 › 스핑크스 3성 첫 만남</div></div>
+  <div class="act">보러 가기</div><!-- 선택 -->
+  <div class="bar"><i></i></div><!-- 선택: 남은 시간 -->
+</div>
+
+<!-- 2) inline warning chip (대상 근처에 고정, 해결될 때까지 유지) -->
+<div class="ny-chip" role="alert" style="--ny-arrow:28px">
+  <span class="pw"><!-- paw svg --></span>이미 같은 벽지가 깔려 있어요<a>다른 벽지 보기</a>
+</div>
+
+<!-- 3) confirm sheet -->
+<div class="ny-dim"></div>
+<div class="ny-sheet" role="dialog" aria-modal="true" aria-labelledby="ny-t">
+  <img class="cat" src="cat.png" alt="">
+  <h3 id="ny-t">중복 카드 5장을 바꿀까요?</h3><p>포인트로 바꾸면 되돌릴 수 없어요</p>
+  <div class="btns"><div class="c" role="button">취소</div><div class="o" role="button">바꾸기</div></div>
+</div>
+
+<!-- 4) celebrate banner -->
+<div class="ny-celebrate" role="status"><img src="cat.png" width="62" alt="">
+  <div><div class="t">아비시니안 세트 완성! 🎉</div><div class="rw"><span>+10 냥코인</span><span>+200P</span></div></div></div>
+<script>
+// 최소 큐: 1개만 보이고, 같은 key는 합치기
+const Q=[];let cur=null;
+function nyNotify(o){ // {key,kind,title,sub,action,assertive,duration}
+  if(cur&&cur.key===o.key){Object.assign(cur,o);cur.render();return}
+  const q=Q.find(x=>x.key===o.key); if(q){Object.assign(q,o);return}
+  Q.push(o); if(!cur) next();
+}
+function next(){/* 꺼내서 렌더 → duration(기본 2600ms, 액션 있으면 4000ms) 뒤 닫고 next() */}
+</script>
