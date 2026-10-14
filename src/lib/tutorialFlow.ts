@@ -135,8 +135,8 @@ export function roomPickCoachMark(step: TutorialStep): CoachMark | null {
   if (!sub) return null;
   return {
     id: "step-4-1",
-    target: resolveTutorialTarget(sub.target),
-    copy: sub.copy ?? step.copy,
+    target: resolveTutorialTarget(sub.target || "#drawer-item-0"),
+    copy: sub.copy ?? step.copy ?? "서랍에서 마음에 드는 아이템을 톡 눌러 보세요",
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     passThrough: true,
@@ -145,17 +145,26 @@ export function roomPickCoachMark(step: TutorialStep): CoachMark | null {
   };
 }
 
-/** Drag phase: skip only (no dim/bubble); grid/ghost/hint live in RoomScreen. */
+/** Preview confirm phase: spotlight the ✓ button. */
 export function roomDragCoachMark(step: TutorialStep): CoachMark | null {
   const sub = roomSubstep(step, "4-2");
   if (!sub) return null;
   return {
     id: "step-4-2",
-    target: "",
+    target: resolveTutorialTarget(sub.target || "#placement-confirm"),
+    copy: sub.copy ?? "여기 놓을게요! ✓를 눌러 확정해요",
+    sub: sub.sub,
+    showFinger: sub.showFinger !== false,
     ackOnly: true,
-    showFinger: false,
-    dim: false,
+    passThrough: true,
+    stepLabel: step.stepLabel ?? "STEP 4/5",
+    bubble: "above",
   };
+}
+
+/** Alias for tap→preview tutorial naming. */
+export function roomPreviewCoachMark(step: TutorialStep): CoachMark | null {
+  return roomDragCoachMark(step);
 }
 
 export function roomDoneCoachMark(step: TutorialStep): CoachMark | null {
@@ -165,7 +174,7 @@ export function roomDoneCoachMark(step: TutorialStep): CoachMark | null {
     id: "step-4-3",
     target: "",
     copy: sub.copy ?? "잘했어요! 다른 아이템도 자유롭게 꾸며 보세요",
-    cta: sub.cta ?? "다음",
+    cta: sub.cta ?? "완료",
     ackOnly: true,
     showFinger: false,
     hideSkip: true,

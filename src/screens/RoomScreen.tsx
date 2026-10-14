@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
 import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
-import { RoomDrawer } from "../components/RoomDrawer";
-import { RoomTutDragGuide } from "../components/RoomTutDragGuide";
+import { RoomDrawer, type DrawerItemMeta } from "../components/RoomDrawer";
 import { RoomWorld } from "../components/RoomWorld";
 import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
 import { loadDexOwned } from "../lib/dexCollection";
@@ -25,25 +24,17 @@ import {
 } from "../lib/roomCatalog";
 import { applyOpsPrices, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import {
-  canPlace,
-  canPlaceWall,
   cloneLayout,
-  firstFreeTile,
-  firstFreeOnWall,
   hitTestPaint,
   hitTestTile,
   hitTestWall,
-  inGrid,
-  isDecal,
   isWallDecor,
   itemSize,
   nearestHints,
-  occupancy,
   screenOf,
   snapWallHit,
   spriteRect,
   toggledOrientation,
-  wallOccupancy,
   wallPlaceFromSlot,
   wallSpriteRect,
   resolvedWallSlot,
@@ -52,23 +43,30 @@ import {
   currentRoom,
   defaultRecord,
   loadRoomState,
-  newInstanceId,
   patchCurrentRoom,
-  placedCountAll,
   placedInOtherRoom,
   saveRoomState,
 } from "../lib/roomStore";
 import {
-  applyPaint,
-  cloneFloorTiles,
-  cloneWallTiles,
-  paintTargetAnchor,
-  paintTargetLabel,
-} from "../lib/roomTiles";
-import type { OpsEconomy } from "../lib/opsTypes";
+  clearFurnitureToDrawer,
+  commitPlacement,
+  findPaintPreviewTarget,
+  maxOwnForItem,
+  maxOwnForItemSync,
+  newRequestId,
+  PREVIEW_GHOST_LIFT_PT,
+  putBackToDrawer,
+  remainingCount,
+  startFloorPreviewFromDrawer,
+  startWallPreviewFromDrawer,
+  validateFloorPreview,
+  validateWallPreview,
+  type PlacementPreview,
+} from "../lib/roomPlacement";
+import { paintTargetAnchor, paintTargetLabel } from "../lib/roomTiles";
+import type { OpsEconomy, PriceTier } from "../lib/opsTypes";
 import type {
   FloorPlacement,
-  PaintFillMode,
   PaintTarget,
   RoomDrag,
   RoomItem,
@@ -84,7 +82,8 @@ const VIEW_W = 390;
 const SWIPE_THRESHOLD = 56;
 import "./RoomScreen.css";
 
-export type RoomTutorialPhase = "pick" | "drag" | "done" | "points" | null;
+/** `drag` is kept as an alias of `preview` for older tutorial callers. */
+export type RoomTutorialPhase = "pick" | "preview" | "drag" | "done" | "points" | null;
 
 type RoomScreenProps = {
   onBack: () => void;
@@ -119,6 +118,7 @@ export function RoomScreen({
   const [roomsFile, setRoomsFile] = useState<RoomsFile | null>(null);
   const [state, setState] = useState<RoomSaveState | null>(null);
   const [economyRooms, setEconomyRooms] = useState<OpsEconomy["rooms"]>([]);
+  const [itemTiers, setItemTiers] = useState<Record<string, PriceTier>>({});
   const [starterDrawerIds, setStarterDrawerIds] = useState<string[]>([]);
   const [themeFilter, setThemeFilter] = useState<RoomThemeFilter>("all");
   const [unlockRoom, setUnlockRoom] = useState<RoomDefinition | null | "soon">(null);
@@ -134,42 +134,37 @@ export function RoomScreen({
   const [snapshot, setSnapshot] = useState<RoomLayoutState | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [buyItem, setBuyItem] = useState<RoomItem | null>(null);
-  const [confirm, setConfirm] = useState<"reset" | "discard" | "save-ph" | null>(null);
+  const [buyMore, setBuyMore] = useState(false);
+  const [confirm, setConfirm] = useState<"reset" | "discard" | "save-ph" | "clear-furniture" | null>(null);
   const [dragging, setDragging] = useState<RoomDrag | null>(null);
+  const [preview, setPreview] = useState<PlacementPreview | null>(null);
+  const [committing, setCommitting] = useState(false);
   const [placeFxId, setPlaceFxId] = useState<string | null>(null);
   // Treat null phase as pick when tutorial is active (resume / first paint).
   const effectiveTutPhase =
     tutorialActive && tutorialPhase == null ? "pick" : tutorialPhase;
+  const tutPreviewPhase =
+    effectiveTutPhase === "preview" || effectiveTutPhase === "drag";
   const tutLock = Boolean(
-    tutorialActive && (effectiveTutPhase === "pick" || effectiveTutPhase === "drag"),
+    tutorialActive && (effectiveTutPhase === "pick" || tutPreviewPhase),
   );
-  const [shakeId, setShakeId] = useState<string | null>(null);
   const [activeWall, setActiveWall] = useState<"L" | "R">("L");
   const [brushId, setBrushId] = useState<string | null>(null);
-  const [fillMode, setFillMode] = useState<PaintFillMode>("cell");
-  const [eraser, setEraser] = useState(false);
   const [paintHover, setPaintHover] = useState<PaintTarget | null>(null);
-  const [undoStack, setUndoStack] = useState<
-    { floorTiles: RoomLayoutState["floorTiles"]; wallTiles: RoomLayoutState["wallTiles"] }[]
-  >([]);
+  /** One-step undo for last confirm / put-back / fill-all / clear-furniture. */
+  const [editUndo, setEditUndo] = useState<RoomSaveState | null>(null);
   const [stars] = useState(() => makeStars());
   const toastTimer = useRef(0);
-  const longPress = useRef(0);
-  const dragOrigin = useRef<FloorPlacement | WallPlacement | null>(null);
-  const tutDrawerOrigin = useRef<{ itemId: string; instanceId: string } | null>(null);
-  const paintStroke = useRef<{
-    dirty: boolean;
-    before: { floorTiles: RoomLayoutState["floorTiles"]; wallTiles: RoomLayoutState["wallTiles"] };
-    painted: Set<string>;
-  } | null>(null);
-  const tilesRef = useRef<{
-    floorTiles: RoomLayoutState["floorTiles"];
-    wallTiles: RoomLayoutState["wallTiles"];
-  } | null>(null);
+  const previewRef = useRef<PlacementPreview | null>(null);
+  const previewMoving = useRef(false);
   const stageRef = useRef<HTMLDivElement>(null);
   const swipe = useRef({ x: 0, y: 0, dx: 0, active: false });
   const itemsById = useMemo(() => itemMap(items), [items]);
   const paintTab = tab === "벽지" || tab === "바닥";
+
+  useEffect(() => {
+    previewRef.current = preview;
+  }, [preview]);
 
   useEffect(() => {
     void Promise.all([loadRoomCatalog(), loadRoomGrid(), loadRoomsFile(), loadOpsConfig()]).then(
@@ -179,6 +174,11 @@ export function RoomScreen({
         setGrid(gridFile);
         setRoomsFile(rooms);
         setEconomyRooms(config.economy.rooms ?? []);
+        setItemTiers(
+          Object.fromEntries(
+            (config.prices.items ?? []).map((row) => [row.id, row.tier]),
+          ) as Record<string, PriceTier>,
+        );
         setStarterDrawerIds(config.starter.drawer ?? []);
         const loaded = await loadRoomState(priced, rooms, gridFile);
         const synced = await syncRoomSaveWithOps(loaded);
@@ -241,7 +241,6 @@ export function RoomScreen({
       if (prev === "edit") return prev;
       setSnapshot(cloneLayout(currentRoom(state)));
       setSelectedId(null);
-      setUndoStack([]);
       return "edit";
     });
     // Free starter drawer placeables (e.g. cushions) so #drawer-item-0 can target NEW.
@@ -263,41 +262,6 @@ export function RoomScreen({
     });
   }, [tutorialActive, state?.currentRoomId, itemsById, starterDrawerIds]);
 
-  // Follow finger after grabbing from the drawer (pointer may leave the drawer cell).
-  useEffect(() => {
-    if (!(dragging && dragging.kind === "floor" && dragging.fromDrawer)) return;
-    // Ignore the pointerup that ends the long-press until the user has moved (or a short arm delay).
-    let armed = false;
-    const armTimer = window.setTimeout(() => {
-      armed = true;
-    }, 80);
-    const onMove = (event: globalThis.PointerEvent) => {
-      armed = true;
-      if (!stageRef.current) return;
-      const rect = stageRef.current.getBoundingClientRect();
-      // While finger is still over the drawer, keep the suggest/spawn tile.
-      if (event.clientY > rect.bottom - 4) return;
-      const tile = hitTestTile(event.clientX - rect.left, event.clientY - rect.top, mode);
-      setDragging((current) =>
-        current?.kind === "floor" ? { ...current, col: tile.col, row: tile.row } : current,
-      );
-    };
-    const onUp = () => {
-      if (!armed) return;
-      onStagePointerUp();
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-    return () => {
-      window.clearTimeout(armTimer);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- bind while fromDrawer drag is active
-  }, [dragging && dragging.kind === "floor" ? dragging.fromDrawer : false, dragging?.instanceId, mode]);
-
   const showToast = (message: string) => {
     setToast(message);
     window.clearTimeout(toastTimer.current);
@@ -309,9 +273,33 @@ export function RoomScreen({
     void saveRoomState(next);
   };
 
-  const shake = (instanceId: string) => {
-    setShakeId(instanceId);
-    window.setTimeout(() => setShakeId(null), 300);
+  /** Update layout in React state without persisting (preview drafts). */
+  const patchLayoutLocal = (nextLayout: RoomLayoutState) => {
+    if (!state) return;
+    setState(patchCurrentRoom(state, nextLayout));
+  };
+
+  const syncDragFromPreview = (next: PlacementPreview | null) => {
+    if (!next || next.kind === "paint") {
+      setDragging(null);
+      return;
+    }
+    if (next.kind === "floor") {
+      setDragging({
+        kind: "floor",
+        instanceId: next.instanceId,
+        col: next.col,
+        row: next.row,
+      });
+      return;
+    }
+    setDragging({
+      kind: "wall",
+      instanceId: next.instanceId,
+      wall: next.wall,
+      slot: next.slot,
+      band: next.band,
+    });
   };
 
   if (!state || !roomsFile) {
@@ -341,16 +329,30 @@ export function RoomScreen({
           })?.id ?? "cushions"
       : null;
   const unlockFor = (roomId: string) => economyRooms.find((row) => row.id === roomId)?.unlock;
-  if (!paintStroke.current) {
-    tilesRef.current = { floorTiles: layout.floorTiles, wallTiles: layout.wallTiles };
-  }
+  const drawerItemMeta: Record<string, DrawerItemMeta> = Object.fromEntries(
+    items.map((item) => {
+      const ownedN = state.owned[item.id] ?? 0;
+      const rem = isPaintItem(item) ? ownedN : remainingCount(state, item.id);
+      const otherId = placedInOtherRoom(state, item.id);
+      const otherName = otherId ? (roomById(roomsFile.rooms, otherId)?.nameKo ?? "다른 방") : null;
+      const maxOwn = maxOwnForItemSync(item, itemTiers[item.id]);
+      return [
+        item.id,
+        {
+          remaining: rem,
+          owned: ownedN,
+          otherRoomName: otherName,
+          canBuyMore: !item.attendanceOnly && !isPaintItem(item) && ownedN < maxOwn,
+        } satisfies DrawerItemMeta,
+      ];
+    }),
+  );
   const placedCount = layout.floor.length + layout.walls.length;
   const selected =
     layout.floor.find((item) => item.instanceId === selectedId) ??
     layout.walls.find((item) => item.instanceId === selectedId);
   const selectedItem = selected ? itemsById.get(selected.id) : undefined;
   const selectedFloor = selected && "col" in selected ? selected : null;
-  const selectedWall = selected && "wall" in selected && !("col" in selected) ? (selected as WallPlacement) : null;
   const hints =
     mode === "edit" && selectedFloor && selectedItem && !selectedFloor.onTopOf && !isWallDecor(selectedItem)
       ? nearestHints(selectedItem, selectedFloor.orientation, layout.floor, itemsById, selectedId ?? undefined)
@@ -360,23 +362,87 @@ export function RoomScreen({
     setSnapshot(cloneLayout(layout));
     setMode("edit");
     setSelectedId(null);
-    setUndoStack([]);
+    setEditUndo(null);
+    setPreview(null);
+    setDragging(null);
     void haptic("tap");
   };
 
+  const cancelPreview = (layoutNow: RoomLayoutState = layout) => {
+    const current = previewRef.current;
+    if (!current) {
+      setPreview(null);
+      setDragging(null);
+      return layoutNow;
+    }
+    let nextLayout = layoutNow;
+    if (current.kind === "floor") {
+      if (current.origin === "placed" && current.originFloor) {
+        nextLayout = {
+          ...nextLayout,
+          floor: nextLayout.floor.map((entry) =>
+            entry.instanceId === current.instanceId ? { ...current.originFloor! } : entry,
+          ),
+        };
+      } else if (current.origin === "drawer" || current.origin === "move-from") {
+        nextLayout = {
+          ...nextLayout,
+          floor: nextLayout.floor.filter((entry) => entry.instanceId !== current.instanceId),
+        };
+      }
+    } else if (current.kind === "wall") {
+      if (current.origin === "placed" && current.originWall) {
+        nextLayout = {
+          ...nextLayout,
+          walls: nextLayout.walls.map((entry) =>
+            entry.instanceId === current.instanceId ? { ...current.originWall! } : entry,
+          ),
+        };
+      } else if (current.origin === "drawer" || current.origin === "move-from") {
+        nextLayout = {
+          ...nextLayout,
+          walls: nextLayout.walls.filter((entry) => entry.instanceId !== current.instanceId),
+        };
+      }
+    }
+    // Paint previews are visual-only (paintHover) until ✓.
+    setPreview(null);
+    previewRef.current = null;
+    setDragging(null);
+    setSelectedId(null);
+    setPaintHover(null);
+    return nextLayout;
+  };
+
   const leaveEdit = (saved: boolean) => {
+    // Spec: unfinished preview is cancelled when leaving edit.
+    // Done path persists a cancelled layout first; discard restores snapshot — only clear refs here.
+    if (previewRef.current && saved) {
+      // already cancelled+persisted by the 완료 handler when needed
+    } else if (previewRef.current) {
+      previewRef.current = null;
+      setPreview(null);
+    }
     setMode("view");
     setSelectedId(null);
     setDragging(null);
+    setPreview(null);
     setSnapshot(null);
     setPaintHover(null);
-    setUndoStack([]);
-    paintStroke.current = null;
+    setEditUndo(null);
     if (saved) showToast("방을 저장했어요");
   };
 
-  const patchLayout = (nextLayout: RoomLayoutState) => {
-    persist(patchCurrentRoom(state, nextLayout));
+  const applyEditUndo = () => {
+    if (!editUndo) return;
+    persist(editUndo);
+    setEditUndo(null);
+    setPreview(null);
+    previewRef.current = null;
+    setDragging(null);
+    setSelectedId(null);
+    setPaintHover(null);
+    showToast("되돌렸어요");
   };
 
   const goToUnlocked = (index: number) => {
@@ -429,315 +495,330 @@ export function RoomScreen({
     if (instanceId) void haptic("tap");
   };
 
-  const paintPrefer = (): "floor" | "wall" | "any" => {
-    if (eraser) return "any";
-    if (tab === "벽지") return "wall";
-    if (tab === "바닥") return "floor";
-    return "any";
+  /** Sample point under the ghost (finger is PREVIEW_GHOST_LIFT_PT below the sprite). */
+  const pointerUnderGhost = (clientX: number, clientY: number, rect: DOMRect) => ({
+    localX: clientX - rect.left,
+    localY: clientY - rect.top - PREVIEW_GHOST_LIFT_PT,
+  });
+
+  const moveFloorPreviewTo = (col: number, row: number, base: PlacementPreview & { kind: "floor" }) => {
+    const item = itemsById.get(base.itemId);
+    if (!item) return;
+    const check = validateFloorPreview(
+      item,
+      col,
+      row,
+      base.orientation,
+      layout.floor,
+      itemsById,
+      base.instanceId,
+    );
+    const next: PlacementPreview = { ...base, col, row, valid: check.valid, reason: check.reason };
+    setPreview(next);
+    previewRef.current = next;
+    syncDragFromPreview(next);
+    patchLayoutLocal({
+      ...layout,
+      floor: layout.floor.map((entry) =>
+        entry.instanceId === base.instanceId ? { ...entry, col, row, orientation: base.orientation } : entry,
+      ),
+    });
   };
 
-  const paintBrushId = (target?: PaintTarget | null) => {
-    if (eraser) {
-      if (target?.kind === "floor") return roomDef.defaultFloor;
-      if (target?.kind === "wall") return roomDef.defaultWall[target.wall];
-      if (tab === "벽지") return roomDef.defaultWall.L;
-      if (tab === "바닥") return roomDef.defaultFloor;
-      return null;
-    }
-    return brushId;
-  };
-
-  const beginPaintStroke = (layoutNow: RoomLayoutState) => {
-    paintStroke.current = {
-      dirty: false,
-      before: {
-        floorTiles: cloneFloorTiles(layoutNow.floorTiles),
-        wallTiles: cloneWallTiles(layoutNow.wallTiles),
-      },
-      painted: new Set(),
+  const moveWallPreviewTo = (
+    wall: "L" | "R",
+    slot: number,
+    band: number,
+    base: PlacementPreview & { kind: "wall" },
+  ) => {
+    const item = itemsById.get(base.itemId);
+    if (!item) return;
+    const check = validateWallPreview(item, wall, slot, band, layout.walls, itemsById, base.instanceId);
+    const coords = wallPlaceFromSlot(item, wall, slot, band);
+    const next: PlacementPreview = {
+      ...base,
+      wall,
+      slot,
+      band,
+      t: coords.t,
+      heightUnits: coords.heightUnits,
+      valid: check.valid,
+      reason: check.reason,
     };
+    setPreview(next);
+    previewRef.current = next;
+    syncDragFromPreview(next);
+    setActiveWall(wall);
+    patchLayoutLocal({
+      ...layout,
+      walls: layout.walls.map((entry) =>
+        entry.instanceId === base.instanceId ? { ...entry, ...coords, worldPx: undefined } : entry,
+      ),
+    });
   };
 
-  const paintAt = (target: PaintTarget) => {
-    const id = paintBrushId(target);
-    if (!id || !state) return;
-    const key = target.kind === "floor" ? `f:${target.col},${target.row}` : `w:${target.wall}:${target.index}`;
-    const stroke = paintStroke.current;
-    if (stroke?.painted.has(key) && fillMode === "cell") return;
-    const current = tilesRef.current ?? { floorTiles: layout.floorTiles, wallTiles: layout.wallTiles };
-    const next = applyPaint(current.floorTiles, current.wallTiles, target, id, fillMode === "fill");
-    if (!next.changed) return;
-    tilesRef.current = { floorTiles: next.floor, wallTiles: next.walls };
-    if (stroke) {
-      stroke.dirty = true;
-      stroke.painted.add(key);
+  const movePaintPreviewTo = (target: PaintTarget, base: PlacementPreview & { kind: "paint" }) => {
+    const type = base.itemId.replace(/^(floor_|wall_)/, "");
+    let valid = true;
+    let reason: string | null = null;
+    if (base.fillAll) {
+      // fill-all validity comes from whether any tile differs
+      const found = findPaintPreviewTarget(
+        itemsById.get(base.itemId)!,
+        layout.floorTiles,
+        layout.wallTiles,
+      );
+      valid = found.valid;
+      reason = found.reason;
+    } else if (target.kind === "floor") {
+      if (layout.floorTiles[target.row]?.[target.col] === type) {
+        valid = false;
+        reason = "이미 같은 바닥이 깔려 있어요";
+      }
+    } else if (layout.wallTiles[target.wall][target.index] === type) {
+      valid = false;
+      reason = "이미 같은 벽지가 깔려 있어요";
     }
-    persist(
-      patchCurrentRoom(state, { ...state.rooms[state.currentRoomId], floorTiles: next.floor, wallTiles: next.walls }),
-    );
-    void haptic("tap");
-  };
-
-  const endPaintStroke = () => {
-    const stroke = paintStroke.current;
-    paintStroke.current = null;
-    if (!stroke?.dirty) return;
-    setUndoStack((stack) => [...stack.slice(-19), stroke.before]);
-  };
-
-  const undoPaint = () => {
-    const prev = undoStack[undoStack.length - 1];
-    if (!prev || !state) return;
-    setUndoStack((stack) => stack.slice(0, -1));
-    persist(
-      patchCurrentRoom(state, {
-        ...currentRoom(state),
-        floorTiles: cloneFloorTiles(prev.floorTiles),
-        wallTiles: cloneWallTiles(prev.wallTiles),
-      }),
-    );
+    const next: PlacementPreview = { ...base, target, valid, reason };
+    setPreview(next);
+    previewRef.current = next;
+    setPaintHover(target);
   };
 
   const onFloorPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (mode !== "edit") return;
-    if (!paintTab) {
-      if ((event.target as HTMLElement).closest(".lucky-sprite")) return;
-      setSelectedId(null);
+    if ((event.target as HTMLElement).closest(".lucky-sprite")) return;
+
+    // Preview active: tap empty tile moves preview (furniture) or paint target.
+    if (preview && !tutLock) {
+      const rect = stageRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      // Tap-to-move uses the tapped tile directly; drag uses ghost-offset sampling.
+      const localX = event.clientX - rect.left;
+      const localY = event.clientY - rect.top;
+      if (preview.kind === "floor") {
+        const tile = hitTestTile(localX, localY, mode);
+        moveFloorPreviewTo(tile.col, tile.row, preview);
+        previewMoving.current = true;
+        try {
+          stageRef.current?.setPointerCapture(event.pointerId);
+        } catch {
+          // ignore
+        }
+        return;
+      }
+      if (preview.kind === "paint" && preview.paintKind === "floor") {
+        const tile = hitTestTile(localX, localY, mode);
+        movePaintPreviewTo({ kind: "floor", col: tile.col, row: tile.row }, preview);
+        previewMoving.current = true;
+        try {
+          stageRef.current?.setPointerCapture(event.pointerId);
+        } catch {
+          // ignore
+        }
+        return;
+      }
+      if (preview.kind === "paint" && preview.paintKind === "wall") {
+        const target = hitTestPaint(localX, localY, mode, "wall");
+        if (target?.kind === "wall") movePaintPreviewTo(target, preview);
+        previewMoving.current = true;
+        try {
+          stageRef.current?.setPointerCapture(event.pointerId);
+        } catch {
+          // ignore
+        }
+        return;
+      }
+      if (preview.kind === "wall") {
+        const hit = hitTestWall(localX, localY, mode);
+        if (hit) {
+          const item = itemsById.get(preview.itemId);
+          if (item) {
+            const snapped = snapWallHit(item, hit);
+            moveWallPreviewTo(snapped.wall, snapped.slot, snapped.band, preview);
+          }
+        }
+        previewMoving.current = true;
+        try {
+          stageRef.current?.setPointerCapture(event.pointerId);
+        } catch {
+          // ignore
+        }
+        return;
+      }
+    }
+
+    if (preview) return;
+    setSelectedId(null);
+  };
+
+  const beginPreviewFromPlaced = (instanceId: string) => {
+    if (tutLock) return;
+    const floorPlace = layout.floor.find((item) => item.instanceId === instanceId);
+    const wallPlace = layout.walls.find((item) => item.instanceId === instanceId);
+    if (floorPlace && !floorPlace.onTopOf) {
+      const item = itemsById.get(floorPlace.id);
+      if (!item) return;
+      const check = validateFloorPreview(
+        item,
+        floorPlace.col,
+        floorPlace.row,
+        floorPlace.orientation,
+        layout.floor,
+        itemsById,
+        floorPlace.instanceId,
+      );
+      const next: PlacementPreview = {
+        kind: "floor",
+        itemId: floorPlace.id,
+        instanceId: floorPlace.instanceId,
+        col: floorPlace.col,
+        row: floorPlace.row,
+        orientation: floorPlace.orientation,
+        origin: "placed",
+        originFloor: { ...floorPlace },
+        valid: check.valid,
+        reason: check.reason,
+      };
+      setPreview(next);
+      previewRef.current = next;
+      setSelectedId(instanceId);
+      syncDragFromPreview(next);
+      void haptic("tap");
       return;
     }
-    event.preventDefault();
-    const rect = stageRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const target = hitTestPaint(event.clientX - rect.left, event.clientY - rect.top, mode, paintPrefer());
-    setPaintHover(target);
-    if (!target) return;
-    beginPaintStroke(layout);
-    paintAt(target);
-    try {
-      stageRef.current?.setPointerCapture(event.pointerId);
-    } catch {
-      // ignore
+    if (wallPlace) {
+      const item = itemsById.get(wallPlace.id);
+      if (!item) return;
+      const slot = resolvedWallSlot(item, wallPlace);
+      const check = validateWallPreview(
+        item,
+        wallPlace.wall,
+        slot.slot,
+        slot.band,
+        layout.walls,
+        itemsById,
+        wallPlace.instanceId,
+      );
+      const next: PlacementPreview = {
+        kind: "wall",
+        itemId: wallPlace.id,
+        instanceId: wallPlace.instanceId,
+        wall: wallPlace.wall,
+        slot: slot.slot,
+        band: slot.band,
+        t: wallPlace.t,
+        heightUnits: wallPlace.heightUnits,
+        origin: "placed",
+        originWall: { ...wallPlace },
+        valid: check.valid,
+        reason: check.reason,
+      };
+      setPreview(next);
+      previewRef.current = next;
+      setSelectedId(instanceId);
+      setActiveWall(wallPlace.wall);
+      syncDragFromPreview(next);
+      void haptic("tap");
     }
   };
 
   const onItemPointerDown = (event: PointerEvent<HTMLButtonElement>, instanceId: string) => {
     if (mode !== "edit" || paintTab) return;
     if (tutLock) {
-      // During pick/drag, only the tutorial draft (from drawer) may move.
-      if (!tutDrawerOrigin.current || tutDrawerOrigin.current.instanceId !== instanceId) return;
+      // Tutorial: only the active preview draft may be interacted with (move locked separately).
+      if (!preview || preview.kind === "paint" || preview.instanceId !== instanceId) return;
+      return;
     }
     event.stopPropagation();
-    setSelectedId(instanceId);
-    const floorPlace = layout.floor.find((item) => item.instanceId === instanceId);
-    const wallPlace = layout.walls.find((item) => item.instanceId === instanceId);
-    if (wallPlace) setActiveWall(wallPlace.wall);
-    window.clearTimeout(longPress.current);
-    longPress.current = window.setTimeout(() => {
-      if (floorPlace && !floorPlace.onTopOf) {
-        dragOrigin.current = { ...floorPlace };
-        setDragging({ kind: "floor", instanceId, col: floorPlace.col, row: floorPlace.row });
-        return;
+
+    // If already previewing this instance, start drag-to-move.
+    if (preview && preview.kind !== "paint" && preview.instanceId === instanceId) {
+      previewMoving.current = true;
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // ignore
       }
-      if (wallPlace) {
-        const item = itemsById.get(wallPlace.id);
-        const slot = item ? resolvedWallSlot(item, wallPlace) : { slot: wallPlace.slot, band: wallPlace.band };
-        dragOrigin.current = { ...wallPlace };
-        setDragging({ kind: "wall", instanceId, wall: wallPlace.wall, slot: slot.slot, band: slot.band });
-      }
-    }, 200);
+      return;
+    }
+
+    // Tap placed item → enter preview (cancel any other preview first).
+    if (preview) {
+      const cleared = cancelPreview(layout);
+      patchLayoutLocal(cleared);
+    }
+    beginPreviewFromPlaced(instanceId);
   };
 
   const onStagePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (mode === "edit" && paintTab && stageRef.current) {
-      const rect = stageRef.current.getBoundingClientRect();
-      const target = hitTestPaint(event.clientX - rect.left, event.clientY - rect.top, mode, paintPrefer());
-      setPaintHover(target);
-      if (paintStroke.current && target) paintAt(target);
-    }
-    if (!dragging || !stageRef.current) return;
+    if (!preview || !stageRef.current || tutLock || !previewMoving.current) return;
     const rect = stageRef.current.getBoundingClientRect();
-    const localX = event.clientX - rect.left;
-    const localY = event.clientY - rect.top;
-    if (dragging.kind === "floor") {
+    const { localX, localY } = pointerUnderGhost(event.clientX, event.clientY, rect);
+    if (preview.kind === "floor") {
       const tile = hitTestTile(localX, localY, mode);
-      setDragging((current) => (current?.kind === "floor" ? { ...current, col: tile.col, row: tile.row } : current));
+      if (tile.col === preview.col && tile.row === preview.row) return;
+      moveFloorPreviewTo(tile.col, tile.row, preview);
       return;
     }
-    const place = layout.walls.find((item) => item.instanceId === dragging.instanceId);
-    const item = place ? itemsById.get(place.id) : undefined;
-    if (!item) return;
-    const hit = hitTestWall(localX, localY, mode);
-    if (!hit) return;
-    const snapped = snapWallHit(item, hit);
-    setActiveWall(snapped.wall);
-    setDragging((current) =>
-      current?.kind === "wall"
-        ? { ...current, wall: snapped.wall, slot: snapped.slot, band: snapped.band }
-        : current,
-    );
+    if (preview.kind === "wall") {
+      const item = itemsById.get(preview.itemId);
+      if (!item) return;
+      const hit = hitTestWall(localX, localY, mode);
+      if (!hit) return;
+      const snapped = snapWallHit(item, hit);
+      if (snapped.wall === preview.wall && snapped.slot === preview.slot && snapped.band === preview.band) return;
+      moveWallPreviewTo(snapped.wall, snapped.slot, snapped.band, preview);
+      return;
+    }
+    if (preview.kind === "paint" && !preview.fillAll) {
+      const prefer = preview.paintKind === "floor" ? "floor" : "wall";
+      const target =
+        prefer === "floor"
+          ? (() => {
+              const tile = hitTestTile(localX, localY, mode);
+              return { kind: "floor" as const, col: tile.col, row: tile.row };
+            })()
+          : hitTestPaint(localX, localY, mode, "wall");
+      if (!target) return;
+      movePaintPreviewTo(target, preview);
+    }
   };
 
   const onStagePointerUp = () => {
-    window.clearTimeout(longPress.current);
-    if (paintStroke.current) endPaintStroke();
-    if (!dragging) return;
-    if (dragging.kind === "floor") {
-      const place = layout.floor.find((item) => item.instanceId === dragging.instanceId);
-      const item = place ? itemsById.get(place.id) : undefined;
-      if (place && item) {
-        const [w, d] = itemSize(item, place.orientation);
-        const used = occupancy(layout.floor, itemsById, place.instanceId);
-        const ok = isDecal(item)
-          ? inGrid(dragging.col, dragging.row, w, d)
-          : canPlace(dragging.col, dragging.row, w, d, used);
-        if (ok) {
-          patchLayout({
-            ...layout,
-            floor: layout.floor.map((entry) =>
-              entry.instanceId === place.instanceId ? { ...entry, col: dragging.col, row: dragging.row } : entry,
-            ),
-          });
-          playPlaceFx(place.instanceId);
-          if (dragging.fromDrawer || tutLock) {
-            tutDrawerOrigin.current = null;
-            onTutorialPlaced?.();
-          }
-        } else if (dragging.fromDrawer || tutDrawerOrigin.current?.instanceId === place.instanceId) {
-          // Return to drawer — remove draft placement.
-          patchLayout({
-            ...layout,
-            floor: layout.floor.filter((entry) => entry.instanceId !== place.instanceId),
-          });
-          setSelectedId(null);
-          tutDrawerOrigin.current = null;
-          showToast("여기는 자리가 없어요");
-          void haptic("softMedium");
-        }
-      }
-    } else {
-      const place = layout.walls.find((item) => item.instanceId === dragging.instanceId);
-      const item = place ? itemsById.get(place.id) : undefined;
-      if (place && item) {
-        const used = wallOccupancy(layout.walls, itemsById, place.instanceId);
-        const ok = canPlaceWall(item, dragging.wall, dragging.slot, dragging.band, used);
-        if (ok) {
-          const next = wallPlaceFromSlot(item, dragging.wall, dragging.slot, dragging.band);
-          patchLayout({
-            ...layout,
-            walls: layout.walls.map((entry) =>
-              entry.instanceId === place.instanceId ? { ...entry, ...next, worldPx: undefined } : entry,
-            ),
-          });
-          setActiveWall(next.wall);
-          playPlaceFx(place.instanceId);
-        } else {
-          shake(place.instanceId);
-        }
-      }
-    }
-    setDragging(null);
-    dragOrigin.current = null;
+    previewMoving.current = false;
     window.dispatchEvent(new Event("lucky-cat:drawer-scroll-unlock"));
   };
 
-  const rotateSelected = () => {
-    if (!selectedFloor || !selectedItem || isWallDecor(selectedItem)) return;
-    const next = toggledOrientation(selectedFloor.orientation);
-    const [w, d] = itemSize(selectedItem, next);
-    const used = occupancy(layout.floor, itemsById, selectedFloor.instanceId);
-    if (!selectedFloor.onTopOf && !isDecal(selectedItem) && !canPlace(selectedFloor.col, selectedFloor.row, w, d, used)) {
-      shake(selectedFloor.instanceId);
-      return;
-    }
-    patchLayout({
+  const rotatePreview = () => {
+    if (!preview || preview.kind !== "floor" || tutLock) return;
+    const item = itemsById.get(preview.itemId);
+    if (!item || isWallDecor(item)) return;
+    const nextOri = toggledOrientation(preview.orientation);
+    const check = validateFloorPreview(
+      item,
+      preview.col,
+      preview.row,
+      nextOri,
+      layout.floor,
+      itemsById,
+      preview.instanceId,
+    );
+    const next: PlacementPreview = {
+      ...preview,
+      orientation: nextOri,
+      valid: check.valid,
+      reason: check.reason,
+    };
+    setPreview(next);
+    previewRef.current = next;
+    syncDragFromPreview(next);
+    patchLayoutLocal({
       ...layout,
-      floor: layout.floor.map((entry) => {
-        if (entry.instanceId === selectedFloor.instanceId) {
-          return { ...entry, orientation: next };
-        }
-        if (entry.onTopOf === selectedFloor.id || entry.onTopOf === selectedFloor.instanceId) {
-          return { ...entry, fx: 1 - (entry.fx ?? 0.5) };
-        }
-        return entry;
-      }),
-    });
-  };
-
-  const deleteSelected = () => {
-    if (!selected) return;
-    const hostId = selected.instanceId;
-    const hostItemId = selected.id;
-    patchLayout({
-      ...layout,
-      floor: layout.floor
-        .filter((entry) => entry.instanceId !== hostId)
-        .map((entry) => {
-          if (entry.onTopOf === hostId || entry.onTopOf === hostItemId) {
-            const host = selectedFloor;
-            return {
-              ...entry,
-              onTopOf: undefined,
-              fx: undefined,
-              fy: undefined,
-              col: host?.col ?? entry.col,
-              row: host?.row ?? entry.row,
-            };
-          }
-          return entry;
-        }),
-      walls: layout.walls.filter((entry) => entry.instanceId !== selected.instanceId),
-    });
-    setSelectedId(null);
-  };
-
-  const startMove = () => {
-    if (selectedFloor && !selectedFloor.onTopOf) {
-      dragOrigin.current = { ...selectedFloor };
-      setDragging({
-        kind: "floor",
-        instanceId: selectedFloor.instanceId,
-        col: selectedFloor.col,
-        row: selectedFloor.row,
-      });
-      return;
-    }
-    if (selectedWall && selectedItem) {
-      const slot = resolvedWallSlot(selectedItem, selectedWall);
-      dragOrigin.current = { ...selectedWall };
-      setDragging({
-        kind: "wall",
-        instanceId: selectedWall.instanceId,
-        wall: selectedWall.wall,
-        slot: slot.slot,
-        band: slot.band,
-      });
-    }
-  };
-
-  const sendToOtherWall = () => {
-    if (!selectedWall || !selectedItem) return;
-    const other: "L" | "R" = selectedWall.wall === "L" ? "R" : "L";
-    const current = resolvedWallSlot(selectedItem, selectedWall);
-    const used = wallOccupancy(layout.walls, itemsById, selectedWall.instanceId);
-    const target = canPlaceWall(selectedItem, other, current.slot, current.band, used)
-      ? wallPlaceFromSlot(selectedItem, other, current.slot, current.band)
-      : firstFreeOnWall(
-          selectedItem,
-          layout.walls.filter((entry) => entry.instanceId !== selectedWall.instanceId),
-          itemsById,
-          other,
-        );
-    if (!target) {
-      shake(selectedWall.instanceId);
-      return;
-    }
-    patchLayout({
-      ...layout,
-      walls: layout.walls.map((entry) =>
-        entry.instanceId === selectedWall.instanceId ? { ...entry, ...target, worldPx: undefined } : entry,
+      floor: layout.floor.map((entry) =>
+        entry.instanceId === preview.instanceId ? { ...entry, orientation: nextOri } : entry,
       ),
     });
-    setActiveWall(other);
   };
 
   const playPlaceFx = (instanceId: string) => {
@@ -752,108 +833,233 @@ export function RoomScreen({
     window.setTimeout(() => setPlaceFxId(null), 240);
   };
 
-  /** Tutorial: spawn draft on floor and enter drag (from drawer long-press / drag). */
-  const beginTutorialDrawerDrag = (item: RoomItem, clientX: number, clientY: number) => {
-    if (!tutLock || isPaintItem(item) || isWallDecor(item)) return;
-    if ((state.owned[item.id] ?? 0) < 1) return;
-    const remaining = (state.owned[item.id] ?? 0) - placedCountAll(state, item.id);
-    if (remaining <= 0) return;
-
-    // Prefer suggest tile — finger is still over the drawer, so hit-testing the stage
-    // would land off-grid and immediately cancel on pointerup.
-    const rect = stageRef.current?.getBoundingClientRect();
-    const hit =
-      rect && clientY < rect.bottom && clientY > rect.top
-        ? hitTestTile(clientX - rect.left, clientY - rect.top, mode)
-        : null;
-    const tile =
-      suggestTile != null
-        ? { col: suggestTile.c, row: suggestTile.r }
-        : hit ?? { col: 5, row: 2 };
-    const instanceId = newInstanceId(item.id);
-    tutDrawerOrigin.current = { itemId: item.id, instanceId };
-    patchLayout({
-      ...layout,
-      floor: [
-        ...layout.floor,
-        { instanceId, id: item.id, col: tile.col, row: tile.row, orientation: "default" },
-      ],
+  const confirmPreview = async () => {
+    if (!preview || !preview.valid || committing || !state) return;
+    setCommitting(true);
+    const before = structuredClone(state);
+    const requestId = newRequestId();
+    const result = await commitPlacement({
+      state,
+      roomId: state.currentRoomId,
+      preview,
+      itemsById,
+      requestId,
     });
-    setSelectedId(instanceId);
-    setDragging({ kind: "floor", instanceId, col: tile.col, row: tile.row, fromDrawer: true });
-    onTutorialPicked?.();
+    setCommitting(false);
+    if (!result.ok) {
+      showToast(result.reason);
+      const failed: PlacementPreview = { ...preview, valid: false, reason: result.reason };
+      setPreview(failed);
+      previewRef.current = failed;
+      syncDragFromPreview(failed);
+      void haptic("softMedium");
+      return;
+    }
+    setEditUndo(before);
+    const placedId = preview.kind === "paint" ? null : preview.instanceId;
+    setState(result.state);
+    setPreview(null);
+    previewRef.current = null;
+    setDragging(null);
+    setSelectedId(null);
+    setPaintHover(null);
+    setBrushId(null);
+    if (placedId) playPlaceFx(placedId);
+    else {
+      AudioManager.playSfx("item-place");
+      void haptic("softMedium");
+    }
+    if (tutLock || tutorialActive) onTutorialPlaced?.();
+  };
+
+  const putPreviewBack = async () => {
+    if (!preview || preview.kind === "paint" || preview.origin !== "placed" || !state) return;
+    const before = structuredClone(state);
+    const result = await putBackToDrawer({
+      state,
+      roomId: state.currentRoomId,
+      instanceId: preview.instanceId,
+      requestId: newRequestId("put"),
+    });
+    if (!result.ok) {
+      showToast(result.reason);
+      return;
+    }
+    setEditUndo(before);
+    setState(result.state);
+    setPreview(null);
+    previewRef.current = null;
+    setDragging(null);
+    setSelectedId(null);
+    showToast("서랍에 넣었어요");
+  };
+
+  const togglePaintFillAll = () => {
+    if (!preview || preview.kind !== "paint") return;
+    const item = itemsById.get(preview.itemId);
+    if (!item) return;
+    const fillAll = !preview.fillAll;
+    const found = findPaintPreviewTarget(item, layout.floorTiles, layout.wallTiles);
+    const next: PlacementPreview = {
+      ...preview,
+      fillAll,
+      valid: found.valid,
+      reason: found.reason,
+      target: fillAll ? preview.target : found.valid ? found.target : preview.target,
+    };
+    setPreview(next);
+    previewRef.current = next;
+    setPaintHover(next.target);
+  };
+
+  const startPaintPreview = (item: RoomItem, layoutNow: RoomLayoutState = layout) => {
+    const found = findPaintPreviewTarget(item, layoutNow.floorTiles, layoutNow.wallTiles);
+    const next: PlacementPreview = {
+      kind: "paint",
+      itemId: item.id,
+      paintKind: found.paintKind,
+      target: found.target,
+      fillAll: false,
+      valid: found.valid,
+      reason: found.reason,
+    };
+    setPreview(next);
+    previewRef.current = next;
+    setBrushId(item.id);
+    setSelectedId(null);
+    setDragging(null);
+    setPaintHover(found.target);
     void haptic("tap");
   };
 
-  const pickDrawerItem = (item: RoomItem) => {
-    // Tutorial pick/drag phases: tap alone does not place — long-press / drag only.
-    if (tutLock) return;
+  const startFurniturePreview = (
+    item: RoomItem,
+    origin: "drawer" | "move-from" = "drawer",
+    fromRoomId?: string,
+    layoutNow: RoomLayoutState = layout,
+  ) => {
+    if (isWallDecor(item)) {
+      const next = startWallPreviewFromDrawer(item, layoutNow.walls, itemsById, activeWall);
+      const withOrigin: PlacementPreview = { ...next, origin, fromRoomId };
+      const draft: WallPlacement = {
+        instanceId: next.instanceId,
+        id: next.itemId,
+        wall: next.wall,
+        t: next.t,
+        heightUnits: next.heightUnits,
+        slot: next.slot,
+        band: next.band,
+      };
+      patchLayoutLocal({ ...layoutNow, walls: [...layoutNow.walls, draft] });
+      setPreview(withOrigin);
+      previewRef.current = withOrigin;
+      setSelectedId(next.instanceId);
+      setActiveWall(next.wall);
+      syncDragFromPreview(withOrigin);
+      void haptic("tap");
+      return;
+    }
+    const prefer =
+      tutorialActive && suggestTile ? { col: suggestTile.c, row: suggestTile.r } : null;
+    const next = startFloorPreviewFromDrawer(
+      item,
+      layoutNow.floor,
+      itemsById,
+      prefer,
+      origin,
+      fromRoomId,
+    );
+    const draft: FloorPlacement = {
+      instanceId: next.instanceId,
+      id: next.itemId,
+      col: next.col,
+      row: next.row,
+      orientation: next.orientation,
+    };
+    patchLayoutLocal({ ...layoutNow, floor: [...layoutNow.floor, draft] });
+    setPreview(next);
+    previewRef.current = next;
+    setSelectedId(next.instanceId);
+    syncDragFromPreview(next);
+    void haptic("tap");
+  };
+
+  const pickDrawerItem = async (item: RoomItem) => {
+    let layoutNow: RoomLayoutState = layout;
+    // Cancel any active preview when picking another drawer item.
+    if (preview) {
+      layoutNow = cancelPreview(layout);
+      patchLayoutLocal(layoutNow);
+    }
+
+    if (tutLock && suggestItemId && item.id !== suggestItemId) return;
+
     if ((state.owned[item.id] ?? 0) < 1) {
       if (item.attendanceOnly) {
         showToast("출석 체크에서만 받을 수 있어요");
         return;
       }
+      setBuyMore(false);
       setBuyItem(item);
       return;
     }
+
     if (isPaintItem(item)) {
-      setBrushId(item.id);
-      setEraser(false);
-      setSelectedId(null);
+      startPaintPreview(item, layoutNow);
+      if (tutLock) onTutorialPicked?.();
       return;
     }
-    const remaining = (state.owned[item.id] ?? 0) - placedCountAll(state, item.id);
-    const existingHere =
-      layout.floor.find((place) => place.id === item.id) ?? layout.walls.find((place) => place.id === item.id);
-    if (remaining <= 0) {
-      if (existingHere) {
-        setSelectedId(existingHere.instanceId);
+
+    const rem = remainingCount(state, item.id);
+    if (rem <= 0) {
+      const otherId = placedInOtherRoom(state, item.id);
+      if (otherId) {
+        const otherName = roomById(roomsFile.rooms, otherId)?.nameKo ?? "다른 방";
+        showToast(`다른 방에 있어요 · ${otherName}`);
         return;
       }
-      showToast("다른 방에 배치 중");
-      return;
-    }
-    if (isWallDecor(item)) {
-      const slot = firstFreeOnWall(item, layout.walls, itemsById, activeWall);
-      if (!slot) {
-        showToast("걸 자리가 없어요");
+      if (item.attendanceOnly) {
+        showToast("한정 아이템이에요");
         return;
       }
-      const instanceId = newInstanceId(item.id);
-      const draft: WallPlacement = {
-        instanceId,
-        id: item.id,
-        wall: slot.wall,
-        t: slot.t,
-        heightUnits: slot.heightUnits,
-        slot: slot.slot,
-        band: slot.band,
-      };
-      patchLayout({
-        ...layout,
-        walls: [...layout.walls, draft],
-      });
-      setSelectedId(instanceId);
-      setActiveWall(slot.wall);
-      AudioManager.playSfx("item-place");
+      const maxOwn = await maxOwnForItem(item);
+      const owned = state.owned[item.id] ?? 0;
+      if (owned < maxOwn) {
+        setBuyMore(true);
+        setBuyItem(item);
+        return;
+      }
+      showToast("더 이상 가질 수 없어요");
       return;
     }
-    const spot = firstFreeTile(item, "default", layout.floor, itemsById);
-    if (!spot) {
-      showToast("놓을 칸이 없어요");
+
+    startFurniturePreview(item, "drawer", undefined, layoutNow);
+    if (tutLock) onTutorialPicked?.();
+  };
+
+  const moveHereFromOtherRoom = (item: RoomItem) => {
+    let layoutNow = layout;
+    if (preview) {
+      layoutNow = cancelPreview(layout);
+      patchLayoutLocal(layoutNow);
+    }
+    const otherId = placedInOtherRoom(state, item.id);
+    if (!otherId) {
+      showToast("다른 방에서 찾을 수 없어요");
       return;
     }
-    const instanceId = newInstanceId(item.id);
-    patchLayout({
-      ...layout,
-      floor: [
-        ...layout.floor,
-        { instanceId, id: item.id, col: spot.col, row: spot.row, orientation: "default" },
-      ],
-    });
-    setSelectedId(instanceId);
-    AudioManager.playSfx("item-place");
-    void haptic("tap");
+    const otherName = roomById(roomsFile.rooms, otherId)?.nameKo ?? "다른 방";
+    showToast(`다른 방에 있어요 · ${otherName}`);
+    startFurniturePreview(item, "move-from", otherId, layoutNow);
+  };
+
+  const openBuyMore = (item: RoomItem) => {
+    if (item.attendanceOnly) {
+      showToast("한정 아이템이에요");
+      return;
+    }
+    setBuyMore(true);
+    setBuyItem(item);
   };
 
   const buy = (item: RoomItem) => {
@@ -871,24 +1077,49 @@ export function RoomScreen({
     });
     void spendRoomPoints(nextPoints);
     setBuyItem(null);
+    setBuyMore(false);
     showToast(`${item.nameKo}를 샀어요`);
   };
 
   const screen = screenOf(mode);
-  const hudPlace =
-    dragging?.kind === "wall" && selectedWall && selectedItem
+  const previewItem = preview ? itemsById.get(preview.itemId) : undefined;
+  const hudPlace: FloorPlacement | WallPlacement | null =
+    preview?.kind === "floor"
       ? {
-          ...selectedWall,
-          ...wallPlaceFromSlot(selectedItem, dragging.wall, dragging.slot, dragging.band),
-          worldPx: undefined,
+          instanceId: preview.instanceId,
+          id: preview.itemId,
+          col: preview.col,
+          row: preview.row,
+          orientation: preview.orientation,
         }
-      : selected;
+      : preview?.kind === "wall"
+        ? {
+            instanceId: preview.instanceId,
+            id: preview.itemId,
+            wall: preview.wall,
+            t: preview.t,
+            heightUnits: preview.heightUnits,
+            slot: preview.slot,
+            band: preview.band,
+          }
+        : preview?.kind === "paint"
+          ? null
+          : selected ?? null;
   const hud =
-    selectedItem && hudPlace ? selectionHud(selectedItem, hudPlace, layout, itemsById, screen) : null;
+    preview?.kind === "paint" && previewItem
+      ? {
+          left: screen.left + paintTargetAnchor(preview.target).x * screen.scale - 40,
+          top: screen.top + paintTargetAnchor(preview.target).y * screen.scale - 56,
+          width: 80,
+          height: 48,
+        }
+      : previewItem && hudPlace
+        ? selectionHud(previewItem, hudPlace, layout, itemsById, screen)
+        : null;
 
   return (
     <div
-      className={`lucky-room is-${mode} ${shakeId ? "is-shaking" : ""}`}
+      className={`lucky-room is-${mode}`}
       ref={stageRef}
       onPointerMove={onStagePointerMove}
       onPointerUp={onStagePointerUp}
@@ -947,22 +1178,47 @@ export function RoomScreen({
             <b>EDIT</b>
             <span>꾸미는 중</span>
           </p>
-          <button
-            type="button"
-            id="room-done"
-            className="lucky-done"
-            onClick={() => {
-              if (tutorialPhase === "done" || tutorialPhase === "points") {
-                onTutorialComplete?.();
-                return;
-              }
-              if (tutLock) return;
-              persist(state);
-              leaveEdit(true);
-            }}
-          >
-            완료
-          </button>
+          <div className="lucky-edit-bar-actions">
+            <button
+              type="button"
+              className="lucky-ghost"
+              disabled={!editUndo || tutLock}
+              onClick={applyEditUndo}
+              aria-label="되돌리기"
+            >
+              ↩
+            </button>
+            <button
+              type="button"
+              className="lucky-ghost"
+              disabled={tutLock}
+              onClick={() => setConfirm("clear-furniture")}
+            >
+              가구 모두 넣기
+            </button>
+            <button
+              type="button"
+              id="room-done"
+              className="lucky-done"
+              onClick={() => {
+                if (tutorialPhase === "done" || tutorialPhase === "points") {
+                  onTutorialComplete?.();
+                  return;
+                }
+                if (tutLock) return;
+                if (previewRef.current) {
+                  const cleared = cancelPreview(layout);
+                  const next = patchCurrentRoom(state, cleared);
+                  persist(next);
+                } else {
+                  persist(state);
+                }
+                leaveEdit(true);
+              }}
+            >
+              완료
+            </button>
+          </div>
         </div>
       )}
 
@@ -1076,26 +1332,36 @@ export function RoomScreen({
                       dragging={active && !paintTab ? dragging : null}
                       hints={active && !paintTab ? hints : null}
                       frameThumbs={frameThumbs}
-                      shakeId={active ? shakeId : null}
+                      shakeId={null}
                       shadowsEnabled={state.shadowsEnabled}
-                      painting={active && paintTab}
-                      paintHover={active && paintTab ? paintHover : null}
+                      painting={active && (paintTab || preview?.kind === "paint")}
+                      paintHover={
+                        active && (paintTab || preview?.kind === "paint") ? paintHover : null
+                      }
                       suggestTile={
                         active &&
                         tutorialActive &&
-                        (tutorialPhase === "pick" || tutorialPhase === "drag" || !tutorialPhase)
+                        (effectiveTutPhase === "pick" ||
+                          effectiveTutPhase === "preview" ||
+                          effectiveTutPhase === "drag" ||
+                          !tutorialPhase)
                           ? suggestTile
                           : null
                       }
                       suggestItemId={
                         active &&
                         tutorialActive &&
-                        (tutorialPhase === "pick" || tutorialPhase === "drag" || !tutorialPhase)
+                        (effectiveTutPhase === "pick" ||
+                          effectiveTutPhase === "preview" ||
+                          effectiveTutPhase === "drag" ||
+                          !tutorialPhase)
                           ? suggestItemId
                           : null
                       }
                       reduceMotion={reduceMotion}
                       placeFxId={placeFxId}
+                      previewGhost={Boolean(active && preview && preview.kind !== "paint")}
+                      previewInvalid={Boolean(active && preview && !preview.valid)}
                       onSelect={onSelect}
                       onItemPointerDown={onItemPointerDown}
                       onFloorPointerDown={onFloorPointerDown}
@@ -1108,24 +1374,24 @@ export function RoomScreen({
         </div>
       </div>
 
-      {mode === "edit" && paintTab && paintHover ? (
+      {mode === "edit" && preview?.kind === "paint" && paintHover ? (
         <div
-          className="lucky-paint-hud"
+          className={`lucky-paint-hud ${preview.valid ? "" : "is-invalid"}`}
           style={{
             left: screen.left + paintTargetAnchor(paintHover).x * screen.scale,
             top: screen.top + paintTargetAnchor(paintHover).y * screen.scale,
           }}
         >
-          <span>{paintTargetLabel(paintHover, brushId ? itemsById.get(brushId) : null)}</span>
-          <i className="lucky-paint-pencil" aria-hidden="true">
-            <img src={roomAsset("ui/icon-brush.svg")} alt="" />
-          </i>
+          <span>
+            {preview.reason ??
+              paintTargetLabel(paintHover, itemsById.get(preview.itemId) ?? null)}
+          </span>
         </div>
       ) : null}
 
-      {mode === "edit" && hud && selectedItem && selected && !paintTab ? (
+      {mode === "edit" && preview && hud && previewItem ? (
         <div
-          className="lucky-select-hud"
+          className={`lucky-select-hud lucky-placement-hud ${preview.valid ? "" : "is-invalid"}`}
           style={{ left: hud.left, top: hud.top, width: hud.width, height: hud.height }}
         >
           <div className="lucky-select-box">
@@ -1134,34 +1400,66 @@ export function RoomScreen({
             <i />
             <i />
           </div>
-          <div className="lucky-mini-toolbar">
-            <button type="button" aria-label="이동" onClick={startMove}>
-              <img src={roomAsset("ui/icon-move.svg")} alt="" />
+          <div className="lucky-placement-toolbar" role="toolbar" aria-label="배치 미리보기">
+            <button
+              type="button"
+              aria-label="취소"
+              disabled={tutLock}
+              onClick={() => {
+                if (tutLock) return;
+                const cleared = cancelPreview(layout);
+                patchLayoutLocal(cleared);
+              }}
+            >
+              ✕
             </button>
-            {selectedWall ? (
-              <button type="button" aria-label="반대쪽 벽으로 보내기" onClick={sendToOtherWall}>
-                <img src={roomAsset("ui/icon-flip.svg")} alt="" />
+            {preview.kind === "floor" ? (
+              <button type="button" aria-label="회전" disabled={tutLock} onClick={rotatePreview}>
+                ⟳
               </button>
-            ) : (
-              <>
-                <button type="button" aria-label="회전" onClick={rotateSelected}>
-                  <img src={roomAsset("ui/icon-rotate.svg")} alt="" />
-                </button>
-                <button type="button" aria-label="뒤집기" onClick={rotateSelected}>
-                  <img src={roomAsset("ui/icon-flip.svg")} alt="" />
-                </button>
-              </>
-            )}
-            <button type="button" className="is-delete" aria-label="삭제" onClick={deleteSelected}>
-              <img src={roomAsset("ui/icon-delete.svg")} alt="" />
+            ) : null}
+            {preview.kind === "paint" ? (
+              <button
+                type="button"
+                className="is-text"
+                disabled={!preview.valid}
+                onClick={togglePaintFillAll}
+              >
+                {preview.fillAll ? "한 칸만" : "전체 바꾸기"}
+              </button>
+            ) : null}
+            {preview.kind !== "paint" && preview.origin === "placed" ? (
+              <button type="button" className="is-text" onClick={() => void putPreviewBack()}>
+                서랍에 넣기
+              </button>
+            ) : null}
+            <button
+              type="button"
+              id="placement-confirm"
+              className="is-confirm"
+              aria-label="확정"
+              disabled={!preview.valid || committing}
+              onClick={() => void confirmPreview()}
+            >
+              ✓
             </button>
           </div>
-          <span className="lucky-select-tag">
-            {selectedItem.nameKo} ·{" "}
-            {selectedFloor
-              ? itemSize(selectedItem, selectedFloor.orientation).join("×")
-              : `${(dragging?.kind === "wall" ? dragging.wall : selectedWall?.wall) === "R" ? "오른쪽 벽" : "왼쪽 벽"}`}
-          </span>
+          {preview.reason ? (
+            <span className={`lucky-placement-reason ${preview.valid ? "" : "is-invalid"}`}>
+              {preview.reason}
+            </span>
+          ) : (
+            <span className="lucky-select-tag">
+              {previewItem.nameKo}
+              {preview.kind === "floor"
+                ? ` · ${itemSize(previewItem, preview.orientation).join("×")}`
+                : preview.kind === "wall"
+                  ? ` · ${preview.wall === "R" ? "오른쪽 벽" : "왼쪽 벽"}`
+                  : preview.fillAll
+                    ? " · 전체"
+                    : " · 한 칸"}
+            </span>
+          )}
         </div>
       ) : null}
 
@@ -1197,20 +1495,15 @@ export function RoomScreen({
         <RoomDrawer
           tab={tab}
           onTab={(next) => {
+            if (preview) {
+              const cleared = cancelPreview(layout);
+              patchLayoutLocal(cleared);
+            }
             setTab(next);
             if (next === "벽지" || next === "바닥") {
               setSelectedId(null);
               setDragging(null);
-              const ownedPaint = items.find(
-                (item) =>
-                  (next === "벽지"
-                    ? item.category === "벽지" || item.placement === "wallpaper"
-                    : item.category === "바닥" || item.placement === "floor-skin") && (state.owned[item.id] ?? 0) > 0,
-              );
-              if (ownedPaint && (!brushId || itemsById.get(brushId)?.category !== next)) {
-                setBrushId(ownedPaint.id);
-              }
-              setEraser(false);
+              setBrushId(null);
             } else {
               setPaintHover(null);
               setBrushId(null);
@@ -1221,12 +1514,11 @@ export function RoomScreen({
           items={items}
           layout={layout}
           owned={state.owned}
+          itemMeta={drawerItemMeta}
           points={state.points}
           selectedId={selectedId}
           brushId={brushId}
-          fillMode={fillMode}
-          eraser={eraser}
-          canUndo={undoStack.length > 0}
+          canUndo={Boolean(editUndo)}
           otherRoomIds={otherRoomIds}
           preferOwnedSort={tutorialActive}
           preferNewIds={[...starterDrawerIds].sort((a, b) => {
@@ -1239,35 +1531,25 @@ export function RoomScreen({
             return starterDrawerIds.indexOf(a) - starterDrawerIds.indexOf(b);
           })}
           tutorialLockId={tutLock ? suggestItemId : null}
-          tutorialLongPressMs={tutLock ? 250 : 0}
-          onTutorialGrab={
-            tutLock
-              ? (item, x, y) => {
-                  beginTutorialDrawerDrag(item, x, y);
-                }
-              : undefined
-          }
           onPick={pickDrawerItem}
-          onFillMode={(next) => {
-            setFillMode(next);
-            setEraser(false);
-          }}
-          onEraser={() => setEraser((value) => !value)}
-          onUndo={undoPaint}
+          onMoveHere={moveHereFromOtherRoom}
+          onBuyMore={openBuyMore}
+          onUndo={applyEditUndo}
           onHelp={() => showToast("중복 고양이 카드를 발바닥 포인트로 바꿀 수 있어요")}
         />
       )}
 
-      {tutLock && suggestTile ? (
-        <RoomTutDragGuide
-          active
-          phase={dragging || effectiveTutPhase === "drag" ? "drag" : "pick"}
-          reduceMotion={reduceMotion}
-        />
-      ) : null}
-
       {buyItem ? (
-        <RoomBuySheet item={buyItem} points={state.points} onClose={() => setBuyItem(null)} onBuy={() => buy(buyItem)} />
+        <RoomBuySheet
+          item={buyItem}
+          points={state.points}
+          confirmLabel={buyMore ? "하나 더 사기" : undefined}
+          onClose={() => {
+            setBuyItem(null);
+            setBuyMore(false);
+          }}
+          onBuy={() => buy(buyItem)}
+        />
       ) : null}
 
       {confirm === "reset" ? (
@@ -1295,6 +1577,9 @@ export function RoomScreen({
           danger
           onCancel={() => setConfirm(null)}
           onConfirm={() => {
+            previewRef.current = null;
+            setPreview(null);
+            setDragging(null);
             if (snapshot) persist(patchCurrentRoom(state, snapshot));
             setConfirm(null);
             leaveEdit(false);
@@ -1313,6 +1598,43 @@ export function RoomScreen({
             void saveRoomState(state);
             setConfirm(null);
             showToast("방을 기억해 두었어요");
+          }}
+        />
+      ) : null}
+
+      {confirm === "clear-furniture" ? (
+        <RoomConfirm
+          title="가구 모두 넣기"
+          body="이 방의 가구·소품·벽 꾸미기를 모두 서랍으로 되돌릴게요. 벽지·바닥은 그대로예요."
+          cancel="취소"
+          confirm="모두 넣기"
+          danger
+          onCancel={() => setConfirm(null)}
+          onConfirm={() => {
+            void (async () => {
+              let base = state;
+              if (previewRef.current) {
+                const cleared = cancelPreview(layout);
+                base = patchCurrentRoom(state, cleared);
+              }
+              setEditUndo(structuredClone(base));
+              const result = await clearFurnitureToDrawer({
+                state: base,
+                roomId: state.currentRoomId,
+                requestId: newRequestId("clear"),
+              });
+              setConfirm(null);
+              if (!result.ok) {
+                showToast(result.reason);
+                return;
+              }
+              setState(result.state);
+              setPreview(null);
+              previewRef.current = null;
+              setDragging(null);
+              setSelectedId(null);
+              showToast("가구를 모두 서랍에 넣었어요");
+            })();
           }}
         />
       ) : null}
