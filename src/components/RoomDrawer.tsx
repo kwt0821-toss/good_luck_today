@@ -14,6 +14,8 @@ import type { RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib
 const DRAWER_HELP = "중복 고양이 카드를 발바닥 포인트로 바꿀 수 있어요";
 const DRAWER_HEIGHT_COLLAPSED = 420;
 const DRAWER_HEIGHT_EXPANDED = 560;
+const DRAWER_DISMISS_HEIGHT = 280;
+const LONG_PRESS_MS = 420;
 
 export type DrawerItemMeta = {
   remaining: number;
@@ -30,24 +32,22 @@ type RoomDrawerProps = {
   items: RoomItem[];
   layout: RoomLayoutState;
   owned: Record<string, number>;
-  /** Per-item remaining/owned/other-room for count labels + CTAs. */
   itemMeta: Record<string, DrawerItemMeta>;
   points: number;
   selectedId: string | null;
   brushId: string | null;
   canUndo: boolean;
   otherRoomIds: Record<string, string | null>;
-  /** When true, 보유 tab sorts NEW placeables first (tutorial). */
   preferOwnedSort?: boolean;
-  /** Prefer these ids first among NEW placeables (starter.drawer order). */
   preferNewIds?: string[];
-  /** Tutorial: only this item id may be tapped; others are disabled. */
   tutorialLockId?: string | null;
   onPick: (item: RoomItem) => void;
   onMoveHere: (item: RoomItem) => void;
   onBuyMore: (item: RoomItem) => void;
   onUndo: () => void;
   onHelp?: () => void;
+  /** Collapsed sheet dragged down past dismiss threshold. */
+  onRequestClose?: () => void;
 };
 
 function tileState(
@@ -85,10 +85,7 @@ function tileState(
   };
 }
 
-function ownedSortRank(
-  item: RoomItem,
-  state: ReturnType<typeof tileState>,
-): number {
+function ownedSortRank(item: RoomItem, state: ReturnType<typeof tileState>): number {
   const isNew = !state.locked && !state.depleted && !state.otherRoom;
   if (isNew && isPlaceableDecor(item)) return 0;
   if (isNew && isPaintItem(item)) return 1;
@@ -121,17 +118,29 @@ export function RoomDrawer({
   onBuyMore,
   onUndo,
   onHelp,
+  onRequestClose,
 }: RoomDrawerProps) {
   const gridRef = useRef<HTMLDivElement | null>(null);
   const scrollLocked = useRef(false);
   const [expanded, setExpanded] = useState(false);
   const [dragHeight, setDragHeight] = useState<number | null>(null);
   const [sheetDragging, setSheetDragging] = useState(false);
-  const sheetDrag = useRef<{ y: number; startHeight: number; active: boolean; height: number }>({
+  const [infoItem, setInfoItem] = useState<RoomItem | null>(null);
+  const longPressTimer = useRef(0);
+  const longPressArmed = useRef(false);
+  const pressOrigin = useRef<{ x: number; y: number; item: RoomItem } | null>(null);
+  const sheetDrag = useRef<{
+    y: number;
+    startHeight: number;
+    active: boolean;
+    height: number;
+    startedExpanded: boolean;
+  }>({
     y: 0,
     startHeight: DRAWER_HEIGHT_COLLAPSED,
     active: false,
     height: DRAWER_HEIGHT_COLLAPSED,
+    startedExpanded: false,
   });
 
   const sheetHeight = dragHeight ?? (expanded ? DRAWER_HEIGHT_EXPANDED : DRAWER_HEIGHT_COLLAPSED);
@@ -143,6 +152,7 @@ export function RoomDrawer({
       startHeight: sheetHeight,
       active: true,
       height: sheetHeight,
+      startedExpanded: expanded,
     };
     setSheetDragging(true);
     try {
@@ -154,10 +164,13 @@ export function RoomDrawer({
 
   const onSheetPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!sheetDrag.current.active) return;
-    const dy = sheetDrag.current.y - event.clientY;
+    const dy = sheetDrag.current.y - event.clientY; // up = positive
+    const minH = sheetDrag.current.startedExpanded
+      ? DRAWER_HEIGHT_COLLAPSED
+      : DRAWER_DISMISS_HEIGHT;
     const next = Math.min(
       DRAWER_HEIGHT_EXPANDED,
-      Math.max(DRAWER_HEIGHT_COLLAPSED, sheetDrag.current.startHeight + dy),
+      Math.max(minH, sheetDrag.current.startHeight + dy),
     );
     sheetDrag.current.height = next;
     setDragHeight(next);
@@ -167,9 +180,24 @@ export function RoomDrawer({
     if (!sheetDrag.current.active) return;
     sheetDrag.current.active = false;
     setSheetDragging(false);
+    const h = sheetDrag.current.height;
+    const startedExpanded = sheetDrag.current.startedExpanded;
+
+    // Dismiss only from collapsed start, dragged well below collapsed.
+    if (
+      !startedExpanded &&
+      !tutorialLockId &&
+      onRequestClose &&
+      h <= (DRAWER_HEIGHT_COLLAPSED + DRAWER_DISMISS_HEIGHT) / 2
+    ) {
+      setDragHeight(null);
+      setExpanded(false);
+      onRequestClose();
+      return;
+    }
+
     const mid = (DRAWER_HEIGHT_COLLAPSED + DRAWER_HEIGHT_EXPANDED) / 2;
-    const open = sheetDrag.current.height >= mid;
-    setExpanded(open);
+    setExpanded(h >= mid);
     setDragHeight(null);
   };
 
@@ -191,6 +219,10 @@ export function RoomDrawer({
   useEffect(() => {
     if (!tutorialLockId) unlockDrawerScroll();
   }, [tutorialLockId]);
+
+  useEffect(() => {
+    setInfoItem(null);
+  }, [tab, themeFilter]);
 
   let visible = items.filter((item) => {
     if (tab === "보유") {
@@ -225,6 +257,44 @@ export function RoomDrawer({
   }
 
   const paintTab = tab === "벽지" || tab === "바닥";
+  const infoMeta = infoItem ? itemMeta[infoItem.id] : null;
+  const infoState = infoItem
+    ? tileState(
+        infoItem,
+        layout,
+        owned,
+        selectedId,
+        brushId,
+        otherRoomIds[infoItem.id] ?? null,
+        infoMeta ?? undefined,
+      )
+    : null;
+
+  const cancelLongPressTimer = () => {
+    window.clearTimeout(longPressTimer.current);
+    longPressTimer.current = 0;
+    pressOrigin.current = null;
+  };
+
+  const openInfo = (item: RoomItem) => {
+    cancelLongPressTimer();
+    longPressArmed.current = true;
+    setInfoItem(item);
+  };
+
+  const handleCellClick = (item: RoomItem, state: ReturnType<typeof tileState>) => {
+    if (longPressArmed.current) {
+      longPressArmed.current = false;
+      return;
+    }
+    const paint = isPaintItem(item);
+    if (state.locked || paint || state.remaining > 0) {
+      setInfoItem(null);
+      onPick(item);
+      return;
+    }
+    openInfo(item);
+  };
 
   return (
     <section
@@ -236,7 +306,7 @@ export function RoomDrawer({
         className="lucky-drawer-handle"
         role="slider"
         aria-label="아이템창 높이"
-        aria-valuemin={DRAWER_HEIGHT_COLLAPSED}
+        aria-valuemin={DRAWER_DISMISS_HEIGHT}
         aria-valuemax={DRAWER_HEIGHT_EXPANDED}
         aria-valuenow={Math.round(sheetHeight)}
         tabIndex={0}
@@ -302,104 +372,155 @@ export function RoomDrawer({
           </button>
         </div>
       ) : null}
+
+      {infoItem && infoState ? (
+        <div className="lucky-drawer-info" role="dialog" aria-label={infoItem.nameKo}>
+          <div className="lucky-drawer-info-copy">
+            <strong className="lucky-drawer-info-name">{infoItem.nameKo}</strong>
+            <span className="lucky-drawer-info-status">
+              {infoItem.attendanceOnly
+                ? "출석 한정 · 다시 살 수 없어요"
+                : infoState.otherRoom && infoMeta?.otherRoomName
+                  ? `다른 방에 있어요 · ${infoMeta.otherRoomName}`
+                  : infoState.depleted
+                    ? infoMeta?.canBuyMore
+                      ? "모두 배치 중"
+                      : "더 이상 가질 수 없어요"
+                    : infoState.placedHere
+                      ? "이 방에 있어요"
+                      : infoState.remaining > 0
+                        ? `남은 ${infoState.remaining}/${infoMeta?.owned ?? 0}`
+                        : "보유"}
+            </span>
+          </div>
+          <div className="lucky-drawer-info-actions">
+            {infoState.otherRoom ? (
+              <button
+                type="button"
+                className="lucky-drawer-info-btn"
+                onClick={() => {
+                  setInfoItem(null);
+                  onMoveHere(infoItem);
+                }}
+              >
+                이 방으로 옮기기
+              </button>
+            ) : null}
+            {!infoItem.attendanceOnly && infoMeta?.canBuyMore ? (
+              <button
+                type="button"
+                className="lucky-drawer-info-btn is-amber"
+                onClick={() => {
+                  setInfoItem(null);
+                  onBuyMore(infoItem);
+                }}
+              >
+                하나 더 사기 · {infoItem.price.toLocaleString("ko-KR")}P
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="lucky-drawer-info-close"
+              aria-label="닫기"
+              onClick={() => setInfoItem(null)}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <div ref={gridRef} className={`lucky-drawer-grid ${tutorialLockId ? "is-tut-mode" : ""}`}>
         {visible.map((item, index) => {
           const meta = itemMeta[item.id];
           const state = tileState(item, layout, owned, selectedId, brushId, otherRoomIds[item.id] ?? null, meta);
-          const isNew = !state.locked && !state.depleted && !state.otherRoom && !isPaintItem(item);
           const tutLockedOut = Boolean(tutorialLockId && tutorialLockId !== item.id);
           const paint = isPaintItem(item);
           const ownedCount = meta?.owned ?? owned[item.id] ?? 0;
           const remaining = meta?.remaining ?? 0;
-          const otherName = meta?.otherRoomName ?? null;
-          const canBuyMore = Boolean(meta?.canBuyMore);
-          const showCount = !paint && !state.locked && ownedCount > 0;
+          const showCount = !paint && !state.locked && ownedCount > 1;
+          const dimmed = !state.locked && !paint && remaining <= 0;
 
           return (
-            <div
+            <button
               key={item.id}
               id={
                 (tutorialLockId && item.id === tutorialLockId) || (!tutorialLockId && index === 0)
                   ? "drawer-item-0"
                   : undefined
               }
-              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom || state.depleted ? "is-other" : ""} ${state.selected ? "is-selected" : ""} ${isNew ? "is-new" : ""} ${tutLockedOut ? "is-tut-locked" : ""}`}
+              type="button"
+              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom || state.depleted ? "is-other" : ""} ${state.selected || infoItem?.id === item.id ? "is-selected" : ""} ${tutLockedOut ? "is-tut-locked" : ""} ${dimmed ? "is-dimmed" : ""}`}
+              disabled={tutLockedOut}
+              aria-label={item.nameKo}
+              onClick={() => handleCellClick(item, state)}
+              onPointerDown={(event) => {
+                if (tutLockedOut || state.locked) return;
+                if (event.button != null && event.button !== 0) return;
+                cancelLongPressTimer();
+                longPressArmed.current = false;
+                pressOrigin.current = { x: event.clientX, y: event.clientY, item };
+                longPressTimer.current = window.setTimeout(() => {
+                  openInfo(item);
+                }, LONG_PRESS_MS);
+              }}
+              onPointerMove={(event) => {
+                if (!pressOrigin.current) return;
+                const dx = event.clientX - pressOrigin.current.x;
+                const dy = event.clientY - pressOrigin.current.y;
+                if (Math.hypot(dx, dy) > 10) cancelLongPressTimer();
+              }}
+              onPointerUp={cancelLongPressTimer}
+              onPointerCancel={() => {
+                cancelLongPressTimer();
+                longPressArmed.current = false;
+              }}
             >
-              <button
-                type="button"
-                className="lucky-cell-main"
-                disabled={tutLockedOut}
-                onClick={() => onPick(item)}
-              >
-                <span className="lucky-cell-tile">
-                  {item.tileImage || item.id ? (
-                    <img src={roomAsset(item.tileImage ?? `tiles/${item.id}.png`)} alt="" />
-                  ) : (
-                    <span className="lucky-cell-empty" />
-                  )}
-                  {isNew ? <span className="lucky-cell-new">NEW</span> : null}
-                  {showCount ? (
-                    <span className="lucky-cell-count" aria-label={`남은 ${remaining} / 전체 ${ownedCount}`}>
-                      {remaining}/{ownedCount}
-                    </span>
-                  ) : null}
-                  {state.placedHere && !state.locked && remaining > 0 && !paint ? (
-                    <img className="lucky-cell-check" src={roomAsset("ui/badge-check.svg")} alt="" />
-                  ) : null}
-                  {state.locked ? <img className="lucky-cell-lock" src={roomAsset("ui/icon-lock.svg")} alt="" /> : null}
-                </span>
-                <strong>
-                  {item.nameKo}
-                  {item.attendanceOnly ? <span className="lucky-attend-tag">출석 한정</span> : null}
-                </strong>
-                {state.locked ? (
-                  <em>
-                    <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />
-                    {item.price}
-                  </em>
-                ) : paint ? (
-                  <small>{state.brushing || state.selected ? "미리보기" : "보유 · 계속 쓸 수 있어요"}</small>
-                ) : state.depleted && state.otherRoom && otherName ? (
-                  <small className="is-other">다른 방에 있어요 · {otherName}</small>
-                ) : state.depleted && item.attendanceOnly ? (
-                  <small className="is-other">한정 아이템이에요</small>
-                ) : state.depleted && canBuyMore ? (
-                  <small className="is-other">모두 배치 중</small>
-                ) : state.depleted ? (
-                  <small className="is-other">더 이상 가질 수 없어요</small>
+              <span className="lucky-cell-tile">
+                {item.tileImage || item.id ? (
+                  <img src={roomAsset(item.tileImage ?? `tiles/${item.id}.png`)} alt="" />
                 ) : (
-                  <small>
-                    남은 {remaining}/{ownedCount}
-                  </small>
+                  <span className="lucky-cell-empty" />
                 )}
-              </button>
-              {!state.locked && !paint && state.depleted && state.otherRoom ? (
-                <button
-                  type="button"
-                  className="lucky-cell-cta"
-                  disabled={tutLockedOut}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onMoveHere(item);
-                  }}
-                >
-                  이 방으로 옮기기
-                </button>
-              ) : null}
-              {!state.locked && !paint && state.depleted && !state.otherRoom && canBuyMore ? (
-                <button
-                  type="button"
-                  className="lucky-cell-cta"
-                  disabled={tutLockedOut}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onBuyMore(item);
-                  }}
-                >
-                  하나 더 사기
-                </button>
-              ) : null}
-            </div>
+                {item.attendanceOnly && !state.locked ? (
+                  <img
+                    className="lucky-cell-badge is-tl"
+                    src={roomAsset("ui/icon-badge-moon.svg")}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                ) : null}
+                {state.placedHere && !state.locked && !paint ? (
+                  <img
+                    className="lucky-cell-badge is-tr"
+                    src={roomAsset("ui/badge-check.svg")}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                ) : null}
+                {state.otherRoom && !state.locked && !paint ? (
+                  <img
+                    className="lucky-cell-badge is-tr"
+                    src={roomAsset("ui/icon-badge-home.svg")}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                ) : null}
+                {state.locked ? (
+                  <img
+                    className="lucky-cell-badge is-tr"
+                    src={roomAsset("ui/icon-lock.svg")}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                ) : null}
+                {showCount ? (
+                  <span className="lucky-cell-count" aria-label={`남은 ${remaining} / 전체 ${ownedCount}`}>
+                    {remaining}/{ownedCount}
+                  </span>
+                ) : null}
+              </span>
+            </button>
           );
         })}
       </div>

@@ -10,14 +10,30 @@ type ConfirmProps = {
   cancel: string;
   confirm: string;
   danger?: boolean;
+  /** Backdrop / outside tap. Defaults to onCancel. */
+  onDismiss?: () => void;
   onCancel: () => void;
   onConfirm: () => void;
 };
 
-export function RoomConfirm({ title, body, cancel, confirm, danger, onCancel, onConfirm }: ConfirmProps) {
+export function RoomConfirm({
+  title,
+  body,
+  cancel,
+  confirm,
+  danger,
+  onDismiss,
+  onCancel,
+  onConfirm,
+}: ConfirmProps) {
   return (
     <div className="lucky-modal">
-      <button type="button" className="lucky-modal-back" aria-label="닫기" onClick={onCancel} />
+      <button
+        type="button"
+        className="lucky-modal-back"
+        aria-label="닫기"
+        onClick={onDismiss ?? onCancel}
+      />
       <div className="lucky-modal-card" role="dialog" aria-label={title}>
         <h3>{title}</h3>
         <p>{body}</p>

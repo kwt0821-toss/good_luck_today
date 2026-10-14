@@ -1018,6 +1018,46 @@
   cursor: wait;
 }
 
+.settings-version-tap {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.settings-reset-confirm {
+  margin: 10px 0 4px;
+  padding: 14px 14px 12px;
+  border-radius: 14px;
+  background: rgba(255, 139, 122, 0.1);
+  border: 1px solid rgba(255, 139, 122, 0.28);
+}
+
+.settings-reset-confirm strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--menu-cream);
+}
+
+.settings-reset-confirm p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(243, 233, 215, 0.7);
+}
+
+.settings-reset-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.menu-sheet-cta.is-danger {
+  background: linear-gradient(180deg, #ff9b8c, #ff6d5a);
+  color: #2a1010;
+}
+
 .settings-toggle {
   width: 44px;
   height: 26px;

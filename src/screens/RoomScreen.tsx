@@ -135,7 +135,9 @@ export function RoomScreen({
   const [toast, setToast] = useState<string | null>(null);
   const [buyItem, setBuyItem] = useState<RoomItem | null>(null);
   const [buyMore, setBuyMore] = useState(false);
-  const [confirm, setConfirm] = useState<"reset" | "discard" | "save-ph" | "clear-furniture" | null>(null);
+  const [confirm, setConfirm] = useState<
+    "reset" | "discard" | "close-edit" | "save-ph" | "clear-furniture" | null
+  >(null);
   const [dragging, setDragging] = useState<RoomDrag | null>(null);
   const [preview, setPreview] = useState<PlacementPreview | null>(null);
   const [committing, setCommitting] = useState(false);
@@ -1038,7 +1040,7 @@ export function RoomScreen({
   };
 
   const moveHereFromOtherRoom = (item: RoomItem) => {
-    let layoutNow = layout;
+    let layoutNow: RoomLayoutState = layout;
     if (preview) {
       layoutNow = cancelPreview(layout);
       patchLayoutLocal(layoutNow);
@@ -1536,6 +1538,10 @@ export function RoomScreen({
           onBuyMore={openBuyMore}
           onUndo={applyEditUndo}
           onHelp={() => showToast("중복 고양이 카드를 발바닥 포인트로 바꿀 수 있어요")}
+          onRequestClose={() => {
+            if (tutLock) return;
+            setConfirm("close-edit");
+          }}
         />
       )}
 
@@ -1583,6 +1589,34 @@ export function RoomScreen({
             if (snapshot) persist(patchCurrentRoom(state, snapshot));
             setConfirm(null);
             leaveEdit(false);
+          }}
+        />
+      ) : null}
+
+      {confirm === "close-edit" ? (
+        <RoomConfirm
+          title="변경사항을 저장할까요?"
+          body="꾸미기를 끝낼게요. 저장하지 않으면 들어오기 전 배치로 돌아가요."
+          cancel="저장 안 함"
+          confirm="저장"
+          onDismiss={() => setConfirm(null)}
+          onCancel={() => {
+            previewRef.current = null;
+            setPreview(null);
+            setDragging(null);
+            if (snapshot) persist(patchCurrentRoom(state, snapshot));
+            setConfirm(null);
+            leaveEdit(false);
+          }}
+          onConfirm={() => {
+            if (previewRef.current) {
+              const cleared = cancelPreview(layout);
+              persist(patchCurrentRoom(state, cleared));
+            } else {
+              persist(state);
+            }
+            setConfirm(null);
+            leaveEdit(true);
           }}
         />
       ) : null}

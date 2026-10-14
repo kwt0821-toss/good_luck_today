@@ -35,6 +35,25 @@ import "./MenuPanel.css";
 type RewardsView = "inbox" | "confirm" | "success" | "history";
 type ExchangeView = "summary" | "confirm";
 
+const PROGRESS_RESET_UNLOCK_KEY = "lucky-cat.progress-reset-unlocked";
+
+function readProgressResetUnlocked(): boolean {
+  if (progressResetUnlockedByDefault()) return true;
+  try {
+    return window.sessionStorage.getItem(PROGRESS_RESET_UNLOCK_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeProgressResetUnlocked(): void {
+  try {
+    window.sessionStorage.setItem(PROGRESS_RESET_UNLOCK_KEY, "1");
+  } catch {
+    // ignore quota / private mode
+  }
+}
+
 type MenuPanelProps = {
   open: boolean;
   ops: OpsState;
@@ -106,9 +125,8 @@ export function MenuPanel({
   const [popDay, setPopDay] = useState<number | null>(null);
   const [creditsText, setCreditsText] = useState<string | null>(null);
   const [devResetting, setDevResetting] = useState(false);
-  const [progressResetVisible, setProgressResetVisible] = useState(() =>
-    progressResetUnlockedByDefault(),
-  );
+  const [progressResetVisible, setProgressResetVisible] = useState(() => readProgressResetUnlocked());
+  const [progressResetConfirm, setProgressResetConfirm] = useState(false);
   const versionTapRef = useRef({ count: 0, timer: 0 });
   const [rewardsView, setRewardsView] = useState<RewardsView>("inbox");
   const [withdrawAmount, setWithdrawAmount] = useState(0);
@@ -246,6 +264,7 @@ export function MenuPanel({
       setRewardsView("inbox");
       setExchangeView("summary");
       setExchangeBusy(false);
+      setProgressResetConfirm(false);
     }, reduce ? 150 : 280);
   };
 
@@ -290,6 +309,39 @@ export function MenuPanel({
     setToast(message);
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), 1800);
+  };
+
+  const unlockProgressReset = () => {
+    if (progressResetVisible) return;
+    const stamp = versionTapRef.current;
+    window.clearTimeout(stamp.timer);
+    stamp.count += 1;
+    if (stamp.count >= 7) {
+      stamp.count = 0;
+      writeProgressResetUnlocked();
+      setProgressResetVisible(true);
+      showToast("진행도 초기화가 열렸어요");
+      return;
+    }
+    stamp.timer = window.setTimeout(() => {
+      stamp.count = 0;
+    }, 2200);
+  };
+
+  const runProgressReset = () => {
+    if (devResetting) return;
+    setDevResetting(true);
+    void resetToNewUserState()
+      .then((next) => {
+        onOpsChange(next);
+        onDevResetNewUser?.();
+        window.location.assign("/");
+      })
+      .catch(() => {
+        setDevResetting(false);
+        setProgressResetConfirm(false);
+        showToast("초기화에 실패했어요");
+      });
   };
 
   const onPanelPointerDown = (event: ReactPointerEvent) => {
@@ -1175,20 +1227,15 @@ export function MenuPanel({
                               type="button"
                               className="link settings-version-tap"
                               aria-label="앱 버전"
-                              onClick={() => {
-                                if (progressResetVisible) return;
-                                const stamp = versionTapRef.current;
-                                window.clearTimeout(stamp.timer);
-                                stamp.count += 1;
-                                if (stamp.count >= 7) {
-                                  stamp.count = 0;
-                                  setProgressResetVisible(true);
-                                  showToast("진행도 초기화가 열렸어요");
-                                  return;
+                              onPointerUp={(event) => {
+                                if (event.button != null && event.button !== 0) return;
+                                unlockProgressReset();
+                              }}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  unlockProgressReset();
                                 }
-                                stamp.timer = window.setTimeout(() => {
-                                  stamp.count = 0;
-                                }, 1800);
                               }}
                             >
                               v1.0.0{isDevBuild ? " · DEV" : ""}
@@ -1244,25 +1291,35 @@ export function MenuPanel({
                           disabled={devResetting}
                           onClick={() => {
                             if (devResetting) return;
-                            const ok = window.confirm(
-                              "신규 유저 상태로 초기화할까요?\n도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워져요.",
-                            );
-                            if (!ok) return;
-                            setDevResetting(true);
-                            void resetToNewUserState()
-                              .then((next) => {
-                                onOpsChange(next);
-                                onDevResetNewUser?.();
-                                window.location.assign("/");
-                              })
-                              .catch(() => {
-                                setDevResetting(false);
-                                showToast("초기화에 실패했어요");
-                              });
+                            setProgressResetConfirm(true);
                           }}
                         >
                           {devResetting ? "초기화 중…" : "진행도 초기화"}
                         </button>
+                      </div>
+                    ) : null}
+                    {progressResetConfirm ? (
+                      <div className="settings-reset-confirm" role="dialog" aria-label="진행도 초기화 확인">
+                        <strong>신규 유저 상태로 초기화할까요?</strong>
+                        <p>도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워져요.</p>
+                        <div className="settings-reset-confirm-actions">
+                          <button
+                            type="button"
+                            className="menu-sheet-cta is-secondary"
+                            disabled={devResetting}
+                            onClick={() => setProgressResetConfirm(false)}
+                          >
+                            취소
+                          </button>
+                          <button
+                            type="button"
+                            className="menu-sheet-cta is-danger"
+                            disabled={devResetting}
+                            onClick={runProgressReset}
+                          >
+                            {devResetting ? "초기화 중…" : "초기화"}
+                          </button>
+                        </div>
                       </div>
                     ) : null}
                     {creditsText ? (
