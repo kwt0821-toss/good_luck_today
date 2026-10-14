@@ -123,26 +123,21 @@ export async function grantPawAdReward(state: OpsState): Promise<
   return { state: next, gained };
 }
 
-/** Convert one duplicate copy to paw (keeps count at least 1). */
+/** Convert `qty` duplicate copies (default 1) to paw. Prefer postDupExchange for idempotent writes. */
 export async function convertDuplicate(
   state: OpsState,
   card: DexCard,
+  qty = 1,
 ): Promise<{ state: OpsState; gained: number; owned: DexOwnedMap } | { error: string }> {
-  const config = await loadOpsConfig();
-  const owned = await loadDexOwned();
-  const record = owned[card.id];
-  if (!record || record.count <= 1) {
-    return { error: "바꿀 중복 카드가 없어요" };
-  }
-  const gained = dupPawForCard(card, config.economy);
-  const nextOwned = {
-    ...owned,
-    [card.id]: { ...record, count: record.count - 1 },
-  };
-  await saveDexOwned(nextOwned);
-  const next = { ...state, pawBalance: state.pawBalance + gained };
-  await saveOpsState(next);
-  return { state: next, gained, owned: nextOwned };
+  const { buildDupExchangeRequestId, postDupExchange } = await import("./dupExchange");
+  const result = await postDupExchange(state, {
+    mode: "card",
+    cardId: card.id,
+    qty,
+    requestId: buildDupExchangeRequestId("card", card.id),
+  });
+  if (!result.response.ok) return { error: result.response.reason };
+  return { state: result.state, gained: result.response.gained, owned: result.owned };
 }
 
 export { canClaimAttendanceToday } from "./attendanceServer";
@@ -173,26 +168,18 @@ export async function claimAttendanceIfNeeded(
 export async function convertAllDuplicates(
   state: OpsState,
 ): Promise<{ state: OpsState; gained: number; converted: number; owned: DexOwnedMap } | { error: string }> {
-  const config = await loadOpsConfig();
-  const catalog = await loadDexCatalog();
-  let owned = await loadDexOwned();
-  let gained = 0;
-  let converted = 0;
-  const nextOwned: DexOwnedMap = { ...owned };
-  for (const card of catalog.cards) {
-    const record = nextOwned[card.id];
-    if (!record || record.count <= 1) continue;
-    const extras = record.count - 1;
-    gained += dupPawForCard(card, config.economy) * extras;
-    converted += extras;
-    nextOwned[card.id] = { ...record, count: 1 };
-  }
-  if (converted <= 0) return { error: "바꿀 중복 카드가 없어요" };
-  owned = nextOwned;
-  await saveDexOwned(owned);
-  const next = { ...state, pawBalance: state.pawBalance + gained };
-  await saveOpsState(next);
-  return { state: next, gained, converted, owned };
+  const { buildDupExchangeRequestId, postDupExchange } = await import("./dupExchange");
+  const result = await postDupExchange(state, {
+    mode: "all",
+    requestId: buildDupExchangeRequestId("all"),
+  });
+  if (!result.response.ok) return { error: result.response.reason };
+  return {
+    state: result.state,
+    gained: result.response.gained,
+    converted: result.response.converted,
+    owned: result.owned,
+  };
 }
 
 export async function collectAllRewards(

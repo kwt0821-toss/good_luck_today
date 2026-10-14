@@ -41,6 +41,7 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     ticketShopDayKey: today,
     ticketShopDayBought: 0,
     ticketShopLedger: [],
+    dupExchangeLedger: [],
     attendanceBadges: [],
     claimedMilestoneDays: [],
     featureIntrosSeen: [],

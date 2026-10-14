@@ -25,16 +25,15 @@ import {
   buildTicketBuyRequestId,
   postShopTicketsBuy,
 } from "../lib/mockTicketShop";
-import {
-  claimAttendanceGift,
-  convertAllDuplicates,
-} from "../lib/opsRewards";
+import { buildDupExchangeRequestId, postDupExchange } from "../lib/dupExchange";
+import { claimAttendanceGift } from "../lib/opsRewards";
 import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
 import type { MenuSheetId } from "../lib/menuTypes";
 import { haptic } from "../lib/native";
 import "./MenuPanel.css";
 
 type RewardsView = "inbox" | "confirm" | "success" | "history";
+type ExchangeView = "summary" | "confirm";
 
 type MenuPanelProps = {
   open: boolean;
@@ -112,6 +111,8 @@ export function MenuPanel({
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
   const [withdrawBusy, setWithdrawBusy] = useState(false);
   const [ticketBuyBusy, setTicketBuyBusy] = useState(false);
+  const [exchangeView, setExchangeView] = useState<ExchangeView>("summary");
+  const [exchangeBusy, setExchangeBusy] = useState(false);
   const reduce = shouldReduceMenuMotion(settings);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const sheetDrag = useRef<{ y: number; active: boolean }>({ y: 0, active: false });
@@ -127,6 +128,7 @@ export function MenuPanel({
       setSheet(null);
       setSheetOpen(false);
       setRewardsView("inbox");
+      setExchangeView("summary");
       return;
     }
     setClosing(false);
@@ -176,6 +178,10 @@ export function MenuPanel({
         setModel(next);
         setWithdrawAmount(next.wallet.maxWithdrawable);
       });
+    }
+    if (id === "exchange") {
+      setExchangeView("summary");
+      setExchangeBusy(false);
     }
     AudioManager.playSfx("sheet-open");
     requestAnimationFrame(() => setSheetOpen(true));
@@ -234,6 +240,8 @@ export function MenuPanel({
     window.setTimeout(() => {
       setSheet(null);
       setRewardsView("inbox");
+      setExchangeView("summary");
+      setExchangeBusy(false);
     }, reduce ? 150 : 280);
   };
 
@@ -350,16 +358,27 @@ export function MenuPanel({
   };
 
   const doExchange = async () => {
-    const result = await convertAllDuplicates(ops);
-    if ("error" in result) {
-      showToast(result.error);
-      return;
+    if (exchangeBusy || !model || model.exchange.duplicateCount <= 0) return;
+    setExchangeBusy(true);
+    try {
+      const result = await postDupExchange(ops, {
+        mode: "all",
+        requestId: buildDupExchangeRequestId("all"),
+      });
+      if (!result.response.ok) {
+        showToast(result.response.reason);
+        return;
+      }
+      onOpsChange(result.state);
+      const toastTpl =
+        model.menu.sheets.exchange.doneToast ?? "{p}P를 받았어요";
+      showToast(toastTpl.replace("{p}", String(result.response.gained)));
+      AudioManager.playSfx("reward-coin");
+      void haptic("success");
+      closeSheet();
+    } finally {
+      setExchangeBusy(false);
     }
-    onOpsChange(result.state);
-    showToast(`중복 ${result.converted}장 → +${result.gained}P`);
-    AudioManager.playSfx("reward-coin");
-    void haptic("success");
-    closeSheet();
   };
 
   const doBuyRateUpTicket = async () => {
@@ -825,7 +844,7 @@ export function MenuPanel({
                   </>
                 ) : null}
 
-                {sheet === "exchange" ? (
+                {sheet === "exchange" && exchangeView === "summary" ? (
                   <>
                     <div className="menu-list-row">
                       <span>중복 카드</span>
@@ -836,6 +855,31 @@ export function MenuPanel({
                       <b>{model.exchange.totalPaw.toLocaleString("ko-KR")}P</b>
                     </div>
                   </>
+                ) : null}
+
+                {sheet === "exchange" && exchangeView === "confirm" ? (
+                  <div className="exchange-confirm">
+                    <h4>
+                      {(model.menu.sheets.exchange.confirmTitle ??
+                        "중복 카드 {n}장을 발바닥 포인트 {p}P로 바꿀까요?")
+                        .replace("{n}", String(model.exchange.duplicateCount))
+                        .replace("{p}", String(model.exchange.totalPaw))}
+                    </h4>
+                    <p className="exchange-confirm-sub">
+                      {model.menu.sheets.exchange.confirmSub ??
+                        "카드마다 1장은 도감에 남아요 · 바꾼 카드는 되돌릴 수 없어요"}
+                    </p>
+                    <ul className="exchange-grade-list">
+                      {model.exchange.lines.map((line) => (
+                        <li key={line.key}>
+                          <span>
+                            {line.label} {line.count}장
+                          </span>
+                          <b>{line.paw.toLocaleString("ko-KR")}P</b>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ) : null}
 
                 {sheet === "ticketShop" ? (
@@ -1220,18 +1264,41 @@ export function MenuPanel({
                 </>
               ) : null}
 
-              {sheet === "exchange" ? (
+              {sheet === "exchange" && exchangeView === "summary" ? (
                 <button
                   type="button"
                   className="menu-sheet-cta"
                   disabled={model.exchange.duplicateCount <= 0}
-                  onClick={() => void doExchange()}
+                  onClick={() => setExchangeView("confirm")}
                 >
                   {model.menu.sheets.exchange.cta.replace(
                     "{total}",
                     String(model.exchange.totalPaw),
                   )}
                 </button>
+              ) : null}
+
+              {sheet === "exchange" && exchangeView === "confirm" ? (
+                <div className="exchange-confirm-actions">
+                  <button
+                    type="button"
+                    className="menu-sheet-cta is-secondary"
+                    disabled={exchangeBusy}
+                    onClick={() => setExchangeView("summary")}
+                  >
+                    {model.menu.sheets.exchange.confirmCancel ?? "취소"}
+                  </button>
+                  <button
+                    type="button"
+                    className="menu-sheet-cta"
+                    disabled={exchangeBusy || model.exchange.duplicateCount <= 0}
+                    onClick={() => void doExchange()}
+                  >
+                    {exchangeBusy
+                      ? "처리 중…"
+                      : (model.menu.sheets.exchange.confirmOk ?? "바꾸기")}
+                  </button>
+                </div>
               ) : null}
 
               {sheet === "ticketShop" ? (

@@ -111,7 +111,17 @@ export type MenuConfig = {
       perCardDecimals: number;
       note: string;
     };
-    exchange: { title: string; eyebrow: string; desc: string; cta: string };
+    exchange: {
+      title: string;
+      eyebrow: string;
+      desc: string;
+      cta: string;
+      confirmTitle?: string;
+      confirmSub?: string;
+      confirmCancel?: string;
+      confirmOk?: string;
+      doneToast?: string;
+    };
     ticketShop: {
       title: string;
       eyebrow: string;

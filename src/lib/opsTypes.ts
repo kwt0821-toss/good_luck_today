@@ -461,6 +461,16 @@ export type OpsState = {
   ticketShopDayBought: number;
   /** Idempotent purchase ledger (tossUserKey + requestId) */
   ticketShopLedger: TicketShopLedgerItem[];
+  /** Idempotent ledger for POST /dex/duplicates/exchange (tossUserKey + requestId) */
+  dupExchangeLedger: Array<{
+    requestId: string;
+    createdAt: number;
+    mode: "all" | "card";
+    cardId?: string;
+    converted: number;
+    gained: number;
+    pawBalance: number;
+  }>;
   attendanceBadges: string[];
   claimedMilestoneDays: number[];
   featureIntrosSeen: string[];

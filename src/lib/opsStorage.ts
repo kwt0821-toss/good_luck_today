@@ -147,6 +147,20 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
             }))
             .filter((item) => item.requestId)
         : fallback.ticketShopLedger,
+      dupExchangeLedger: Array.isArray(parsed.dupExchangeLedger)
+        ? parsed.dupExchangeLedger
+            .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+            .map((item) => ({
+              requestId: typeof item.requestId === "string" ? item.requestId : "",
+              createdAt: typeof item.createdAt === "number" ? item.createdAt : 0,
+              mode: item.mode === "card" ? ("card" as const) : ("all" as const),
+              cardId: typeof item.cardId === "string" ? item.cardId : undefined,
+              converted: typeof item.converted === "number" ? item.converted : 0,
+              gained: typeof item.gained === "number" ? item.gained : 0,
+              pawBalance: typeof item.pawBalance === "number" ? item.pawBalance : 0,
+            }))
+            .filter((item) => item.requestId)
+        : fallback.dupExchangeLedger,
       attendanceBadges: parseStringArray(parsed.attendanceBadges),
       claimedMilestoneDays: Array.isArray(parsed.claimedMilestoneDays)
         ? parsed.claimedMilestoneDays.filter((n): n is number => typeof n === "number")

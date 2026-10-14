@@ -3,6 +3,7 @@ import type { AttendanceStatusResponse } from "./attendanceTypes";
 import { loadDexCatalog } from "./dexCatalog";
 import { loadDexOwned } from "./dexCollection";
 import { listClaimableDexRewards } from "./dexRewards";
+import { summarizeDupExchange, type DupExchangeGradeLine } from "./dupExchange";
 import {
   getWithdrawRules,
   maxWithdrawableAmount,
@@ -29,7 +30,11 @@ export type MenuViewModel = {
   menuIconDot: boolean;
   attendance: AttendanceStatusResponse;
   pawAds: { remaining: number; max: number; weekendDouble: boolean };
-  exchange: { duplicateCount: number; totalPaw: number };
+  exchange: {
+    duplicateCount: number;
+    totalPaw: number;
+    lines: DupExchangeGradeLine[];
+  };
   /** Dex manual-claim pending count (inbox auto-grant removed). */
   rewards: { unclaimedCount: number; dexClaimableCount: number; items: [] };
   wallet: {
@@ -65,21 +70,9 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
   const cozyPoints = computeOwnedCozy(config.prices, ops.ownedItemIds);
   const cozyLevel = cozyLevelFromPoints(config.economy, cozyPoints);
 
-  let duplicateCount = 0;
-  let exchangeTotal = 0;
-  const convert = config.economy.pawSources.duplicateConvert;
-  for (const card of catalog.cards) {
-    const count = owned[card.id]?.count ?? 0;
-    if (count <= 1) continue;
-    const extras = count - 1;
-    duplicateCount += extras;
-    let unit = convert.rare_3to5star;
-    if (card.type === "legend") unit = convert.legend;
-    else if (card.type === "special") unit = convert.special;
-    else if (card.type === "character") unit = convert.character;
-    else if ((card.stars ?? 1) <= 2) unit = convert.common_1to2star;
-    exchangeTotal += unit * extras;
-  }
+  const exchangeSummary = summarizeDupExchange(catalog.cards, owned, config.economy);
+  const duplicateCount = exchangeSummary.duplicateCount;
+  const exchangeTotal = exchangeSummary.totalPaw;
 
   const dexClaimableCount = dexClaimable.length;
   const pawRemaining = remainingPawAds(ops, config);
@@ -204,7 +197,11 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     menuIconDot,
     attendance,
     pawAds: { remaining: pawRemaining, max: pawMax, weekendDouble },
-    exchange: { duplicateCount, totalPaw: exchangeTotal },
+    exchange: {
+      duplicateCount,
+      totalPaw: exchangeTotal,
+      lines: exchangeSummary.lines,
+    },
     rewards: { unclaimedCount: dexClaimableCount, dexClaimableCount, items: [] },
     wallet: {
       min: withdrawRules.min,

@@ -1,4 +1,5 @@
 import { dexAsset } from "../lib/dexCatalog";
+import { formatDupBadge } from "../lib/dupExchange";
 import type { DexCard, DexOwnedRecord } from "../lib/dexTypes";
 import { ncoinIcon } from "../lib/ncoinIcon";
 
@@ -35,6 +36,7 @@ export function DexCardSlot({
   claimEnabled = true,
 }: DexCardSlotProps) {
   const owned = (record?.count ?? 0) > 0;
+  const dupBadge = formatDupBadge(record?.count ?? 0);
   const comingSoon = kind === "soon";
   const name = card?.type === "breed" ? card.breed?.en : card?.name?.ko;
   const alt = owned && name ? name : "아직 만나지 못한 고양이";
@@ -87,7 +89,7 @@ export function DexCardSlot({
       )}
       {owned ? <span className="dex-slot-shine" aria-hidden="true" /> : null}
       {owned && record?.isNew ? <span className="dex-tag-new">NEW</span> : null}
-      {owned && (record?.count ?? 0) >= 2 ? <span className="dex-badge-dup">×{record?.count}</span> : null}
+      {owned && dupBadge ? <span className="dex-badge-dup">{dupBadge}</span> : null}
       {owned && claimable && card ? (
         <span
           role="button"

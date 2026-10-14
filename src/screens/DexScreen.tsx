@@ -32,8 +32,10 @@ import {
 } from "../lib/dexRewards";
 import { haptic } from "../lib/native";
 import type { DexCard, DexCatalog, DexOwnedMap, DexTab } from "../lib/dexTypes";
-import { convertDuplicate } from "../lib/opsRewards";
-import type { OpsState } from "../lib/opsTypes";
+import { buildDupExchangeRequestId, postDupExchange } from "../lib/dupExchange";
+import { dupPawForCard } from "../lib/drawRates";
+import { loadOpsConfig } from "../lib/opsConfig";
+import type { OpsEconomy, OpsState } from "../lib/opsTypes";
 import "./DexScreen.css";
 
 export type DexTutorialPhase = "scroll" | "slot" | "claim" | "toast" | "ncoin-after" | null;
@@ -74,6 +76,7 @@ export function DexScreen({
   onTutorialClaimed,
 }: DexScreenProps) {
   const [catalog, setCatalog] = useState<DexCatalog | null>(null);
+  const [economy, setEconomy] = useState<OpsEconomy | null>(null);
   const [owned, setOwned] = useState<DexOwnedMap>({});
   const [claimable, setClaimable] = useState<DexReward[]>([]);
   const [tab, setTab] = useState<DexTab>(() => {
@@ -111,19 +114,22 @@ export function DexScreen({
   };
 
   useEffect(() => {
-    void Promise.all([loadDexCatalog(), loadDexOwned()]).then(([nextCatalog, nextOwned]) => {
-      setCatalog(nextCatalog);
-      setOwned(nextOwned);
-      void refreshClaimable(ops, nextOwned);
-      const cardId = focusCardId ?? new URLSearchParams(window.location.search).get("card");
-      if (cardId) {
-        const found = nextCatalog.cards.find((item) => item.id === cardId);
-        if (found) {
-          setTab(found.type);
-          if (!focusCardId && (nextOwned[found.id]?.count ?? 0) > 0) setOpenCard(found);
+    void Promise.all([loadDexCatalog(), loadDexOwned(), loadOpsConfig()]).then(
+      ([nextCatalog, nextOwned, config]) => {
+        setCatalog(nextCatalog);
+        setOwned(nextOwned);
+        setEconomy(config.economy);
+        void refreshClaimable(ops, nextOwned);
+        const cardId = focusCardId ?? new URLSearchParams(window.location.search).get("card");
+        if (cardId) {
+          const found = nextCatalog.cards.find((item) => item.id === cardId);
+          if (found) {
+            setTab(found.type);
+            if (!focusCardId && (nextOwned[found.id]?.count ?? 0) > 0) setOpenCard(found);
+          }
         }
-      }
-    });
+      },
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- boot once; ops claim refresh via claim handlers
   }, []);
 
@@ -554,20 +560,25 @@ export function DexScreen({
           card={openCard}
           group={groupForCard(catalog, openCard)}
           owned={owned}
+          dupUnitPaw={economy ? dupPawForCard(openCard, economy) : 0}
           onClose={() => setOpenCard(null)}
           onChangeCard={setOpenCard}
-          onConvertDuplicate={(card) => {
-            void (async () => {
-              const result = await convertDuplicate(ops, card);
-              if ("error" in result) {
-                showToast(result.error);
-                return;
-              }
-              onOpsChange(result.state);
-              setOwned(result.owned);
-              showToast(`중복 카드 → +${result.gained}포인트`);
-              void haptic("success");
-            })();
+          onConvertDuplicate={async (card, qty) => {
+            const result = await postDupExchange(ops, {
+              mode: "card",
+              cardId: card.id,
+              qty,
+              requestId: buildDupExchangeRequestId("card", card.id),
+            });
+            if (!result.response.ok) {
+              showToast(result.response.reason);
+              return;
+            }
+            onOpsChange(result.state);
+            setOwned(result.owned);
+            showToast(`${result.response.gained}P를 받았어요`);
+            void haptic("success");
+            AudioManager.playSfx("reward-coin");
           }}
         />
       ) : null}

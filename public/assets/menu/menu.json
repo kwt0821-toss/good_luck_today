@@ -349,7 +349,12 @@
    "title": "중복 카드 교환",
    "eyebrow": "SWAP",
    "desc": "겹친 카드를 포인트로 바꿔요. 카드는 1장씩 남아요.",
-   "cta": "한 번에 바꾸기 · {total}P"
+   "cta": "모두 교환",
+   "confirmTitle": "중복 카드 {n}장을 발바닥 포인트 {p}P로 바꿀까요?",
+   "confirmSub": "카드마다 1장은 도감에 남아요 · 바꾼 카드는 되돌릴 수 없어요",
+   "confirmCancel": "취소",
+   "confirmOk": "바꾸기",
+   "doneToast": "{p}P를 받았어요"
   },
   "ticketShop": {
    "title": "확률업 뽑기권",

@@ -1417,6 +1417,60 @@
   margin-top: 0;
 }
 
+.exchange-confirm h4 {
+  margin: 4px 0 10px;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--menu-cream);
+  letter-spacing: -0.2px;
+}
+
+.exchange-confirm-sub {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgba(243, 233, 215, 0.55);
+}
+
+.exchange-grade-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.exchange-grade-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: rgba(243, 233, 215, 0.06);
+  color: rgba(243, 233, 215, 0.78);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.exchange-grade-list b {
+  color: var(--menu-amber);
+  font-variant-numeric: tabular-nums;
+}
+
+.exchange-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 8px;
+}
+
+.exchange-confirm-actions .menu-sheet-cta {
+  width: 100%;
+}
+
 .menu-sheet-cta.is-secondary {
   background: rgba(243, 233, 215, 0.08);
   color: var(--menu-cream);

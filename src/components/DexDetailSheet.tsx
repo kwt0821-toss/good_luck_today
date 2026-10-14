@@ -6,13 +6,18 @@ import { cardDisplayName, cardKoreanName, dexAsset, formatMetDate } from "../lib
 import { loadMenuSettings, shouldReduceMenuMotion } from "../lib/menuSettings";
 import type { DexCard, DexOwnedMap } from "../lib/dexTypes";
 
+type DupConvertPhase = "idle" | "stepper" | "confirm";
+
 type DexDetailSheetProps = {
   card: DexCard;
   group: DexCard[];
   owned: DexOwnedMap;
+  /** Paw points per duplicate card (economy.pawSources.duplicateConvert). */
+  dupUnitPaw?: number;
   onClose: () => void;
   onChangeCard: (card: DexCard) => void;
-  onConvertDuplicate?: (card: DexCard) => void;
+  /** Convert `qty` duplicates (keeps 1). */
+  onConvertDuplicate?: (card: DexCard, qty: number) => void | Promise<void>;
 };
 
 const LIFT_MS = 100;
@@ -85,6 +90,7 @@ export function DexDetailSheet({
   card,
   group,
   owned,
+  dupUnitPaw = 0,
   onClose,
   onChangeCard,
   onConvertDuplicate,
@@ -94,6 +100,9 @@ export function DexDetailSheet({
   const [settled, setSettled] = useState(false);
   const [showingBack, setShowingBack] = useState(false);
   const [shining, setShining] = useState(false);
+  const [dupPhase, setDupPhase] = useState<DupConvertPhase>("idle");
+  const [dupQty, setDupQty] = useState(1);
+  const [dupBusy, setDupBusy] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -124,6 +133,8 @@ export function DexDetailSheet({
   const met = record ? formatMetDate(record.firstSeen) : null;
   const rare = isRareCard(card);
   const legend = card.type === "legend";
+  const dupCount = Math.max(0, (record?.count ?? 0) - 1);
+  const dupPawTotal = dupUnitPaw * dupQty;
 
   const subtitle =
     card.type === "breed" && card.stars
@@ -360,7 +371,12 @@ export function DexDetailSheet({
     setShining(false);
     resetPose(0);
     prefetchCardFaces(card);
-  }, [card.id, card.front, card.back]);
+    const maxDup = Math.max(0, (owned[card.id]?.count ?? 0) - 1);
+    setDupPhase("idle");
+    setDupBusy(false);
+    setDupQty(Math.max(1, maxDup));
+    // Reset when switching cards or after ownership count changes (post-convert).
+  }, [card.id, card.front, card.back, owned[card.id]?.count]);
 
   useEffect(() => {
     prefetchCardFaces(card);
@@ -576,15 +592,102 @@ export function DexDetailSheet({
           })}
         </div>
 
-        {(record?.count ?? 0) > 1 && onConvertDuplicate ? (
-          <button
-            type="button"
-            id="dex-dup-convert"
-            className="dex-convert-btn"
-            onClick={() => onConvertDuplicate(card)}
-          >
-            겹친 카드 포인트로 바꾸기
-          </button>
+        {dupCount > 0 && onConvertDuplicate && dupPhase === "idle" ? (
+          <div className="dex-dup-block">
+            <p className="dex-dup-meta">
+              중복 {dupCount}장 · 1장당 {dupUnitPaw.toLocaleString("ko-KR")}P
+            </p>
+            <button
+              type="button"
+              id="dex-dup-convert"
+              className="dex-convert-btn"
+              onClick={() => {
+                setDupQty(dupCount);
+                setDupPhase("stepper");
+              }}
+            >
+              발바닥 포인트로 바꾸기
+            </button>
+          </div>
+        ) : null}
+
+        {dupCount > 0 && onConvertDuplicate && dupPhase === "stepper" ? (
+          <div className="dex-dup-stepper" role="group" aria-label="바꿀 장수">
+            <p className="dex-dup-meta">도감에 1장은 남기고 바꿀 장수를 골라요</p>
+            <div className="dex-dup-stepper-row">
+              <button
+                type="button"
+                className="dex-dup-step-btn"
+                aria-label="줄이기"
+                disabled={dupQty <= 1}
+                onClick={() => setDupQty((prev) => Math.max(1, prev - 1))}
+              >
+                −
+              </button>
+              <div className="dex-dup-step-value">
+                <strong>{dupQty}</strong>
+                <span>장</span>
+              </div>
+              <button
+                type="button"
+                className="dex-dup-step-btn"
+                aria-label="늘리기"
+                disabled={dupQty >= dupCount}
+                onClick={() => setDupQty((prev) => Math.min(dupCount, prev + 1))}
+              >
+                +
+              </button>
+            </div>
+            <p className="dex-dup-step-total">
+              {dupQty}장 → {dupPawTotal.toLocaleString("ko-KR")}P
+            </p>
+            <div className="dex-dup-actions">
+              <button type="button" className="dex-convert-btn is-secondary" onClick={() => setDupPhase("idle")}>
+                취소
+              </button>
+              <button type="button" className="dex-convert-btn" onClick={() => setDupPhase("confirm")}>
+                다음
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {dupCount > 0 && onConvertDuplicate && dupPhase === "confirm" ? (
+          <div className="dex-dup-confirm" role="alertdialog" aria-label="중복 카드 바꾸기 확인">
+            <p className="dex-dup-confirm-title">
+              {dupQty}장을 {dupPawTotal.toLocaleString("ko-KR")}P로 바꿀까요?
+            </p>
+            <p className="dex-dup-meta">카드마다 1장은 도감에 남아요 · 바꾼 카드는 되돌릴 수 없어요</p>
+            <div className="dex-dup-actions">
+              <button
+                type="button"
+                className="dex-convert-btn is-secondary"
+                disabled={dupBusy}
+                onClick={() => setDupPhase("stepper")}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="dex-convert-btn"
+                disabled={dupBusy}
+                onClick={() => {
+                  void (async () => {
+                    if (dupBusy) return;
+                    setDupBusy(true);
+                    try {
+                      await onConvertDuplicate(card, dupQty);
+                      setDupPhase("idle");
+                    } finally {
+                      setDupBusy(false);
+                    }
+                  })();
+                }}
+              >
+                {dupBusy ? "처리 중…" : "바꾸기"}
+              </button>
+            </div>
+          </div>
         ) : null}
       </div>
     </div>,
