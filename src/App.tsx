@@ -491,6 +491,7 @@ export default function App() {
     if (ad.purpose === "paw") {
       const result = await grantPawAdReward(ops);
       setAd(null);
+      setMenuOpen(true);
       if ("error" in result) {
         setLocalToast(result.error);
         return;
@@ -543,6 +544,8 @@ export default function App() {
       setReservation(null);
     }
     setAd(null);
+    // Paw ads start with the menu left open; restore it if anything closed it.
+    if (ad?.purpose === "paw") setMenuOpen(true);
   }, [ad, ops, persistOps]);
 
   const completeAdRef = useRef(completeAd);
@@ -1109,7 +1112,7 @@ export default function App() {
         onOpenDex={() => setScreen({ name: "collection" })}
         onOpenRoom={() => setScreen({ name: "room" })}
         onPawAd={() => {
-          closeMenu();
+          // Keep the menu open under the ad so we return to it afterward.
           setAd({ kind: "short", purpose: "paw", presentation: startAdPresentation() });
         }}
         onRateUpDraw={() => {
