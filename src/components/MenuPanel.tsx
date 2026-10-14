@@ -312,11 +312,11 @@ export function MenuPanel({
   };
 
   const unlockProgressReset = () => {
-    if (devResetting) return;
+    if (devResetting || progressResetConfirm) return;
     const stamp = versionTapRef.current;
     const now = Date.now();
-    // Dedupe click + pointerup (or synthetic double-fires) from one physical tap.
-    if (now - stamp.lastMs < 140) return;
+    // pointerdown-only counting; ignore rapid duplicates from the same gesture.
+    if (now - stamp.lastMs < 90) return;
     stamp.lastMs = now;
     window.clearTimeout(stamp.timer);
     stamp.count += 1;
@@ -324,15 +324,17 @@ export function MenuPanel({
       stamp.count = 0;
       writeProgressResetUnlocked();
       setProgressResetVisible(true);
-      // Open confirm immediately so version spam can actually reset (DEV already
-      // shows the button, and Toss WebViews often hide the scrolled row).
       setProgressResetConfirm(true);
-      showToast("진행도 초기화 확인");
+      showToast("진행도 초기화");
+      void haptic("success");
       return;
+    }
+    if (stamp.count === 3 || stamp.count === 5) {
+      showToast(`버전 ${stamp.count}/7`);
     }
     stamp.timer = window.setTimeout(() => {
       stamp.count = 0;
-    }, 2500);
+    }, 2800);
   };
 
   const runProgressReset = () => {
@@ -342,23 +344,20 @@ export function MenuPanel({
       .then((next) => {
         onOpsChange(next);
         onDevResetNewUser?.();
-        window.location.assign("/");
+        // Hard reload — Toss WebViews sometimes keep the old SPA shell on assign("/").
+        const url = `${window.location.pathname}?reset=${Date.now()}`;
+        window.location.replace(url);
+        window.setTimeout(() => {
+          window.location.href = url;
+        }, 200);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("progress reset failed", err);
         setDevResetting(false);
         setProgressResetConfirm(false);
         showToast("초기화에 실패했어요");
       });
   };
-
-  useEffect(() => {
-    if (!progressResetConfirm) return;
-    window.requestAnimationFrame(() => {
-      document
-        .querySelector(".settings-reset-confirm")
-        ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    });
-  }, [progressResetConfirm]);
 
   const onPanelPointerDown = (event: ReactPointerEvent) => {
     swipeStart.current = { x: event.clientX, y: event.clientY };
@@ -1275,10 +1274,9 @@ export function MenuPanel({
                               type="button"
                               className="link settings-version-tap"
                               aria-label="앱 버전"
-                              onClick={() => unlockProgressReset()}
-                              onPointerUp={(event) => {
-                                // Some in-app WebViews drop click; pointer still fires.
-                                if (event.pointerType === "mouse") return;
+                              onPointerDown={(event) => {
+                                if (event.button != null && event.button !== 0) return;
+                                event.preventDefault();
                                 unlockProgressReset();
                               }}
                             >
@@ -1340,30 +1338,6 @@ export function MenuPanel({
                         >
                           {devResetting ? "초기화 중…" : "진행도 초기화"}
                         </button>
-                      </div>
-                    ) : null}
-                    {progressResetConfirm ? (
-                      <div className="settings-reset-confirm" role="dialog" aria-label="진행도 초기화 확인">
-                        <strong>신규 유저 상태로 초기화할까요?</strong>
-                        <p>도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워져요.</p>
-                        <div className="settings-reset-confirm-actions">
-                          <button
-                            type="button"
-                            className="menu-sheet-cta is-secondary"
-                            disabled={devResetting}
-                            onClick={() => setProgressResetConfirm(false)}
-                          >
-                            취소
-                          </button>
-                          <button
-                            type="button"
-                            className="menu-sheet-cta is-danger"
-                            disabled={devResetting}
-                            onClick={runProgressReset}
-                          >
-                            {devResetting ? "초기화 중…" : "초기화"}
-                          </button>
-                        </div>
                       </div>
                     ) : null}
                     {creditsText ? (
@@ -1512,6 +1486,42 @@ export function MenuPanel({
 
         {toast ? <div className="menu-toast">{toast}</div> : null}
       </aside>
+
+      {progressResetConfirm ? (
+        <div className="settings-reset-overlay" role="dialog" aria-modal="true" aria-label="진행도 초기화 확인">
+          <button
+            type="button"
+            className="settings-reset-overlay-dim"
+            aria-label="닫기"
+            disabled={devResetting}
+            onClick={() => {
+              if (!devResetting) setProgressResetConfirm(false);
+            }}
+          />
+          <div className="settings-reset-confirm is-modal">
+            <strong>신규 유저 상태로 초기화할까요?</strong>
+            <p>도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워져요.</p>
+            <div className="settings-reset-confirm-actions">
+              <button
+                type="button"
+                className="menu-sheet-cta is-secondary"
+                disabled={devResetting}
+                onClick={() => setProgressResetConfirm(false)}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="menu-sheet-cta is-danger"
+                disabled={devResetting}
+                onClick={runProgressReset}
+              >
+                {devResetting ? "초기화 중…" : "초기화"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

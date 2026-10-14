@@ -29,7 +29,6 @@ import {
   hitTestTile,
   hitTestWall,
   isWallDecor,
-  itemSize,
   nearestHints,
   screenOf,
   snapWallHit,
@@ -185,17 +184,10 @@ export function RoomScreen({
         : `${preview.kind}:${preview.instanceId}:${preview.origin}`;
     if (key === previewKeyRef.current) return;
     previewKeyRef.current = key;
-    if (!preview) {
-      setPreviewHudMode("message");
-      return;
-    }
-    // Paint + tutorial need the confirm toolbar immediately.
-    if (preview.kind === "paint" || tutLock) {
-      setPreviewHudMode("toolbar");
-      return;
-    }
-    setPreviewHudMode("message");
-  }, [preview, tutLock]);
+    // Always start with the edit toolbar so ✓ / ✕ stay reachable.
+    // Name/reason chips stay mutually exclusive (hidden while toolbar is open).
+    setPreviewHudMode(preview ? "toolbar" : "message");
+  }, [preview]);
 
   useEffect(() => {
     void Promise.all([loadRoomCatalog(), loadRoomGrid(), loadRoomsFile(), loadOpsConfig()]).then(
@@ -832,19 +824,17 @@ export function RoomScreen({
   };
 
   const onStagePointerUp = () => {
+    // Toolbar open + tap preview item (no drag) → cancel and restore origin.
     if (
       previewItemTap.current &&
       preview &&
       preview.kind !== "paint" &&
       preview.instanceId === previewItemTap.current.instanceId &&
-      !previewMoving.current
+      !previewMoving.current &&
+      previewHudModeRef.current === "toolbar"
     ) {
-      if (previewHudModeRef.current === "message") {
-        setPreviewHudMode("toolbar");
-      } else {
-        const cleared = cancelPreview(layout);
-        patchLayoutLocal(cleared);
-      }
+      const cleared = cancelPreview(layout);
+      patchLayoutLocal(cleared);
     }
     previewItemTap.current = null;
     previewMoving.current = false;
@@ -1522,55 +1512,45 @@ export function RoomScreen({
             <i />
             <i />
           </div>
-          {previewHudMode === "toolbar" ? (
-            <div className="lucky-placement-toolbar" role="toolbar" aria-label="배치 미리보기">
-              <button
-                type="button"
-                aria-label="취소"
-                disabled={tutLock}
-                onClick={() => {
-                  if (tutLock) return;
-                  const cleared = cancelPreview(layout);
-                  patchLayoutLocal(cleared);
-                }}
-              >
-                ✕
+          <div className="lucky-placement-toolbar" role="toolbar" aria-label="배치 미리보기">
+            <button
+              type="button"
+              aria-label="취소"
+              disabled={tutLock}
+              onClick={() => {
+                if (tutLock) return;
+                const cleared = cancelPreview(layout);
+                patchLayoutLocal(cleared);
+              }}
+            >
+              ✕
+            </button>
+            {preview.kind === "floor" ? (
+              <button type="button" aria-label="회전" disabled={tutLock} onClick={rotatePreview}>
+                ⟳
               </button>
-              {preview.kind === "floor" ? (
-                <button type="button" aria-label="회전" disabled={tutLock} onClick={rotatePreview}>
-                  ⟳
-                </button>
-              ) : null}
-              {preview.origin === "placed" ? (
-                <button type="button" className="is-text" onClick={() => void putPreviewBack()}>
-                  서랍에 넣기
-                </button>
-              ) : null}
-              <button
-                type="button"
-                id="placement-confirm"
-                className="is-confirm"
-                aria-label="확정"
-                disabled={!preview.valid || committing}
-                onClick={() => void confirmPreview()}
-              >
-                ✓
+            ) : null}
+            {preview.origin === "placed" ? (
+              <button type="button" className="is-text" onClick={() => void putPreviewBack()}>
+                서랍에 넣기
               </button>
-            </div>
-          ) : preview.reason ? (
+            ) : null}
+            <button
+              type="button"
+              id="placement-confirm"
+              className="is-confirm"
+              aria-label="확정"
+              disabled={!preview.valid || committing}
+              onClick={() => void confirmPreview()}
+            >
+              ✓
+            </button>
+          </div>
+          {preview.reason ? (
             <span className={`lucky-placement-reason ${preview.valid ? "" : "is-invalid"}`}>
               {preview.reason}
             </span>
-          ) : (
-            <span className="lucky-select-tag">
-              {previewItem.nameKo}
-              {preview.kind === "floor"
-                ? ` · ${itemSize(previewItem, preview.orientation).join("×")}`
-                : preview.kind === "wall"
-                  ? ` · ${preview.wall === "R" ? "오른쪽 벽" : "왼쪽 벽"}`
-                  : ""}
-            </span>
-          )}
+          ) : null}
         </div>
       ) : null}
 
