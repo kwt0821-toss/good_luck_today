@@ -65,9 +65,9 @@ import {
   ncoinNextMark,
   rewardsIntroMark,
   roomDoneCoachMark,
-  roomDragCoachMark,
   roomPickCoachMark,
   roomPointsCoachMark,
+  roomPreviewCoachMark,
   step5CoachMark,
   type RewardsTutPhase,
 } from "./lib/tutorialFlow";
@@ -309,11 +309,11 @@ export default function App() {
       if (dexTutPhase === "ncoin-after") return dexAfterClaimMark(tutorialStep);
     }
 
-    // Step 4: pick → drag → done → points (STEP 4/5). Wait until RoomScreen finishes loading.
+    // Step 4: pick → preview(✓) → done (STEP 4/5). Wait until RoomScreen finishes loading.
     if (tutorialStep.step === 4 && screen.name === "room") {
       if (!roomScreenReady) return null;
       if (roomTutPhase === "pick" || roomTutPhase == null) return roomPickCoachMark(tutorialStep);
-      if (roomTutPhase === "drag") return roomDragCoachMark(tutorialStep);
+      if (roomTutPhase === "preview" || roomTutPhase === "drag") return roomDragCoachMark(tutorialStep);
       if (roomTutPhase === "done") return roomDoneCoachMark(tutorialStep);
       if (roomTutPhase === "points") return roomPointsCoachMark(tutorialStep);
     }
@@ -746,14 +746,10 @@ export default function App() {
       return;
     }
 
-    // Step 4: pick/drag via RoomScreen; done → points tip → step 5 (rewards guide).
+    // Step 4: pick/preview via RoomScreen; done → step 5 (tutorial-1.7 has no 4-4 points tip).
     if (tutorialStep.step === 4 && screen.name === "room") {
-      if (roomTutPhase === "pick" || roomTutPhase === "drag") return;
-      if (roomTutPhase === "done") {
-        setRoomTutPhase("points");
-        return;
-      }
-      if (roomTutPhase === "points") {
+      if (roomTutPhase === "pick" || roomTutPhase === "preview" || roomTutPhase === "drag") return;
+      if (roomTutPhase === "done" || roomTutPhase === "points") {
         if (tutorialReplayStep != null) {
           setTutorialReplayStep(5);
           setRoomTutPhase(null);
@@ -1007,10 +1003,12 @@ export default function App() {
           reduceMotion={reduceMotion}
           onReady={() => setRoomScreenReady(true)}
           onTutorialPicked={() => {
-            if (roomTutPhase === "pick") setRoomTutPhase("drag");
+            if (roomTutPhase === "pick") setRoomTutPhase("preview");
           }}
           onTutorialPlaced={() => {
-            if (roomTutPhase === "pick" || roomTutPhase === "drag") setRoomTutPhase("done");
+            if (roomTutPhase === "pick" || roomTutPhase === "preview" || roomTutPhase === "drag") {
+              setRoomTutPhase("done");
+            }
           }}
           onTutorialComplete={() => {
             if (roomTutPhase === "done" || roomTutPhase === "points") void advanceTutorial();

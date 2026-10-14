@@ -9,11 +9,18 @@ import {
   ROOM_TABS,
   ROOM_THEME_FILTERS,
 } from "../lib/roomCatalog";
-import type { PaintFillMode, RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib/roomTypes";
+import type { RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib/roomTypes";
 
 const DRAWER_HELP = "중복 고양이 카드를 발바닥 포인트로 바꿀 수 있어요";
 const DRAWER_HEIGHT_COLLAPSED = 420;
 const DRAWER_HEIGHT_EXPANDED = 560;
+
+export type DrawerItemMeta = {
+  remaining: number;
+  owned: number;
+  otherRoomName: string | null;
+  canBuyMore: boolean;
+};
 
 type RoomDrawerProps = {
   tab: RoomTab;
@@ -23,25 +30,22 @@ type RoomDrawerProps = {
   items: RoomItem[];
   layout: RoomLayoutState;
   owned: Record<string, number>;
+  /** Per-item remaining/owned/other-room for count labels + CTAs. */
+  itemMeta: Record<string, DrawerItemMeta>;
   points: number;
   selectedId: string | null;
   brushId: string | null;
-  fillMode: PaintFillMode;
-  eraser: boolean;
   canUndo: boolean;
   otherRoomIds: Record<string, string | null>;
   /** When true, 보유 tab sorts NEW placeables first (tutorial). */
   preferOwnedSort?: boolean;
   /** Prefer these ids first among NEW placeables (starter.drawer order). */
   preferNewIds?: string[];
-  /** Tutorial: only this item id may be grabbed; others are disabled. */
+  /** Tutorial: only this item id may be tapped; others are disabled. */
   tutorialLockId?: string | null;
-  /** Tutorial: long-press ms to grab (0 = off). */
-  tutorialLongPressMs?: number;
-  onTutorialGrab?: (item: RoomItem, clientX: number, clientY: number) => void;
   onPick: (item: RoomItem) => void;
-  onFillMode: (mode: PaintFillMode) => void;
-  onEraser: () => void;
+  onMoveHere: (item: RoomItem) => void;
+  onBuyMore: (item: RoomItem) => void;
   onUndo: () => void;
   onHelp?: () => void;
 };
@@ -53,6 +57,7 @@ function tileState(
   selectedId: string | null,
   brushId: string | null,
   otherRoomId: string | null,
+  meta?: DrawerItemMeta,
 ) {
   const locked = (owned[item.id] ?? 0) < 1;
   const usedOnFloor = layout.floorTiles?.some((row) => row.includes(item.id)) ?? false;
@@ -67,20 +72,31 @@ function tileState(
     brushing ||
     layout.floor.some((place) => place.instanceId === selectedId && place.id === item.id) ||
     layout.walls.some((place) => place.instanceId === selectedId && place.id === item.id);
-  return { locked, placedHere, otherRoom: Boolean(otherRoomId) && !placedHere, selected, brushing };
+  const remaining = meta?.remaining ?? Math.max(0, (owned[item.id] ?? 0) - (placedHere ? 1 : 0));
+  const depleted = !locked && !isPaintItem(item) && remaining <= 0;
+  return {
+    locked,
+    placedHere,
+    otherRoom: Boolean(otherRoomId) && !placedHere,
+    selected,
+    brushing,
+    remaining,
+    depleted,
+  };
 }
 
 function ownedSortRank(
   item: RoomItem,
   state: ReturnType<typeof tileState>,
 ): number {
-  const isNew = !state.locked && !state.placedHere && !state.otherRoom;
+  const isNew = !state.locked && !state.depleted && !state.otherRoom;
   if (isNew && isPlaceableDecor(item)) return 0;
   if (isNew && isPaintItem(item)) return 1;
   if (isNew) return 2;
   if (!state.locked && state.otherRoom) return 3;
-  if (!state.locked && state.placedHere) return 4;
-  return 5;
+  if (!state.locked && state.depleted) return 4;
+  if (!state.locked && state.placedHere) return 5;
+  return 6;
 }
 
 export function RoomDrawer({
@@ -91,27 +107,21 @@ export function RoomDrawer({
   items,
   layout,
   owned,
+  itemMeta,
   points,
   selectedId,
   brushId,
-  fillMode,
-  eraser,
   canUndo,
   otherRoomIds,
   preferOwnedSort = false,
   preferNewIds = [],
   tutorialLockId = null,
-  tutorialLongPressMs = 0,
-  onTutorialGrab,
   onPick,
-  onFillMode,
-  onEraser,
+  onMoveHere,
+  onBuyMore,
   onUndo,
   onHelp,
 }: RoomDrawerProps) {
-  const pressTimer = useRef(0);
-  const pressOrigin = useRef<{ x: number; y: number; item: RoomItem } | null>(null);
-  const grabbed = useRef(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const scrollLocked = useRef(false);
   const [expanded, setExpanded] = useState(false);
@@ -124,17 +134,10 @@ export function RoomDrawer({
     height: DRAWER_HEIGHT_COLLAPSED,
   });
 
-  const baseHeight = tutorialLockId
-    ? 300
-    : expanded
-      ? DRAWER_HEIGHT_EXPANDED
-      : DRAWER_HEIGHT_COLLAPSED;
-  const sheetHeight = dragHeight ?? baseHeight;
+  const sheetHeight = dragHeight ?? (expanded ? DRAWER_HEIGHT_EXPANDED : DRAWER_HEIGHT_COLLAPSED);
 
   const onSheetPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (tutorialLockId) return;
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
     sheetDrag.current = {
       y: event.clientY,
       startHeight: sheetHeight,
@@ -142,15 +145,19 @@ export function RoomDrawer({
       height: sheetHeight,
     };
     setSheetDragging(true);
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // ignore
+    }
   };
 
   const onSheetPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!sheetDrag.current.active) return;
-    event.preventDefault();
     const dy = sheetDrag.current.y - event.clientY;
     const next = Math.min(
       DRAWER_HEIGHT_EXPANDED,
-      Math.max(DRAWER_HEIGHT_COLLAPSED - 24, sheetDrag.current.startHeight + dy),
+      Math.max(DRAWER_HEIGHT_COLLAPSED, sheetDrag.current.startHeight + dy),
     );
     sheetDrag.current.height = next;
     setDragHeight(next);
@@ -161,18 +168,9 @@ export function RoomDrawer({
     sheetDrag.current.active = false;
     setSheetDragging(false);
     const mid = (DRAWER_HEIGHT_COLLAPSED + DRAWER_HEIGHT_EXPANDED) / 2;
-    const finalHeight = sheetDrag.current.height;
-    setExpanded(finalHeight >= mid);
+    const open = sheetDrag.current.height >= mid;
+    setExpanded(open);
     setDragHeight(null);
-  };
-
-  const lockDrawerScroll = () => {
-    const grid = gridRef.current;
-    if (!grid || scrollLocked.current) return;
-    scrollLocked.current = true;
-    grid.classList.add("is-scroll-locked");
-    grid.style.overflow = "hidden";
-    grid.style.touchAction = "none";
   };
 
   const unlockDrawerScroll = () => {
@@ -184,7 +182,6 @@ export function RoomDrawer({
     grid.style.touchAction = "";
   };
 
-  // RoomScreen fires this when a from-drawer drag ends (place or cancel).
   useEffect(() => {
     const onUnlock = () => unlockDrawerScroll();
     window.addEventListener("lucky-cat:drawer-scroll-unlock", onUnlock);
@@ -194,6 +191,7 @@ export function RoomDrawer({
   useEffect(() => {
     if (!tutorialLockId) unlockDrawerScroll();
   }, [tutorialLockId]);
+
   let visible = items.filter((item) => {
     if (tab === "보유") {
       if ((owned[item.id] ?? 0) < 1) return false;
@@ -202,7 +200,6 @@ export function RoomDrawer({
     return (
       itemMatchesTab(item, tab) &&
       itemMatchesTheme(item, themeFilter) &&
-      // Attendance-only items are excluded from the shop list until granted.
       !(item.attendanceOnly && (owned[item.id] ?? 0) < 1)
     );
   });
@@ -213,8 +210,8 @@ export function RoomDrawer({
       return idx < 0 ? 1000 + id.charCodeAt(0) : idx;
     };
     visible = [...visible].sort((a, b) => {
-      const sa = tileState(a, layout, owned, selectedId, brushId, otherRoomIds[a.id] ?? null);
-      const sb = tileState(b, layout, owned, selectedId, brushId, otherRoomIds[b.id] ?? null);
+      const sa = tileState(a, layout, owned, selectedId, brushId, otherRoomIds[a.id] ?? null, itemMeta[a.id]);
+      const sb = tileState(b, layout, owned, selectedId, brushId, otherRoomIds[b.id] ?? null, itemMeta[b.id]);
       const ra = ownedSortRank(a, sa);
       const rb = ownedSortRank(b, sb);
       if (ra !== rb) return ra - rb;
@@ -298,154 +295,111 @@ export function RoomDrawer({
         ))}
       </div>
       {paintTab ? (
-        <div className="lucky-paint-toolbar" role="toolbar" aria-label="칠하기 도구">
-          <div className="lucky-paint-toggle">
-            <button
-              type="button"
-              className={fillMode === "cell" && !eraser ? "is-active" : ""}
-              onClick={() => onFillMode("cell")}
-            >
-              한 칸씩
-            </button>
-            <button
-              type="button"
-              className={fillMode === "fill" && !eraser ? "is-active" : ""}
-              onClick={() => onFillMode("fill")}
-            >
-              전체 칠하기
-            </button>
-          </div>
-          <button type="button" className={`lucky-paint-eraser ${eraser ? "is-active" : ""}`} onClick={onEraser}>
-            <img src={roomAsset("ui/icon-eraser.svg")} alt="" />
-            지우개
-          </button>
+        <div className="lucky-paint-toolbar lucky-paint-toolbar-lite" role="toolbar" aria-label="칠하기 도구">
+          <p className="lucky-paint-hint">탭하면 다른 칸에 미리보기로 칠해요</p>
           <button type="button" className="lucky-paint-undo" onClick={onUndo} disabled={!canUndo} aria-label="되돌리기">
             되돌리기
           </button>
         </div>
       ) : null}
-      <div
-        ref={gridRef}
-        className={`lucky-drawer-grid ${tutorialLockId ? "is-tut-mode" : ""}`}
-      >
+      <div ref={gridRef} className={`lucky-drawer-grid ${tutorialLockId ? "is-tut-mode" : ""}`}>
         {visible.map((item, index) => {
-          const state = tileState(item, layout, owned, selectedId, brushId, otherRoomIds[item.id] ?? null);
-          const isNew = !state.locked && !state.placedHere && !state.otherRoom;
+          const meta = itemMeta[item.id];
+          const state = tileState(item, layout, owned, selectedId, brushId, otherRoomIds[item.id] ?? null, meta);
+          const isNew = !state.locked && !state.depleted && !state.otherRoom && !isPaintItem(item);
           const tutLockedOut = Boolean(tutorialLockId && tutorialLockId !== item.id);
-          const tutGrab = Boolean(tutorialLongPressMs > 0 && onTutorialGrab && tutorialLockId === item.id);
+          const paint = isPaintItem(item);
+          const ownedCount = meta?.owned ?? owned[item.id] ?? 0;
+          const remaining = meta?.remaining ?? 0;
+          const otherName = meta?.otherRoomName ?? null;
+          const canBuyMore = Boolean(meta?.canBuyMore);
+          const showCount = !paint && !state.locked && ownedCount > 0;
+
           return (
-            <button
+            <div
               key={item.id}
               id={
                 (tutorialLockId && item.id === tutorialLockId) || (!tutorialLockId && index === 0)
                   ? "drawer-item-0"
                   : undefined
               }
-              type="button"
-              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom ? "is-other" : ""} ${state.selected ? "is-selected" : ""} ${isNew ? "is-new" : ""} ${tutLockedOut ? "is-tut-locked" : ""} ${tutGrab ? "is-tut-grab" : ""}`}
-              disabled={tutLockedOut}
-              style={tutGrab ? { touchAction: "none", zIndex: 131, position: "relative" } : undefined}
-              onClick={(event) => {
-                if (tutGrab) {
-                  event.preventDefault();
-                  return;
-                }
-                onPick(item);
-              }}
-              onPointerDown={
-                tutGrab
-                  ? (event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      grabbed.current = false;
-                      lockDrawerScroll();
-                      pressOrigin.current = { x: event.clientX, y: event.clientY, item };
-                      window.clearTimeout(pressTimer.current);
-                      const startX = event.clientX;
-                      const startY = event.clientY;
-                      pressTimer.current = window.setTimeout(() => {
-                        if (!pressOrigin.current || grabbed.current) return;
-                        grabbed.current = true;
-                        onTutorialGrab?.(item, startX, startY);
-                      }, tutorialLongPressMs);
-                      try {
-                        event.currentTarget.setPointerCapture(event.pointerId);
-                      } catch {
-                        // ignore
-                      }
-                    }
-                  : undefined
-              }
-              onPointerMove={
-                tutGrab
-                  ? (event) => {
-                      if (!pressOrigin.current || grabbed.current) return;
-                      const dx = event.clientX - pressOrigin.current.x;
-                      const dy = event.clientY - pressOrigin.current.y;
-                      if (Math.hypot(dx, dy) < 8) return;
-                      event.preventDefault();
-                      event.stopPropagation();
-                      window.clearTimeout(pressTimer.current);
-                      grabbed.current = true;
-                      lockDrawerScroll();
-                      onTutorialGrab?.(pressOrigin.current.item, event.clientX, event.clientY);
-                    }
-                  : undefined
-              }
-              onPointerUp={
-                tutGrab
-                  ? () => {
-                      window.clearTimeout(pressTimer.current);
-                      pressOrigin.current = null;
-                      // Keep scroll locked while world drag continues; RoomScreen unlocks via class clear on phase change.
-                      if (!grabbed.current) unlockDrawerScroll();
-                    }
-                  : undefined
-              }
-              onPointerCancel={
-                tutGrab
-                  ? () => {
-                      window.clearTimeout(pressTimer.current);
-                      pressOrigin.current = null;
-                      grabbed.current = false;
-                      unlockDrawerScroll();
-                    }
-                  : undefined
-              }
+              className={`lucky-cell ${state.locked ? "is-locked" : ""} ${state.placedHere ? "is-placed" : ""} ${state.otherRoom || state.depleted ? "is-other" : ""} ${state.selected ? "is-selected" : ""} ${isNew ? "is-new" : ""} ${tutLockedOut ? "is-tut-locked" : ""}`}
             >
-              <span className="lucky-cell-tile">
-                {item.tileImage || item.id ? (
-                  <img src={roomAsset(item.tileImage ?? `tiles/${item.id}.png`)} alt="" />
+              <button
+                type="button"
+                className="lucky-cell-main"
+                disabled={tutLockedOut}
+                onClick={() => onPick(item)}
+              >
+                <span className="lucky-cell-tile">
+                  {item.tileImage || item.id ? (
+                    <img src={roomAsset(item.tileImage ?? `tiles/${item.id}.png`)} alt="" />
+                  ) : (
+                    <span className="lucky-cell-empty" />
+                  )}
+                  {isNew ? <span className="lucky-cell-new">NEW</span> : null}
+                  {showCount ? (
+                    <span className="lucky-cell-count" aria-label={`남은 ${remaining} / 전체 ${ownedCount}`}>
+                      {remaining}/{ownedCount}
+                    </span>
+                  ) : null}
+                  {state.placedHere && !state.locked && remaining > 0 && !paint ? (
+                    <img className="lucky-cell-check" src={roomAsset("ui/badge-check.svg")} alt="" />
+                  ) : null}
+                  {state.locked ? <img className="lucky-cell-lock" src={roomAsset("ui/icon-lock.svg")} alt="" /> : null}
+                </span>
+                <strong>
+                  {item.nameKo}
+                  {item.attendanceOnly ? <span className="lucky-attend-tag">출석 한정</span> : null}
+                </strong>
+                {state.locked ? (
+                  <em>
+                    <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />
+                    {item.price}
+                  </em>
+                ) : paint ? (
+                  <small>{state.brushing || state.selected ? "미리보기" : "보유 · 계속 쓸 수 있어요"}</small>
+                ) : state.depleted && state.otherRoom && otherName ? (
+                  <small className="is-other">다른 방에 있어요 · {otherName}</small>
+                ) : state.depleted && item.attendanceOnly ? (
+                  <small className="is-other">한정 아이템이에요</small>
+                ) : state.depleted && canBuyMore ? (
+                  <small className="is-other">모두 배치 중</small>
+                ) : state.depleted ? (
+                  <small className="is-other">더 이상 가질 수 없어요</small>
                 ) : (
-                  <span className="lucky-cell-empty" />
+                  <small>
+                    남은 {remaining}/{ownedCount}
+                  </small>
                 )}
-                {isNew ? <span className="lucky-cell-new">NEW</span> : null}
-                {state.placedHere && !state.locked ? (
-                  <img className="lucky-cell-check" src={roomAsset("ui/badge-check.svg")} alt="" />
-                ) : null}
-                {state.locked ? <img className="lucky-cell-lock" src={roomAsset("ui/icon-lock.svg")} alt="" /> : null}
-              </span>
-              <strong>
-                {item.nameKo}
-                {item.attendanceOnly ? <span className="lucky-attend-tag">출석 한정</span> : null}
-              </strong>
-              {state.locked ? (
-                <em>
-                  <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />
-                  {item.price}
-                </em>
-              ) : (
-                <small className={state.otherRoom ? "is-other" : ""}>
-                  {state.brushing
-                    ? "칠하는 중"
-                    : state.otherRoom
-                      ? "다른 방에 배치 중"
-                      : state.placedHere
-                        ? "사용 중"
-                        : "보유"}
-                </small>
-              )}
-            </button>
+              </button>
+              {!state.locked && !paint && state.depleted && state.otherRoom ? (
+                <button
+                  type="button"
+                  className="lucky-cell-cta"
+                  disabled={tutLockedOut}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onMoveHere(item);
+                  }}
+                >
+                  이 방으로 옮기기
+                </button>
+              ) : null}
+              {!state.locked && !paint && state.depleted && !state.otherRoom && canBuyMore ? (
+                <button
+                  type="button"
+                  className="lucky-cell-cta"
+                  disabled={tutLockedOut}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onBuyMore(item);
+                  }}
+                >
+                  하나 더 사기
+                </button>
+              ) : null}
+            </div>
           );
         })}
       </div>

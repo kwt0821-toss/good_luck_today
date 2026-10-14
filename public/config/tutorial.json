@@ -1,5 +1,5 @@
 {
- "_version": "tutorial-1.6",
+ "_version": "tutorial-1.7 (2026-10-14)",
  "maxDurationSec": 60,
  "style": "coach marks (dim + 하이라이트 원/라운드 사각 + 말풍선)",
  "skip": {
@@ -123,8 +123,7 @@
    "screen": "room",
    "stepLabel": "STEP 4/5",
    "target": "#drawer-item-0",
-   "copy": "서랍에서 마음에 드는 아이템을 꾸욱 눌러 보세요",
-   "gesture": "long-press 250ms or drag; ghost + suggestTile hint",
+   "copy": "서랍에서 마음에 드는 아이템을 톡 눌러 보세요",
    "suggestTile": {
     "c": 5,
     "r": 2
@@ -133,46 +132,36 @@
     {
      "id": "4-1",
      "target": "#drawer-item-0",
-     "copy": "서랍에서 마음에 드는 아이템을 꾸욱 눌러 보세요",
+     "copy": "서랍에서 마음에 드는 아이템을 톡 눌러 보세요",
      "showFinger": true,
-     "longPressMs": 250,
      "lockItem": true
     },
     {
      "id": "4-2",
-     "target": "",
-     "copy": "",
-     "ghostFollow": true,
-     "dragHint": true,
+     "target": "#placement-confirm",
+     "copy": "여기 놓을게요! ✓를 눌러 확정해요",
+     "sub": "나중에 끌어서 옮기거나 돌릴 수 있어요",
+     "showFinger": true,
+     "lockItem": true,
      "suggestTile": {
       "c": 5,
       "r": 2
-     },
-     "invalidToast": "여기는 자리가 없어요",
-     "lockItem": true
+     }
     },
     {
      "id": "4-3",
      "target": "",
      "copy": "잘했어요! 다른 아이템도 자유롭게 꾸며 보세요",
-     "cta": "다음",
+     "cta": "완료",
      "ackOnly": true,
      "placeFx": {
       "sfx": "item-place",
       "bounceMs": 240,
       "sparkles": true
      }
-    },
-    {
-     "id": "4-4",
-     "target": "#room-points-chip",
-     "copy": "발바닥 포인트를 모아 원하는 아이템을 구매할 수 있어요!",
-     "cta": "완료",
-     "ackOnly": true,
-     "showFinger": true
     }
    ],
-   "action": "long-press/drag drawer → place → points tip → 완료 → step 5"
+   "action": "tap drawer → preview → ✓ confirm → step 5"
   },
   {
    "step": 5,

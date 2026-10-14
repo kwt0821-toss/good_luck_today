@@ -146,8 +146,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   height: 34px;
   margin: 14px 20px 0;
+}
+
+.lucky-edit-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.lucky-edit-bar-actions .lucky-ghost {
+  font-size: 11px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.lucky-edit-bar-actions .lucky-ghost:disabled {
+  opacity: 0.35;
 }
 
 .lucky-edit-bar p {
@@ -708,6 +726,20 @@
   z-index: 8;
 }
 
+.lucky-sprite.is-preview-ghost {
+  z-index: 9;
+  filter: drop-shadow(0 10px 12px rgba(20, 12, 40, 0.35));
+  transition: transform 80ms linear;
+}
+
+.lucky-sprite.is-preview-invalid {
+  filter: drop-shadow(0 0 0 #ff5a5a) drop-shadow(0 10px 12px rgba(20, 12, 40, 0.35));
+}
+
+.lucky-sprite.is-preview-invalid img {
+  filter: sepia(0.35) saturate(2.4) hue-rotate(-35deg) brightness(0.95);
+}
+
 .lucky-sprite.is-wall {
   z-index: 3;
   overflow: visible;
@@ -1058,6 +1090,93 @@
   font-weight: 700;
 }
 
+.lucky-placement-hud.is-invalid .lucky-select-box {
+  border-color: #ff7a7a;
+  background: rgba(255, 90, 90, 0.1);
+}
+
+.lucky-placement-toolbar {
+  position: absolute;
+  left: 50%;
+  top: -52px;
+  transform: translateX(-50%);
+  min-height: 38px;
+  padding: 0 6px;
+  border-radius: 19px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(28, 24, 46, 0.94);
+  border: 1px solid rgba(243, 233, 215, 0.16);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
+.lucky-placement-toolbar::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  background: rgba(28, 24, 46, 0.94);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.lucky-placement-toolbar button {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 15px;
+  background: rgba(243, 233, 215, 0.07);
+  color: #fff4e4;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.lucky-placement-toolbar button.is-text {
+  font-size: 11px;
+  letter-spacing: -0.02em;
+}
+
+.lucky-placement-toolbar button.is-confirm {
+  background: #3ecf8e;
+  color: #102418;
+}
+
+.lucky-placement-toolbar button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.lucky-placement-reason {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 6px);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(28, 24, 46, 0.9);
+  color: #fff4e4;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.lucky-placement-reason.is-invalid {
+  background: #ff5a5a;
+  color: #fff8f6;
+}
+
 .lucky-paint-hud {
   position: absolute;
   z-index: 8;
@@ -1346,13 +1465,84 @@
   padding-bottom: 8px;
 }
 
+.lucky-paint-toolbar-lite {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 14px 8px;
+}
+
+.lucky-paint-hint {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(243, 233, 215, 0.55);
+}
+
+.lucky-cell-main {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.lucky-cell-count {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  min-width: 22px;
+  height: 14px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(18, 14, 28, 0.72);
+  color: #ffe7c2;
+  font-family: Poppins, sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+}
+
+.lucky-cell-cta {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 5px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffd3a0, #ffb36b);
+  color: #2a1e10;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+}
+
+.lucky-cell-cta:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.lucky-paint-hud.is-invalid span {
+  color: #ffb4b4;
+}
+
 .lucky-cell {
   border: 0;
   padding: 0;
   background: transparent;
   color: var(--cream);
   text-align: center;
-  cursor: pointer;
+}
+
+.lucky-cell-main {
+  text-align: center;
 }
 
 .lucky-cell-tile {

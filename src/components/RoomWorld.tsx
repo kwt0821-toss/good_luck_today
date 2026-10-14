@@ -59,6 +59,10 @@ type RoomWorldProps = {
   suggestItemId?: string | null;
   reduceMotion?: boolean;
   placeFxId?: string | null;
+  /** Placement preview: lift ghost ~24pt above finger. */
+  previewGhost?: boolean;
+  /** Placement preview: tint red when invalid. */
+  previewInvalid?: boolean;
   onSelect: (instanceId: string | null, kind: "floor" | "wall") => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, instanceId: string) => void;
   onFloorPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
@@ -109,6 +113,8 @@ function FloorSprite({
   flipped,
   thumbs,
   placeFx = false,
+  previewGhost = false,
+  previewInvalid = false,
   onSelect,
   onItemPointerDown,
 }: {
@@ -121,17 +127,22 @@ function FloorSprite({
   flipped: boolean;
   thumbs: string[];
   placeFx?: boolean;
+  previewGhost?: boolean;
+  previewInvalid?: boolean;
   onSelect: (id: string) => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, id: string) => void;
 }) {
   const frames = item.id === "cardframe" || item.id === "squareframe";
+  const liftY = previewGhost ? "translateY(-24px)" : lifted ? "translateY(-12px)" : "";
   return (
     <button
       type="button"
       className={[
         "lucky-sprite",
         selected ? "is-selected" : "",
-        lifted ? "is-lifted" : "",
+        lifted || previewGhost ? "is-lifted" : "",
+        previewGhost ? "is-preview-ghost" : "",
+        previewInvalid ? "is-preview-invalid" : "",
         shaking ? "is-shake" : "",
         placeFx ? "is-place-fx" : "",
         item.hero || item.id === "catbed_cat" ? "is-catbed" : "",
@@ -144,7 +155,7 @@ function FloorSprite({
         top: rect.y,
         width: rect.w,
         height: rect.h,
-        transform: `${flipped ? "scaleX(-1) " : ""}${lifted ? "translateY(-12px)" : ""}`.trim(),
+        transform: `${flipped ? "scaleX(-1) " : ""}${liftY}`.trim(),
       }}
       aria-label={item.nameKo}
       onPointerDown={(event) => onItemPointerDown(event, place.instanceId)}
@@ -281,6 +292,8 @@ export function RoomWorld({
   suggestItemId = null,
   reduceMotion = false,
   placeFxId = null,
+  previewGhost = false,
+  previewInvalid = false,
   onSelect,
   onItemPointerDown,
   onFloorPointerDown,
@@ -546,6 +559,7 @@ export function RoomWorld({
         const item = itemsById.get(place.id);
         if (!item) return null;
         const rect = spriteRect(item, place, shownFloor, itemsById);
+        const isPreview = Boolean(previewGhost && dragging?.instanceId === place.instanceId);
         return (
           <FloorSprite
             key={place.instanceId}
@@ -558,6 +572,8 @@ export function RoomWorld({
             flipped={place.orientation === "mirrored"}
             thumbs={frameThumbs}
             placeFx={place.instanceId === placeFxId}
+            previewGhost={isPreview}
+            previewInvalid={isPreview && previewInvalid}
             onSelect={(id) => onSelect(id, "floor")}
             onItemPointerDown={onItemPointerDown}
           />
@@ -590,19 +606,24 @@ export function RoomWorld({
 
       {catView.ready ? <RoamingCatShadow view={catView} motionRef={catMotionRef} /> : null}
 
-      {shownWalls.map((place) => (
-        <WallSprite
-          key={place.instanceId}
-          place={place}
-          item={itemsById.get(place.id)}
-          selected={place.instanceId === selectedId}
-          lifted={place.instanceId === selectedId && mode === "edit"}
-          shaking={place.instanceId === shakeId}
-          thumbs={frameThumbs}
-          onSelect={(id) => onSelect(id, "wall")}
-          onItemPointerDown={onItemPointerDown}
-        />
-      ))}
+      {shownWalls.map((place) => {
+        const isPreview = Boolean(previewGhost && dragging?.instanceId === place.instanceId);
+        return (
+          <WallSprite
+            key={place.instanceId}
+            place={place}
+            item={itemsById.get(place.id)}
+            selected={place.instanceId === selectedId}
+            lifted={(place.instanceId === selectedId && mode === "edit") || isPreview}
+            shaking={place.instanceId === shakeId}
+            thumbs={frameThumbs}
+            previewGhost={isPreview}
+            previewInvalid={isPreview && previewInvalid}
+            onSelect={(id) => onSelect(id, "wall")}
+            onItemPointerDown={onItemPointerDown}
+          />
+        );
+      })}
 
       {/* string lights are baked into world/room-frame-* */}
 
@@ -616,6 +637,7 @@ export function RoomWorld({
         const item = itemsById.get(place.id);
         if (!item) return null;
         const rect = spriteRect(item, place, shownFloor, itemsById);
+        const isPreview = Boolean(previewGhost && dragging?.instanceId === place.instanceId);
         return (
           <FloorSprite
             key={place.instanceId}
@@ -628,6 +650,8 @@ export function RoomWorld({
             flipped={!item.furniture && place.orientation === "mirrored"}
             thumbs={frameThumbs}
             placeFx={place.instanceId === placeFxId}
+            previewGhost={isPreview}
+            previewInvalid={isPreview && previewInvalid}
             onSelect={(id) => onSelect(id, "floor")}
             onItemPointerDown={onItemPointerDown}
           />
@@ -667,6 +691,8 @@ function WallSprite({
   lifted,
   shaking,
   thumbs,
+  previewGhost = false,
+  previewInvalid = false,
   onSelect,
   onItemPointerDown,
 }: {
@@ -676,22 +702,25 @@ function WallSprite({
   lifted: boolean;
   shaking: boolean;
   thumbs: string[];
+  previewGhost?: boolean;
+  previewInvalid?: boolean;
   onSelect: (id: string) => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, id: string) => void;
 }) {
   if (!item) return null;
   const rect = wallSpriteRect(item, place);
   const frames = item.id === "cardframe" || item.id === "squareframe";
+  const liftY = previewGhost ? "translateY(-24px)" : lifted ? "translateY(-12px)" : undefined;
   return (
     <button
       type="button"
-      className={`lucky-sprite is-wall is-wall-${place.wall} ${selected ? "is-selected" : ""} ${lifted ? "is-lifted" : ""} ${shaking ? "is-shake" : ""}`}
+      className={`lucky-sprite is-wall is-wall-${place.wall} ${selected ? "is-selected" : ""} ${lifted || previewGhost ? "is-lifted" : ""} ${previewGhost ? "is-preview-ghost" : ""} ${previewInvalid ? "is-preview-invalid" : ""} ${shaking ? "is-shake" : ""}`}
       style={{
         left: rect.x,
         top: rect.y,
         width: rect.w,
         height: rect.h,
-        transform: lifted ? "translateY(-12px)" : undefined,
+        transform: liftY,
       }}
       aria-label={item.nameKo}
       onPointerDown={(event) => onItemPointerDown(event, place.instanceId)}

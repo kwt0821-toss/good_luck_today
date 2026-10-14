@@ -39,11 +39,13 @@ export function RoomBuySheet({
   points,
   onClose,
   onBuy,
+  confirmLabel = "구매",
 }: {
   item: RoomItem;
   points: number;
   onClose: () => void;
   onBuy: () => void;
+  confirmLabel?: string;
 }) {
   const enough = points >= item.price;
   return (
@@ -69,7 +71,7 @@ export function RoomBuySheet({
                 닫기
               </button>
               <button type="button" className="is-amber" onClick={onBuy}>
-                구매
+                {confirmLabel}
               </button>
             </div>
           </>
