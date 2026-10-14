@@ -895,6 +895,9 @@
   background: rgba(25, 31, 40, 0.92);
   color: #fff;
   font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-line;
+  text-align: center;
   z-index: 30;
 }
 

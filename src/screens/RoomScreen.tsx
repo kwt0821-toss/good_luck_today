@@ -1017,7 +1017,7 @@ export function RoomScreen({
       const otherId = placedInOtherRoom(state, item.id);
       if (otherId) {
         const otherName = roomById(roomsFile.rooms, otherId)?.nameKo ?? "다른 방";
-        showToast(`다른 방에 있어요 · ${otherName}`);
+        showToast(`다른 방에 있어요\n${otherName}`);
         return;
       }
       if (item.attendanceOnly) {
@@ -1051,9 +1051,9 @@ export function RoomScreen({
       return;
     }
     const otherName = roomById(roomsFile.rooms, otherId)?.nameKo ?? "다른 방";
-    showToast(`다른 방에 있어요 · ${otherName}`);
-    startFurniturePreview(item, "move-from", otherId, layoutNow);
-  };
+        showToast(`다른 방에 있어요\n${otherName}`);
+      startFurniturePreview(item, "move-from", otherId, layoutNow);
+    };
 
   const openBuyMore = (item: RoomItem) => {
     if (item.attendanceOnly) {

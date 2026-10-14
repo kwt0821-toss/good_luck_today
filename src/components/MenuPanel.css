@@ -597,6 +597,20 @@
   justify-content: center;
   gap: 4px;
   padding: 8px 4px;
+  margin: 0;
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.att-cell:disabled {
+  cursor: default;
+}
+
+.att-cell.is-today:not(:disabled) {
+  cursor: pointer;
 }
 
 .att-cell.is-day7 {
@@ -775,6 +789,20 @@
   justify-content: center;
   gap: 6px;
   padding: 8px 2px 18px;
+  margin: 0;
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.att-week-cell:disabled {
+  cursor: default;
+}
+
+.att-week-cell.is-today:not(:disabled) {
+  cursor: pointer;
 }
 
 .att-week-cell strong {

@@ -127,7 +127,7 @@ export function MenuPanel({
   const [devResetting, setDevResetting] = useState(false);
   const [progressResetVisible, setProgressResetVisible] = useState(() => readProgressResetUnlocked());
   const [progressResetConfirm, setProgressResetConfirm] = useState(false);
-  const versionTapRef = useRef({ count: 0, timer: 0 });
+  const versionTapRef = useRef({ count: 0, timer: 0, lastMs: 0 });
   const [rewardsView, setRewardsView] = useState<RewardsView>("inbox");
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
@@ -312,20 +312,27 @@ export function MenuPanel({
   };
 
   const unlockProgressReset = () => {
-    if (progressResetVisible) return;
+    if (devResetting) return;
     const stamp = versionTapRef.current;
+    const now = Date.now();
+    // Dedupe click + pointerup (or synthetic double-fires) from one physical tap.
+    if (now - stamp.lastMs < 140) return;
+    stamp.lastMs = now;
     window.clearTimeout(stamp.timer);
     stamp.count += 1;
     if (stamp.count >= 7) {
       stamp.count = 0;
       writeProgressResetUnlocked();
       setProgressResetVisible(true);
-      showToast("진행도 초기화가 열렸어요");
+      // Open confirm immediately so version spam can actually reset (DEV already
+      // shows the button, and Toss WebViews often hide the scrolled row).
+      setProgressResetConfirm(true);
+      showToast("진행도 초기화 확인");
       return;
     }
     stamp.timer = window.setTimeout(() => {
       stamp.count = 0;
-    }, 2200);
+    }, 2500);
   };
 
   const runProgressReset = () => {
@@ -343,6 +350,15 @@ export function MenuPanel({
         showToast("초기화에 실패했어요");
       });
   };
+
+  useEffect(() => {
+    if (!progressResetConfirm) return;
+    window.requestAnimationFrame(() => {
+      document
+        .querySelector(".settings-reset-confirm")
+        ?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }, [progressResetConfirm]);
 
   const onPanelPointerDown = (event: ReactPointerEvent) => {
     swipeStart.current = { x: event.clientX, y: event.clientY };
@@ -746,31 +762,47 @@ export function MenuPanel({
                 {sheet === "attendance" && attState === "firstWeek" ? (
                   <>
                     <div className="att-grid">
-                      {model.attendance.firstWeekGifts.map((gift) => (
-                        <div
-                          key={gift.day}
-                          className={`att-cell ${gift.day === 7 ? "is-day7" : ""} ${gift.claimed ? "is-claimed" : ""} ${gift.isToday ? "is-today" : ""} ${!gift.claimed && !gift.isToday ? "is-locked" : ""} ${stampDay === gift.day ? "is-stamping" : ""} ${popDay === gift.day ? "is-pop" : ""}`}
-                        >
-                          <span className="att-day">DAY {gift.day}</span>
-                          <img className="att-thumb" src={gift.thumb} alt="" />
-                          <span className="att-name">{gift.nameKo}</span>
-                          {gift.attendanceOnly ? (
-                            <span className="att-only-tag">
-                              {model.menu.attendanceOnlyTag?.label ?? "출석 한정"}
-                            </span>
-                          ) : null}
-                          {gift.day === 7 ? <span className="att-day7-note">마지막 날 큰 선물</span> : null}
-                          {gift.claimed || stampDay === gift.day ? (
-                            <img className="att-stamp" src={menuAsset("icon-stamp.svg")} alt="" />
-                          ) : null}
-                          {gift.isToday ? (
-                            <>
-                              <span className="menu-dot" />
-                              <span className="att-today-tag">오늘</span>
-                            </>
-                          ) : null}
-                        </div>
-                      ))}
+                      {model.attendance.firstWeekGifts.map((gift) => {
+                        const canTapClaim = gift.isToday && model.attendance.canClaimToday;
+                        return (
+                          <button
+                            key={gift.day}
+                            type="button"
+                            className={`att-cell ${gift.day === 7 ? "is-day7" : ""} ${gift.claimed ? "is-claimed" : ""} ${gift.isToday ? "is-today" : ""} ${!gift.claimed && !gift.isToday ? "is-locked" : ""} ${stampDay === gift.day ? "is-stamping" : ""} ${popDay === gift.day ? "is-pop" : ""}`}
+                            disabled={!canTapClaim}
+                            aria-label={
+                              canTapClaim
+                                ? `${gift.day}일차 출석하기`
+                                : gift.claimed
+                                  ? `${gift.day}일차 출석 완료`
+                                  : `${gift.day}일차`
+                            }
+                            onClick={() => {
+                              if (!canTapClaim) return;
+                              void claimAttendance();
+                            }}
+                          >
+                            <span className="att-day">DAY {gift.day}</span>
+                            <img className="att-thumb" src={gift.thumb} alt="" />
+                            <span className="att-name">{gift.nameKo}</span>
+                            {gift.attendanceOnly ? (
+                              <span className="att-only-tag">
+                                {model.menu.attendanceOnlyTag?.label ?? "출석 한정"}
+                              </span>
+                            ) : null}
+                            {gift.day === 7 ? <span className="att-day7-note">마지막 날 큰 선물</span> : null}
+                            {gift.claimed || stampDay === gift.day ? (
+                              <img className="att-stamp" src={menuAsset("icon-stamp.svg")} alt="" />
+                            ) : null}
+                            {gift.isToday ? (
+                              <>
+                                <span className="menu-dot" />
+                                <span className="att-today-tag">오늘</span>
+                              </>
+                            ) : null}
+                          </button>
+                        );
+                      })}
                     </div>
                     <div className="att-progress">
                       <span>출석 진행</span>
@@ -826,19 +858,35 @@ export function MenuPanel({
                         : "이번 주"}
                     </p>
                     <div className="att-week-grid">
-                      {model.attendance.weekCells.map((cell) => (
-                        <div
-                          key={cell.day}
-                          className={`att-week-cell ${cell.claimed ? "is-claimed" : ""} ${cell.isToday ? "is-today" : ""} ${stampDay === cell.day ? "is-stamping" : ""} ${popDay === cell.day ? "is-pop" : ""}`}
-                        >
-                          <span className="att-day">{cell.label}</span>
-                          <strong>{cell.rewardLabel}</strong>
-                          {cell.claimed || stampDay === cell.day ? (
-                            <img className="att-stamp" src={menuAsset("icon-stamp.svg")} alt="" />
-                          ) : null}
-                          {cell.isToday ? <span className="att-today-tag">오늘</span> : null}
-                        </div>
-                      ))}
+                      {model.attendance.weekCells.map((cell) => {
+                        const canTapClaim = cell.isToday && model.attendance.canClaimToday;
+                        return (
+                          <button
+                            key={cell.day}
+                            type="button"
+                            className={`att-week-cell ${cell.claimed ? "is-claimed" : ""} ${cell.isToday ? "is-today" : ""} ${stampDay === cell.day ? "is-stamping" : ""} ${popDay === cell.day ? "is-pop" : ""}`}
+                            disabled={!canTapClaim}
+                            aria-label={
+                              canTapClaim
+                                ? `${cell.label} 출석하기`
+                                : cell.claimed
+                                  ? `${cell.label} 출석 완료`
+                                  : cell.label
+                            }
+                            onClick={() => {
+                              if (!canTapClaim) return;
+                              void claimAttendance();
+                            }}
+                          >
+                            <span className="att-day">{cell.label}</span>
+                            <strong>{cell.rewardLabel}</strong>
+                            {cell.claimed || stampDay === cell.day ? (
+                              <img className="att-stamp" src={menuAsset("icon-stamp.svg")} alt="" />
+                            ) : null}
+                            {cell.isToday ? <span className="att-today-tag">오늘</span> : null}
+                          </button>
+                        );
+                      })}
                     </div>
                   </>
                 ) : null}
@@ -1227,15 +1275,11 @@ export function MenuPanel({
                               type="button"
                               className="link settings-version-tap"
                               aria-label="앱 버전"
+                              onClick={() => unlockProgressReset()}
                               onPointerUp={(event) => {
-                                if (event.button != null && event.button !== 0) return;
+                                // Some in-app WebViews drop click; pointer still fires.
+                                if (event.pointerType === "mouse") return;
                                 unlockProgressReset();
-                              }}
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter" || event.key === " ") {
-                                  event.preventDefault();
-                                  unlockProgressReset();
-                                }
                               }}
                             >
                               v1.0.0{isDevBuild ? " · DEV" : ""}

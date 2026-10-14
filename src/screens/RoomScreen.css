@@ -1641,24 +1641,31 @@
   gap: 2px;
 }
 
-.lucky-drawer-info-name,
-.lucky-drawer-info-status {
+.lucky-drawer-info-name {
   display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--cream);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.lucky-drawer-info-name {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--cream);
-}
-
 .lucky-drawer-info-status {
+  display: block;
   font-size: 11px;
   font-weight: 600;
   color: rgba(243, 233, 215, 0.62);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lucky-drawer-info-status.is-multiline {
+  white-space: pre-line;
+  overflow: visible;
+  text-overflow: unset;
+  line-height: 1.35;
 }
 
 .lucky-drawer-info-actions {

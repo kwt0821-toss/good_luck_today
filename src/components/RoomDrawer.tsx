@@ -377,11 +377,15 @@ export function RoomDrawer({
         <div className="lucky-drawer-info" role="dialog" aria-label={infoItem.nameKo}>
           <div className="lucky-drawer-info-copy">
             <strong className="lucky-drawer-info-name">{infoItem.nameKo}</strong>
-            <span className="lucky-drawer-info-status">
+            <span
+              className={`lucky-drawer-info-status ${
+                infoState.otherRoom && infoMeta?.otherRoomName ? "is-multiline" : ""
+              }`}
+            >
               {infoItem.attendanceOnly
                 ? "출석 한정 · 다시 살 수 없어요"
                 : infoState.otherRoom && infoMeta?.otherRoomName
-                  ? `다른 방에 있어요 · ${infoMeta.otherRoomName}`
+                  ? `다른 방에 있어요\n${infoMeta.otherRoomName}`
                   : infoState.depleted
                     ? infoMeta?.canBuyMore
                       ? "모두 배치 중"
