@@ -30,6 +30,8 @@ import { claimAttendanceGift } from "../lib/opsRewards";
 import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
 import type { MenuSheetId } from "../lib/menuTypes";
 import { haptic } from "../lib/native";
+import { nyConfirm, nyNotify } from "../lib/nyangNotify";
+import { NyChip } from "./NyChip";
 import "./MenuPanel.css";
 
 type RewardsView = "inbox" | "confirm" | "success" | "history";
@@ -120,7 +122,6 @@ export function MenuPanel({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [ratesTab, setRatesTab] = useState<"normal" | "rateUp">("normal");
   const [settings, setSettings] = useState<MenuSettings>(() => loadMenuSettings());
-  const [toast, setToast] = useState<string | null>(null);
   const [stampDay, setStampDay] = useState<number | null>(null);
   const [popDay, setPopDay] = useState<number | null>(null);
   const [creditsText, setCreditsText] = useState<string | null>(null);
@@ -138,7 +139,6 @@ export function MenuPanel({
   const reduce = shouldReduceMenuMotion(settings);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const sheetDrag = useRef<{ y: number; active: boolean }>({ y: 0, active: false });
-  const toastTimer = useRef(0);
   const stepHoldTimer = useRef(0);
   const stepRepeatTimer = useRef(0);
   const withdrawAmountRef = useRef(withdrawAmount);
@@ -281,19 +281,33 @@ export function MenuPanel({
       if (result.response.ok && result.response.status === "done") {
         setRewardsView("success");
         haptic("success");
+        nyNotify({
+          key: "withdraw-done",
+          kind: "success",
+          title: `토스포인트 <b>${withdrawAmount}원</b>을 받았어요`,
+        });
       } else if (result.response.ok && result.response.status === "pending") {
         setLastWithdraw(row);
         setRewardsView("success");
-        showToast("처리 중이에요. 잠시 후 기록에서 확인해 주세요");
+        nyNotify({
+          key: "withdraw-pending",
+          kind: "info",
+          title: "처리 중이에요",
+          sub: "잠시 후 기록에서 확인해 주세요",
+        });
       } else if (result.response.ok === false && result.response.code === "DAILY_LIMIT") {
-        showToast(
-          result.response.remainingToday != null
-            ? `오늘은 ${result.response.remainingToday}원까지 받을 수 있어요`
-            : result.response.reason,
-        );
         setRewardsView("inbox");
       } else {
-        showToast(result.response.ok === false ? result.response.reason : "지급에 실패했어요");
+        nyNotify({
+          key: "withdraw-fail",
+          kind: "error",
+          title: "보내지 못해 냥코인을 돌려드렸어요",
+          sub:
+            result.response.ok === false
+              ? result.response.reason
+              : "네트워크를 확인하고 다시 눌러 주세요",
+          action: { label: "다시 시도", onClick: () => setRewardsView("inbox") },
+        });
         setRewardsView("inbox");
       }
       void buildMenuViewModel(result.state).then((next) => {
@@ -303,12 +317,6 @@ export function MenuPanel({
     } finally {
       setWithdrawBusy(false);
     }
-  };
-
-  const showToast = (message: string) => {
-    setToast(message);
-    window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), 1800);
   };
 
   const unlockProgressReset = () => {
@@ -325,12 +333,16 @@ export function MenuPanel({
       writeProgressResetUnlocked();
       setProgressResetVisible(true);
       setProgressResetConfirm(true);
-      showToast("진행도 초기화");
+      nyNotify({ key: "progress-reset-unlock", kind: "info", title: "진행도 초기화" });
       void haptic("success");
       return;
     }
     if (stamp.count === 3 || stamp.count === 5) {
-      showToast(`버전 ${stamp.count}/7`);
+      nyNotify({
+        key: "version-tap",
+        kind: "info",
+        title: `버전 ${stamp.count}/7`,
+      });
     }
     stamp.timer = window.setTimeout(() => {
       stamp.count = 0;
@@ -355,7 +367,13 @@ export function MenuPanel({
         console.error("progress reset failed", err);
         setDevResetting(false);
         setProgressResetConfirm(false);
-        showToast("초기화에 실패했어요");
+        nyNotify({
+          key: "progress-reset-fail",
+          kind: "error",
+          title: "초기화하지 못했어요",
+          sub: "네트워크를 확인하고 다시 눌러 주세요",
+          action: { label: "다시 시도", onClick: () => runProgressReset() },
+        });
       });
   };
 
@@ -387,7 +405,12 @@ export function MenuPanel({
     if (!enabled && id !== "points" && id !== "exchange") return;
     if (open === "action:rewardedAd(paw)") {
       if (!enabled) {
-        showToast("내일 다시 열려요");
+        nyNotify({
+          key: "paw-ad-closed",
+          kind: "info",
+          title: "오늘 포인트 받기를 모두 했어요",
+          sub: "내일 0시에 다시 열려요",
+        });
         return;
       }
       onPawAd();
@@ -403,7 +426,13 @@ export function MenuPanel({
   const claimAttendance = async () => {
     const result = await claimAttendanceGift(ops);
     if (result.error) {
-      showToast(result.error);
+      nyNotify({
+        key: "attend-fail",
+        kind: "error",
+        title: "출석하지 못했어요",
+        sub: result.error,
+        action: { label: "다시 시도", onClick: () => void claimAttendance() },
+      });
       return;
     }
     const day =
@@ -421,15 +450,61 @@ export function MenuPanel({
     window.setTimeout(() => {
       setPopDay(null);
       if (pawReward || ticketReward) AudioManager.playSfx("reward-coin");
-      if (itemReward) showToast("서랍에 쏙 넣었어요");
-      else if (ticketReward) showToast("확률업 이용권을 받았어요");
-      else if (pawReward) showToast(`포인트 +${pawReward.paw}`);
-      else showToast("출석 완료!");
+      if (day === 7) {
+        const rewards = [];
+        if (pawReward) rewards.push({ label: `+${pawReward.paw}P`, icon: "paw" as const });
+        if (ticketReward) rewards.push({ label: "뽑기권 +1", icon: "ticket" as const });
+        if (itemReward) rewards.push({ label: "가구", icon: "cat" as const });
+        nyNotify({
+          key: "attend-7",
+          kind: "celebrate",
+          title: "출석 7일 달성! 🎉",
+          rewards: rewards.length ? rewards : [{ label: "출석 선물", icon: "paw" }],
+        });
+        return;
+      }
+      if (itemReward) {
+        nyNotify({
+          key: "attend-item",
+          kind: "success",
+          title: "출석 선물이 도착했어요",
+          sub: "서랍에 쏙 넣었어요",
+          action: { label: "놓으러 가기", onClick: () => { closeSheet(); onClose(); onOpenRoom(); } },
+        });
+      } else if (ticketReward) {
+        nyNotify({
+          key: "attend-ticket",
+          kind: "reward",
+          title: "출석 선물 도착!",
+          sub: "확률업 이용권을 받았어요",
+        });
+      } else if (pawReward) {
+        nyNotify({
+          key: "attend-paw",
+          kind: "reward",
+          title: "출석 선물 도착!",
+          sub: `발바닥 <b>${pawReward.paw}P</b>`,
+          count: pawReward.paw,
+        });
+      } else {
+        nyNotify({ key: "attend-ok", kind: "success", title: "출석 완료!" });
+      }
     }, 320);
   };
 
   const doExchange = async () => {
     if (exchangeBusy || !model || model.exchange.duplicateCount <= 0) return;
+    const n = model.exchange.duplicateCount;
+    const p = model.exchange.totalPaw;
+    const ok = await nyConfirm({
+      key: "dup-exchange",
+      title: `중복 카드 ${n}장을 바꿀까요?`,
+      body: "바꾼 카드는 도감에 1장씩 남아요\n포인트로 바꾸면 되돌릴 수 없어요",
+      badge: `+${p} 포인트`,
+      cancelLabel: model.menu.sheets.exchange.confirmCancel ?? "취소",
+      confirmLabel: model.menu.sheets.exchange.confirmOk ?? "바꾸기",
+    });
+    if (!ok) return;
     setExchangeBusy(true);
     try {
       const result = await postDupExchange(ops, {
@@ -437,13 +512,22 @@ export function MenuPanel({
         requestId: buildDupExchangeRequestId("all"),
       });
       if (!result.response.ok) {
-        showToast(result.response.reason);
+        nyNotify({
+          key: "dup-exchange-fail",
+          kind: "error",
+          title: "바꾸지 못했어요",
+          sub: result.response.reason,
+          action: { label: "다시 시도", onClick: () => void doExchange() },
+        });
         return;
       }
       onOpsChange(result.state);
-      const toastTpl =
-        model.menu.sheets.exchange.doneToast ?? "{p}P를 받았어요";
-      showToast(toastTpl.replace("{p}", String(result.response.gained)));
+      nyNotify({
+        key: "dup-exchange-done",
+        kind: "reward",
+        title: `포인트 <b>+${result.response.gained}</b> 받았어요`,
+        count: result.response.gained,
+      });
       AudioManager.playSfx("reward-coin");
       void haptic("success");
       closeSheet();
@@ -462,12 +546,39 @@ export function MenuPanel({
       });
       onOpsChange(result.state);
       if (!result.response.ok) {
-        showToast(result.response.reason);
+        const reason = result.response.reason;
+        if (reason.includes("주") || reason.includes("한도") || reason.includes("보유")) {
+          // Inline chip near buy button handles persistent can't-buy; snack for feedback.
+          nyNotify({
+            key: "ticket-limit",
+            kind: "info",
+            title: reason.includes("보유")
+              ? "뽑기권은 3장까지 가질 수 있어요"
+              : "이번 주 구매 한도를 다 썼어요",
+            sub: reason.includes("보유")
+              ? "가지고 있는 권을 먼저 써 보세요"
+              : "월요일 0시에 다시 살 수 있어요",
+          });
+        } else {
+          nyNotify({
+            key: "ticket-buy-fail",
+            kind: "error",
+            title: "사지 못했어요",
+            sub: reason,
+            action: { label: "다시 시도", onClick: () => void doBuyRateUpTicket() },
+          });
+        }
         return;
       }
       AudioManager.playSfx("reward-coin");
       void haptic("success");
-      showToast(model?.menu.sheets.ticketShop.toastBought ?? "확률업 뽑기권을 샀어요");
+      const held = result.state.rateUpTickets;
+      nyNotify({
+        key: "ticket-bought",
+        kind: "success",
+        title: "확률업 뽑기권을 샀어요",
+        sub: `보유 <b>${held}/3</b>`,
+      });
     } finally {
       setTicketBuyBusy(false);
     }
@@ -661,7 +772,12 @@ export function MenuPanel({
 
             <div className="menu-footer">
               <span>LUCKY CAT · v1.0.0</span>
-              <button type="button" onClick={() => showToast("문의 링크는 곧 연결돼요")}>
+              <button
+                type="button"
+                onClick={() =>
+                  nyNotify({ key: "contact-soon", kind: "info", title: "문의 링크는 곧 연결돼요" })
+                }
+              >
                 문의하기
               </button>
             </div>
@@ -1169,7 +1285,17 @@ export function MenuPanel({
                                   +
                                 </button>
                               </div>
-                              <p className="wallet-hint">{hint}</p>
+                              {lowBalance || dailyDone ? (
+                                <div className="ny-chip-anchor">
+                                  <NyChip arrow="down" arrowX={40} wide>
+                                    {lowBalance
+                                      ? `10냥코인부터 받을 수 있어요 · ${needMore}개 더 모으면 돼요`
+                                      : "오늘 출금 한도를 다 썼어요 · 내일 0시에 다시 받을 수 있어요"}
+                                  </NyChip>
+                                </div>
+                              ) : (
+                                <p className="wallet-hint">{hint}</p>
+                              )}
                               {!stepperDisabled && leftover > 0 ? (
                                 <p className="wallet-remain-hint">
                                   {(
@@ -1183,7 +1309,18 @@ export function MenuPanel({
                                 id="btn-withdraw"
                                 className="menu-sheet-cta is-withdraw"
                                 disabled={stepperDisabled || withdrawAmount < min}
-                                onClick={() => setRewardsView("confirm")}
+                                onClick={() => {
+                                  void (async () => {
+                                    const ok = await nyConfirm({
+                                      key: "withdraw",
+                                      title: `토스포인트 ${withdrawAmount}원을 받을까요?`,
+                                      body: "받은 포인트는 냥코인으로 되돌릴 수 없어요",
+                                      cancelLabel: "취소",
+                                      confirmLabel: "받기",
+                                    });
+                                    if (ok) void doWithdraw();
+                                  })();
+                                }}
                               >
                                 {cta}
                               </button>
@@ -1297,7 +1434,7 @@ export function MenuPanel({
                                   .then(setCreditsText);
                                 return;
                               }
-                              showToast("링크는 곧 연결돼요");
+                              nyNotify({ key: "link-soon", kind: "info", title: "링크는 곧 연결돼요" });
                             }}
                           >
                             {item.label}
@@ -1317,7 +1454,7 @@ export function MenuPanel({
                             };
                             onOpsChange(next);
                             void buildMenuViewModel(next).then(setModel);
-                            showToast("냥코인 +10 (DEV)");
+                            nyNotify({ key: "ncoin", kind: "reward", title: "냥코인 <b>{n}개</b> 받았어요", count: 10, sub: "DEV" });
                             AudioManager.playSfx("reward-coin");
                           }}
                         >
@@ -1368,40 +1505,30 @@ export function MenuPanel({
                   type="button"
                   className="menu-sheet-cta"
                   disabled={model.exchange.duplicateCount <= 0}
-                  onClick={() => setExchangeView("confirm")}
+                  onClick={() => void doExchange()}
                 >
-                  {model.menu.sheets.exchange.cta.replace(
-                    "{total}",
-                    String(model.exchange.totalPaw),
-                  )}
+                  {exchangeBusy
+                    ? "처리 중…"
+                    : model.menu.sheets.exchange.cta.replace(
+                        "{total}",
+                        String(model.exchange.totalPaw),
+                      )}
                 </button>
-              ) : null}
-
-              {sheet === "exchange" && exchangeView === "confirm" ? (
-                <div className="exchange-confirm-actions">
-                  <button
-                    type="button"
-                    className="menu-sheet-cta is-secondary"
-                    disabled={exchangeBusy}
-                    onClick={() => setExchangeView("summary")}
-                  >
-                    {model.menu.sheets.exchange.confirmCancel ?? "취소"}
-                  </button>
-                  <button
-                    type="button"
-                    className="menu-sheet-cta"
-                    disabled={exchangeBusy || model.exchange.duplicateCount <= 0}
-                    onClick={() => void doExchange()}
-                  >
-                    {exchangeBusy
-                      ? "처리 중…"
-                      : (model.menu.sheets.exchange.confirmOk ?? "바꾸기")}
-                  </button>
-                </div>
               ) : null}
 
               {sheet === "ticketShop" ? (
                 <div className="ticket-shop-actions">
+                  {!model.ticketShop.canBuy && model.ticketShop.disabledReason ? (
+                    <div className="ny-chip-anchor is-ticket">
+                      <NyChip arrow="down" arrowX={48} wide>
+                        {model.ticketShop.disabledReason.includes("보유")
+                          ? "뽑기권은 3장까지 가질 수 있어요"
+                          : model.ticketShop.disabledReason.includes("주")
+                            ? "이번 주 구매 한도를 다 썼어요 · 월요일 0시에 다시 살 수 있어요"
+                            : model.ticketShop.disabledReason}
+                      </NyChip>
+                    </div>
+                  ) : null}
                   <button
                     type="button"
                     className="menu-sheet-cta"
@@ -1484,7 +1611,6 @@ export function MenuPanel({
           </div>
         ) : null}
 
-        {toast ? <div className="menu-toast">{toast}</div> : null}
       </aside>
 
       {progressResetConfirm ? (

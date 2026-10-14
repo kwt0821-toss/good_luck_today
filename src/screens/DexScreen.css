@@ -661,6 +661,19 @@
   font-variant-numeric: tabular-nums;
 }
 
+.dex-slot-chip {
+  position: absolute;
+  left: 50%;
+  top: 118px;
+  transform: translateX(-50%);
+  z-index: 12;
+  pointer-events: none;
+}
+.dex-slot-chip .ny-chip {
+  position: relative;
+  pointer-events: auto;
+}
+
 .dex-sheet-root {
   /* Portaled to #root — redeclare tokens so title/stats don't inherit body ink. */
   --cream: #f3e9d7;

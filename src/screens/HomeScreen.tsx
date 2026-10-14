@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 import { formatCountdownHms, formatLuckyCatalogDate, msUntilNextKstMidnight } from "../lib/date";
 import { MENU_SETTINGS_EVENT, shouldReduceMenuMotion } from "../lib/menuSettings";
+import { nyNotify } from "../lib/nyangNotify";
 
 const ASSETS = {
   bg: "/assets/main/bg-night-base.webp",
@@ -72,11 +73,9 @@ export function HomeScreen({
 }: HomeScreenProps) {
   const [waking, setWaking] = useState(false);
   const [flipping, setFlipping] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(() => formatCountdownHms(msUntilNextKstMidnight()));
   const [nudge, setNudge] = useState(false);
   const wakeTimer = useRef(0);
-  const noticeTimer = useRef(0);
   const navTimer = useRef(0);
   const navLock = useRef(false);
   const [reduce, setReduce] = useState(() => shouldReduceMenuMotion());
@@ -117,9 +116,7 @@ export function HomeScreen({
   }, [lowRemaining, reduce, drawsDone]);
 
   const showNotice = (message: string) => {
-    setNotice(message);
-    window.clearTimeout(noticeTimer.current);
-    noticeTimer.current = window.setTimeout(() => setNotice(null), 1800);
+    nyNotify({ key: `home:${message}`, kind: "info", title: message });
   };
 
   const popThen = (action: () => void) => (event: MouseEvent<HTMLButtonElement>) => {
@@ -425,11 +422,6 @@ export function HomeScreen({
         </button>
       </nav>
 
-      {notice ? (
-        <div className="local-toast" role="status">
-          {notice}
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -1311,6 +1311,20 @@
   color: rgba(243, 233, 215, 0.55);
 }
 
+.ny-chip-anchor {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 14px;
+  min-height: 44px;
+}
+.ny-chip-anchor .ny-chip {
+  position: relative;
+}
+.ny-chip-anchor.is-ticket {
+  margin-bottom: 12px;
+}
+
 .wallet-hint {
   margin: 0 0 6px;
   font-size: 12px;

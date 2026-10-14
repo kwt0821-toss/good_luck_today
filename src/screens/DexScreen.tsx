@@ -31,6 +31,8 @@ import {
   type DexReward,
 } from "../lib/dexRewards";
 import { haptic } from "../lib/native";
+import { nyConfirm, nyNotify } from "../lib/nyangNotify";
+import { NyChip } from "../components/NyChip";
 import type { DexCard, DexCatalog, DexOwnedMap, DexTab } from "../lib/dexTypes";
 import { buildDupExchangeRequestId, postDupExchange } from "../lib/dupExchange";
 import { dupPawForCard } from "../lib/drawRates";
@@ -86,7 +88,6 @@ export function DexScreen({
     }
     return "breed";
   });
-  const [toast, setToast] = useState<string | null>(null);
   const [openCard, setOpenCard] = useState<DexCard | null>(null);
   const [claimBusy, setClaimBusy] = useState(false);
   const [burstToken, setBurstToken] = useState(0);
@@ -94,7 +95,8 @@ export function DexScreen({
   const [celebrate, setCelebrate] = useState<CelebrateState | null>(null);
   const [scrollLock, setScrollLock] = useState(false);
   const [pulseSlotId, setPulseSlotId] = useState<string | null>(null);
-  const toastTimer = useRef(0);
+  const [slotChip, setSlotChip] = useState<{ cardId: string; text: string } | null>(null);
+  const slotChipTimer = useRef(0);
   const scrollDoneRef = useRef(false);
   const tabRefs = useRef<Record<DexTab, HTMLButtonElement | null>>({
     breed: null,
@@ -208,12 +210,6 @@ export function DexScreen({
     return () => window.clearTimeout(timer);
   }, [tutorialPhase, focusCardId, reduceMotion]);
 
-  const showToast = (message: string) => {
-    setToast(message);
-    window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), 1600);
-  };
-
   const playClaimFx = (rewards: DexReward[]) => {
     const full = rewards.some((item) => item.kind === "fullDex");
     setBurstConfetti(full);
@@ -241,13 +237,34 @@ export function DexScreen({
         requestId: buildDexClaimRequestId(),
       });
       if (!result.response.ok) {
-        showToast(result.response.reason);
+        nyNotify({
+          key: "dex-claim-fail",
+          kind: "error",
+          title: "보상을 받지 못했어요",
+          sub: result.response.reason,
+          action: { label: "다시 시도", onClick: () => void runClaim(rewardIds, celebrateAfter) },
+        });
         return;
       }
+      const prevNyang = ops.nyangCoinBalance;
       onOpsChange(result.state);
       const claimed = result.claimed;
       await refreshClaimable(result.state, owned);
       playClaimFx(claimed);
+      if (prevNyang < 10 && result.state.nyangCoinBalance >= 10) {
+        nyNotify({
+          key: "ncoin-10",
+          kind: "reward",
+          title: "냥코인 10개!",
+          sub: "토스포인트로 바꿀 수 있어요",
+          action: {
+            label: "보상함",
+            onClick: () => {
+              window.dispatchEvent(new CustomEvent("lucky-open-rewards"));
+            },
+          },
+        });
+      }
 
       if (
         tutorialPhase === "claim" &&
@@ -255,11 +272,15 @@ export function DexScreen({
         claimed.some((item) => item.cardId === focusCardId || item.id === `newCard:${focusCardId}`)
       ) {
         const sum = summarizeClaimable(claimed);
-        showToast(
-          sum.nyangCoin > 0
-            ? `냥코인 ${sum.nyangCoin}개 + ${sum.paw}포인트 받았어요`
-            : `+${sum.paw}포인트 받았어요`,
-        );
+        nyNotify({
+          key: "ncoin",
+          kind: "reward",
+          title:
+            sum.nyangCoin > 0
+              ? `냥코인 <b>{n}개</b> + ${sum.paw}P 받았어요`
+              : `발바닥 <b>+${sum.paw}P</b> 받았어요`,
+          count: sum.nyangCoin > 0 ? sum.nyangCoin : sum.paw,
+        });
         onTutorialClaimed?.();
         return;
       }
@@ -282,11 +303,29 @@ export function DexScreen({
         });
       } else if (claimed.length) {
         const sum = summarizeClaimable(claimed);
-        showToast(
-          sum.nyangCoin > 0
-            ? `냥코인 +${sum.nyangCoin} · +${sum.paw}P`
-            : `+${sum.paw}P`,
-        );
+        if (rewardIds === "all" || claimed.length >= 2) {
+          nyNotify({
+            key: "dex-claim-all",
+            kind: "celebrate",
+            title: `보상 ${claimed.length}개를 받았어요`,
+            rewards: [
+              ...(sum.nyangCoin > 0 ? [{ label: `+${sum.nyangCoin} 냥코인`, icon: "ncoin" as const }] : []),
+              ...(sum.paw > 0 ? [{ label: `+${sum.paw}P`, icon: "paw" as const }] : []),
+            ],
+            sub: sum.nyangCoin > 0 ? `+${sum.nyangCoin} 냥코인 +${sum.paw}P` : `+${sum.paw}P`,
+          });
+        } else {
+          nyNotify({
+            key: "ncoin",
+            kind: "reward",
+            title:
+              sum.nyangCoin > 0
+                ? `냥코인 <b>{n}개</b> + ${sum.paw}P 받았어요`
+                : `발바닥 <b>+${sum.paw}P</b> 받았어요`,
+            count: sum.nyangCoin > 0 ? sum.nyangCoin : sum.paw,
+            sub: claimed[0]?.label,
+          });
+        }
       }
     } finally {
       setClaimBusy(false);
@@ -336,7 +375,9 @@ export function DexScreen({
       return;
     }
     void haptic("softMedium");
-    showToast("아직 만나지 못한 고양이예요");
+    window.clearTimeout(slotChipTimer.current);
+    setSlotChip({ cardId: card.id, text: "아직 못 만난 고양이예요" });
+    slotChipTimer.current = window.setTimeout(() => setSlotChip(null), 1800);
   };
 
   return (
@@ -349,7 +390,29 @@ export function DexScreen({
           <button
             type="button"
             className="dex-back"
-            onClick={onBack}
+            onClick={() => {
+              const pending = claimable.length;
+              const sum = summarizeClaimable(claimable);
+              onBack();
+              if (!tutLocked && pending > 0) {
+                nyNotify({
+                  key: "dex-pending",
+                  kind: "info",
+                  title: `더 받을 보상이 <b>{n}개</b> 있어요`,
+                  count: pending,
+                  sub:
+                    sum.nyangCoin > 0
+                      ? `도감에서 냥코인 ${sum.nyangCoin} + ${sum.paw}P 받기`
+                      : `도감에서 +${sum.paw}P 받기`,
+                  action: {
+                    label: "보러 가기",
+                    onClick: () => {
+                      window.dispatchEvent(new CustomEvent("lucky-open-dex"));
+                    },
+                  },
+                });
+              }
+            }}
             aria-label="뒤로 가기"
             disabled={tutLocked}
           >
@@ -564,6 +627,16 @@ export function DexScreen({
           onClose={() => setOpenCard(null)}
           onChangeCard={setOpenCard}
           onConvertDuplicate={async (card, qty) => {
+            const unit = economy ? dupPawForCard(card, economy) : 0;
+            const ok = await nyConfirm({
+              key: "dex-dup",
+              title: `중복 카드 ${qty}장을 바꿀까요?`,
+              body: "포인트로 바꾸면 되돌릴 수 없어요",
+              badge: unit > 0 ? `+${unit * qty} 포인트` : undefined,
+              cancelLabel: "취소",
+              confirmLabel: "바꾸기",
+            });
+            if (!ok) return;
             const result = await postDupExchange(ops, {
               mode: "card",
               cardId: card.id,
@@ -571,12 +644,22 @@ export function DexScreen({
               requestId: buildDupExchangeRequestId("card", card.id),
             });
             if (!result.response.ok) {
-              showToast(result.response.reason);
+              nyNotify({
+                key: "dex-dup-fail",
+                kind: "error",
+                title: "바꾸지 못했어요",
+                sub: result.response.reason,
+              });
               return;
             }
             onOpsChange(result.state);
             setOwned(result.owned);
-            showToast(`${result.response.gained}P를 받았어요`);
+            nyNotify({
+              key: "dup-exchange-done",
+              kind: "reward",
+              title: `포인트 <b>+${result.response.gained}</b> 받았어요`,
+              count: result.response.gained,
+            });
             void haptic("success");
             AudioManager.playSfx("reward-coin");
           }}
@@ -615,7 +698,26 @@ export function DexScreen({
               ) : null}
               <span>+{celebrate.paw}P</span>
             </div>
-            <button type="button" className="dex-celebrate-cta" onClick={() => setCelebrate(null)}>
+            <button
+              type="button"
+              className="dex-celebrate-cta"
+              onClick={() => {
+                const c = celebrate;
+                setCelebrate(null);
+                if (!c) return;
+                nyNotify({
+                  key: `dex-set-${c.kind}`,
+                  kind: "celebrate",
+                  title: c.sub.includes("완성") ? `${c.sub}! 🎉` : `${c.sub} 세트 완성! 🎉`,
+                  rewards: [
+                    ...(c.nyangCoin > 0
+                      ? [{ label: `+${c.nyangCoin} 냥코인`, icon: "ncoin" as const }]
+                      : []),
+                    ...(c.paw > 0 ? [{ label: `+${c.paw}P`, icon: "paw" as const }] : []),
+                  ],
+                });
+              }}
+            >
               좋아요
             </button>
           </div>
@@ -624,9 +726,11 @@ export function DexScreen({
 
       <CoinBurst token={burstToken} confetti={burstConfetti} count={burstConfetti ? 32 : 12} />
 
-      {toast ? (
-        <div className="local-toast" role="status">
-          {toast}
+      {slotChip ? (
+        <div className="ny-chip-anchor dex-slot-chip">
+          <NyChip arrow="up" arrowX={28}>
+            {slotChip.text}
+          </NyChip>
         </div>
       ) : null}
 

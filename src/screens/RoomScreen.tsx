@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
 import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
+import { NyChip } from "../components/NyChip";
+import { nyConfirm, nyNotify } from "../lib/nyangNotify";
 import { RoomDrawer, type DrawerItemMeta } from "../components/RoomDrawer";
 import { RoomWorld } from "../components/RoomWorld";
 import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
@@ -131,7 +133,6 @@ export function RoomScreen({
   const [tab, setTab] = useState<RoomTab>(tutorialActive ? "보유" : "가구");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<RoomLayoutState | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
   const [buyItem, setBuyItem] = useState<RoomItem | null>(null);
   const [buyMore, setBuyMore] = useState(false);
   const [confirm, setConfirm] = useState<
@@ -157,7 +158,6 @@ export function RoomScreen({
   /** One-step undo for last confirm / put-back / fill-all / clear-furniture. */
   const [editUndo, setEditUndo] = useState<RoomSaveState | null>(null);
   const [stars] = useState(() => makeStars());
-  const toastTimer = useRef(0);
   const previewRef = useRef<PlacementPreview | null>(null);
   const previewMoving = useRef(false);
   const previewHudModeRef = useRef<"message" | "toolbar">("message");
@@ -285,10 +285,8 @@ export function RoomScreen({
     });
   }, [tutorialActive, state?.currentRoomId, itemsById, starterDrawerIds]);
 
-  const showToast = (message: string) => {
-    setToast(message);
-    window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), 1600);
+  const showToast = (message: string, kind: "success" | "reward" | "info" | "error" = "info") => {
+    nyNotify({ key: `room:${message.slice(0, 28)}`, kind, title: message.replace(/\n/g, " · ") });
   };
 
   const persist = (next: RoomSaveState) => {
@@ -453,7 +451,7 @@ export function RoomScreen({
     setSnapshot(null);
     setPaintHover(null);
     setEditUndo(null);
-    if (saved) showToast("방을 저장했어요");
+    if (saved) nyNotify({ key: "room-save", kind: "success", title: "방을 저장했어요", sub: roomDef?.nameKo });
   };
 
   const applyEditUndo = () => {
@@ -898,7 +896,6 @@ export function RoomScreen({
     });
     setCommitting(false);
     if (!result.ok) {
-      showToast(result.reason);
       const failed: PlacementPreview = { ...preview, valid: false, reason: result.reason };
       setPreview(failed);
       previewRef.current = failed;
@@ -942,7 +939,7 @@ export function RoomScreen({
     previewRef.current = null;
     setDragging(null);
     setSelectedId(null);
-    showToast("서랍에 넣었어요");
+    nyNotify({ key: "room-drawer", kind: "success", title: "서랍에 넣었어요" });
   };
 
   const togglePaintFillAll = () => {
@@ -1129,7 +1126,12 @@ export function RoomScreen({
     void spendRoomPoints(nextPoints);
     setBuyItem(null);
     setBuyMore(false);
-    showToast(`${item.nameKo}를 샀어요`);
+    nyNotify({
+      key: "room-buy",
+      kind: "success",
+      title: `${item.nameKo}을 서랍에 넣었어요`,
+      action: { label: "놓으러 가기", onClick: () => { /* stay in room edit */ setMode("edit"); } },
+    });
   };
 
   const screen = screenOf(mode);
@@ -1231,7 +1233,27 @@ export function RoomScreen({
         </header>
       ) : (
         <div className="lucky-edit-bar">
-          <button type="button" className="lucky-ghost" onClick={() => setConfirm("discard")}>
+          <button
+            type="button"
+            className="lucky-ghost"
+            onClick={() => {
+              void (async () => {
+                const ok = await nyConfirm({
+                  key: "room-discard",
+                  title: "바꾼 내용을 버릴까요?",
+                  body: "꾸미기 모드에 들어오기 전 배치로 돌아가요.",
+                  cancelLabel: "계속 꾸미기",
+                  confirmLabel: "버리기",
+                });
+                if (!ok) return;
+                previewRef.current = null;
+                setPreview(null);
+                setDragging(null);
+                if (snapshot) persist(patchCurrentRoom(state, snapshot));
+                leaveEdit(false);
+              })();
+            }}
+          >
             취소
           </button>
           <p>
@@ -1455,14 +1477,47 @@ export function RoomScreen({
         >
           <div className="lucky-paint-dock-copy">
             <strong className="lucky-paint-dock-name">{previewItem.nameKo}</strong>
-            <span className={`lucky-paint-dock-status ${preview.valid ? "" : "is-invalid"}`}>
-              {preview.reason ??
-                (preview.fillAll
+            {!preview.valid && preview.reason ? (
+              <div className="ny-chip-placement is-paint">
+                <NyChip
+                  arrow="down"
+                  arrowX={40}
+                  action={
+                    preview.reason.includes("벽지")
+                      ? {
+                          label: "다른 벽지 보기",
+                          onClick: () => {
+                            const cleared = cancelPreview(layout);
+                            patchLayoutLocal(cleared);
+                            setTab("벽지");
+                          },
+                        }
+                      : preview.reason.includes("바닥")
+                        ? {
+                            label: "다른 바닥 보기",
+                            onClick: () => {
+                              const cleared = cancelPreview(layout);
+                              patchLayoutLocal(cleared);
+                              setTab("바닥");
+                            },
+                          }
+                        : undefined
+                  }
+                >
+                  {preview.reason.includes("벽지")
+                    ? "이미 같은 벽지가 깔려 있어요"
+                    : preview.reason}
+                </NyChip>
+              </div>
+            ) : (
+              <span className="lucky-paint-dock-status">
+                {preview.fillAll
                   ? preview.paintKind === "floor"
                     ? "모든 바닥 칸 미리보기"
                     : "모든 벽 칸 미리보기"
-                  : paintTargetLabel(preview.target, previewItem))}
-            </span>
+                  : paintTargetLabel(preview.target, previewItem)}
+              </span>
+            )}
           </div>
           <div className="lucky-paint-dock-actions">
             <button
@@ -1546,10 +1601,29 @@ export function RoomScreen({
               ✓
             </button>
           </div>
-          {preview.reason ? (
-            <span className={`lucky-placement-reason ${preview.valid ? "" : "is-invalid"}`}>
-              {preview.reason}
-            </span>
+          {!preview.valid && preview.reason ? (
+            <div className="ny-chip-placement">
+              <NyChip
+                arrow="up"
+                arrowX={36}
+                action={
+                  preview.reason.includes("자리")
+                    ? {
+                        label: "서랍에 넣기",
+                        onClick: () => {
+                          void putPreviewBack();
+                        },
+                      }
+                    : undefined
+                }
+              >
+                {preview.reason.includes("자리")
+                  ? "방에 자리가 없어요"
+                  : preview.reason.includes("겹쳐")
+                    ? "다른 가구와 겹쳐요"
+                    : preview.reason}
+              </NyChip>
+            </div>
           ) : null}
         </div>
       ) : null}
@@ -1663,25 +1737,6 @@ export function RoomScreen({
         />
       ) : null}
 
-      {confirm === "discard" ? (
-        <RoomConfirm
-          title="변경사항을 버릴까요?"
-          body="꾸미기 모드에 들어오기 전 배치로 돌아가요."
-          cancel="계속 꾸미기"
-          confirm="버리기"
-          danger
-          onCancel={() => setConfirm(null)}
-          onConfirm={() => {
-            previewRef.current = null;
-            setPreview(null);
-            setDragging(null);
-            if (snapshot) persist(patchCurrentRoom(state, snapshot));
-            setConfirm(null);
-            leaveEdit(false);
-          }}
-        />
-      ) : null}
-
       {confirm === "close-edit" ? (
         <RoomConfirm
           title="변경사항을 저장할까요?"
@@ -1772,11 +1827,6 @@ export function RoomScreen({
         />
       ) : null}
 
-      {toast ? (
-        <div className="local-toast" role="status">
-          {toast}
-        </div>
-      ) : null}
     </div>
   );
 }

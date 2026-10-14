@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AudioManager } from "./audio/AudioManager";
 import { AdModal } from "./components/AdModal";
+import { NyangNotifyHost } from "./components/NyangNotifyHost";
+import { nyNotify } from "./lib/nyangNotify";
 import { MenuPanel } from "./components/MenuPanel";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import { toKstDateKey } from "./lib/date";
@@ -148,7 +150,6 @@ export default function App() {
   const [revealToast, setRevealToast] = useState<string | null>(null);
   const [bootError, setBootError] = useState<string | null>(null);
   const [featureIntro, setFeatureIntro] = useState<FeatureIntro | null>(null);
-  const [localToast, setLocalToast] = useState<string | null>(null);
 
   const today = toKstDateKey();
 
@@ -222,6 +223,21 @@ export default function App() {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, [menuOpen]);
+
+  useEffect(() => {
+    const openDex = () => setScreen({ name: "collection" });
+    const openRewards = () => {
+      setScreen({ name: "home" });
+      setForceMenuSheet("rewards");
+      setMenuOpen(true);
+    };
+    window.addEventListener("lucky-open-dex", openDex);
+    window.addEventListener("lucky-open-rewards", openRewards);
+    return () => {
+      window.removeEventListener("lucky-open-dex", openDex);
+      window.removeEventListener("lucky-open-rewards", openRewards);
+    };
+  }, []);
 
   const closeMenu = useCallback(() => {
     setMenuOpen(false);
@@ -432,8 +448,12 @@ export default function App() {
       if (!ops || !config) return;
       const slot = forceSlot ?? nextDrawSlot(ops, config);
       if (!slot) {
-        setLocalToast("내일 또 만나요");
-        window.setTimeout(() => setLocalToast(null), 1800);
+        nyNotify({
+          key: "draw-empty",
+          kind: "info",
+          title: "오늘 뽑기를 모두 했어요",
+          sub: "내일 0시에 다시 만나요",
+        });
         return;
       }
 
@@ -444,8 +464,18 @@ export default function App() {
       const reserved = await reserveDraw(ops, { forceSlot: slot });
       await persistOps(reserved.state);
       if (!reserved.reservation) {
-        setLocalToast(reserved.error ?? "뽑기를 시작하지 못했어요");
-        window.setTimeout(() => setLocalToast(null), 1800);
+        nyNotify({
+          key: "draw-reserve-fail",
+          kind: "error",
+          title: "뽑기를 시작하지 못했어요",
+          sub: reserved.error ?? "잠시 후 다시 눌러 주세요",
+          action: {
+            label: "다시 시도",
+            onClick: () => {
+              void beginDraw(forceSlot);
+            },
+          },
+        });
         return;
       }
 
@@ -458,7 +488,13 @@ export default function App() {
       if (slot === "tutorial" || (slot === "rateUp" && willUseRateUpTicket(ops, config))) {
         const confirmed = await confirmDrawAfterAd(reserved.state, reserved.reservation.drawId);
         if ("error" in confirmed) {
-          setLocalToast(confirmed.error);
+          nyNotify({
+            key: "draw-confirm-fail",
+            kind: "error",
+            title: "연결이 잠시 끊겼어요",
+            sub: confirmed.error || "다시 시도해 주세요",
+            action: { label: "다시 시도", onClick: () => void beginDraw(forceSlot) },
+          });
           return;
         }
         await persistOps(
@@ -469,6 +505,14 @@ export default function App() {
         setReservation(confirmed.reservation);
         setRevealCard(confirmed.card);
         setRevealToast(confirmed.toast);
+        if (!confirmed.reservation.isNew) {
+          nyNotify({
+            key: "draw-dup",
+            kind: "info",
+            title: "이미 만난 고양이예요",
+            sub: "메뉴 › 중복 카드 교환에서 바꿀 수 있어요",
+          });
+        }
         setRevealReady(true);
         setWaitFailed(false);
         await haptic("success");
@@ -493,13 +537,23 @@ export default function App() {
       setAd(null);
       setMenuOpen(true);
       if ("error" in result) {
-        setLocalToast(result.error);
+        nyNotify({
+          key: "paw-ad-fail",
+          kind: "error",
+          title: "포인트를 받지 못했어요",
+          sub: result.error || "네트워크를 확인하고 다시 눌러 주세요",
+          action: { label: "다시 시도", onClick: () => setMenuOpen(true) },
+        });
         return;
       }
       await persistOps(result.state);
-      AudioManager.playSfx("reward-coin");
-      setLocalToast(`포인트 +${result.gained}`);
-      window.setTimeout(() => setLocalToast(null), 1800);
+      nyNotify({
+        key: "paw-ad",
+        kind: "reward",
+        title: `발바닥 <b>+${result.gained}P</b> 받았어요`,
+        sub: "메뉴 › 포인트 받기",
+        count: result.gained,
+      });
       await haptic("success");
       return;
     }
@@ -511,13 +565,27 @@ export default function App() {
     const confirmed = await confirmDrawAfterAd(ops, ad.drawId);
     setAd(null);
     if ("error" in confirmed) {
-      setLocalToast(confirmed.error);
+      nyNotify({
+        key: "draw-confirm-fail",
+        kind: "error",
+        title: "연결이 잠시 끊겼어요",
+        sub: confirmed.error || "다시 시도해 주세요",
+        action: { label: "다시 시도", onClick: () => void beginDraw() },
+      });
       return;
     }
     await persistOps(confirmed.state);
     setReservation(confirmed.reservation);
     setRevealCard(confirmed.card);
     setRevealToast(confirmed.toast);
+    if (!confirmed.reservation.isNew) {
+      nyNotify({
+        key: "draw-dup",
+        kind: "info",
+        title: "이미 만난 고양이예요",
+        sub: "메뉴 › 중복 카드 교환에서 바꿀 수 있어요",
+      });
+    }
     // Start the post-ad wait clock now (images may already be decoded).
     if (!revealReady) {
       window.setTimeout(() => {
@@ -542,6 +610,12 @@ export default function App() {
       const next = await cancelDrawReservation(ops);
       await persistOps(next);
       setReservation(null);
+      nyNotify({
+        key: "ad-cancel-draw",
+        kind: "error",
+        title: "광고를 끝까지 보지 못했어요",
+        sub: "뽑기권은 그대로예요",
+      });
     }
     setAd(null);
     // Paw ads start with the menu left open; restore it if anything closed it.
@@ -1214,11 +1288,7 @@ export default function App() {
         />
       ) : null}
 
-      {localToast ? (
-        <div className="local-toast" role="status">
-          {localToast}
-        </div>
-      ) : null}
+      <NyangNotifyHost />
     </>
   );
 }

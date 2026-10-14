@@ -1289,6 +1289,25 @@
   cursor: default;
 }
 
+.ny-chip-placement {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  z-index: 8;
+  pointer-events: auto;
+}
+.ny-chip-placement .ny-chip {
+  position: relative;
+}
+.ny-chip-placement.is-paint {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  margin-top: 4px;
+}
+
 .lucky-placement-reason {
   position: absolute;
   left: 50%;

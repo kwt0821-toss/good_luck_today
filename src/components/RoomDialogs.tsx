@@ -3,6 +3,7 @@ import type { RoomDefinition } from "../lib/roomCatalog";
 import type { DexCard } from "../lib/dexTypes";
 import { EXCHANGE_RATES } from "../lib/roomStore";
 import type { RoomItem } from "../lib/roomTypes";
+import { NyChip } from "./NyChip";
 
 type ConfirmProps = {
   title: string;
@@ -93,7 +94,11 @@ export function RoomBuySheet({
           </>
         ) : (
           <>
-            <p>발바닥 포인트가 모자라요. 중복 카드를 바꿔 모아 보세요.</p>
+            <div className="ny-chip-anchor" style={{ position: "relative", margin: "12px 0" }}>
+              <NyChip arrow="down" arrowX={48} wide>
+                {`포인트가 ${item.price - points} 모자라요 · 출석·포인트 받기로 모아요`}
+              </NyChip>
+            </div>
             <div className="lucky-modal-actions">
               <button type="button" className="is-amber" onClick={onClose}>
                 확인
