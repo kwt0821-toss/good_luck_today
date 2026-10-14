@@ -1487,7 +1487,7 @@
   border: 0;
   background: transparent;
   color: inherit;
-  text-align: left;
+  text-align: center;
   font: inherit;
   cursor: pointer;
 }
@@ -1538,10 +1538,6 @@
   padding: 0;
   background: transparent;
   color: var(--cream);
-  text-align: center;
-}
-
-.lucky-cell-main {
   text-align: center;
 }
 
