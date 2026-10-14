@@ -181,7 +181,16 @@ export function RoomScreen({
         setEconomyRooms(config.economy.rooms ?? []);
         setStarterDrawerIds(config.starter.drawer ?? []);
         const loaded = await loadRoomState(priced, rooms, gridFile);
-        setState(await syncRoomSaveWithOps(loaded));
+        const synced = await syncRoomSaveWithOps(loaded);
+        setState(synced);
+        if (
+          synced.currentRoomId !== loaded.currentRoomId ||
+          synced.unlocked.join() !== loaded.unlocked.join() ||
+          synced.points !== loaded.points ||
+          synced.cozyLevel !== loaded.cozyLevel
+        ) {
+          void saveRoomState(synced);
+        }
       },
     );
     void Promise.all([loadDexCatalog(), loadDexOwned()]).then(([catalog, owned]) => {
