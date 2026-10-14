@@ -54,12 +54,14 @@
 }
 
 .dex-back {
+  position: relative;
+  z-index: 3;
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   margin-left: -4px;
   border: 1px solid rgba(243, 233, 215, 0.35);
   border-radius: 10px;
@@ -67,6 +69,13 @@
   color: #fff8ea;
   cursor: pointer;
   padding: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dex-back:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .dex-back svg {
