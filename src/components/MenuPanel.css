@@ -1445,8 +1445,6 @@
 .exchange-grade-list li {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
   min-height: 36px;
   padding: 0 12px;
   border-radius: 12px;
@@ -1454,10 +1452,6 @@
   color: rgba(243, 233, 215, 0.78);
   font-size: 13px;
   font-weight: 650;
-}
-
-.exchange-grade-list b {
-  color: var(--menu-amber);
   font-variant-numeric: tabular-nums;
 }
 

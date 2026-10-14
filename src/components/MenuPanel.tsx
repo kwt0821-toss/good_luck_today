@@ -873,9 +873,8 @@ export function MenuPanel({
                       {model.exchange.lines.map((line) => (
                         <li key={line.key}>
                           <span>
-                            {line.label} {line.count}장
+                            {line.label} {line.count}장 · {line.paw.toLocaleString("ko-KR")}P
                           </span>
-                          <b>{line.paw.toLocaleString("ko-KR")}P</b>
                         </li>
                       ))}
                     </ul>

@@ -575,23 +575,6 @@ export function DexDetailSheet({
           </div>
         </div>
 
-        <div className="dex-dots" aria-label="보유 카드">
-          {group.map((item) => {
-            const isOwned = Boolean(owned[item.id]);
-            const isActive = item.id === card.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={`dex-dot ${isActive ? "is-active" : ""} ${isOwned ? "" : "is-locked"}`}
-                aria-label={cardDisplayName(item)}
-                disabled={!isOwned}
-                onClick={() => selectOwned(item)}
-              />
-            );
-          })}
-        </div>
-
         {dupCount > 0 && onConvertDuplicate && dupPhase === "idle" ? (
           <div className="dex-dup-block">
             <p className="dex-dup-meta">
@@ -689,6 +672,23 @@ export function DexDetailSheet({
             </div>
           </div>
         ) : null}
+
+        <div className="dex-dots" aria-label="보유 카드">
+          {group.map((item) => {
+            const isOwned = Boolean(owned[item.id]);
+            const isActive = item.id === card.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`dex-dot ${isActive ? "is-active" : ""} ${isOwned ? "" : "is-locked"}`}
+                aria-label={cardDisplayName(item)}
+                disabled={!isOwned}
+                onClick={() => selectOwned(item)}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>,
     host,
