@@ -140,6 +140,8 @@ export function RoomScreen({
   >(null);
   const [dragging, setDragging] = useState<RoomDrag | null>(null);
   const [preview, setPreview] = useState<PlacementPreview | null>(null);
+  /** Furniture preview HUD: name/reason message XOR edit toolbar (never both). */
+  const [previewHudMode, setPreviewHudMode] = useState<"message" | "toolbar">("message");
   const [committing, setCommitting] = useState(false);
   const [placeFxId, setPlaceFxId] = useState<string | null>(null);
   // Treat null phase as pick when tutorial is active (resume / first paint).
@@ -159,6 +161,9 @@ export function RoomScreen({
   const toastTimer = useRef(0);
   const previewRef = useRef<PlacementPreview | null>(null);
   const previewMoving = useRef(false);
+  const previewHudModeRef = useRef<"message" | "toolbar">("message");
+  const previewItemTap = useRef<{ instanceId: string; x: number; y: number } | null>(null);
+  const previewKeyRef = useRef<string | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const swipe = useRef({ x: 0, y: 0, dx: 0, active: false });
   const itemsById = useMemo(() => itemMap(items), [items]);
@@ -167,6 +172,30 @@ export function RoomScreen({
   useEffect(() => {
     previewRef.current = preview;
   }, [preview]);
+
+  useEffect(() => {
+    previewHudModeRef.current = previewHudMode;
+  }, [previewHudMode]);
+
+  useEffect(() => {
+    const key = !preview
+      ? null
+      : preview.kind === "paint"
+        ? `paint:${preview.itemId}`
+        : `${preview.kind}:${preview.instanceId}:${preview.origin}`;
+    if (key === previewKeyRef.current) return;
+    previewKeyRef.current = key;
+    if (!preview) {
+      setPreviewHudMode("message");
+      return;
+    }
+    // Paint + tutorial need the confirm toolbar immediately.
+    if (preview.kind === "paint" || tutLock) {
+      setPreviewHudMode("toolbar");
+      return;
+    }
+    setPreviewHudMode("message");
+  }, [preview, tutLock]);
 
   useEffect(() => {
     void Promise.all([loadRoomCatalog(), loadRoomGrid(), loadRoomsFile(), loadOpsConfig()]).then(
@@ -734,9 +763,10 @@ export function RoomScreen({
     }
     event.stopPropagation();
 
-    // If already previewing this instance, start drag-to-move.
+    // Same preview instance: wait for tap vs drag (message↔toolbar / cancel).
     if (preview && preview.kind !== "paint" && preview.instanceId === instanceId) {
-      previewMoving.current = true;
+      previewItemTap.current = { instanceId, x: event.clientX, y: event.clientY };
+      previewMoving.current = false;
       try {
         event.currentTarget.setPointerCapture(event.pointerId);
       } catch {
@@ -754,7 +784,21 @@ export function RoomScreen({
   };
 
   const onStagePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!preview || !stageRef.current || tutLock || !previewMoving.current) return;
+    if (!preview || !stageRef.current || tutLock) return;
+
+    // Promote a press on the preview item into a drag once the finger moves.
+    if (previewItemTap.current && preview.kind !== "paint") {
+      const dx = event.clientX - previewItemTap.current.x;
+      const dy = event.clientY - previewItemTap.current.y;
+      if (Math.hypot(dx, dy) > 8) {
+        previewMoving.current = true;
+        previewItemTap.current = null;
+        // Dragging implies toolbar chrome (message alone can't move).
+        if (previewHudModeRef.current !== "toolbar") setPreviewHudMode("toolbar");
+      }
+    }
+
+    if (!previewMoving.current) return;
     const rect = stageRef.current.getBoundingClientRect();
     const { localX, localY } = pointerUnderGhost(event.clientX, event.clientY, rect);
     if (preview.kind === "floor") {
@@ -788,6 +832,21 @@ export function RoomScreen({
   };
 
   const onStagePointerUp = () => {
+    if (
+      previewItemTap.current &&
+      preview &&
+      preview.kind !== "paint" &&
+      preview.instanceId === previewItemTap.current.instanceId &&
+      !previewMoving.current
+    ) {
+      if (previewHudModeRef.current === "message") {
+        setPreviewHudMode("toolbar");
+      } else {
+        const cleared = cancelPreview(layout);
+        patchLayoutLocal(cleared);
+      }
+    }
+    previewItemTap.current = null;
     previewMoving.current = false;
     window.dispatchEvent(new Event("lucky-cat:drawer-scroll-unlock"));
   };
@@ -1402,51 +1461,52 @@ export function RoomScreen({
             <i />
             <i />
           </div>
-          <div className="lucky-placement-toolbar" role="toolbar" aria-label="배치 미리보기">
-            <button
-              type="button"
-              aria-label="취소"
-              disabled={tutLock}
-              onClick={() => {
-                if (tutLock) return;
-                const cleared = cancelPreview(layout);
-                patchLayoutLocal(cleared);
-              }}
-            >
-              ✕
-            </button>
-            {preview.kind === "floor" ? (
-              <button type="button" aria-label="회전" disabled={tutLock} onClick={rotatePreview}>
-                ⟳
-              </button>
-            ) : null}
-            {preview.kind === "paint" ? (
+          {previewHudMode === "toolbar" || preview.kind === "paint" ? (
+            <div className="lucky-placement-toolbar" role="toolbar" aria-label="배치 미리보기">
               <button
                 type="button"
-                className="is-text"
-                disabled={!preview.valid}
-                onClick={togglePaintFillAll}
+                aria-label="취소"
+                disabled={tutLock}
+                onClick={() => {
+                  if (tutLock) return;
+                  const cleared = cancelPreview(layout);
+                  patchLayoutLocal(cleared);
+                }}
               >
-                {preview.fillAll ? "한 칸만" : "전체 바꾸기"}
+                ✕
               </button>
-            ) : null}
-            {preview.kind !== "paint" && preview.origin === "placed" ? (
-              <button type="button" className="is-text" onClick={() => void putPreviewBack()}>
-                서랍에 넣기
+              {preview.kind === "floor" ? (
+                <button type="button" aria-label="회전" disabled={tutLock} onClick={rotatePreview}>
+                  ⟳
+                </button>
+              ) : null}
+              {preview.kind === "paint" ? (
+                <button
+                  type="button"
+                  className="is-text"
+                  disabled={!preview.valid}
+                  onClick={togglePaintFillAll}
+                >
+                  {preview.fillAll ? "한 칸만" : "전체 바꾸기"}
+                </button>
+              ) : null}
+              {preview.kind !== "paint" && preview.origin === "placed" ? (
+                <button type="button" className="is-text" onClick={() => void putPreviewBack()}>
+                  서랍에 넣기
+                </button>
+              ) : null}
+              <button
+                type="button"
+                id="placement-confirm"
+                className="is-confirm"
+                aria-label="확정"
+                disabled={!preview.valid || committing}
+                onClick={() => void confirmPreview()}
+              >
+                ✓
               </button>
-            ) : null}
-            <button
-              type="button"
-              id="placement-confirm"
-              className="is-confirm"
-              aria-label="확정"
-              disabled={!preview.valid || committing}
-              onClick={() => void confirmPreview()}
-            >
-              ✓
-            </button>
-          </div>
-          {preview.reason ? (
+            </div>
+          ) : preview.reason ? (
             <span className={`lucky-placement-reason ${preview.valid ? "" : "is-invalid"}`}>
               {preview.reason}
             </span>
@@ -1457,9 +1517,7 @@ export function RoomScreen({
                 ? ` · ${itemSize(previewItem, preview.orientation).join("×")}`
                 : preview.kind === "wall"
                   ? ` · ${preview.wall === "R" ? "오른쪽 벽" : "왼쪽 벽"}`
-                  : preview.fillAll
-                    ? " · 전체"
-                    : " · 한 칸"}
+                  : ""}
             </span>
           )}
         </div>

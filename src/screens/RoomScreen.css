@@ -70,8 +70,8 @@
 .lucky-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 32px;
+  gap: 8px;
+  min-height: 28px;
   margin: 0 0 2px;
   pointer-events: auto;
 }
@@ -81,11 +81,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   margin-left: -4px;
   border: 1px solid rgba(243, 233, 215, 0.35);
-  border-radius: 10px;
+  border-radius: 9px;
   background: rgba(243, 233, 215, 0.14);
   color: #fff8ea;
   cursor: pointer;
@@ -93,8 +93,8 @@
 }
 
 .lucky-back svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .lucky-back:active {
@@ -103,7 +103,7 @@
 
 .lucky-eyebrow {
   margin: 0;
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.2px;
   color: #f3e9d7;
@@ -111,8 +111,8 @@
 
 .lucky-logo {
   display: block;
-  width: 207px;
-  height: 42px;
+  width: 180px;
+  height: 36px;
   margin: 0 0 0 -2px;
 }
 
@@ -215,7 +215,7 @@
 .lucky-switcher {
   position: absolute;
   left: 50%;
-  top: 72px;
+  top: 84px;
   z-index: 7;
   display: flex;
   flex-direction: column;
@@ -229,7 +229,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 32px;
+  height: 30px;
   padding: 0 6px 0 8px;
   border-radius: 999px;
   border: 1px solid rgba(243, 233, 215, 0.16);
@@ -240,10 +240,10 @@
 }
 
 .lucky-room-chip span {
-  min-width: 92px;
+  min-width: 88px;
   text-align: center;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: -0.2px;
 }
 

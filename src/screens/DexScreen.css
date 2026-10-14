@@ -48,7 +48,7 @@
 .dex-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-height: 28px;
   margin: 0 0 2px;
 }
@@ -60,11 +60,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   margin-left: -4px;
   border: 1px solid rgba(243, 233, 215, 0.35);
-  border-radius: 10px;
+  border-radius: 9px;
   background: rgba(243, 233, 215, 0.14);
   color: #fff8ea;
   cursor: pointer;
@@ -79,8 +79,8 @@
 }
 
 .dex-back svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .dex-back:active {
@@ -89,7 +89,7 @@
 
 .dex-eyebrow {
   margin: 0;
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.2px;
   color: #f3e9d7;
@@ -97,10 +97,9 @@
 
 .dex-logo {
   display: block;
-  width: min(287px, 100%);
-  height: auto;
-  max-height: 46px;
-  margin: 0 0 20px -2px;
+  width: 180px;
+  height: 36px;
+  margin: 0 0 16px -2px;
   object-fit: contain;
   object-position: left center;
 }
