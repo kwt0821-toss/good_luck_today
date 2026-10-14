@@ -1149,54 +1149,52 @@ export function MenuPanel({
                       );
                     })}
                     {isDevBuild ? (
-                      <>
-                        <div className="settings-row settings-row-dev">
-                          <button
-                            type="button"
-                            className="link"
-                            onClick={() => {
-                              const next = {
-                                ...ops,
-                                nyangCoinBalance: ops.nyangCoinBalance + 10,
-                              };
-                              onOpsChange(next);
-                              void buildMenuViewModel(next).then(setModel);
-                              showToast("냥코인 +10 (DEV)");
-                              AudioManager.playSfx("reward-coin");
-                            }}
-                          >
-                            냥코인 10개 획득 (DEV)
-                          </button>
-                        </div>
-                        <div className="settings-row settings-row-dev">
-                          <button
-                            type="button"
-                            className="link is-danger"
-                            disabled={devResetting}
-                            onClick={() => {
-                              if (devResetting) return;
-                              const ok = window.confirm(
-                                "개발용: 신규 유저 상태로 초기화할까요?\n도감·출석·튜토리얼·방 진행도가 지워져요.",
-                              );
-                              if (!ok) return;
-                              setDevResetting(true);
-                              void resetToNewUserState()
-                                .then((next) => {
-                                  onOpsChange(next);
-                                  onDevResetNewUser?.();
-                                  window.location.assign("/");
-                                })
-                                .catch(() => {
-                                  setDevResetting(false);
-                                  showToast("초기화에 실패했어요");
-                                });
-                            }}
-                          >
-                            {devResetting ? "초기화 중…" : "신규 유저로 초기화 (DEV)"}
-                          </button>
-                        </div>
-                      </>
+                      <div className="settings-row settings-row-dev">
+                        <button
+                          type="button"
+                          className="link"
+                          onClick={() => {
+                            const next = {
+                              ...ops,
+                              nyangCoinBalance: ops.nyangCoinBalance + 10,
+                            };
+                            onOpsChange(next);
+                            void buildMenuViewModel(next).then(setModel);
+                            showToast("냥코인 +10 (DEV)");
+                            AudioManager.playSfx("reward-coin");
+                          }}
+                        >
+                          냥코인 10개 획득 (DEV)
+                        </button>
+                      </div>
                     ) : null}
+                    <div className="settings-row settings-row-dev">
+                      <button
+                        type="button"
+                        className="link is-danger"
+                        disabled={devResetting}
+                        onClick={() => {
+                          if (devResetting) return;
+                          const ok = window.confirm(
+                            "신규 유저 상태로 초기화할까요?\n도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워져요.",
+                          );
+                          if (!ok) return;
+                          setDevResetting(true);
+                          void resetToNewUserState()
+                            .then((next) => {
+                              onOpsChange(next);
+                              onDevResetNewUser?.();
+                              window.location.assign("/");
+                            })
+                            .catch(() => {
+                              setDevResetting(false);
+                              showToast("초기화에 실패했어요");
+                            });
+                        }}
+                      >
+                        {devResetting ? "초기화 중…" : "진행도 초기화"}
+                      </button>
+                    </div>
                     {creditsText ? (
                       <pre className="menu-credits">{creditsText}</pre>
                     ) : null}

@@ -1,4 +1,3 @@
-import { isDevBuild } from "./devMode";
 import { saveDexOwned } from "./dexCollection";
 import { loadOpsConfig } from "./opsConfig";
 import { createDefaultOpsState } from "./opsState";
@@ -11,7 +10,10 @@ import { isInTossApp } from "./native";
 import { Storage } from "@apps-in-toss/web-framework";
 
 const LEGACY_USER_KEY = "lucky-cat.user-state";
+const ROOM_KEY = "lucky-cat.my-room.v6.rooms";
 const ROOM_LEGACY_KEYS = ["lucky-cat.my-room.v5.tiles", "lucky-cat.my-room.v5"];
+const DEX_KEY = "lucky-cat.dex-collection";
+const OPS_KEY = "lucky-cat.ops-state.v1";
 
 async function removeKey(key: string): Promise<void> {
   if (isInTossApp()) {
@@ -29,13 +31,17 @@ async function removeKey(key: string): Promise<void> {
 }
 
 /**
- * Wipe progress back to a fresh install (DEV builds only).
- * Keeps menu/audio settings. Reloading the app afterward is recommended.
+ * Wipe progress back to a fresh install.
+ * Clears ops / dex / room (incl. legacy keys). Keeps menu/audio settings.
+ * Reloading the app afterward is recommended.
  */
 export async function resetToNewUserState(): Promise<OpsState> {
-  if (!isDevBuild) {
-    throw new Error("resetToNewUserState is DEV-only");
-  }
+  // Drop persisted blobs first so a mid-flight failure can't leave mock leftovers.
+  await removeKey(OPS_KEY);
+  await removeKey(DEX_KEY);
+  await removeKey(ROOM_KEY);
+  await removeKey(LEGACY_USER_KEY);
+  for (const key of ROOM_LEGACY_KEYS) await removeKey(key);
 
   const config = await loadOpsConfig();
   const next = createDefaultOpsState(config);
@@ -43,9 +49,6 @@ export async function resetToNewUserState(): Promise<OpsState> {
 
   // Empty collection — not the design mock seed.
   await saveDexOwned({});
-
-  await removeKey(LEGACY_USER_KEY);
-  for (const key of ROOM_LEGACY_KEYS) await removeKey(key);
 
   const [catalog, grid, rooms] = await Promise.all([
     loadRoomCatalog(),
