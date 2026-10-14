@@ -40,6 +40,7 @@
   bottom: 0;
   width: 312px;
   max-width: 100%;
+  box-sizing: border-box;
   border-radius: 28px 0 0 28px;
   border-left: 1px solid rgba(243, 233, 215, 0.14);
   box-shadow: -18px 0 40px rgba(0, 0, 0, 0.45);
@@ -54,7 +55,7 @@
   transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   flex-direction: column;
-  padding: 0 20px 0 22px;
+  padding: 0 22px 0 20px;
   overflow: hidden;
   overflow-x: hidden;
 }
@@ -108,7 +109,7 @@
 .menu-close {
   position: absolute;
   top: 18px;
-  right: -2px;
+  right: 0;
   width: 36px;
   height: 36px;
   min-width: 44px;
@@ -212,14 +213,14 @@
   flex: 1 1 auto;
   overflow-x: hidden;
   overflow-y: auto;
-  margin-top: 4px;
+  margin-top: 10px;
   padding-bottom: 8px;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: none;
 }
 
 .menu-section-label {
-  margin: 18px 0 2px 2px;
+  margin: 14px 0 4px 2px;
   font-family: Poppins, sans-serif;
   font-weight: 500;
   font-size: 9px;
@@ -227,15 +228,21 @@
   color: rgba(243, 233, 215, 0.42);
 }
 
+.menu-scroll > section:first-child .menu-section-label {
+  margin-top: 6px;
+}
+
 .menu-row {
   --row-end-opacity: 1;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   min-height: 48px;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto 18px;
+  /* minmax(0, …) keeps meta from blowing past the panel and covering the label. */
+  grid-template-columns: 24px minmax(0, 1fr) minmax(0, max-content) 16px;
   align-items: center;
-  column-gap: 12px;
+  column-gap: 8px;
   border: 0;
   border-bottom: 1px solid rgba(243, 233, 215, 0.08);
   background: transparent;
@@ -298,8 +305,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   font-weight: 700;
   font-size: 14.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Same cream bordered tag as .main-draw-pill-ad on the home draw CTA. */
@@ -322,14 +333,15 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 5px;
   font-size: 11px;
   color: rgba(243, 233, 215, 0.6);
   white-space: nowrap;
-  max-width: 46%;
+  max-width: 118px;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  justify-self: end;
 }
 
 .menu-row-meta > span {
@@ -337,6 +349,9 @@
   align-items: center;
   gap: 3px;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .menu-meta-ncoin {
@@ -389,11 +404,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
   padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 6px);
   font-family: Poppins, sans-serif;
   font-size: 9px;
   letter-spacing: 2px;
   color: rgba(243, 233, 215, 0.38);
+}
+
+.menu-footer > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menu-footer button {
