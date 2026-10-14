@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import {
   isPaintItem,
@@ -10,6 +10,10 @@ import {
   ROOM_THEME_FILTERS,
 } from "../lib/roomCatalog";
 import type { PaintFillMode, RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib/roomTypes";
+
+const DRAWER_HELP = "중복 고양이 카드를 발바닥 포인트로 바꿀 수 있어요";
+const DRAWER_HEIGHT_COLLAPSED = 420;
+const DRAWER_HEIGHT_EXPANDED = 560;
 
 type RoomDrawerProps = {
   tab: RoomTab;
@@ -39,7 +43,7 @@ type RoomDrawerProps = {
   onFillMode: (mode: PaintFillMode) => void;
   onEraser: () => void;
   onUndo: () => void;
-  onExchange: () => void;
+  onHelp?: () => void;
 };
 
 function tileState(
@@ -103,13 +107,64 @@ export function RoomDrawer({
   onFillMode,
   onEraser,
   onUndo,
-  onExchange,
+  onHelp,
 }: RoomDrawerProps) {
   const pressTimer = useRef(0);
   const pressOrigin = useRef<{ x: number; y: number; item: RoomItem } | null>(null);
   const grabbed = useRef(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const scrollLocked = useRef(false);
+  const [expanded, setExpanded] = useState(false);
+  const [dragHeight, setDragHeight] = useState<number | null>(null);
+  const [sheetDragging, setSheetDragging] = useState(false);
+  const sheetDrag = useRef<{ y: number; startHeight: number; active: boolean; height: number }>({
+    y: 0,
+    startHeight: DRAWER_HEIGHT_COLLAPSED,
+    active: false,
+    height: DRAWER_HEIGHT_COLLAPSED,
+  });
+
+  const baseHeight = tutorialLockId
+    ? 300
+    : expanded
+      ? DRAWER_HEIGHT_EXPANDED
+      : DRAWER_HEIGHT_COLLAPSED;
+  const sheetHeight = dragHeight ?? baseHeight;
+
+  const onSheetPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (tutorialLockId) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    sheetDrag.current = {
+      y: event.clientY,
+      startHeight: sheetHeight,
+      active: true,
+      height: sheetHeight,
+    };
+    setSheetDragging(true);
+  };
+
+  const onSheetPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!sheetDrag.current.active) return;
+    event.preventDefault();
+    const dy = sheetDrag.current.y - event.clientY;
+    const next = Math.min(
+      DRAWER_HEIGHT_EXPANDED,
+      Math.max(DRAWER_HEIGHT_COLLAPSED - 24, sheetDrag.current.startHeight + dy),
+    );
+    sheetDrag.current.height = next;
+    setDragHeight(next);
+  };
+
+  const onSheetPointerUp = () => {
+    if (!sheetDrag.current.active) return;
+    sheetDrag.current.active = false;
+    setSheetDragging(false);
+    const mid = (DRAWER_HEIGHT_COLLAPSED + DRAWER_HEIGHT_EXPANDED) / 2;
+    const finalHeight = sheetDrag.current.height;
+    setExpanded(finalHeight >= mid);
+    setDragHeight(null);
+  };
 
   const lockDrawerScroll = () => {
     const grid = gridRef.current;
@@ -176,10 +231,26 @@ export function RoomDrawer({
 
   return (
     <section
-      className={`lucky-drawer ${paintTab ? "is-paint" : ""} ${tutorialLockId ? "is-tutorial" : ""}`}
+      className={`lucky-drawer ${paintTab ? "is-paint" : ""} ${tutorialLockId ? "is-tutorial" : ""} ${expanded ? "is-expanded" : ""} ${sheetDragging ? "is-dragging" : ""}`}
       aria-label="꾸미기 서랍"
+      style={{ height: sheetHeight }}
     >
-      <div className="lucky-drawer-handle" />
+      <div
+        className="lucky-drawer-handle"
+        role="slider"
+        aria-label="아이템창 높이"
+        aria-valuemin={DRAWER_HEIGHT_COLLAPSED}
+        aria-valuemax={DRAWER_HEIGHT_EXPANDED}
+        aria-valuenow={Math.round(sheetHeight)}
+        tabIndex={0}
+        onPointerDown={onSheetPointerDown}
+        onPointerMove={onSheetPointerMove}
+        onPointerUp={onSheetPointerUp}
+        onPointerCancel={onSheetPointerUp}
+        onDoubleClick={() => {
+          if (!tutorialLockId) setExpanded((prev) => !prev);
+        }}
+      />
       <header className="lucky-drawer-head">
         <div>
           <h2>
@@ -189,14 +260,17 @@ export function RoomDrawer({
         <span className="lucky-points-chip" id="room-points-chip">
           <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />
           {points.toLocaleString("en-US")}
+          <button
+            type="button"
+            className="lucky-points-help"
+            aria-label="발바닥 포인트 도움말"
+            title={DRAWER_HELP}
+            onClick={() => onHelp?.()}
+          >
+            !
+          </button>
         </span>
       </header>
-      <p className="lucky-drawer-hint">
-        중복 카드를 발바닥 포인트로 바꿔 가구를 사요
-        <button type="button" onClick={onExchange}>
-          바꾸기 ›
-        </button>
-      </p>
       <div className="lucky-drawer-tabs" role="tablist">
         {ROOM_TABS.map((item) => (
           <button

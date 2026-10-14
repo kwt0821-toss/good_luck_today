@@ -212,8 +212,8 @@ export function newCardRevealCopy(card: DexCard): { title: string; sub: string }
   return { title: "새 고양이를 만났어요", sub: "도감에서 보상을 받아 보세요" };
 }
 
-export function duplicateRevealCopy(dupPaw: number): string {
-  return `이미 만난 고양이예요 발바닥 포인트 ${dupPaw}P로 바꿀 수 있어요`;
+export function duplicateRevealCopy(_dupPaw?: number): string {
+  return "이미 만난 고양이예요\n발바닥 포인트로 바꿀 수 있어요";
 }
 
 /**
