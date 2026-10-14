@@ -653,11 +653,17 @@
 }
 
 .dex-sheet-root {
+  /* Portaled to #root — redeclare tokens so title/stats don't inherit body ink. */
+  --cream: #f3e9d7;
+  --amber: #ffc48a;
+  --ink: #221d38;
   position: fixed;
   inset: 0;
   z-index: 40;
   display: flex;
   align-items: flex-end;
+  color: var(--cream);
+  font-family: "Noto Sans KR", "Toss Product Sans", sans-serif;
 }
 
 .dex-sheet-backdrop {
@@ -742,6 +748,7 @@
   font-weight: 800;
   font-size: 26px;
   letter-spacing: -0.5px;
+  color: var(--cream);
 }
 
 .dex-sheet-sub {
@@ -752,7 +759,7 @@
 
 .dex-sheet-stars {
   margin-left: 6px;
-  color: var(--amber);
+  color: #ffc48a;
   font-size: 10px;
   letter-spacing: 1px;
 }
@@ -965,7 +972,7 @@
 }
 
 .dex-flip-hint span {
-  color: var(--amber);
+  color: #ffc48a;
 }
 
 .dex-stats {
@@ -997,6 +1004,7 @@
   font-family: Poppins, sans-serif;
   font-weight: 700;
   font-size: 15px;
+  color: var(--cream);
 }
 
 .dex-stats small {

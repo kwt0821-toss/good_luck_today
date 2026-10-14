@@ -229,10 +229,10 @@
   top: -28px;
   z-index: 5;
   transform: translateX(-50%) scale(0.6);
-  white-space: normal;
+  white-space: pre-line;
   text-align: center;
   line-height: 1.35;
-  max-width: min(300px, 88vw);
+  max-width: min(280px, 86vw);
   overflow: hidden;
   padding: 7px 14px;
   border-radius: 16px;

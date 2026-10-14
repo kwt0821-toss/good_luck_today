@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
-import { RoomBuySheet, RoomConfirm, RoomExchangeSheet, RoomUnlockSheet } from "../components/RoomDialogs";
+import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
 import { RoomDrawer } from "../components/RoomDrawer";
 import { RoomTutDragGuide } from "../components/RoomTutDragGuide";
 import { RoomWorld } from "../components/RoomWorld";
@@ -65,7 +65,6 @@ import {
   paintTargetAnchor,
   paintTargetLabel,
 } from "../lib/roomTiles";
-import type { DexCard } from "../lib/dexTypes";
 import type { OpsEconomy } from "../lib/opsTypes";
 import type {
   FloorPlacement,
@@ -124,6 +123,8 @@ export function RoomScreen({
   const [themeFilter, setThemeFilter] = useState<RoomThemeFilter>("all");
   const [unlockRoom, setUnlockRoom] = useState<RoomDefinition | null | "soon">(null);
   const [dragX, setDragX] = useState(0);
+  const [viewW, setViewW] = useState(VIEW_W);
+  const portRef = useRef<HTMLDivElement | null>(null);
   const [frameThumbs, setFrameThumbs] = useState<string[]>([]);
   const [mode, setMode] = useState<RoomMode>(() =>
     new URLSearchParams(window.location.search).get("edit") || tutorialActive ? "edit" : "view",
@@ -134,8 +135,6 @@ export function RoomScreen({
   const [toast, setToast] = useState<string | null>(null);
   const [buyItem, setBuyItem] = useState<RoomItem | null>(null);
   const [confirm, setConfirm] = useState<"reset" | "discard" | "save-ph" | null>(null);
-  const [exchangeOpen, setExchangeOpen] = useState(false);
-  const [dupes, setDupes] = useState<{ card: DexCard; extra: number; pick: number }[]>([]);
   const [dragging, setDragging] = useState<RoomDrag | null>(null);
   const [placeFxId, setPlaceFxId] = useState<string | null>(null);
   // Treat null phase as pick when tutorial is active (resume / first paint).
@@ -182,7 +181,16 @@ export function RoomScreen({
         setEconomyRooms(config.economy.rooms ?? []);
         setStarterDrawerIds(config.starter.drawer ?? []);
         const loaded = await loadRoomState(priced, rooms, gridFile);
-        setState(await syncRoomSaveWithOps(loaded));
+        const synced = await syncRoomSaveWithOps(loaded);
+        setState(synced);
+        if (
+          synced.currentRoomId !== loaded.currentRoomId ||
+          synced.unlocked.join() !== loaded.unlocked.join() ||
+          synced.points !== loaded.points ||
+          synced.cozyLevel !== loaded.cozyLevel
+        ) {
+          void saveRoomState(synced);
+        }
       },
     );
     void Promise.all([loadDexCatalog(), loadDexOwned()]).then(([catalog, owned]) => {
@@ -200,6 +208,31 @@ export function RoomScreen({
     readySent.current = true;
     onReady?.();
   }, [state, roomsFile, onReady]);
+
+  // Keep room carousel page width in sync with the real viewport (Toss chrome ≠ 390).
+  useEffect(() => {
+    const el = portRef.current;
+    if (!el) return;
+    const apply = () => {
+      const w = Math.round(el.clientWidth);
+      if (w > 0) setViewW(w);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [Boolean(state && roomsFile)]);
+
+  // If unlocks changed (ops sync), snap currentRoomId back onto an unlocked room.
+  useEffect(() => {
+    if (!state || !roomsFile) return;
+    const unlocked = roomsFile.switcher.order.filter((id) => state.unlocked.includes(id) && state.rooms[id]);
+    if (!unlocked.length || unlocked.includes(state.currentRoomId)) return;
+    const nextId = unlocked[0];
+    const next = { ...state, currentRoomId: nextId };
+    setState(next);
+    void saveRoomState(next);
+  }, [state, roomsFile]);
 
   useEffect(() => {
     if (!tutorialActive || !state) return;
@@ -285,21 +318,24 @@ export function RoomScreen({
     return <div className="lucky-room is-loading">방을 불러오는 중이에요.</div>;
   }
 
-  const layout = currentRoom(state);
-  const roomDef = roomById(roomsFile.rooms, state.currentRoomId) ?? roomsFile.rooms[0];
   const unlockedIds = roomsFile.switcher.order.filter((id) => state.unlocked.includes(id) && state.rooms[id]);
+  // Keep label/hint/roaming tied to a room that is actually unlocked & shown.
+  const displayRoomId = unlockedIds.includes(state.currentRoomId)
+    ? state.currentRoomId
+    : (unlockedIds[0] ?? state.currentRoomId);
+  const layout = state.rooms[displayRoomId] ?? currentRoom(state);
+  const roomDef = roomById(roomsFile.rooms, displayRoomId) ?? roomsFile.rooms[0];
   const lockedRooms = roomsFile.rooms.filter((room) => !state.unlocked.includes(room.id));
-  const currentIndex = Math.max(0, unlockedIds.indexOf(state.currentRoomId));
+  const currentIndex = Math.max(0, unlockedIds.indexOf(displayRoomId));
   const otherRoomIds = Object.fromEntries(items.map((item) => [item.id, placedInOtherRoom(state, item.id)]));
-  const layoutForSuggest = currentRoom(state);
   const suggestItemId =
     tutorialActive && suggestTile
       ? items
           .filter((item) => (state.owned[item.id] ?? 0) > 0 && isPlaceableDecor(item))
           .find((item) => {
             const placedHere =
-              layoutForSuggest.floor.some((place) => place.id === item.id) ||
-              layoutForSuggest.walls.some((place) => place.id === item.id);
+              layout.floor.some((place) => place.id === item.id) ||
+              layout.walls.some((place) => place.id === item.id);
             const other = Boolean(otherRoomIds[item.id]) && !placedHere;
             return !placedHere && !other;
           })?.id ?? "cushions"
@@ -838,18 +874,6 @@ export function RoomScreen({
     showToast(`${item.nameKo}를 샀어요`);
   };
 
-  const openExchange = async () => {
-    const [catalog, owned] = await Promise.all([loadDexCatalog(), loadDexOwned()]);
-    const rows = catalog.cards
-      .map((card) => {
-        const extra = Math.max(0, (owned[card.id]?.count ?? 0) - 1);
-        return { card, extra, pick: extra };
-      })
-      .filter((row) => row.extra > 0);
-    setDupes(rows);
-    setExchangeOpen(true);
-  };
-
   const screen = screenOf(mode);
   const hudPlace =
     dragging?.kind === "wall" && selectedWall && selectedItem
@@ -1007,6 +1031,7 @@ export function RoomScreen({
       ) : null}
 
       <div
+        ref={portRef}
         className="lucky-island-port"
         onPointerDown={mode === "view" ? onSwipeDown : undefined}
         onPointerMove={mode === "view" ? onSwipeMove : undefined}
@@ -1016,18 +1041,18 @@ export function RoomScreen({
         <div
           className={`lucky-island-slider ${dragX ? "is-dragging" : ""}`}
           style={{
-            transform: `translate3d(${mode === "view" ? -currentIndex * VIEW_W + dragX : 0}px, 0, 0)`,
+            transform: `translate3d(${mode === "view" ? -currentIndex * viewW + dragX : 0}px, 0, 0)`,
           }}
         >
-          {(mode === "edit" ? [state.currentRoomId] : unlockedIds).map((roomId, index) => {
+          {(mode === "edit" ? [displayRoomId] : unlockedIds).map((roomId, index) => {
             const roomLayout = state.rooms[roomId];
             if (!roomLayout) return null;
-            const active = roomId === state.currentRoomId;
+            const active = roomId === displayRoomId;
             return (
               <div
                 key={roomId}
                 className="lucky-island-page"
-                style={{ left: mode === "view" ? index * VIEW_W : 0 }}
+                style={{ left: mode === "view" ? index * viewW : 0, width: viewW }}
               >
                 <div
                   className={`lucky-island ${mode === "view" ? "is-float" : ""}`}
@@ -1229,7 +1254,7 @@ export function RoomScreen({
           }}
           onEraser={() => setEraser((value) => !value)}
           onUndo={undoPaint}
-          onExchange={() => void openExchange()}
+          onHelp={() => showToast("중복 고양이 카드를 발바닥 포인트로 바꿀 수 있어요")}
         />
       )}
 
@@ -1299,30 +1324,6 @@ export function RoomScreen({
             unlockRoom && unlockRoom !== "soon" ? unlockFor(unlockRoom.id) : undefined
           }
           onClose={() => setUnlockRoom(null)}
-        />
-      ) : null}
-
-      {exchangeOpen ? (
-        <RoomExchangeSheet
-          cards={dupes}
-          onClose={() => setExchangeOpen(false)}
-          onConfirm={(picks) => {
-            const gained = dupes.reduce((sum, row) => {
-              const n = picks[row.card.id] ?? 0;
-              const rate =
-                row.card.type === "legend"
-                  ? 150
-                  : row.card.type === "special" || row.card.type === "character"
-                    ? 60
-                    : (row.card.stars ?? 0) >= 4
-                      ? 30
-                      : 10;
-              return sum + n * rate;
-            }, 0);
-            persist({ ...state, points: state.points + gained });
-            setExchangeOpen(false);
-            if (gained) showToast(`발바닥 +${gained} 받았어요`);
-          }}
         />
       ) : null}
 

@@ -49,6 +49,11 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
     .map((room) => room.id)
     .filter((id) => Boolean(state.rooms[id]));
 
+  const nextUnlocked = unlocked.length ? unlocked : state.unlocked;
+  const currentRoomId = nextUnlocked.includes(state.currentRoomId)
+    ? state.currentRoomId
+    : (nextUnlocked[0] ?? state.currentRoomId);
+
   await saveOpsState({
     ...ops,
     pawBalance: points,
@@ -60,7 +65,8 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
     ...state,
     points,
     cozyLevel,
-    unlocked: unlocked.length ? unlocked : state.unlocked,
+    unlocked: nextUnlocked,
+    currentRoomId,
     owned: {
       ...state.owned,
       ...Object.fromEntries(mergedOwned.map((id) => [id, Math.max(1, state.owned[id] ?? 1)])),

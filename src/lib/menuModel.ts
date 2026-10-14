@@ -105,8 +105,8 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
 
     if (id === "attendance") {
       meta = attendance.canClaimToday
-        ? `${Math.max(1, attendance.attendanceDays + 1)}일째 · 선물 도착`
-        : `누적 ${attendance.attendanceDays}일 · 내일 또 만나요`;
+        ? `${Math.max(1, attendance.attendanceDays + 1)}일째 · 선물`
+        : `누적 ${attendance.attendanceDays}일`;
       if (attendance.canClaimToday) badge = { type: "dot" };
     } else if (id === "points") {
       meta =
@@ -123,22 +123,25 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
       rowDisabled = duplicateCount <= 0;
     } else if (id === "ticketShop") {
       const shop = getTicketShopStatus(ops, config);
-      meta = `보유 ${shop.ticketsHeld}장 · 오늘 ${shop.dayBought}/${shop.dayLimit}`;
+      meta = `보유 ${shop.ticketsHeld}장`;
     } else if (id === "rewards") {
       meta =
         dexClaimableCount > 0
-          ? `{ncoin}${ops.nyangCoinBalance} 냥코인 · 도감 보상 ${dexClaimableCount}`
-          : `{ncoin}${ops.nyangCoinBalance} 냥코인`;
+          ? `{ncoin}${ops.nyangCoinBalance} · 보상 ${dexClaimableCount}`
+          : `{ncoin}${ops.nyangCoinBalance}`;
       if (dexClaimableCount > 0) badge = { type: "dot" };
     } else if (id === "rates") {
-      meta = `5성↑·스페셜 ${highlightPct}%`;
+      meta = `5성↑ ${highlightPct}%`;
     } else if (id === "notice") {
-      meta = latestNotice.title;
+      // Keep a single right-side chip so NEW + long title don't pile onto the label.
       if (latestNotice.id !== ops.lastSeenNoticeId) {
         badge = { type: "pill-new", text: "NEW" };
+        meta = "";
       } else if (weekendDouble) {
         badge = { type: "pill", text: latestNotice.title, tone: "hot" };
         meta = "";
+      } else {
+        meta = latestNotice.title;
       }
     } else if (id === "invite") {
       meta = "";
