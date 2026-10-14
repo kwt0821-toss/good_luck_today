@@ -1500,7 +1500,7 @@ export function MenuPanel({
           />
           <div className="settings-reset-confirm is-modal">
             <strong>신규 유저 상태로 초기화할까요?</strong>
-            <p>도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워져요.</p>
+            <p>도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워지고, 발바닥 포인트 2,000P가 지급돼요.</p>
             <div className="settings-reset-confirm-actions">
               <button
                 type="button"

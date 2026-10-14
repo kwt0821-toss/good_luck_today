@@ -1,4 +1,5 @@
 import { saveDexOwned } from "./dexCollection";
+import { RESET_BONUS_PAW } from "./devMode";
 import { loadOpsConfig } from "./opsConfig";
 import { createDefaultOpsState } from "./opsState";
 import { saveOpsState } from "./opsStorage";
@@ -8,6 +9,8 @@ import { applyOpsPrices } from "./roomEconomy";
 import { newUserRoomState, saveRoomState } from "./roomStore";
 import { isInTossApp } from "./native";
 import { Storage } from "@apps-in-toss/web-framework";
+
+export { RESET_BONUS_PAW } from "./devMode";
 
 const LEGACY_USER_KEY = "lucky-cat.user-state";
 const ROOM_KEY = "lucky-cat.my-room.v6.rooms";
@@ -44,7 +47,10 @@ export async function resetToNewUserState(): Promise<OpsState> {
   for (const key of ROOM_LEGACY_KEYS) await removeKey(key);
 
   const config = await loadOpsConfig();
-  const next = createDefaultOpsState(config);
+  const next: OpsState = {
+    ...createDefaultOpsState(config),
+    pawBalance: RESET_BONUS_PAW,
+  };
   await saveOpsState(next);
 
   // Empty collection — not the design mock seed.

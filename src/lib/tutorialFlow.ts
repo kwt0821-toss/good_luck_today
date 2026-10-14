@@ -158,6 +158,7 @@ export function roomDragCoachMark(step: TutorialStep): CoachMark | null {
     ackOnly: true,
     passThrough: true,
     stepLabel: step.stepLabel ?? "STEP 4/5",
+    // Above the ✓ toolbar (not parked on the drawer) so it won't cover the item.
     bubble: "above",
   };
 }

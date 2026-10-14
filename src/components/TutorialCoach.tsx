@@ -194,20 +194,29 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
     let rawTop = placeAbove
       ? hole.top - BUBBLE_GAP - bubbleH
       : hole.top + hole.height + BUBBLE_GAP;
-    // Room tutorial: keep copy in the stage above the bottom sheet, not on ITEMS chrome.
+    let above = placeAbove;
+    // Room tutorial pick: park copy above the drawer so it doesn't sit on ITEMS chrome.
+    // Only when the spotlight hole is in/near the drawer — never for stage targets
+    // like #placement-confirm, where parking on the drawer covers the preview item.
     try {
       const drawer = document.querySelector(".lucky-drawer");
       if (drawer) {
         const drawerTop = drawer.getBoundingClientRect().top - frame.top;
-        const aboveDrawer = drawerTop - BUBBLE_GAP - bubbleH;
-        if (aboveDrawer >= PAD_TOP) rawTop = aboveDrawer;
+        const holeNearDrawer = hole.top + hole.height >= drawerTop - 48;
+        if (holeNearDrawer) {
+          const aboveDrawer = drawerTop - BUBBLE_GAP - bubbleH;
+          if (aboveDrawer >= PAD_TOP) {
+            rawTop = aboveDrawer;
+            above = true;
+          }
+        }
       }
     } catch {
       // ignore
     }
     return {
       top: Math.min(maxTop, Math.max(PAD_TOP, rawTop)),
-      above: placeAbove,
+      above,
     };
   }, [mark, hole, measuredBubbleH, frame]);
 

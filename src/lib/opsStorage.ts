@@ -1,7 +1,7 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
 import { toKstDateKey } from "./date";
-import { DEV_PAW_BALANCE, isDevBuild } from "./devMode";
+import { DEV_PAW_BALANCE, isDevBuild, RESET_BONUS_PAW } from "./devMode";
 import { isInTossApp } from "./native";
 import { loadOpsConfig } from "./opsConfig";
 import { applyOpsDailyReset, createDefaultOpsState } from "./opsState";
@@ -259,7 +259,8 @@ export async function loadOpsState(): Promise<OpsState> {
   const fallback = createDefaultOpsState(config, today);
   const parsed = parseOps(await read(OPS_KEY), fallback);
   let next = applyOpsDailyReset(parsed, today);
-  if (isDevBuild && next.pawBalance !== DEV_PAW_BALANCE) {
+  // Keep the post-reset test grant; otherwise top up local DEV to a generous balance.
+  if (isDevBuild && next.pawBalance !== DEV_PAW_BALANCE && next.pawBalance !== RESET_BONUS_PAW) {
     next = { ...next, pawBalance: DEV_PAW_BALANCE };
   }
   if (next !== parsed) await saveOpsState(next);
