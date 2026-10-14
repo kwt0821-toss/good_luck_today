@@ -336,7 +336,7 @@ export function DrawRevealScreen({
         }
         if (badge) {
           badge.style.opacity = reservation.isNew ? String(p) : "0";
-          badge.style.transform = "scale(1) rotate(-8deg)";
+          badge.style.transform = "scale(1) rotate(-14deg)";
         }
         if (dup) {
           dup.style.opacity = reservation.isNew ? "0" : String(p);
@@ -413,7 +413,7 @@ export function DrawRevealScreen({
       const bp = clamp((t - 900) / 260);
       if (badge) {
         badge.style.opacity = reservation.isNew ? (bp ? "1" : "0") : "0";
-        badge.style.transform = `scale(${0.4 + 0.6 * eBack(bp)}) rotate(${-10 + 4 * bp}deg)`;
+        badge.style.transform = `scale(${0.4 + 0.6 * eBack(bp)}) rotate(${-14 + 2 * bp}deg)`;
       }
       if (dup) {
         dup.style.opacity = reservation.isNew ? "0" : String(bp);

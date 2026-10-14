@@ -213,7 +213,7 @@ export function newCardRevealCopy(card: DexCard): { title: string; sub: string }
 }
 
 export function duplicateRevealCopy(dupPaw: number): string {
-  return `이미 만난 고양이예요 · +${dupPaw}P로 바꿀 수 있어요`;
+  return `이미 만난 고양이예요 발바닥 포인트 ${dupPaw}P로 바꿀 수 있어요`;
 }
 
 /**

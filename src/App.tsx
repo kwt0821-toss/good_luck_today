@@ -953,7 +953,13 @@ export default function App() {
       {screen.name === "collection" ? (
         <CollectionScreen
           onBack={() => {
-            if (dexTutPhase) return;
+            // Only block during active tutorial step 3 — leftover dexTutPhase
+            // from "도감 보기" must not trap the back button forever.
+            const tutStep3 =
+              tutorialReplayStep === 3 ||
+              Boolean(ops && !ops.tutorialDone && ops.tutorialStep === 3);
+            if (dexTutPhase && tutStep3) return;
+            setDexTutPhase(null);
             setScreen({ name: "home" });
           }}
           ops={ops}
@@ -1039,13 +1045,16 @@ export default function App() {
                 setScreen({ name: "collection" });
                 return;
               }
-              if (ops.tutorialStep === 2 && !ops.tutorialDone && tutorialReplayStep == null) {
+              const enterDexTutorial =
+                ops.tutorialStep === 2 && !ops.tutorialDone && tutorialReplayStep == null;
+              if (enterDexTutorial) {
                 await persistOps({ ...ops, tutorialStep: 3 });
               }
               setRevealTutPhase(null);
               setHideRevealToast(false);
               setStepThenActive(false);
-              setDexTutPhase("scroll");
+              // Only start dex tutorial phase when still in the tutorial flow.
+              setDexTutPhase(enterDexTutorial ? "scroll" : null);
               setScreen({ name: "collection" });
             })();
           }}
