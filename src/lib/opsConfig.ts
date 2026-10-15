@@ -25,12 +25,14 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
     delete currency.toss;
   }
   const pawSources = structuredClone(raw.pawSources) as OpsEconomy["pawSources"] & Record<string, unknown>;
-  const first = pawSources.newCardFirstGet as Record<string, number>;
+  const first = pawSources.newCardFirstGet as OpsEconomy["pawSources"]["newCardFirstGet"] & {
+    toss?: number;
+  };
   if (first && first.nyangCoin == null && first.toss != null) {
     first.nyangCoin = first.toss;
     delete first.toss;
   }
-  const setComplete = pawSources.setComplete as Record<string, Record<string, number>>;
+  const setComplete = pawSources.setComplete as Record<string, Record<string, number | undefined>>;
   for (const pack of Object.values(setComplete ?? {})) {
     if (pack && pack.nyangCoin == null && pack.toss != null) {
       pack.nyangCoin = pack.toss;
@@ -63,7 +65,13 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
     toTossPointRate: 1,
   };
   const grant = (baseNyang as { grant?: Record<string, unknown> }).grant;
-  const withdrawRaw = baseNyang.withdraw ?? {};
+  const withdrawRaw = (baseNyang.withdraw ?? {}) as {
+    min?: number;
+    unit?: number;
+    dailyLimit?: number;
+    resetTimeKST?: string;
+    note?: string;
+  };
   const withdraw = {
     min: Number(withdrawRaw.min ?? baseNyang.withdrawMin ?? 10),
     unit: Number(withdrawRaw.unit ?? baseNyang.withdrawStep ?? 10),
@@ -84,9 +92,12 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
       maxPerUserKRW,
       oncePerTossAccount:
         baseNyang.oncePerTossAccount ??
-        Boolean(grant?.oncePerTossAccountPerReward) ??
-        true,
-      serverVerified: baseNyang.serverVerified ?? Boolean(grant?.serverVerified) ?? true,
+        (grant?.oncePerTossAccountPerReward != null
+          ? Boolean(grant.oncePerTossAccountPerReward)
+          : true),
+      serverVerified:
+        baseNyang.serverVerified ??
+        (grant?.serverVerified != null ? Boolean(grant.serverVerified) : true),
       idempotencyKey:
         baseNyang.idempotencyKey ??
         (typeof grant?.idempotencyKey === "string"
