@@ -10,6 +10,11 @@
   pointer-events: none;
 }
 
+/* Help earn sheet must sit above tutorial coach (z≈135–140). */
+.menu-root.is-help-open {
+  z-index: 150;
+}
+
 .menu-root.is-open {
   pointer-events: auto;
 }

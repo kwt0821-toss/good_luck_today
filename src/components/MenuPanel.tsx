@@ -769,7 +769,7 @@ export function MenuPanel({
 
   return (
     <div
-      className={`menu-root ${open && !closing ? "is-open" : ""} ${closing ? "is-closing" : ""} ${reduce ? "is-reduce" : ""}`}
+      className={`menu-root ${open && !closing ? "is-open" : ""} ${closing ? "is-closing" : ""} ${reduce ? "is-reduce" : ""} ${helpOpen ? "is-help-open" : ""}`}
     >
       <button
         type="button"
