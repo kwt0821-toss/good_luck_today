@@ -1,0 +1,70 @@
+.title-ribbon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(280px, 78vw);
+  margin: 6px 0 0;
+  padding: 5px 10px 5px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(34, 30, 58, 0.55);
+  color: #f3ebd7;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  cursor: pointer;
+  text-align: left;
+}
+
+.title-ribbon.is-empty {
+  background: transparent;
+  border: 1.5px dashed rgba(243, 235, 215, 0.45);
+  color: rgba(243, 235, 215, 0.78);
+}
+
+.title-ribbon-badge {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.title-ribbon-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title-ribbon-chevron {
+  flex: none;
+  opacity: 0.75;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.title-ribbon-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5a5a;
+  box-shadow: 0 0 0 2px rgba(34, 30, 58, 0.9);
+}
+
+/* Room header sits on lighter chrome — keep contrast. */
+.lucky-header .title-ribbon {
+  background: rgba(28, 24, 46, 0.72);
+}
+
+.lucky-header .title-ribbon.is-empty {
+  background: transparent;
+  border-color: rgba(34, 30, 58, 0.35);
+  color: rgba(34, 30, 58, 0.72);
+}

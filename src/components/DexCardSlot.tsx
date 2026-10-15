@@ -12,6 +12,8 @@ type DexCardSlotProps = {
   onClick?: () => void;
   /** Manual claim badge (economy.dexRewards.claimMode = manual). */
   claimable?: boolean;
+  /** Grade-based 냥코인 amount shown on the claim badge. */
+  claimNyang?: number;
   onClaim?: () => void;
   claimBusy?: boolean;
   /** Tutorial pulse (scale 1→1.06→1). */
@@ -30,6 +32,7 @@ export function DexCardSlot({
   record,
   onClick,
   claimable = false,
+  claimNyang,
   onClaim,
   claimBusy = false,
   pulse = false,
@@ -96,7 +99,7 @@ export function DexCardSlot({
           tabIndex={0}
           id={`dex-claim-${card.id}`}
           className={`dex-claim-badge ${claimBusy ? "is-busy" : ""}`}
-          aria-label="보상 받기"
+          aria-label={claimNyang != null ? `냥코인 ${claimNyang} 보상 받기` : "보상 받기"}
           onClick={(event) => {
             event.stopPropagation();
             if (!claimBusy && claimEnabled) onClaim?.();
@@ -110,6 +113,7 @@ export function DexCardSlot({
           }}
         >
           <img src={ncoinIcon(14)} alt="" width={14} height={14} />
+          {claimNyang != null ? <em>{claimNyang}</em> : null}
         </span>
       ) : null}
     </button>

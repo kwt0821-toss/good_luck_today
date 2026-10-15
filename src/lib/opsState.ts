@@ -55,6 +55,10 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     rewardInbox: [],
     walletHistory: [],
     lastSeenNoticeId: "",
+    lifetimeDraws: 0,
+    claimedAchievementIds: [],
+    equippedTitleId: "",
+    achievementClaimLedger: [],
   };
 }
 

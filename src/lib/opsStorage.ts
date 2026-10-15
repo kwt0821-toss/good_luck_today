@@ -247,6 +247,28 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         : fallback.walletHistory,
       lastSeenNoticeId:
         typeof parsed.lastSeenNoticeId === "string" ? parsed.lastSeenNoticeId : "",
+      lifetimeDraws:
+        typeof parsed.lifetimeDraws === "number" ? parsed.lifetimeDraws : fallback.lifetimeDraws,
+      claimedAchievementIds: Array.isArray(parsed.claimedAchievementIds)
+        ? parsed.claimedAchievementIds.filter((id): id is string => typeof id === "string")
+        : fallback.claimedAchievementIds,
+      equippedTitleId:
+        typeof parsed.equippedTitleId === "string" ? parsed.equippedTitleId : fallback.equippedTitleId,
+      achievementClaimLedger: Array.isArray(parsed.achievementClaimLedger)
+        ? parsed.achievementClaimLedger
+            .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+            .map((item) => ({
+              requestId: typeof item.requestId === "string" ? item.requestId : "",
+              titleId: typeof item.titleId === "string" ? item.titleId : "",
+              createdAt: typeof item.createdAt === "number" ? item.createdAt : 0,
+              paw: typeof item.paw === "number" ? item.paw : 0,
+              nyangCoin: typeof item.nyangCoin === "number" ? item.nyangCoin : 0,
+              pawBalance: typeof item.pawBalance === "number" ? item.pawBalance : 0,
+              nyangCoinBalance:
+                typeof item.nyangCoinBalance === "number" ? item.nyangCoinBalance : 0,
+            }))
+            .filter((item) => item.requestId && item.titleId)
+        : fallback.achievementClaimLedger,
     };
   } catch {
     return fallback;

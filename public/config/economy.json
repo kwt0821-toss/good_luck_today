@@ -1,6 +1,6 @@
 {
- "_version": "economy-1.6 (2026-10-13)",
- "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
+ "_version": "economy-1.7 (2026-10-15)",
+ "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요. 1.7: 새 카드 냥코인은 nyangCoinByGrade.",
  "currency": {
   "paw": {
    "nameKo": "포인트(발바닥)",
@@ -22,7 +22,8 @@
   },
   "newCardFirstGet": {
    "paw": 20,
-   "nyangCoin": 1
+   "nyangCoin": 1,
+   "note": "paw는 공통. 냥코인 실제 지급은 nyangCoinByGrade(카드 등급별)."
   },
   "duplicateConvert": {
    "common_1to2star": 10,
@@ -56,11 +57,20 @@
     "nyangCoin": 100
    }
   },
-  "attendance": "starter.json → attendance"
+  "attendance": "starter.json → attendance",
+  "nyangCoinByGrade": {
+   "breed_1to3": 1,
+   "breed_4": 5,
+   "breed_5": 10,
+   "special": 5,
+   "character": 7,
+   "legend": 50,
+   "note": "special = 밈 카드. 계정당 카드·세트·fullDex 보상 id별 1회."
+  }
  },
  "dexRewards": {
   "claimMode": "manual",
-  "note": "도감에서 직접 수령. 자동 지급 없음. 금액은 pawSources.newCardFirstGet / setComplete. 보상 id: newCard:{cardId}, set:breed:{id}, set:{special|character|legend}, fullDex. 계정당 1회(tossUserKey+rewardId), POST /dex/rewards/claim 멱등키 tossUserKey+requestId."
+  "note": "도감에서 직접 수령. 자동 지급 없음. 새 카드 냥코인=nyangCoinByGrade, paw=newCardFirstGet.paw. 세트/fullDex는 setComplete. 보상 id: newCard:{cardId}, set:breed:{id}, set:{special|character|legend}, fullDex. 계정당 1회(tossUserKey+rewardId), POST /dex/rewards/claim 멱등키 tossUserKey+requestId."
  },
  "draws": {
   "resetTimeKST": "00:00",
@@ -344,7 +354,7 @@
   }
  },
  "nyangCoin": {
-  "maxPerUserKRW": 417,
+  "maxPerUserKRW": 907,
   "formula": "107×1 + 18×10 + 3×10 + 100",
   "oncePerTossAccount": true,
   "serverVerified": true,
@@ -360,6 +370,7 @@
    "dailyLimit": 50,
    "resetTimeKST": "00:00",
    "note": "KST 00:00 리셋. 오늘 합계는 done+pending만 (failed 제외). POST /wallet/withdraw 409 DAILY_LIMIT."
-  }
+  },
+  "maxNote": "새 카드 등급별 597 + 세트·전체 310 = 907"
  }
 }

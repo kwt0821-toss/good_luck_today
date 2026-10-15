@@ -15,7 +15,17 @@ export type OpsEconomy = {
       adType: string;
       grantOn: string;
     };
-    newCardFirstGet: NyangCoinReward;
+    newCardFirstGet: NyangCoinReward & { note?: string };
+    /** Grade-based 냥코인 for first-time new cards (economy-1.7). */
+    nyangCoinByGrade?: {
+      breed_1to3: number;
+      breed_4: number;
+      breed_5: number;
+      special: number;
+      character: number;
+      legend: number;
+      note?: string;
+    };
     duplicateConvert: {
       common_1to2star: number;
       rare_3to5star: number;
@@ -505,6 +515,22 @@ export type OpsState = {
   }>;
   walletHistory: WalletHistoryItem[];
   lastSeenNoticeId: string;
+  /** Lifetime draw count (normal + rateUp + tutorial), never resets daily. */
+  lifetimeDraws: number;
+  /** Achievement title ids with rewards claimed (once per account). */
+  claimedAchievementIds: string[];
+  /** Currently equipped title id, or "". */
+  equippedTitleId: string;
+  /** Idempotent ledger for POST /achievements/claim */
+  achievementClaimLedger: Array<{
+    requestId: string;
+    titleId: string;
+    createdAt: number;
+    paw: number;
+    nyangCoin: number;
+    pawBalance: number;
+    nyangCoinBalance: number;
+  }>;
 };
 
 export type TicketShopLedgerItem = {

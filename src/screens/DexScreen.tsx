@@ -574,6 +574,7 @@ export function DexScreen({
                           card={card}
                           record={owned[card.id]}
                           claimable={Boolean(cardReward)}
+                          claimNyang={cardReward?.nyangCoin}
                           claimBusy={claimBusy}
                           pulse={pulseSlotId === card.id}
                           claimEnabled={
@@ -819,6 +820,7 @@ function GridTab({
                 card={card}
                 record={owned[card.id]}
                 claimable={Boolean(cardReward)}
+                claimNyang={cardReward?.nyangCoin}
                 claimBusy={claimBusy}
                 pulse={pulseSlotId === card.id}
                 claimEnabled={!tutLocked || (claimGate && focusCardId === card.id)}

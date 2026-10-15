@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AudioManager } from "./audio/AudioManager";
+import { AchievementsSheet } from "./components/AchievementsSheet";
 import { AdModal } from "./components/AdModal";
 import { NyangNotifyHost } from "./components/NyangNotifyHost";
 import { nyNotify } from "./lib/nyangNotify";
 import { MenuPanel } from "./components/MenuPanel";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
+import {
+  buildAchvProgressList,
+  claimableAchvCount,
+  computeAchvMetrics,
+  loadAchievementsConfig,
+  type AchvConfig,
+  type AchvProgress,
+} from "./lib/achievements";
 import { toKstDateKey } from "./lib/date";
 import { buildMenuViewModel } from "./lib/menuModel";
 import {
@@ -15,6 +24,7 @@ import {
 } from "./lib/menuSettings";
 import type { MockAdKind } from "./lib/mockAds";
 import { countClaimableDexRewards } from "./lib/dexRewards";
+import { newCardPaw, nyangCoinForCard } from "./lib/nyangCoinGrade";
 import { cancelDrawReservation, preloadDrawImages, reserveDraw } from "./lib/mockDrawApi";
 import { getWithdrawRules } from "./lib/mockWallet";
 import { configureNavigationBar, haptic } from "./lib/native";
@@ -126,6 +136,9 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(initialMenuOpen);
   const [menuIconDot, setMenuIconDot] = useState(false);
   const [dexClaimDot, setDexClaimDot] = useState(false);
+  const [achvOpen, setAchvOpen] = useState(false);
+  const [achvConfig, setAchvConfig] = useState<AchvConfig | null>(null);
+  const [achvList, setAchvList] = useState<AchvProgress[]>([]);
   const [revealCard, setRevealCard] = useState<DexCard | null>(null);
   const [tutorialReplayStep, setTutorialReplayStep] = useState<number | null>(null);
   const [revealTutPhase, setRevealTutPhase] = useState<RevealTutPhase | null>(null);
@@ -204,10 +217,22 @@ export default function App() {
     void countClaimableDexRewards(ops).then((count) => {
       if (!cancelled) setDexClaimDot(count > 0);
     });
+    void (async () => {
+      try {
+        const cfg = achvConfig ?? (await loadAchievementsConfig());
+        if (cancelled) return;
+        if (!achvConfig) setAchvConfig(cfg);
+        const metrics = await computeAchvMetrics(ops);
+        if (cancelled) return;
+        setAchvList(buildAchvProgressList(cfg, ops, metrics));
+      } catch {
+        // achievements optional during boot
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [ops]);
+  }, [ops, achvConfig]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -277,14 +302,18 @@ export default function App() {
   const rewardsIntroConfig = config ? getRewardsIntroConfig(config.tutorial) : null;
 
   const tutorialCardId = reservation?.cardId ?? revealCard?.id ?? null;
-  const tutorialVars = useMemo(
-    () => ({
+  const tutorialVars = useMemo(() => {
+    const paw = config ? newCardPaw(config.economy) : 20;
+    const nyangCoin =
+      revealCard && config ? nyangCoinForCard(config.economy, revealCard) : 1;
+    return {
       cardId: tutorialCardId,
       breed: dexCardBreedLabel(revealCard),
       grade: dexCardGradeLabel(revealCard),
-    }),
-    [tutorialCardId, revealCard],
-  );
+      nyangCoin,
+      paw,
+    };
+  }, [tutorialCardId, revealCard, config]);
 
   const coachMark: CoachMark | null = useMemo(() => {
     if (!ops || !config) return null;
@@ -1076,6 +1105,19 @@ export default function App() {
           }
           suggestTile={tutorialStep?.screen === "room" ? (tutorialStep.suggestTile ?? null) : null}
           reduceMotion={reduceMotion}
+          titleRibbon={
+            ops
+              ? {
+                  equippedId: ops.equippedTitleId || null,
+                  equippedName:
+                    achvList.find((item) => item.def.id === ops.equippedTitleId)?.def.nameKo ??
+                    null,
+                  emptyCopy: achvConfig?.emptyRibbonCopy ?? "칭호 없음 · 새내기 집사 받기",
+                  hasClaimable: claimableAchvCount(achvList) > 0,
+                }
+              : undefined
+          }
+          onOpenTitles={() => setAchvOpen(true)}
           onReady={() => setRoomScreenReady(true)}
           onTutorialPicked={() => {
             if (roomTutPhase === "pick") setRoomTutPhase("preview");
@@ -1171,6 +1213,13 @@ export default function App() {
           rateUpPct={rateLabels.rateUpPct}
           menuBadge={menuIconDot}
           dexBadge={dexClaimDot}
+          titleRibbon={{
+            equippedId: ops.equippedTitleId || null,
+            equippedName:
+              achvList.find((item) => item.def.id === ops.equippedTitleId)?.def.nameKo ?? null,
+            emptyCopy: achvConfig?.emptyRibbonCopy ?? "칭호 없음 · 새내기 집사 받기",
+            hasClaimable: claimableAchvCount(achvList) > 0,
+          }}
           onDraw={() => void beginDraw()}
           onRateUpDraw={() => void beginDraw("rateUp")}
           onOpenTicketShop={() => {
@@ -1180,6 +1229,7 @@ export default function App() {
           onOpenMenu={() => setMenuOpen(true)}
           onOpenCollection={() => setScreen({ name: "collection" })}
           onOpenRoom={() => setScreen({ name: "room" })}
+          onOpenTitles={() => setAchvOpen(true)}
         />
       ) : null}
 
@@ -1251,6 +1301,14 @@ export default function App() {
           setRewardsIntro({ stepId: "r3", replay: false });
         }}
       />
+
+      {achvOpen ? (
+        <AchievementsSheet
+          ops={ops}
+          onOpsChange={(next) => void persistOps(next)}
+          onClose={() => setAchvOpen(false)}
+        />
+      ) : null}
 
       <AdModal
         open={ad !== null && ad.presentation === "mock"}

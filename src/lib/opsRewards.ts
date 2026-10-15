@@ -64,11 +64,16 @@ export async function confirmDrawAfterAd(
       ...next,
       normalDrawsUsed: next.normalDrawsUsed + 1,
       tutorialFirstDrawUsed: true,
+      lifetimeDraws: (next.lifetimeDraws ?? 0) + 1,
     };
   } else if (next.rateUpTickets > 0) {
-    next = consumeRateUpTicket(next);
+    next = { ...consumeRateUpTicket(next), lifetimeDraws: (next.lifetimeDraws ?? 0) + 1 };
   } else if (remainingRateUpAdSlots(next, config) > 0) {
-    next = { ...next, rateUpUsed: next.rateUpUsed + 1 };
+    next = {
+      ...next,
+      rateUpUsed: next.rateUpUsed + 1,
+      lifetimeDraws: (next.lifetimeDraws ?? 0) + 1,
+    };
   }
 
   const dupPaw = isNew ? 0 : dupPawForCard(card, config.economy);

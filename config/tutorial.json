@@ -6,9 +6,9 @@
   "button": {
    "id": "tut-skip",
    "label": "건너뛰기",
-   "position": "top-right (앱 바 아래). 대상이 화면 위쪽 160pt 안에 있거나 다른 버튼과 겹치면 말풍선 아래줄(STEP 옆)에 '건너뛰기' 텍스트 버튼으로 표시"
+   "position": "top-right below app bar; if target in top 160pt or overlaps skip, use bubble footer text button"
   },
-  "onSkip": "남은 단계는 건너뛰지만 첫 뽑기 무료·도감 등록은 서버에서 처리. 보상은 자동 지급하지 않고 도감에 '받을 보상'으로 남아요. tutorialDone=true",
+  "onSkip": "남은 단계 보상은 그대로 지급 (첫 뽑기 무료·도감 등록은 서버에서 처리, 도감 보상은 도감에서 직접 수령), tutorialDone=true; contextual rewards-intro skip → tut.rewardsIntro=skipped",
   "resume": "앱 종료 시 다음 실행 때 현재 단계부터, 2회 이상 중단 시 자동 완료"
  },
  "steps": [
@@ -19,8 +19,7 @@
    "copy": "톡, 깨워 볼까요?",
    "sub": "첫 뽑기는 광고 없이 무료예요",
    "action": "tap",
-   "reward": "free first draw (no ad)",
-   "label": "STEP 1 / 5"
+   "reward": "free first draw (no ad)"
   },
   {
    "step": 2,
@@ -29,158 +28,253 @@
    "copy": "오늘의 행운 문구가 도착했어요",
    "toast": {
     "id": "dex-toast",
-    "text": "새로운 고양이를 만났어요!",
-    "sub": "도감에서 보상을 받아 보세요 · 🎁 냥코인 1 + 20P",
-    "persistDuringTutorial": true
+    "text": "새 고양이를 만났어요\n도감에서 보상을 받아 보세요",
+    "autoHideMs": 2800,
+    "holdDuringTutorial": true
    },
-   "action": "tap #btn-to-dex (도감에서 보상 받기)",
-   "label": "STEP 2 / 5"
+   "then": {
+    "id": "ncoin-intro",
+    "delayAfterToastMs": 600,
+    "title": "냥코인을 모아요",
+    "lines": [
+     {
+      "icon": "/assets/ncoin/ncoin-64.png",
+      "text": "새 카드를 뽑으면 냥코인을 받아요"
+     },
+     {
+      "icon": "/assets/menu/icon-dex-mini.svg",
+      "text": "도감에서 보상을 직접 받아요"
+     },
+     {
+      "icon": "/assets/menu/icon-rewards.svg",
+      "text": "10개부터 토스포인트로 바꿔요"
+     },
+     {
+      "icon": "/assets/menu/icon-paw-mini.svg",
+      "text": "발바닥 포인트랑은 달라요",
+      "muted": true,
+      "dividerAbove": true
+     }
+    ],
+    "cta": "알겠어요",
+    "dismissToastWithCta": true,
+    "next": {
+     "target": "#btn-to-dex",
+     "copy": "도감에서 보상을 받아 볼까요?"
+    }
+   },
+   "action": "tap #btn-to-dex (도감에서 보상 받기)"
   },
   {
    "step": 3,
-   "screen": "main→dex",
-   "target": "#icon-dex",
-   "effect": "glow pulse",
-   "copy": "도감에서 모은 카드를 볼 수 있어요",
-   "action": "tap",
+   "screen": "dex",
+   "stepLabel": "STEP 3/5",
+   "target": "#dex-slot-{cardId}",
+   "copy": "방금 만난 고양이가 여기 들어왔어요",
    "substeps": [
     {
      "id": "3-1",
-     "screen": "dex",
-     "entry": "#btn-to-dex(도감에서 보상 받기) → 뽑은 카드의 탭으로 도감 열기",
-     "scroll": "#dex-slot-{cardId}가 화면 가운데 오도록 자동 스크롤 (smooth, 400ms) 후 표시",
      "target": "#dex-slot-{cardId}",
-     "effect": "spotlight + pulse ring 2겹",
      "copy": "방금 만난 고양이가 여기 들어왔어요",
-     "sub": "{품종} · {n}성",
-     "button": "다음",
-     "mockup": "tut-dex-3-1.png"
+     "cta": "다음",
+     "ackOnly": true,
+     "scrollIntoView": {
+      "block": "center",
+      "behavior": "smooth",
+      "ms": 400
+     },
+     "pulseMs": 400
     },
     {
      "id": "3-2",
-     "screen": "dex",
      "target": "#dex-claim-{cardId}",
-     "effect": "원형 spotlight + 손가락 탭 루프",
+     "fallbackTarget": "#dex-slot-{cardId}",
      "copy": "코인을 톡 누르면 보상을 받아요",
-     "sub": "냥코인 1 + 20P",
-     "onlyTarget": true,
-     "action": "tap → POST /dex/rewards/claim → 코인 버스트 + sfx-reward-coin + 토스트 '냥코인 1개 + 20포인트 받았어요'",
-     "mockup": "tut-dex-3-2.png"
-    },
-    {
-     "id": "ncoin-intro",
-     "screen": "dex",
-     "target": "#dex-claim-toast",
-     "when": "첫 수동 받기 직후",
-     "copy": "냥코인을 처음 받았어요!",
      "lines": [
       {
-       "icon": "ncoin",
-       "text": "토스포인트로 바꿀 수 있는 코인이에요 · 1냥코인 = 1원"
+       "icon": "/assets/ncoin/ncoin-64.png",
+       "text": "x {nyangCoinByGrade}"
       },
       {
-       "icon": "ncoin",
-       "text": "처음 만나는 카드, 세트 완성으로 모여요"
-      },
-      {
-       "icon": "ncoin",
-       "text": "10개부터 메뉴 › 보상함에서 받을 수 있어요"
-      },
-      {
-       "icon": "paw",
-       "text": "발바닥 포인트는 방꾸미기 아이템을 사는 데 써요",
-       "style": "divider above, muted"
+       "icon": "/assets/menu/icon-paw-mini.svg",
+       "text": "x {paw}"
       }
      ],
-     "button": "알겠어요",
-     "skipInBubble": true,
-     "action": "tap 알겠어요 → 다음 단계(4)로",
-     "mockup": "tut-dex-3-3.png",
-     "substep": "3-3",
-     "label": "STEP 3 / 5"
+     "note": "말풍선 수량은 App이 economy.nyangCoinByGrade + newCardFirstGet.paw로 덮어써요",
+     "showFinger": true,
+     "claimGate": true
+    },
+    {
+     "id": "3-3",
+     "target": "",
+     "copy": "",
+     "title": "냥코인을 처음 받았어요!",
+     "cta": "알겠어요",
+     "ackOnly": true,
+     "toast": {
+      "text": "냥코인 {nyang}개 + {paw}포인트 받았어요",
+      "autoHideMs": 1600
+     }
     }
    ],
-   "label": "STEP 3 / 5"
+   "action": "scroll slot → pulse → claim coin → toast → ncoin intro"
   },
   {
    "step": 4,
-   "label": "STEP 4 / 5",
-   "screen": "room (edit)",
-   "item": "서랍의 첫 번째 배치 가능 NEW 아이템 (newuser: cushions 방석 더미)",
+   "screen": "room",
+   "stepLabel": "STEP 4/5",
+   "target": "#drawer-item-0",
+   "copy": "서랍에서 마음에 드는 아이템을 톡 눌러 보세요",
    "suggestTile": {
     "c": 5,
     "r": 2
    },
-   "lock": "4-1/4-2 동안 강조 아이템과 ✓만 누를 수 있어요 (✕·회전·이동은 막아 둠). 건너뛰기는 언제나 가능",
    "substeps": [
     {
      "id": "4-1",
      "target": "#drawer-item-0",
-     "effect": "spotlight + 탭 손가락",
      "copy": "서랍에서 마음에 드는 아이템을 톡 눌러 보세요",
-     "action": "tap → suggestTile에 미리보기 생성",
-     "mockup": "(tut-room-4-1.png, 문구만 변경)"
+     "showFinger": true,
+     "lockItem": true
     },
     {
      "id": "4-2",
-     "target": "#placement-confirm (미리보기 위 ✓)",
-     "state": "suggestTile(c5,r2)에 미리보기(초록 칸)",
+     "target": "#placement-confirm",
      "copy": "여기 놓을게요! ✓를 눌러 확정해요",
      "sub": "나중에 끌어서 옮기거나 돌릴 수 있어요",
-     "action": "tap ✓ → POST placements → 4-3"
+     "showFinger": true,
+     "lockItem": true,
+     "suggestTile": {
+      "c": 5,
+      "r": 2
+     }
     },
     {
      "id": "4-3",
-     "effect": "sfx item-place + 바운스 + 반짝이",
+     "target": "",
      "copy": "잘했어요! 다른 아이템도 자유롭게 꾸며 보세요",
-     "button": "완료",
-     "action": "완료 → step 5",
-     "mockup": "tut-room-4-3.png"
+     "cta": "완료",
+     "ackOnly": true,
+     "placeFx": {
+      "sfx": "item-place",
+      "bounceMs": 240,
+      "sparkles": true
+     }
     }
    ],
-   "complete": "→ step 5"
+   "action": "tap drawer → preview → ✓ confirm → step 5"
   },
   {
    "step": 5,
-   "label": "STEP 5 / 5",
-   "screen": "main → menu → rewards",
+   "screen": "main",
+   "stepLabel": "STEP 5/5",
+   "target": "#btn-menu",
+   "copy": "메뉴에서 모은 냥코인을 확인할 수 있어요",
    "substeps": [
     {
      "id": "5-1",
-     "screen": "main",
      "target": "#btn-menu",
-     "effect": "원형 spotlight + 손가락 탭",
      "copy": "메뉴에서 모은 냥코인을 확인할 수 있어요",
-     "sub": "메뉴를 눌러 보세요",
-     "skip": true,
-     "action": "tap → 메뉴 열기",
-     "mockup": "tut-reward-5-1.png"
+     "showFinger": true,
+     "bubble": "below"
     },
     {
      "id": "5-2",
-     "screen": "menu",
      "target": "#menu-row-rewards",
      "copy": "보상함을 눌러 보세요",
-     "sub": "모은 냥코인과 토스포인트 받기가 여기 있어요",
-     "skip": true,
-     "onlyTarget": true,
-     "action": "tap → 보상함 시트",
-     "mockup": "tut-reward-5-2.png"
+     "showFinger": true,
+     "bubble": "below"
     },
     {
      "id": "5-3",
-     "screen": "rewards sheet",
-     "target": ".wallet (잔액 + 출금 영역)",
+     "target": "#withdraw-picker",
+     "fallbackTarget": "#wallet-card",
      "copy": "냥코인 10개부터 토스포인트로 바꿀 수 있어요",
-     "sub": "하루 최대 50원까지 받을 수 있어요 · 지금은 {bal}개, {10-bal}개만 더 모아요",
-     "button": "알겠어요",
-     "state": "잔액<10: −/+ 비활성, 버튼 비활성 '조금만 더 모으면 받을 수 있어요', 진행바 bal/10",
-     "complete": "tutorialDone=true",
-     "mockup": "tut-reward-5-3.png"
+     "sub": "※ 하루 최대 {dailyLimit}원",
+     "cta": "알겠어요",
+     "ackOnly": true,
+     "lines": [
+      {
+       "when": "nyangCoinBalance < 10",
+       "copy": "조금만 더 모으면 받을 수 있어요"
+      }
+     ]
+    }
+   ],
+   "action": "menu → rewards → ack",
+   "complete": "tutorialDone=true"
+  }
+ ],
+ "contextual": {
+  "rewards-intro": {
+   "id": "rewards-intro",
+   "flag": "tut.rewardsIntro",
+   "once": true,
+   "gate": "tutorialDone && not drawing && not ad && not otherSheet",
+   "triggers": [
+    {
+     "when": "nyangCoinBalance >= 10",
+     "from": "r1",
+     "note": "냥코인 처음 ≥10 (r1부터)"
+    },
+    {
+     "when": "openSheet:rewards",
+     "from": "r3",
+     "note": "보상함 처음 열기 (r3부터) — 둘 중 먼저 1회"
+    }
+   ],
+   "lockDismiss": true,
+   "steps": [
+    {
+     "id": "r1",
+     "target": "#btn-menu",
+     "copy": "메뉴에서 보상함을 열 수 있어요",
+     "action": "tap → open menu"
+    },
+    {
+     "id": "r2",
+     "target": "#menu-row-rewards",
+     "copy": "보상함을 눌러 볼까요?",
+     "action": "tap → open sheet:rewards"
+    },
+    {
+     "id": "r3",
+     "target": "#wallet-card",
+     "copy": "모은 냥코인이 여기에 보여요",
+     "action": "next"
+    },
+    {
+     "id": "r4",
+     "target": "#withdraw-picker",
+     "bubble": "above",
+     "copy": "−/+로 금액을 골라요 · 하루 최대 {dailyLimit}원까지 받을 수 있어요",
+     "lines": [
+      {
+       "when": "nyangCoinBalance >= 10 && remainingToday >= 10",
+       "copy": "−/+로 금액을 골라요 · 하루 최대 {dailyLimit}원까지 받을 수 있어요"
+      },
+      {
+       "when": "nyangCoinBalance >= 10 && remainingToday < 10",
+       "copy": "오늘은 다 받았어요 · 내일 00:00에 다시 받을 수 있어요"
+      },
+      {
+       "when": "nyangCoinBalance < 10",
+       "copy": "10 냥코인부터 토스포인트로 받을 수 있어요"
+      }
+     ],
+     "action": "ack — 실제 출금은 유저가 직접"
     }
    ]
   }
- ],
+ },
+ "replay": {
+  "from": "settings",
+  "includes": [
+   "steps 1–4",
+   "contextual.rewards-intro from r1"
+  ],
+  "regrantRewards": false
+ },
  "featureIntros": {
   "ui": "'새 기능' 말풍선 (대상 요소 옆, 1회 노출, 탭하면 닫힘)",
   "schedule": [
@@ -199,8 +293,8 @@
    {
     "day": 4,
     "id": "intro-paw-ads",
-    "target": "#btn-paw-ad",
-    "copy": "광고 보고 포인트 10개 받아요 (하루 10번까지)"
+    "target": "#btn-menu",
+    "copy": "메뉴 › 포인트 받기에서 광고 보고 포인트 10개 받아요 (하루 10번까지)"
    },
    {
     "day": 5,
@@ -217,121 +311,5 @@
    }
   ],
   "rule": "하루 최대 1개, 조건 미충족 시 다음 날로 밀림, 튜토리얼 미완료면 노출 안 함"
- },
- "contextual": [
-  {
-   "id": "rewards-intro",
-   "title": "보상함 튜토리얼",
-   "once": true,
-   "trigger": {
-    "anyOf": [
-     {
-      "event": "nyangCoinBalanceChanged",
-      "condition": "user.nyangCoinBalance >= 10 (처음 도달)",
-      "startAt": "r1"
-     },
-     {
-      "event": "sheetOpen:rewards",
-      "condition": "처음 보상함을 열었을 때 (잔액 무관)",
-      "startAt": "r3"
-     }
-    ],
-    "firstWins": true,
-    "requires": [
-     "tutorialDone == true",
-     "뽑기 연출·광고·다른 시트 진행 중이 아님 (끝난 뒤 메인 화면으로 돌아왔을 때 시작)"
-    ],
-    "priority": "featureIntros보다 먼저. 같은 날 featureIntro는 다음 날로 밀려요"
-   },
-   "state": {
-    "key": "tut.rewardsIntro",
-    "values": [
-     "none",
-     "seen",
-     "skipped"
-    ],
-    "storage": "서버 유저 플래그 (기기 바꿔도 1회)"
-   },
-   "skip": {
-    "label": "건너뛰기",
-    "place": "말풍선 아래줄",
-    "onSkip": "seen 처리, 다시 안 보여요"
-   },
-   "steps": [
-    {
-     "step": "r1",
-     "screen": "main",
-     "target": "#icon-menu",
-     "effect": "빨간 점 + glow pulse",
-     "menuDot": "menuIconBadge 규칙 그대로 (보상함 dot이 켜져 있음)",
-     "copy": "냥코인이 10개 모였어요!",
-     "sub": "메뉴를 열어 볼까요?",
-     "action": "tap #icon-menu"
-    },
-    {
-     "step": "r2",
-     "screen": "menu",
-     "target": "#menu-row-rewards",
-     "copy": "냥코인이 10개 모였어요!",
-     "sub": "보상함에서 토스포인트로 받을 수 있어요",
-     "button": "보상함 열기",
-     "action": "tap #menu-row-rewards",
-     "mockup": "tutorial-rewards-1.png"
-    },
-    {
-     "step": "r3",
-     "screen": "sheet:rewards",
-     "target": "#wallet-card",
-     "copy": "내 냥코인은 여기 모여요",
-     "sub": "1냥코인은 토스포인트 1원이에요. 지금 {balance}냥코인 있어요",
-     "button": "다음",
-     "mockup": "tutorial-rewards-2.png"
-    },
-    {
-     "step": "r4",
-     "screen": "sheet:rewards",
-     "target": "#withdraw-picker",
-     "bubble": "위쪽",
-     "copy": "10개 단위로 골라서 받아요",
-     "lines": [
-      {
-       "icon": "ncoin",
-       "text": "{withdrawMax}냥코인을 받으면 남는 {remainder}냥코인은 그대로 모여요",
-       "when": "balance >= 10 && remainder > 0"
-      },
-      {
-       "icon": "ncoin",
-       "text": "10냥코인 단위로 받아요",
-       "when": "balance >= 10 && remainder == 0"
-      },
-      {
-       "icon": "ncoin",
-       "text": "10개부터 받을 수 있어요 · {10-balance}개 더 모아요",
-       "when": "balance < 10 (보상함을 먼저 연 경우)"
-      },
-      {
-       "icon": "dex",
-       "text": "새 카드·세트 보상은 도감에서 받아요",
-       "when": "dex.unclaimedCount > 0"
-      }
-     ],
-     "button": "알겠어요",
-     "complete": "tut.rewardsIntro = seen",
-     "note": "실제 받기는 유저가 직접 눌러요 (튜토리얼이 대신 출금하지 않음)",
-     "mockup": "tutorial-rewards-3.png"
-    }
-   ],
-   "stepLabel": "보상함 · {n} / 4 (r3부터 시작하면 '보상함 · 1 / 2')",
-   "replay": "설정 › 튜토리얼 다시 보기 (메인 튜토리얼 뒤에 이어서, 보상 지급·출금 없음)"
-  }
- ],
- "replay": {
-  "from": "설정 › 튜토리얼 다시 보기",
-  "plays": [
-   "steps 1–4 (ncoin-intro 포함)",
-   "contextual.rewards-intro (r1부터)"
-  ],
-  "rewards": "재지급 없음",
-  "flags": "tutorialDone·tut.rewardsIntro 유지"
  }
 }

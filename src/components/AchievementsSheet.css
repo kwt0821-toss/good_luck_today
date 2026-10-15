@@ -1,0 +1,385 @@
+.achv-root {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+}
+
+.achv-root > * {
+  pointer-events: auto;
+}
+
+.achv-dim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(8, 7, 18, 0.55);
+  cursor: pointer;
+}
+
+.achv-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: min(78vh, 640px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 28px 28px 0 0;
+  background: #1c1830;
+  color: #f3ebd7;
+  padding: 18px 16px 22px;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.achv-sheet.is-detail {
+  max-height: min(86vh, 720px);
+}
+
+.achv-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.achv-eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(243, 235, 215, 0.55);
+}
+
+.achv-head h2 {
+  margin: 2px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.achv-close,
+.achv-back {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(243, 235, 215, 0.1);
+  color: #f3ebd7;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.achv-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.achv-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.achv-tab {
+  position: relative;
+  flex: none;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(243, 235, 215, 0.08);
+  color: rgba(243, 235, 215, 0.72);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.achv-tab.is-on {
+  background: #f3ebd7;
+  color: #221e3a;
+}
+
+.achv-tab.has-dot i {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff5a5a;
+}
+
+.achv-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 8px;
+  overflow-y: auto;
+  padding: 4px 2px 8px;
+  min-height: 0;
+}
+
+.achv-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px 10px;
+  border: 0;
+  border-radius: 16px;
+  background: rgba(243, 235, 215, 0.05);
+  color: #f3ebd7;
+  font: inherit;
+  cursor: pointer;
+}
+
+.achv-cell.is-claimable {
+  background: rgba(143, 227, 195, 0.12);
+  box-shadow: 0 0 0 1.5px rgba(143, 227, 195, 0.55), 0 0 18px rgba(143, 227, 195, 0.28);
+}
+
+.achv-cell.is-locked {
+  opacity: 0.55;
+  filter: grayscale(0.55);
+}
+
+.achv-cell-badge-wrap {
+  position: relative;
+  width: 52px;
+  height: 52px;
+}
+
+.achv-cell-badge-wrap img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.achv-cell-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5a5a;
+  box-shadow: 0 0 0 2px #1c1830;
+}
+
+.achv-cell-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.achv-equip-tag {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  margin: 0;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #ffc48a;
+  color: #5a2f0c;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.achv-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 8px 8px 4px;
+  overflow-y: auto;
+}
+
+.achv-detail .achv-back {
+  align-self: flex-start;
+}
+
+.achv-detail-badge {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  margin-top: 4px;
+}
+
+.achv-status-chip {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(243, 235, 215, 0.12);
+}
+
+.achv-status-chip.is-claimable {
+  background: rgba(143, 227, 195, 0.22);
+  color: #8fe3c3;
+}
+
+.achv-status-chip.is-equipped {
+  background: rgba(255, 196, 138, 0.22);
+  color: #ffc48a;
+}
+
+.achv-detail h3 {
+  margin: 2px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.achv-detail-cond {
+  margin: 0;
+  font-size: 13.5px;
+  color: rgba(243, 235, 215, 0.7);
+  line-height: 1.4;
+}
+
+.achv-progress {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.achv-progress-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(243, 235, 215, 0.12);
+  overflow: hidden;
+}
+
+.achv-progress-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #8fe3c3, #ffc48a);
+  border-radius: inherit;
+}
+
+.achv-progress span {
+  flex: none;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.achv-series {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.achv-series-step {
+  min-width: 34px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(243, 235, 215, 0.08);
+  color: rgba(243, 235, 215, 0.55);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.achv-series-step.is-on {
+  background: rgba(143, 227, 195, 0.2);
+  color: #8fe3c3;
+}
+
+.achv-series-step.is-current {
+  box-shadow: 0 0 0 1.5px #8fe3c3;
+}
+
+.achv-reward-row {
+  display: flex;
+  gap: 10px;
+  margin: 8px 0 4px;
+}
+
+.achv-reward-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff6e6;
+  color: #2a2238;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.achv-cta {
+  width: 100%;
+  height: 52px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 16px;
+  background: #f3ebd7;
+  color: #221e3a;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.achv-cta:disabled,
+.achv-cta.is-ghost {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.achv-celebrate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 28px 12px 8px;
+}
+
+.achv-celebrate-eyebrow {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: rgba(243, 235, 215, 0.6);
+}
+
+.achv-celebrate h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.achv-celebrate-rewards {
+  display: flex;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+
+.achv-celebrate-rewards span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff6e6;
+  color: #2a2238;
+  font-weight: 800;
+  font-size: 14px;
+}

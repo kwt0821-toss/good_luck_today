@@ -1,6 +1,6 @@
 {
- "_version": "economy-1.6 (2026-10-13)",
- "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
+ "_version": "economy-1.7 (2026-10-15)",
+ "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요. 1.7: 새 카드 냥코인은 nyangCoinByGrade.",
  "currency": {
   "paw": {
    "nameKo": "포인트(발바닥)",
@@ -30,7 +30,8 @@
   },
   "newCardFirstGet": {
    "paw": 20,
-   "nyangCoin": 1
+   "nyangCoin": 1,
+   "note": "paw는 공통. 냥코인 실제 지급은 nyangCoinByGrade(카드 등급별)."
   },
   "duplicateConvert": {
    "common_1to2star": 10,
@@ -85,7 +86,16 @@
    ],
    "noReset": true
   },
-  "claimMode": "manual"
+  "claimMode": "manual",
+  "nyangCoinByGrade": {
+   "breed_1to3": 1,
+   "breed_4": 5,
+   "breed_5": 10,
+   "special": 5,
+   "character": 7,
+   "legend": 50,
+   "note": "special = 밈 카드. 계정당 카드·세트·fullDex 보상 id별 1회."
+  }
  },
  "nyangCoin": {
   "maxEarnPerUser": 417,
@@ -139,7 +149,9 @@
    "policyCheck": "⚠ 토스 포인트 지급 API의 최소/최대 금액, 사전 예산 충전, 호출 한도, 앱 내 재화→토스포인트 전환 허용 범위는 앱인토스 콘솔/담당자 확인 필요 (이 파일은 가정)",
    "dailyLimitUnit": "토스포인트 원 (= 냥코인 개수), KST 00:00 초기화",
    "ui": "−/+ 스테퍼 (10 단위, 최소 10, 최대 min(잔액 내림 10단위, 오늘 남은 한도))"
-  }
+  },
+  "maxPerUserKRW": 907,
+  "maxNote": "새 카드 등급별 597 + 세트·전체 310 = 907"
  },
  "draws": {
   "resetTimeKST": "00:00",
@@ -490,6 +502,7 @@
   "claimApi": "POST /dex/rewards/claim {rewardIds:[...]|'all', requestId} → {claimed:[{id,nyangCoin,paw}], pawBalance, nyangCoinBalance, unclaimedCount}",
   "idempotency": "보상 id별 계정당 1회(유니크 키 tossUserKey+rewardId) + requestId 재시도 시 같은 응답",
   "atomic": "지급 + claimed 표시 한 트랜잭션",
-  "badges": "unclaimedCount>0 → 메인 도감 아이콘 빨간 점, 도감 탭 점(해당 그룹), 메뉴 보상함 행 meta"
+  "badges": "unclaimedCount>0 → 메인 도감 아이콘 빨간 점, 도감 탭 점(해당 그룹), 메뉴 보상함 행 meta",
+  "note": "도감에서 직접 수령. 자동 지급 없음. 새 카드 냥코인=nyangCoinByGrade, paw=newCardFirstGet.paw. 세트/fullDex는 setComplete. 보상 id: newCard:{cardId}, set:breed:{id}, set:{special|character|legend}, fullDex. 계정당 1회(tossUserKey+rewardId), POST /dex/rewards/claim 멱등키 tossUserKey+requestId."
  }
 }

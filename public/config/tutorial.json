@@ -93,13 +93,14 @@
      "lines": [
       {
        "icon": "/assets/ncoin/ncoin-64.png",
-       "text": "x 1"
+       "text": "x {nyangCoinByGrade}"
       },
       {
        "icon": "/assets/menu/icon-paw-mini.svg",
-       "text": "x 20"
+       "text": "x {paw}"
       }
      ],
+     "note": "말풍선 수량은 App이 economy.nyangCoinByGrade + newCardFirstGet.paw로 덮어써요",
      "showFinger": true,
      "claimGate": true
     },
@@ -111,7 +112,7 @@
      "cta": "알겠어요",
      "ackOnly": true,
      "toast": {
-      "text": "냥코인 1개 + 20포인트 받았어요",
+      "text": "냥코인 {nyang}개 + {paw}포인트 받았어요",
       "autoHideMs": 1600
      }
     }

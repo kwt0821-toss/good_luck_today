@@ -92,15 +92,24 @@ export function dexSlotCoachMark(
 
 export function dexClaimCoachMark(
   step: TutorialStep,
-  vars: { cardId?: string | null },
+  vars: { cardId?: string | null; nyangCoin?: number; paw?: number },
 ): CoachMark | null {
   const sub = dexSubstep(step, "3-2");
   if (!sub) return null;
+  const nyang = vars.nyangCoin ?? 1;
+  const paw = vars.paw ?? 20;
+  const lines =
+    vars.nyangCoin != null || vars.paw != null
+      ? [
+          { icon: "/assets/ncoin/ncoin-64.png", text: `x ${nyang}` },
+          { icon: "/assets/menu/icon-paw-mini.svg", text: `x ${paw}` },
+        ]
+      : sub.lines;
   return {
     id: "step-3-2",
     target: resolveTutorialTarget(sub.target, vars, sub.fallbackTarget),
     copy: sub.copy ?? "",
-    lines: sub.lines,
+    lines,
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     activateTarget: Boolean(sub.claimGate),
@@ -125,8 +134,14 @@ export function dexAfterClaimMark(step: TutorialStep): CoachMark | null {
   };
 }
 
-export function dexClaimToastText(step: TutorialStep | null | undefined): string | null {
+export function dexClaimToastText(
+  step: TutorialStep | null | undefined,
+  amounts?: { nyangCoin?: number; paw?: number },
+): string | null {
   const sub = dexSubstep(step, "3-3");
+  if (amounts?.nyangCoin != null && amounts.paw != null) {
+    return `냥코인 ${amounts.nyangCoin}개 + ${amounts.paw}포인트 받았어요`;
+  }
   return sub?.toast?.text ?? null;
 }
 

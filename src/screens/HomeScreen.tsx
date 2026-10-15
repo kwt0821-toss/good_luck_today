@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
+import { TitleRibbon } from "../components/TitleRibbon";
 import { formatCountdownHms, formatLuckyCatalogDate, msUntilNextKstMidnight } from "../lib/date";
 import { MENU_SETTINGS_EVENT, shouldReduceMenuMotion } from "../lib/menuSettings";
 import { nyNotify } from "../lib/nyangNotify";
@@ -42,12 +43,19 @@ type HomeScreenProps = {
   menuBadge?: boolean;
   /** Red dot on #icon-dex when dex rewards are claimable. */
   dexBadge?: boolean;
+  titleRibbon?: {
+    equippedId?: string | null;
+    equippedName?: string | null;
+    emptyCopy: string;
+    hasClaimable: boolean;
+  };
   onDraw: () => void;
   onRateUpDraw: () => void;
   onOpenTicketShop?: () => void;
   onOpenMenu: () => void;
   onOpenCollection: () => void;
   onOpenRoom: () => void;
+  onOpenTitles?: () => void;
 };
 
 export function HomeScreen({
@@ -64,12 +72,14 @@ export function HomeScreen({
   ticketShopPricePaw = 200,
   menuBadge = false,
   dexBadge = false,
+  titleRibbon,
   onDraw,
   onRateUpDraw,
   onOpenTicketShop,
   onOpenMenu,
   onOpenCollection,
   onOpenRoom,
+  onOpenTitles,
 }: HomeScreenProps) {
   const [waking, setWaking] = useState(false);
   const [flipping, setFlipping] = useState(false);
@@ -184,35 +194,46 @@ export function HomeScreen({
       <img className="main-bg" src={ASSETS.bg} alt="" />
 
       <header className="main-header">
-        <h1 className="main-logo">
-          <svg viewBox="0 0 252 96" role="img" aria-label="LUCKY CAT.">
-            <text
-              x="2"
-              y="42"
-              fill="#F3EBD7"
-              fontFamily="Poppins, 'Noto Sans KR', sans-serif"
-              fontSize="42"
-              fontWeight="800"
-              letterSpacing="-1.4"
-            >
-              LUCKY
-            </text>
-            <text
-              x="2"
-              y="90"
-              fill="#221E3A"
-              stroke="#F3EBD7"
-              strokeWidth="2.3"
-              paintOrder="stroke fill"
-              fontFamily="Poppins, 'Noto Sans KR', sans-serif"
-              fontSize="42"
-              fontWeight="800"
-              letterSpacing="-0.8"
-            >
-              CAT.
-            </text>
-          </svg>
-        </h1>
+        <div className="main-brand">
+          <h1 className="main-logo">
+            <svg viewBox="0 0 252 96" role="img" aria-label="LUCKY CAT.">
+              <text
+                x="2"
+                y="42"
+                fill="#F3EBD7"
+                fontFamily="Poppins, 'Noto Sans KR', sans-serif"
+                fontSize="42"
+                fontWeight="800"
+                letterSpacing="-1.4"
+              >
+                LUCKY
+              </text>
+              <text
+                x="2"
+                y="90"
+                fill="#221E3A"
+                stroke="#F3EBD7"
+                strokeWidth="2.3"
+                paintOrder="stroke fill"
+                fontFamily="Poppins, 'Noto Sans KR', sans-serif"
+                fontSize="42"
+                fontWeight="800"
+                letterSpacing="-0.8"
+              >
+                CAT.
+              </text>
+            </svg>
+          </h1>
+          {titleRibbon && onOpenTitles ? (
+            <TitleRibbon
+              equippedId={titleRibbon.equippedId}
+              equippedName={titleRibbon.equippedName}
+              emptyCopy={titleRibbon.emptyCopy}
+              hasClaimable={titleRibbon.hasClaimable}
+              onOpen={onOpenTitles}
+            />
+          ) : null}
+        </div>
         <button
           type="button"
           id="btn-menu"

@@ -2,6 +2,7 @@ import { loadDexCatalog, groupBreedRows, cardsOfType } from "./dexCatalog";
 import { loadDexOwned } from "./dexCollection";
 import type { DexCard, DexOwnedMap, DexTab } from "./dexTypes";
 import { loadOpsConfig } from "./opsConfig";
+import { newCardPaw, nyangCoinForCard } from "./nyangCoinGrade";
 import { saveOpsState } from "./opsStorage";
 import type { OpsConfig, OpsEconomy, OpsState } from "./opsTypes";
 import { grantNyangCoinOnce } from "./mockToss";
@@ -85,7 +86,6 @@ export async function listClaimableDexRewards(
   const catalog = await loadDexCatalog();
   const map = owned ?? (await loadDexOwned());
   const economy = config.economy;
-  const first = economy.pawSources.newCardFirstGet;
   const sets = economy.pawSources.setComplete;
   const out: DexReward[] = [];
 
@@ -100,9 +100,9 @@ export async function listClaimableDexRewards(
       kind: "newCard",
       cardId: card.id,
       tab,
-      paw: first.paw,
-      nyangCoin: first.nyangCoin,
-      label: `${card.name?.ko ?? card.id} 첫 획득`,
+      paw: newCardPaw(economy),
+      nyangCoin: nyangCoinForCard(economy, card),
+      label: `${card.name?.ko ?? card.breed?.ko ?? card.id} 첫 획득`,
     });
   }
 
