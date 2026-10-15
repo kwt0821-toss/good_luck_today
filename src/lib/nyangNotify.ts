@@ -30,6 +30,8 @@ export type NyNotifyInput = {
   count?: number;
   /** Celebrate reward pills. */
   rewards?: NyRewardChip[];
+  /** Allow title/sub to wrap instead of single-line ellipsis. */
+  wrap?: boolean;
 };
 
 export type NyConfirmInput = {

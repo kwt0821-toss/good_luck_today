@@ -1706,7 +1706,14 @@ export function RoomScreen({
           onMoveHere={moveHereFromOtherRoom}
           onBuyMore={openBuyMore}
           onUndo={applyEditUndo}
-          onHelp={() => showToast("중복 고양이 카드를 발바닥 포인트로 바꿀 수 있어요")}
+          onHelp={() =>
+            nyNotify({
+              key: "room:paw-help",
+              kind: "info",
+              title: "중복 고양이 카드를 발바닥 포인트로 바꿀 수 있어요",
+              wrap: true,
+            })
+          }
           onRequestClose={() => {
             if (tutLock) return;
             setConfirm("close-edit");
