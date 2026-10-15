@@ -171,7 +171,12 @@ export function AchievementsSheet({
   return (
     <div className="achv-root" role="dialog" aria-modal="true" aria-label="칭호">
       <button type="button" className="achv-dim" aria-label="닫기" onClick={onClose} />
-      <div id="sheet-title" className={`achv-sheet ${view !== "grid" ? "is-detail" : ""}`}>
+      <div
+        id="sheet-title"
+        className={`achv-sheet ${view !== "grid" ? "is-detail" : ""} ${
+          view === "celebrate" ? "is-celebrate" : ""
+        }`}
+      >
         {view === "grid" ? (
           <>
             <div className="achv-handle" aria-hidden="true" />
@@ -255,28 +260,40 @@ export function AchievementsSheet({
 
         {view === "celebrate" && celebrate ? (
           <div id="sheet-achv-claim" className="achv-celebrate">
-            <div className="achv-celebrate-rays" aria-hidden="true" />
-            <img src={achvBadgeSrc(celebrate.def.id)} alt="" width={132} height={132} />
-            <p className="achv-celebrate-eyebrow">NEW TITLE</p>
-            <h3>새 칭호를 얻었어요</h3>
-            <div className="achv-celebrate-pill">
-              <img src={achvBadgeSrc(celebrate.def.id)} alt="" width={22} height={22} />
-              <span>{celebrate.def.title}</span>
-            </div>
-            <p className="achv-celebrate-cond">
-              {celebrate.def.name} 업적을 달성했어요
-            </p>
-            <div className="achv-celebrate-rewards">
-              {celebrate.def.reward.nyangCoin > 0 ? (
-                <span>
-                  <img src={ncoinIcon(18)} alt="" width={18} height={18} />+
-                  {celebrate.def.reward.nyangCoin} 냥코인
-                </span>
-              ) : null}
-              <span>
-                <img src="/assets/menu/icon-paw-mini-dark.svg" alt="" width={16} height={16} />+
-                {celebrate.def.reward.paw} 포인트
-              </span>
+            <div className="achv-celebrate-body">
+              <div className="achv-celebrate-rays" aria-hidden="true" />
+              <img
+                className="achv-celebrate-hero"
+                src={achvBadgeSrc(celebrate.def.id)}
+                alt=""
+                width={132}
+                height={132}
+              />
+              <p className="achv-celebrate-eyebrow">NEW TITLE</p>
+              <h3>새 칭호를 얻었어요</h3>
+              <div className="achv-celebrate-pill">
+                <img src={achvBadgeSrc(celebrate.def.id)} alt="" width={40} height={40} />
+                <span>{celebrate.def.title}</span>
+              </div>
+              <p className="achv-celebrate-cond">
+                {celebrate.def.name} 업적을 달성했어요
+              </p>
+              <div
+                className={`achv-celebrate-rewards ${
+                  celebrate.def.reward.nyangCoin > 0 ? "" : "is-single"
+                }`}
+              >
+                {celebrate.def.reward.nyangCoin > 0 ? (
+                  <div className="achv-celebrate-reward">
+                    <img src={ncoinIcon(28)} alt="" width={28} height={28} />
+                    <span>+{celebrate.def.reward.nyangCoin} 냥코인</span>
+                  </div>
+                ) : null}
+                <div className="achv-celebrate-reward">
+                  <img src="/assets/menu/icon-paw-coin.svg" alt="" width={28} height={28} />
+                  <span>+{celebrate.def.reward.paw}P</span>
+                </div>
+              </div>
             </div>
             <div className="achv-celebrate-actions">
               <button
