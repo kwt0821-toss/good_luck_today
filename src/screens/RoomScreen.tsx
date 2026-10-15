@@ -1711,7 +1711,6 @@ export function RoomScreen({
               key: "room:paw-help",
               kind: "info",
               title: "중복 고양이 카드를 발바닥 포인트로 바꿀 수 있어요",
-              wrap: true,
             })
           }
           onRequestClose={() => {

@@ -232,7 +232,7 @@ export function NyangNotifyHost() {
           </div>
         ) : (
           <div
-            className={`ny-snack ny-${current.kind} ${phase === "in" ? "in" : "out"}${current.wrap ? " is-wrap" : ""}`}
+            className={`ny-snack ny-${current.kind} ${phase === "in" ? "in" : "out"}`}
             role={current.kind === "error" || current.assertive ? "alert" : "status"}
             style={{ top: 115, ["--ny-bar" as string]: `${durationMs || 2600}ms` }}
             onPointerDown={onPointerDown}
