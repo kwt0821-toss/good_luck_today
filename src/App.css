@@ -913,23 +913,24 @@
   --cream-dim: #c9c0b0;
   --night: #221e3a;
   --cta: #ffc48a;
-  --main-fit-scale: 1;
+  --cat-stage-scale: 1;
+  /* Bottom nav clearance: icon~45 + bottom offset 24 + safe-area */
+  --main-bottom-clearance: calc(24px + 52px + env(safe-area-inset-bottom, 0px));
   position: relative;
   flex: 1;
   min-height: 0;
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   overflow: hidden;
   color: var(--cream);
   font-family: "Noto Sans KR", "Toss Product Sans", sans-serif;
   box-sizing: border-box;
-  /* Available area for the 390×844 stage (visualViewport shell − safe-area). */
   padding-top: env(safe-area-inset-top, 0px);
   padding-right: env(safe-area-inset-right, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0;
   padding-left: env(safe-area-inset-left, 0px);
   background: #14132a;
 }
@@ -945,32 +946,27 @@
   z-index: 0;
 }
 
-/* Layout box matches the *scaled* visual size so touch + overflow stay correct. */
-.main-stage-slot {
-  position: relative;
-  z-index: 1;
-  flex: 0 0 auto;
-  overflow: hidden;
-}
-
 #main-stage,
 .main-stage-canvas {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 390px;
-  height: 844px;
-  transform: scale(var(--main-fit-scale, 1));
-  transform-origin: 0 0;
-  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: 390px;
+  padding: 18px 24px var(--main-bottom-clearance);
+  box-sizing: border-box;
   color: var(--cream);
+  overflow: hidden;
 }
 
 .main-bg {
   position: absolute;
   inset: 0;
-  width: 390px;
-  height: 844px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: top center;
   pointer-events: none;
@@ -980,32 +976,19 @@
 .main-header,
 .main-rule,
 .main-meta,
-.main-stage-row,
-.main-cta-ad,
-.main-cta,
-.main-cta-en,
-.main-cta-done,
-.main-draw-pill,
-.main-count-pill,
-.main-bottom {
-  position: absolute;
+.main-flow,
+.main-after-stage {
+  position: relative;
   z-index: 1;
+  flex: 0 0 auto;
 }
 
-/* layout-spec §1 — fixed design px inside 390×844 */
 .main-header {
-  left: 24px;
-  top: 18px;
-  right: 22px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  height: 120px;
-  pointer-events: none;
-}
-
-.main-header > * {
-  pointer-events: auto;
+  gap: 12px;
+  min-height: 0;
 }
 
 .main-brand {
@@ -1062,11 +1045,9 @@
 }
 
 .main-menu-btn {
-  position: absolute;
-  top: 5px;
-  right: 0;
+  flex: 0 0 auto;
   width: 44px;
-  height: 44px;
+  min-height: 44px;
   padding-top: 2px;
   gap: 2px;
   justify-content: flex-start;
@@ -1098,22 +1079,18 @@
 }
 
 .main-rule {
-  left: 24px;
-  top: 148px;
-  width: 342px;
+  width: 100%;
   height: 1px;
-  margin: 0;
+  margin: 10px 0 8px;
   background: rgba(243, 235, 215, 0.28);
 }
 
 .main-meta {
-  left: 24px;
-  top: 156px;
-  width: 342px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  margin: 0 0 8px;
   font-size: 12px;
   color: var(--cream-dim);
 }
@@ -1129,15 +1106,43 @@
   white-space: nowrap;
 }
 
-/* Stage tap group — layout-spec §1 #9 (0, 211, 390×400) */
+/* Vertical flow: cat (shrinkable) → CTA → count. Bottom nav is fixed outside. */
+.main-flow {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* Stage tap group — design 390×400; shrinks into leftover height only. */
 .main-stage-row {
-  left: 0;
-  top: 211px;
-  width: 390px;
-  height: 400px;
-  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-height: 376px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   margin: 0;
   overflow: visible;
+}
+
+.main-stage-fit {
+  position: relative;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.main-stage-design {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 390px;
+  height: 376px;
+  transform: scale(var(--cat-stage-scale, 1));
+  transform-origin: 0 0;
 }
 
 .main-rateup-wrap {
@@ -1326,7 +1331,7 @@
   left: 0;
   top: 0;
   width: 390px;
-  height: 400px;
+  height: 376px;
   border: 0;
   padding: 0;
   background: transparent;
@@ -1358,13 +1363,13 @@
   animation: main-moon 4.5s ease-in-out infinite;
 }
 
-/* Stage space 390×400pt (layout-spec §6) — design px only; whole canvas scales. */
+/* Stage design px — scaled by --cat-stage-scale when height is tight. */
 .main-float {
   position: absolute;
   left: 0;
   top: 0;
   width: 390px;
-  height: 400px;
+  height: 376px;
   transform: translateY(0);
   transform-origin: 50% 50%;
   will-change: transform;
@@ -1617,10 +1622,26 @@
   opacity: 0;
 }
 
+/* Card → CTA 16px, CTA → count 12px (flex column, not absolute). */
+.main-after-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.main-cta-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+
 .main-cta-ad {
-  left: 0;
-  top: 568px;
-  width: 390px;
   margin: 0;
   text-align: center;
   font-family: "Noto Sans KR", sans-serif;
@@ -1631,9 +1652,6 @@
 }
 
 .main-cta {
-  left: 0;
-  top: 586px;
-  width: 390px;
   margin: 0;
   text-align: center;
   font-family: "Gamja Flower", "Noto Sans KR", sans-serif;
@@ -1643,7 +1661,9 @@
 }
 
 .main-cta-done {
-  top: 590px;
+  margin: 0;
+  text-align: center;
+  font-family: "Gamja Flower", "Noto Sans KR", sans-serif;
   font-size: 18px;
   color: rgba(243, 235, 215, 0.78);
 }
@@ -1653,9 +1673,6 @@
 }
 
 .main-cta-en {
-  left: 0;
-  top: 618px;
-  width: 390px;
   margin: 0;
   text-align: center;
   font-family: Poppins, "Noto Sans KR", sans-serif;
@@ -1666,8 +1683,7 @@
 }
 
 .main-draw-pill {
-  left: 50%;
-  top: 580px;
+  position: relative;
   z-index: 2;
   display: inline-flex;
   align-items: center;
@@ -1686,7 +1702,6 @@
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  transform: translateX(-50%);
   transition: transform 0.35s ease;
 }
 
@@ -1713,12 +1728,11 @@
 }
 
 .main-draw-pill.is-nudge {
-  transform: translateX(-50%) translateY(-3px);
+  transform: translateY(-3px);
 }
 
 .main-count-pill {
-  left: 50%;
-  top: 642px;
+  position: relative;
   z-index: 2;
   display: inline-flex;
   align-items: center;
@@ -1731,8 +1745,7 @@
   color: rgba(243, 233, 215, 0.82);
   font-size: 11px;
   line-height: 1.3;
-  max-width: 340px;
-  transform: translateX(-50%);
+  max-width: 100%;
   white-space: nowrap;
 }
 
@@ -1823,15 +1836,26 @@
   opacity: 0.45;
 }
 
+/* Pinned to the screen bottom — does not rise with short mid content. */
 .main-bottom {
-  left: 22px;
-  right: 22px;
-  top: 656px;
-  height: 48px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  z-index: 2;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 0;
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto;
+  padding: 0 22px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.main-bottom .main-nav-btn {
+  pointer-events: auto;
 }
 
 @keyframes main-breathe {
@@ -1950,7 +1974,7 @@
 
 .main-screen.is-reduce .main-draw-pill.is-nudge {
   animation: none;
-  transform: translateX(-50%);
+  transform: none;
 }
 
 .main-screen.is-reduce .main-rateup-tip {
