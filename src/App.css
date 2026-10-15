@@ -956,7 +956,8 @@
   min-height: 0;
   width: 100%;
   max-width: 390px;
-  padding: 18px 24px var(--main-bottom-clearance);
+  /* Horizontal padding only on header/meta/CTA — stage keeps full 390 width. */
+  padding: 18px 0 var(--main-bottom-clearance);
   box-sizing: border-box;
   color: var(--cream);
   overflow: hidden;
@@ -976,11 +977,15 @@
 .main-header,
 .main-rule,
 .main-meta,
-.main-flow,
 .main-after-stage {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
+}
+
+.main-flow {
+  position: relative;
+  z-index: 1;
 }
 
 .main-header {
@@ -989,6 +994,8 @@
   justify-content: space-between;
   gap: 12px;
   min-height: 0;
+  padding: 0 24px;
+  box-sizing: border-box;
 }
 
 .main-brand {
@@ -1079,10 +1086,11 @@
 }
 
 .main-rule {
-  width: 100%;
+  width: calc(100% - 48px);
   height: 1px;
-  margin: 10px 0 8px;
+  margin: 10px 24px 8px;
   background: rgba(243, 235, 215, 0.28);
+  box-sizing: border-box;
 }
 
 .main-meta {
@@ -1091,6 +1099,8 @@
   justify-content: space-between;
   gap: 10px;
   margin: 0 0 8px;
+  padding: 0 24px;
+  box-sizing: border-box;
   font-size: 12px;
   color: var(--cream-dim);
 }
@@ -1116,14 +1126,14 @@
   width: 100%;
 }
 
-/* Stage tap group — design 390×400; shrinks into leftover height only. */
+/* Stage tap group — design 390×386; shrinks for leftover *height* only. */
 .main-stage-row {
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
-  max-height: 376px;
+  max-height: 386px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   margin: 0;
   overflow: visible;
@@ -1140,7 +1150,7 @@
   left: 0;
   top: 0;
   width: 390px;
-  height: 376px;
+  height: 386px;
   transform: scale(var(--cat-stage-scale, 1));
   transform-origin: 0 0;
 }
@@ -1331,7 +1341,7 @@
   left: 0;
   top: 0;
   width: 390px;
-  height: 376px;
+  height: 386px;
   border: 0;
   padding: 0;
   background: transparent;
@@ -1369,7 +1379,7 @@
   left: 0;
   top: 0;
   width: 390px;
-  height: 376px;
+  height: 386px;
   transform: translateY(0);
   transform-origin: 50% 50%;
   will-change: transform;
@@ -1429,7 +1439,8 @@
   position: relative;
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: fill;
   border-radius: 18px;
   box-shadow: 0 14px 22px rgba(10, 8, 24, 0.35);
   z-index: 1;
@@ -1629,6 +1640,8 @@
   align-items: center;
   gap: 12px;
   margin-top: 16px;
+  padding: 0 24px;
+  box-sizing: border-box;
   width: 100%;
   flex: 0 0 auto;
 }

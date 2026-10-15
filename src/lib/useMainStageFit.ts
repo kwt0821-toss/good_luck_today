@@ -3,10 +3,10 @@ import { useEffect, useState, type RefObject } from "react";
 /** Cat + card design box width (layout-spec §1 #9 / §6). */
 export const CAT_STAGE_W = 390;
 /**
- * Height ends at the face-down card bottom (deck top 152 + 224) so the
- * after-stage 16px gap sits under the card, not under empty stage padding.
+ * Card deck ends at y 376 (top 152 + 224). Extra px covers the -2deg tilt
+ * AABB so the face doesn't spill into the 16px CTA gap.
  */
-export const CAT_STAGE_H = 376;
+export const CAT_STAGE_H = 386;
 
 /**
  * Scale the cat/card stage into `rowRef`'s box. Buttons / bottom nav stay full size —
@@ -23,7 +23,8 @@ export function useCatStageFit(rowRef: RefObject<HTMLElement | null>): number {
       const aw = el.clientWidth;
       const ah = el.clientHeight;
       if (aw <= 0 || ah <= 0) return;
-      const next = Math.min(aw / CAT_STAGE_W, ah / CAT_STAGE_H, 1);
+      // Prefer height fit; only shrink for width when the shell is narrower than 390.
+      const next = Math.min(ah / CAT_STAGE_H, aw < CAT_STAGE_W ? aw / CAT_STAGE_W : 1, 1);
       setScale(Number.isFinite(next) && next > 0 ? next : 1);
     };
 
