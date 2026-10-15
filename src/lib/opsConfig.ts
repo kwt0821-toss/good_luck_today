@@ -37,6 +37,12 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
       delete pack.toss;
     }
   }
+  // Ensure currency.nyangCoin.unit for older call sites.
+  if (currency.nyangCoin && typeof currency.nyangCoin === "object") {
+    const nc = currency.nyangCoin as Record<string, unknown>;
+    if (nc.unit == null) nc.unit = "NYANG";
+  }
+
   let nyangCoin = raw.nyangCoin;
   if (!nyangCoin && anyRaw.tossPayout) {
     nyangCoin = {
@@ -56,19 +62,37 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
     withdrawStep: 10,
     toTossPointRate: 1,
   };
+  const grant = (baseNyang as { grant?: Record<string, unknown> }).grant;
+  const withdrawRaw = baseNyang.withdraw ?? {};
   const withdraw = {
-    min: baseNyang.withdraw?.min ?? baseNyang.withdrawMin ?? 10,
-    unit: baseNyang.withdraw?.unit ?? baseNyang.withdrawStep ?? 10,
-    dailyLimit: baseNyang.withdraw?.dailyLimit ?? 50,
-    resetTimeKST: baseNyang.withdraw?.resetTimeKST ?? "00:00",
-    note: baseNyang.withdraw?.note,
+    min: Number(withdrawRaw.min ?? baseNyang.withdrawMin ?? 10),
+    unit: Number(withdrawRaw.unit ?? baseNyang.withdrawStep ?? 10),
+    dailyLimit: Number(withdrawRaw.dailyLimit ?? 50),
+    resetTimeKST: String(withdrawRaw.resetTimeKST ?? "00:00"),
+    note: typeof withdrawRaw.note === "string" ? withdrawRaw.note : undefined,
   };
+  const maxPerUserKRW =
+    baseNyang.maxPerUserKRW ??
+    baseNyang.maxEarnPerUser ??
+    417;
   return {
     ...raw,
     currency: currency as OpsEconomy["currency"],
     pawSources: pawSources as OpsEconomy["pawSources"],
     nyangCoin: {
       ...baseNyang,
+      maxPerUserKRW,
+      oncePerTossAccount:
+        baseNyang.oncePerTossAccount ??
+        Boolean(grant?.oncePerTossAccountPerReward) ??
+        true,
+      serverVerified: baseNyang.serverVerified ?? Boolean(grant?.serverVerified) ?? true,
+      idempotencyKey:
+        baseNyang.idempotencyKey ??
+        (typeof grant?.idempotencyKey === "string"
+          ? grant.idempotencyKey
+          : "tossUserKey + rewardId"),
+      toTossPointRate: baseNyang.toTossPointRate ?? 1,
       withdraw,
       withdrawMin: withdraw.min,
       withdrawStep: withdraw.unit,

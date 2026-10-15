@@ -10,6 +10,19 @@ type TitleRibbonProps = {
   onOpen: () => void;
 };
 
+/** Highlight the first title hint inside empty ribbon copy (e.g. 새내기 집사). */
+function EmptyRibbonCopy({ copy }: { copy: string }) {
+  const match = copy.match(/^(칭호 없음 · )(.+?)( 받기.*)$/);
+  if (!match) return <>{copy}</>;
+  return (
+    <>
+      {match[1]}
+      <em>{match[2]}</em>
+      {match[3]}
+    </>
+  );
+}
+
 export function TitleRibbon({
   id = "title-ribbon",
   equippedName,
@@ -30,7 +43,9 @@ export function TitleRibbon({
       {hasTitle && equippedId ? (
         <img className="title-ribbon-badge" src={achvBadgeSrc(equippedId)} alt="" width={16} height={16} />
       ) : null}
-      <span className="title-ribbon-text">{hasTitle ? equippedName : emptyCopy}</span>
+      <span className="title-ribbon-text">
+        {hasTitle ? equippedName : <EmptyRibbonCopy copy={emptyCopy} />}
+      </span>
       <span className="title-ribbon-chevron" aria-hidden="true">
         ›
       </span>

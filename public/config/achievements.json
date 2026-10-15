@@ -1,203 +1,241 @@
 {
   "_version": "achievements-1.1 (2026-10-15)",
-  "_note": "칭호(업적) 정의. 진행값은 서버에서 계산하고 POST /achievements/claim 으로 보상 수령(멱등키 tossUserKey+requestId). 배지: /assets/achv/badges/{id}.svg",
-  "emptyRibbonCopy": "칭호 없음 · 새내기 집사 받기",
-  "tabs": [
-    { "id": "all", "labelKo": "전체" },
-    { "id": "collect", "labelKo": "수집" },
-    { "id": "draw", "labelKo": "뽑기" },
-    { "id": "attend", "labelKo": "출석" },
-    { "id": "room", "labelKo": "방꾸미기" },
-    { "id": "exchange", "labelKo": "교환" }
-  ],
-  "titles": [
+  "claimMode": "manual",
+  "claimApi": "POST /achievements/claim {ids[]|'all', requestId} · 계정당 업적 id별 1회 · 서버 카운터 기준",
+  "ui": {
+    "where": "메인·방의 칭호 리본을 누르면 칭호 시트 (메뉴 행 없음)",
+    "states": [
+      "locked(진행 중, n/목표)",
+      "claimable(빛나는 [보상 받기])",
+      "claimed(칭호 획득 → [달기])"
+    ],
+    "titleEquip": "얻은 칭호 1개를 메인(CAT. 로고 아래)·방 리본에 달아요. 없으면 \"칭호 없음\" 빈 리본",
+    "badge": "받을 업적이 있으면 리본·해당 칭호 칸·해당 탭에 빨간 점 (메뉴 아이콘엔 안 띄워요)"
+  },
+  "totals": {
+    "nyangCoin": 81,
+    "paw": 2820
+  },
+  "items": [
     {
-      "id": "newbie_butler",
-      "nameKo": "새내기 집사",
-      "tab": "collect",
-      "seriesId": "collect_cards",
-      "seriesOrder": 1,
-      "condition": { "metric": "uniqueCards", "target": 1 },
-      "conditionCopy": "고양이 카드 1장 모으기",
-      "reward": { "nyangCoin": 1, "paw": 20 }
+      "id": "first_meet",
+      "category": "수집",
+      "title": "새내기 집사",
+      "name": "첫 고양이 만나기",
+      "condition": "도감 1장",
+      "reward": {
+        "nyangCoin": 1,
+        "paw": 20
+      }
     },
     {
-      "id": "rookie_butler",
-      "nameKo": "초보 집사",
-      "tab": "collect",
-      "seriesId": "collect_cards",
-      "seriesOrder": 2,
-      "condition": { "metric": "uniqueCards", "target": 10 },
-      "conditionCopy": "고양이 카드 10장 모으기",
-      "reward": { "nyangCoin": 2, "paw": 40 }
+      "id": "dex_10",
+      "category": "수집",
+      "title": "골목 산책냥",
+      "name": "도감 10장 모으기",
+      "condition": "도감 10장",
+      "reward": {
+        "nyangCoin": 2,
+        "paw": 50
+      }
     },
     {
-      "id": "eager_butler",
-      "nameKo": "열혈 집사",
-      "tab": "collect",
-      "seriesId": "collect_cards",
-      "seriesOrder": 3,
-      "condition": { "metric": "uniqueCards", "target": 30 },
-      "conditionCopy": "고양이 카드 30장 모으기",
-      "reward": { "nyangCoin": 5, "paw": 80 }
+      "id": "dex_30",
+      "category": "수집",
+      "title": "동네 고양이 반장",
+      "name": "도감 30장 모으기",
+      "condition": "도감 30장",
+      "reward": {
+        "nyangCoin": 3,
+        "paw": 100
+      }
     },
     {
-      "id": "veteran_butler",
-      "nameKo": "베테랑 집사",
-      "tab": "collect",
-      "seriesId": "collect_cards",
-      "seriesOrder": 4,
-      "condition": { "metric": "uniqueCards", "target": 60 },
-      "conditionCopy": "고양이 카드 60장 모으기",
-      "reward": { "nyangCoin": 10, "paw": 150 }
+      "id": "dex_60",
+      "category": "수집",
+      "title": "냥덕 학자",
+      "name": "도감 60장 모으기",
+      "condition": "도감 60장",
+      "reward": {
+        "nyangCoin": 5,
+        "paw": 200
+      }
     },
     {
-      "id": "dex_master",
-      "nameKo": "도감 달인",
-      "tab": "collect",
-      "seriesId": "collect_cards",
-      "seriesOrder": 5,
-      "condition": { "metric": "uniqueCards", "target": 90 },
-      "conditionCopy": "고양이 카드 90장 모으기",
-      "reward": { "nyangCoin": 20, "paw": 300 }
+      "id": "dex_90",
+      "category": "수집",
+      "title": "고양이 백과사전",
+      "name": "도감 90장 모으기",
+      "condition": "도감 90장",
+      "reward": {
+        "nyangCoin": 8,
+        "paw": 300
+      }
     },
     {
-      "id": "first_draw",
-      "nameKo": "첫 만남",
-      "tab": "draw",
-      "seriesId": "draw_count",
-      "seriesOrder": 1,
-      "condition": { "metric": "lifetimeDraws", "target": 1 },
-      "conditionCopy": "카드 뽑기 1회",
-      "reward": { "nyangCoin": 1, "paw": 10 }
+      "id": "first_5star",
+      "category": "수집",
+      "title": "반짝별 수집가",
+      "name": "5★ 카드 처음 만나기",
+      "condition": "5★ 1장",
+      "reward": {
+        "nyangCoin": 2,
+        "paw": 50
+      }
     },
     {
-      "id": "draw_10",
-      "nameKo": "뽑기 습관",
-      "tab": "draw",
-      "seriesId": "draw_count",
-      "seriesOrder": 2,
-      "condition": { "metric": "lifetimeDraws", "target": 10 },
-      "conditionCopy": "카드 뽑기 10회",
-      "reward": { "nyangCoin": 2, "paw": 30 }
+      "id": "first_legend",
+      "category": "수집",
+      "title": "전설을 본 냥이",
+      "name": "레전드 카드 처음 만나기",
+      "condition": "레전드 1장",
+      "reward": {
+        "nyangCoin": 3,
+        "paw": 100
+      }
     },
     {
-      "id": "draw_30",
-      "nameKo": "행운 수집가",
-      "tab": "draw",
-      "seriesId": "draw_count",
-      "seriesOrder": 3,
-      "condition": { "metric": "lifetimeDraws", "target": 30 },
-      "conditionCopy": "카드 뽑기 30회",
-      "reward": { "nyangCoin": 5, "paw": 80 }
+      "id": "first_set",
+      "category": "수집",
+      "title": "한 우물 집사",
+      "name": "품종 세트 처음 완성",
+      "condition": "품종 세트 1개",
+      "reward": {
+        "nyangCoin": 2,
+        "paw": 100
+      }
     },
     {
-      "id": "star5_finder",
-      "nameKo": "별빛 집사",
-      "tab": "draw",
-      "condition": { "metric": "ownedFiveStar", "target": 1 },
-      "conditionCopy": "5성 고양이 1장 모으기",
-      "reward": { "nyangCoin": 5, "paw": 50 }
+      "id": "draw_50",
+      "category": "뽑기",
+      "title": "행운 사냥꾼",
+      "name": "카드 50번 뽑기",
+      "condition": "뽑기 50회",
+      "reward": {
+        "nyangCoin": 2,
+        "paw": 50
+      }
     },
     {
-      "id": "attend_1",
-      "nameKo": "출석 시작",
-      "tab": "attend",
-      "seriesId": "attend_days",
-      "seriesOrder": 1,
-      "condition": { "metric": "attendanceDays", "target": 1 },
-      "conditionCopy": "출석 1일",
-      "reward": { "nyangCoin": 1, "paw": 10 }
+      "id": "draw_300",
+      "category": "뽑기",
+      "title": "럭키 앞발",
+      "name": "카드 300번 뽑기",
+      "condition": "뽑기 300회",
+      "reward": {
+        "nyangCoin": 5,
+        "paw": 150
+      }
     },
     {
-      "id": "attend_7",
-      "nameKo": "일주일 집사",
-      "tab": "attend",
-      "seriesId": "attend_days",
-      "seriesOrder": 2,
-      "condition": { "metric": "attendanceDays", "target": 7 },
-      "conditionCopy": "출석 7일",
-      "reward": { "nyangCoin": 3, "paw": 40 }
+      "id": "draw_1000",
+      "category": "뽑기",
+      "title": "행운의 마스터냥",
+      "name": "카드 1000번 뽑기",
+      "condition": "뽑기 1000회",
+      "reward": {
+        "nyangCoin": 10,
+        "paw": 400
+      }
     },
     {
-      "id": "attend_30",
-      "nameKo": "한 달 단짝",
-      "tab": "attend",
-      "seriesId": "attend_days",
-      "seriesOrder": 3,
-      "condition": { "metric": "attendanceDays", "target": 30 },
-      "conditionCopy": "출석 30일",
-      "reward": { "nyangCoin": 10, "paw": 100 }
+      "id": "att_7",
+      "category": "출석",
+      "title": "맨날 보고프냥",
+      "name": "출석 7일",
+      "condition": "누적 출석 7일",
+      "reward": {
+        "nyangCoin": 2,
+        "paw": 50
+      }
     },
     {
-      "id": "attend_100",
-      "nameKo": "백일 집사",
-      "tab": "attend",
-      "seriesId": "attend_days",
-      "seriesOrder": 4,
-      "condition": { "metric": "attendanceDays", "target": 100 },
-      "conditionCopy": "출석 100일",
-      "reward": { "nyangCoin": 30, "paw": 300 }
+      "id": "att_30",
+      "category": "출석",
+      "title": "단골 집사",
+      "name": "출석 30일",
+      "condition": "누적 출석 30일",
+      "reward": {
+        "nyangCoin": 5,
+        "paw": 150
+      }
     },
     {
-      "id": "room_first_place",
-      "nameKo": "첫 꾸미기",
-      "tab": "room",
-      "condition": { "metric": "placedItems", "target": 1 },
-      "conditionCopy": "방에 아이템 1개 배치하기",
-      "reward": { "nyangCoin": 1, "paw": 20 }
+      "id": "att_100",
+      "category": "출석",
+      "title": "백일이냥",
+      "name": "출석 100일",
+      "condition": "누적 출석 100일",
+      "reward": {
+        "nyangCoin": 10,
+        "paw": 400
+      }
     },
     {
-      "id": "room_own_10",
-      "nameKo": "인테리어 입문",
-      "tab": "room",
-      "condition": { "metric": "ownedItems", "target": 10 },
-      "conditionCopy": "가구·소품 10종 보유",
-      "reward": { "nyangCoin": 3, "paw": 50 }
+      "id": "room_10",
+      "category": "방꾸미기",
+      "title": "꾹꾹이 인테리어",
+      "name": "가구·소품 10개 놓기",
+      "condition": "배치 10개 (동시)",
+      "reward": {
+        "nyangCoin": 2,
+        "paw": 50
+      }
     },
     {
-      "id": "room_cozy_5",
-      "nameKo": "아늑한 방",
-      "tab": "room",
-      "condition": { "metric": "cozyLevel", "target": 5 },
-      "conditionCopy": "코지 레벨 5 달성",
-      "reward": { "nyangCoin": 5, "paw": 80 }
+      "id": "room_30",
+      "category": "방꾸미기",
+      "title": "아늑함 장인",
+      "name": "가구·소품 30개 놓기",
+      "condition": "배치 30개 (동시, 모든 방)",
+      "reward": {
+        "nyangCoin": 4,
+        "paw": 150
+      }
     },
     {
-      "id": "room_unlock_2",
-      "nameKo": "두 번째 집",
-      "tab": "room",
-      "condition": { "metric": "unlockedRooms", "target": 2 },
-      "conditionCopy": "방 2개 해금",
-      "reward": { "nyangCoin": 5, "paw": 100 }
+      "id": "room_unlock2",
+      "category": "방꾸미기",
+      "title": "두 집 살림냥",
+      "name": "두 번째 방 열기",
+      "condition": "방 2개 해금",
+      "reward": {
+        "nyangCoin": 3,
+        "paw": 100
+      }
     },
     {
-      "id": "exchange_1",
-      "nameKo": "첫 교환",
-      "tab": "exchange",
-      "seriesId": "exchange_count",
-      "seriesOrder": 1,
-      "condition": { "metric": "dupExchanges", "target": 1 },
-      "conditionCopy": "중복 카드 교환 1회",
-      "reward": { "nyangCoin": 1, "paw": 10 }
+      "id": "room_all",
+      "category": "방꾸미기",
+      "title": "고양이 건축왕",
+      "name": "모든 방 열기",
+      "condition": "방 전부 해금",
+      "reward": {
+        "nyangCoin": 5,
+        "paw": 200
+      }
     },
     {
-      "id": "exchange_10",
-      "nameKo": "알뜰 집사",
-      "tab": "exchange",
-      "seriesId": "exchange_count",
-      "seriesOrder": 2,
-      "condition": { "metric": "dupExchanges", "target": 10 },
-      "conditionCopy": "중복 카드 교환 10회",
-      "reward": { "nyangCoin": 3, "paw": 50 }
+      "id": "exch_20",
+      "category": "교환",
+      "title": "알뜰 집사",
+      "name": "중복 카드 20장 교환",
+      "condition": "교환 누적 20장",
+      "reward": {
+        "nyangCoin": 2,
+        "paw": 50
+      }
     },
     {
-      "id": "exchange_paw_500",
-      "nameKo": "포인트 장인",
-      "tab": "exchange",
-      "condition": { "metric": "dupExchangePaw", "target": 500 },
-      "conditionCopy": "교환으로 발바닥 포인트 500P 모으기",
-      "reward": { "nyangCoin": 5, "paw": 80 }
+      "id": "exch_100",
+      "category": "교환",
+      "title": "냥시장 큰손",
+      "name": "중복 카드 100장 교환",
+      "condition": "교환 누적 100장",
+      "reward": {
+        "nyangCoin": 5,
+        "paw": 150
+      }
     }
   ]
 }

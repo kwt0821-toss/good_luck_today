@@ -8,6 +8,7 @@ import { nyNotify } from "./lib/nyangNotify";
 import { MenuPanel } from "./components/MenuPanel";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import {
+  EMPTY_RIBBON_COPY,
   buildAchvProgressList,
   claimableAchvCount,
   computeAchvMetrics,
@@ -1110,9 +1111,9 @@ export default function App() {
               ? {
                   equippedId: ops.equippedTitleId || null,
                   equippedName:
-                    achvList.find((item) => item.def.id === ops.equippedTitleId)?.def.nameKo ??
+                    achvList.find((item) => item.def.id === ops.equippedTitleId)?.def.title ??
                     null,
-                  emptyCopy: achvConfig?.emptyRibbonCopy ?? "칭호 없음 · 새내기 집사 받기",
+                  emptyCopy: EMPTY_RIBBON_COPY,
                   hasClaimable: claimableAchvCount(achvList) > 0,
                 }
               : undefined
@@ -1216,8 +1217,8 @@ export default function App() {
           titleRibbon={{
             equippedId: ops.equippedTitleId || null,
             equippedName:
-              achvList.find((item) => item.def.id === ops.equippedTitleId)?.def.nameKo ?? null,
-            emptyCopy: achvConfig?.emptyRibbonCopy ?? "칭호 없음 · 새내기 집사 받기",
+              achvList.find((item) => item.def.id === ops.equippedTitleId)?.def.title ?? null,
+            emptyCopy: EMPTY_RIBBON_COPY,
             hasClaimable: claimableAchvCount(achvList) > 0,
           }}
           onDraw={() => void beginDraw()}

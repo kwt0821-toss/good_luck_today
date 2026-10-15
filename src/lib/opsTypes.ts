@@ -5,7 +5,16 @@ export type NyangCoinReward = { paw: number; nyangCoin: number };
 export type OpsEconomy = {
   currency: {
     paw: { nameKo: string; startBalance: number };
-    nyangCoin: { nameKo: string; unit: string; note?: string };
+    nyangCoin: {
+      nameKo: string;
+      unit?: string;
+      icon?: string;
+      startBalance?: number;
+      toTossPoint?: { rate?: number; unit?: string; text?: string };
+      earnOnly?: string;
+      spendInApp?: boolean;
+      note?: string;
+    };
   };
   pawSources: {
     rewardedAd: {
@@ -15,15 +24,21 @@ export type OpsEconomy = {
       adType: string;
       grantOn: string;
     };
-    newCardFirstGet: NyangCoinReward & { note?: string };
-    /** Grade-based 냥코인 for first-time new cards (economy-1.7). */
-    nyangCoinByGrade?: {
-      breed_1to3: number;
-      breed_4: number;
-      breed_5: number;
-      special: number;
-      character: number;
-      legend: number;
+    newCardFirstGet: {
+      paw: number;
+      /** @deprecated flat amount — prefer nyangCoinByGrade */
+      nyangCoin?: number;
+      /** Grade-based 냥코인 (economy-1.7). */
+      nyangCoinByGrade?: {
+        b1: number;
+        b2: number;
+        b3: number;
+        b4: number;
+        b5: number;
+        special: number;
+        character: number;
+        legend: number;
+      };
       note?: string;
     };
     duplicateConvert: {
@@ -74,11 +89,17 @@ export type OpsEconomy = {
   /** Was tossPayout — withdraw / payout rules for 냥코인 → 토스포인트 */
   nyangCoin: {
     nameKo?: string;
-    maxPerUserKRW: number;
-    oncePerTossAccount: boolean;
-    serverVerified: boolean;
-    idempotencyKey: string;
+    /** Normalized from maxEarnPerUser when present (economy-1.7). */
+    maxPerUserKRW?: number;
+    maxEarnPerUser?: number;
+    formula?: string;
+    oncePerTossAccount?: boolean;
+    serverVerified?: boolean;
+    idempotencyKey?: string;
     toTossPointRate?: number;
+    maxWithdrawable?: number;
+    grant?: Record<string, unknown>;
+    sustainability?: Record<string, unknown>;
     /** @deprecated use withdraw.min / withdraw.unit */
     withdrawMin?: number;
     /** @deprecated use withdraw.unit */
@@ -89,6 +110,7 @@ export type OpsEconomy = {
       dailyLimit: number;
       resetTimeKST?: string;
       note?: string;
+      [key: string]: unknown;
     };
   };
   draws: {

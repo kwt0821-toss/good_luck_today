@@ -1,6 +1,6 @@
 {
  "_version": "economy-1.7 (2026-10-15)",
- "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요. 1.7: 새 카드 냥코인은 nyangCoinByGrade.",
+ "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
  "currency": {
   "paw": {
    "nameKo": "포인트(발바닥)",
@@ -8,8 +8,16 @@
   },
   "nyangCoin": {
    "nameKo": "냥코인",
-   "unit": "NYANG",
-   "note": "1냥코인 = 토스포인트 1원"
+   "icon": "ncoin/ncoin-*.png",
+   "startBalance": 0,
+   "toTossPoint": {
+    "rate": 1,
+    "unit": "KRW",
+    "text": "1냥코인 = 토스포인트 1원"
+   },
+   "earnOnly": "도감 보상(새 카드·세트·전체 완성)으로만 얻어요. 구매·광고·출석으로는 안 줘요.",
+   "spendInApp": false,
+   "note": "앱 안에서 쓰지 않고 토스포인트로 받기만 해요. 포인트(발바닥, paw)와 별개 화폐예요."
   }
  },
  "pawSources": {
@@ -22,8 +30,17 @@
   },
   "newCardFirstGet": {
    "paw": 20,
-   "nyangCoin": 1,
-   "note": "paw는 공통. 냥코인 실제 지급은 nyangCoinByGrade(카드 등급별)."
+   "nyangCoinByGrade": {
+    "b1": 1,
+    "b2": 1,
+    "b3": 1,
+    "b4": 5,
+    "b5": 10,
+    "special": 5,
+    "character": 7,
+    "legend": 50
+   },
+   "note": "1–3★ 1 · 4★ 5 · 5★ 10 · 밈(스페셜) 5 · 캐릭터 7 · 레전드 50"
   },
   "duplicateConvert": {
    "common_1to2star": 10,
@@ -37,8 +54,8 @@
   "setComplete": {
    "breed_1to5star": {
     "paw": 200,
-    "count": 18,
-    "nyangCoin": 10
+    "nyangCoin": 10,
+    "count": 18
    },
    "special": {
     "paw": 300,
@@ -57,20 +74,107 @@
     "nyangCoin": 100
    }
   },
-  "attendance": "starter.json → attendance",
-  "nyangCoinByGrade": {
-   "breed_1to3": 1,
-   "breed_4": 5,
-   "breed_5": 10,
-   "special": 5,
-   "character": 7,
-   "legend": 50,
-   "note": "special = 밈 카드. 계정당 카드·세트·fullDex 보상 id별 1회."
-  }
+  "attendance": {
+   "ref": "starter.json → attendance",
+   "firstWeek": "아이템 7개(출석 한정)",
+   "weeklyCycle": {
+    "pawDays1to6": [
+     10,
+     10,
+     15,
+     15,
+     20,
+     20
+    ],
+    "pawPerWeek": 90,
+    "day7": "홀수 주기 출석 선물 상자 / 짝수 주기 확률업 뽑기권 1장 (mode로 변경 가능)"
+   },
+   "milestones": [
+    30,
+    100
+   ],
+   "noReset": true
+  },
+  "claimMode": "manual"
  },
- "dexRewards": {
-  "claimMode": "manual",
-  "note": "도감에서 직접 수령. 자동 지급 없음. 새 카드 냥코인=nyangCoinByGrade, paw=newCardFirstGet.paw. 세트/fullDex는 setComplete. 보상 id: newCard:{cardId}, set:breed:{id}, set:{special|character|legend}, fullDex. 계정당 1회(tossUserKey+rewardId), POST /dex/rewards/claim 멱등키 tossUserKey+requestId."
+ "nyangCoin": {
+  "maxEarnPerUser": 988,
+  "formula": "새 카드 597 (54×1 + 18×5 + 18×10 + 9×5 + 4×7 + 4×50) + 세트 210 (18×10 + 3×10) + 도감 완성 100 + 업적 81 = 988",
+  "grant": {
+   "oncePerTossAccountPerReward": true,
+   "serverVerified": true,
+   "idempotencyKey": "tossUserKey + rewardId",
+   "creditTo": "user.nyangCoinBalance (보상함에서 '받기' 또는 자동 적립)"
+  },
+  "withdraw": {
+   "unit": 10,
+   "min": 10,
+   "maxPerRequest": "floor(balance/10)*10",
+   "remainderStays": true,
+   "serverValidated": true,
+   "validate": [
+    "amount % 10 == 0",
+    "amount >= 10",
+    "amount <= balance (서버 잔액 기준)",
+    "계정당 동시 요청 1건 (row lock)"
+   ],
+   "idempotencyKey": "tossUserKey + withdrawRequestId (클라이언트 UUID, 재시도 시 같은 값)",
+   "payout": "서버→서버로 토스 포인트 지급 API(앱인토스 프로모션/포인트 지급) 호출. 클라이언트는 직접 호출하지 않아요.",
+   "flow": [
+    "POST /wallet/withdraw {amount, requestId}",
+    "서버: 검증 → 잔액 차감(hold) → 기록 status=pending",
+    "토스 지급 API 호출(requestId 전달)",
+    "성공 → status=done / 실패 → 잔액 복구, status=failed",
+    "응답: {status, balance, historyItem}"
+   ],
+   "states": [
+    "pending",
+    "done",
+    "failed"
+   ],
+   "onUnknownResult": "타임아웃 등 결과 불명 → pending 유지, 같은 requestId로 재조회/재시도 (중복 지급 금지)",
+   "dailyLimit": 50,
+   "history": {
+    "keepDays": 365,
+    "fields": [
+     "requestId",
+     "amount",
+     "status",
+     "requestedAt",
+     "doneAt"
+    ]
+   },
+   "budgetAlertKRW": null,
+   "policyCheck": "⚠ 토스 포인트 지급 API의 최소/최대 금액, 사전 예산 충전, 호출 한도, 앱 내 재화→토스포인트 전환 허용 범위는 앱인토스 콘솔/담당자 확인 필요 (이 파일은 가정)",
+   "dailyLimitUnit": "토스포인트 원 (= 냥코인 개수), KST 00:00 초기화",
+   "ui": "−/+ 스테퍼 (10 단위, 최소 10, 최대 min(잔액 내림 10단위, 오늘 남은 한도))"
+  },
+  "maxWithdrawable": 980,
+  "sustainability": {
+   "model": "모든 뽑기에 광고(짧은 광고 3 + 긴 광고 1)가 붙어 있어 냥코인 지급은 광고 노출과 함께 늘어나요",
+   "simMedianKRW": {
+    "engaged(3+1/일)": {
+     "d7": 65,
+     "d30": 263,
+     "d90": 571,
+     "d365": 907
+    },
+    "casual(1/일)": {
+     "d7": 14,
+     "d30": 58,
+     "d90": 166,
+     "d365": 482,
+     "d1460": 787
+    },
+    "note": "업적 제외, /workspace/sim/payout.py"
+   },
+   "breakevenGrossEcpmKRW": "초반 뽑기 광고 1회당 지급 ≈ 2.3원 → 손익분기 총 eCPM ≈ 3,300원 (운영비 30% 차감), 수수료 15% 부활 시 ≈ 3,900원",
+   "watch": [
+    "레전드 50 한 번에 크게 지급 → 일 출금 한도 50으로 분산",
+    "다계정 어뷰징: 토스 계정당 1회 지급 + antiAbuse",
+    "실제 eCPM이 손익분기보다 낮으면 4★/5★ 지급을 먼저 낮추기"
+   ]
+  }
  },
  "draws": {
   "resetTimeKST": "00:00",
@@ -95,8 +199,9 @@
     "slot": "up",
     "type": "rateUp",
     "ad": "long",
+    "perDay": 1,
     "adSeconds": 30,
-    "perDay": 1
+    "adSecondsNote": "확률업 버튼 말풍선 문구('{adSeconds}초 광고 보고 확률업')용. 실제 긴 광고 길이에 맞춰 바꿔요(앱인토스 광고 길이는 확인 필요)"
    }
   ],
   "normalPerDay": 3,
@@ -136,17 +241,12 @@
     "draw",
     "paw"
    ],
-   "rewardOn": "complete callback only",
-   "adGroupId": "ait.v2.live.5d314f95538c4737",
-   "note": "짧은 광고 (일반 뽑기·포인트 받기)"
+   "rewardOn": "complete callback only"
   },
   "long": {
    "use": [
     "rateUpDraw"
-   ],
-   "adGroupId": "ait.v2.live.3e9536c7ec2d4ae7",
-   "adSeconds": 30,
-   "note": "30초 리워드 광고 (확률업)"
+   ]
   },
   "dailyCaps": {
    "drawAds": 3,
@@ -227,19 +327,67 @@
   "simulation": "activeUser(광고 8회/일, 뽑기 4회/일, 하루 최대 3개 구매) 중앙값: Lv5 12일차, Lv8 28일차"
  },
  "shop": {
+  "tierPriceRange": {
+   "small": [
+    80,
+    150
+   ],
+   "normal": [
+    200,
+    400
+   ],
+   "large": [
+    500,
+    900
+   ],
+   "wall": [
+    100,
+    250
+   ],
+   "tile": [
+    200,
+    400
+   ],
+   "legend": [
+    1500,
+    null
+   ]
+  },
+  "tilesBuyOnce": true,
+  "tilesPaintUnlimited": true,
+  "legendItemsRequire": "레전드 카드 보유 (requireCards 목록) — 현재 카탈로그엔 해당 아이템 없음",
+  "prices": "prices.json",
   "excludeSources": [
    "attendance"
   ],
-  "note": "attendanceOnly 아이템은 상점·구매·서랍 기본지급·방 해금 선물·다른 보상 풀에서 제외. 출석 API만 지급.",
+  "attendanceOnlyRule": "prices.json에서 source==\"attendance\" / purchasable=false 아이템은 상점 목록·가격표·다른 보상 풀(방 해금 선물, 이벤트, 상자)에 넣지 않아요. 지급은 서버 출석 API에서만.",
   "tickets": {
    "rateUpTicket": {
-    "ticketType": "rateUp",
+    "nameKo": "확률업 뽑기권",
     "pricePaw": 200,
-    "dayLimit": 2,
-    "weekLimit": 7,
-    "weekReset": "monday 00:00 KST",
-    "note": "포인트로 확률업 뽑기권 구매. 일반 뽑기권은 만들지 않음. 보유 상한은 tickets.rateUpTicket.maxHold(3)과 출석 지급분 공유. 멱등키 tossUserKey+requestId."
-   }
+    "weeklyCap": 7,
+    "dailyCap": 2,
+    "weekResetKST": "MON 00:00",
+    "dayResetKST": "00:00",
+    "buyableWhen": "오늘 광고 확률업(rateUpPerDay)을 이미 썼거나 광고를 보기 싫을 때도 구매 가능. 단 보유 수 < tickets.rateUpTicket.maxHold",
+    "sharesHoldWith": "tickets.rateUpTicket (출석 7일차 지급분과 합쳐 최대 3장)",
+    "separateFromDailyCap": true,
+    "serverValidated": true,
+    "validate": [
+     "paw 잔액 ≥ 가격 (서버 잔액)",
+     "이번 주 구매 수 < weeklyCap",
+     "오늘 구매 수 < dailyCap",
+     "보유 < maxHold"
+    ],
+    "idempotencyKey": "tossUserKey + purchaseRequestId (클라이언트 UUID)",
+    "atomic": "paw 차감 + 뽑기권 +1 + 구매 기록을 한 트랜잭션으로",
+    "api": "POST /shop/tickets/buy {ticketType:'rateUp', requestId} → {paw, ticketsHeld, weekBought, dayBought}"
+   },
+   "normalTicket": {
+    "enabled": false,
+    "_rejected": "일반 뽑기권은 짧은 광고 뽑기를 대체하고 방꾸미기 완료를 ~317일로 늦춰서 넣지 않아요 (sim D/E 참고)"
+   },
+   "_sim": "/workspace/sim/sim.py opt — 최대 참여 유저, 도감 먼저 정책: 도감 중앙값 285→198일, p90 436→301일, 방꾸미기 완료 144→268일"
   }
  },
  "rooms": [
@@ -304,12 +452,12 @@
    "appliesTo": [
     "rewardedAd"
    ],
-   "note": "광고 포인트만 2배 (냥코인 지급·중복 전환은 제외)"
+   "note": "광고 포인트만 2배 (냥코인·중복 전환은 제외)"
   },
   "monthlyCardPack": {
    "enabled": false,
    "_proposal": true,
-   "note": "매달 신규 카드 세트 추가 시 도감·totalCards·nyangCoin 재계산 필요"
+   "note": "매달 신규 카드 세트 추가 시 도감·totalCards·nyangCoin.maxEarnPerUser 재계산 필요"
   },
   "seasonalRooms": {
    "enabled": false,
@@ -337,7 +485,9 @@
   "drawResultServerDecided": true,
   "rateLimit": "동일 계정 뽑기/광고 보상 요청 1초 1회",
   "deviceChange": "계정 기준 지급 (기기 무관)",
-  "nyangCoinOncePerAccount": true
+  "attendance": "출석은 서버 시각(KST) 기준 계정당 하루 1회, attendanceDays는 서버에서만 증가. 기념 보상은 계정당 milestone별 1회(멱등키 tossUserKey+attendanceMilestone:{days}).",
+  "nyangCoinGrantOncePerReward": true,
+  "withdraw": "출금은 서버에서만 검증·지급(10 단위, 잔액 이하, requestId 멱등, 계정당 동시 1건). 클라이언트 금액은 신뢰하지 않아요."
  },
  "files": {
   "prices": "prices.json",
@@ -346,31 +496,41 @@
  },
  "tickets": {
   "rateUpTicket": {
-   "nameKo": "확률업 이용권",
-   "grantsRateUpWithoutAd": true,
-   "separateDailyCap": true,
+   "nameKo": "확률업 뽑기권",
+   "use": "광고 없이 확률업 뽑기 1회",
+   "separateFromDailyCap": true,
    "maxHold": 3,
-   "note": "광고 없이 확률업 1회. 하루 rateUp 한도와 별개. 보유 상한 maxHold."
+   "expires": null,
+   "sources": [
+    "attendance.weeklyCycle.day7",
+    "shop.tickets.rateUpTicket (200P)"
+   ],
+   "rates": "draws.rates_proposal.rateUp"
   }
  },
- "nyangCoin": {
-  "maxPerUserKRW": 907,
-  "formula": "107×1 + 18×10 + 3×10 + 100",
-  "oncePerTossAccount": true,
-  "serverVerified": true,
-  "idempotencyKey": "tossUserKey + requestId",
-  "budgetAlertKRW": null,
-  "nameKo": "냥코인",
-  "toTossPointRate": 1,
-  "withdrawMin": 10,
-  "withdrawStep": 10,
-  "withdraw": {
-   "min": 10,
-   "unit": 10,
-   "dailyLimit": 50,
-   "resetTimeKST": "00:00",
-   "note": "KST 00:00 리셋. 오늘 합계는 done+pending만 (failed 제외). POST /wallet/withdraw 409 DAILY_LIMIT."
+ "dexRewards": {
+  "claimMode": "manual",
+  "autoCredit": false,
+  "where": "도감 화면에서만 받기 (새 카드 슬롯 코인 배지 / 카드 상세 '받기' / 세트 행·탭 헤더 '완성 보상 받기' / 헤더 '모두 받기')",
+  "rewardIds": {
+   "newCard": "newCard:{cardId}",
+   "breedSet": "set:breed:{breedId}",
+   "group": "set:{special|character|legend}",
+   "fullDex": "fullDex"
   },
-  "maxNote": "새 카드 등급별 597 + 세트·전체 310 = 907"
+  "amounts": "newCardFirstGet / setComplete.* (nyangCoin + paw)",
+  "createOn": "카드 획득 확정 시 서버가 claimable 보상 생성 (광고 완료 콜백 이후)",
+  "expires": null,
+  "persist": "받을 때까지 무기한 보관",
+  "claimApi": "POST /dex/rewards/claim {rewardIds:[...]|'all', requestId} → {claimed:[{id,nyangCoin,paw}], pawBalance, nyangCoinBalance, unclaimedCount}",
+  "idempotency": "보상 id별 계정당 1회(유니크 키 tossUserKey+rewardId) + requestId 재시도 시 같은 응답",
+  "atomic": "지급 + claimed 표시 한 트랜잭션",
+  "badges": "unclaimedCount>0 → 메인 도감 아이콘 빨간 점, 도감 탭 점(해당 그룹), 메뉴 보상함 행 meta"
+ },
+ "achievements": {
+  "ref": "achievements.json",
+  "nyangCoinTotal": 81,
+  "pawTotal": 2820,
+  "claimMode": "manual"
  }
 }

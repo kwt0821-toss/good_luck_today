@@ -1,28 +1,36 @@
 .title-ribbon {
+  --ribbon-mint: #3ecf9a;
+  --ribbon-mint-ink: #0f3d2d;
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   max-width: min(280px, 78vw);
-  margin: 6px 0 0;
-  padding: 5px 10px 5px 8px;
+  height: 24px;
+  margin: 8px 0 0;
+  padding: 0 10px 0 6px;
   border: 0;
   border-radius: 999px;
-  background: rgba(34, 30, 58, 0.55);
-  color: #f3ebd7;
+  background: var(--ribbon-mint);
+  color: var(--ribbon-mint-ink);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1;
   cursor: pointer;
   text-align: left;
+  box-shadow: 0 2px 8px rgba(46, 170, 120, 0.28);
 }
 
 .title-ribbon.is-empty {
+  height: auto;
+  min-height: 24px;
+  padding: 4px 10px;
   background: transparent;
-  border: 1.5px dashed rgba(243, 235, 215, 0.45);
-  color: rgba(243, 235, 215, 0.78);
+  border: 1.5px dashed rgba(243, 235, 215, 0.5);
+  color: rgba(243, 235, 215, 0.82);
+  box-shadow: none;
 }
 
 .title-ribbon-badge {
@@ -40,6 +48,12 @@
   white-space: nowrap;
 }
 
+.title-ribbon-text em {
+  font-style: normal;
+  color: var(--ribbon-mint);
+  font-weight: 800;
+}
+
 .title-ribbon-chevron {
   flex: none;
   opacity: 0.75;
@@ -49,22 +63,25 @@
 
 .title-ribbon-dot {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 8px;
-  height: 8px;
+  top: -3px;
+  right: -3px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: #ff5a5a;
   box-shadow: 0 0 0 2px rgba(34, 30, 58, 0.9);
 }
 
-/* Room header sits on lighter chrome — keep contrast. */
-.lucky-header .title-ribbon {
-  background: rgba(28, 24, 46, 0.72);
-}
-
+/* Room header sits on lighter chrome — keep contrast for empty state. */
 .lucky-header .title-ribbon.is-empty {
-  background: transparent;
   border-color: rgba(34, 30, 58, 0.35);
   color: rgba(34, 30, 58, 0.72);
+}
+
+.lucky-header .title-ribbon.is-empty .title-ribbon-text em {
+  color: #2bb87f;
+}
+
+.lucky-header .title-ribbon-dot {
+  box-shadow: 0 0 0 2px #f7f1e6;
 }
