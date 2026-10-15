@@ -276,9 +276,11 @@ export function RoomDrawer({
     pressOrigin.current = null;
   };
 
-  const openInfo = (item: RoomItem) => {
+  const openInfo = (item: RoomItem, fromLongPress = false) => {
     cancelLongPressTimer();
-    longPressArmed.current = true;
+    // Only suppress the trailing click after a real long-press. Setting this on a
+    // normal tap (e.g. previewed/depleted cell) ate the next locked-item tap.
+    if (fromLongPress) longPressArmed.current = true;
     setInfoItem(item);
   };
 
@@ -300,7 +302,7 @@ export function RoomDrawer({
       onPick(item);
       return;
     }
-    openInfo(item);
+    openInfo(item, false);
   };
 
   return (
@@ -472,7 +474,7 @@ export function RoomDrawer({
                 longPressArmed.current = false;
                 pressOrigin.current = { x: event.clientX, y: event.clientY, item };
                 longPressTimer.current = window.setTimeout(() => {
-                  openInfo(item);
+                  openInfo(item, true);
                 }, LONG_PRESS_MS);
               }}
               onPointerMove={(event) => {

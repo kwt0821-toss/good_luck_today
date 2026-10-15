@@ -1570,7 +1570,7 @@ export function MenuPanel({
                       }}
                     >
                       {model.ticketShop.ticketsHeld > 0 ? (
-                        "확률업 이용권 사용"
+                        "확률업 이용권으로 뽑기"
                       ) : (
                         <span className="ticket-shop-draw-cta">
                           <img

@@ -14,7 +14,8 @@ import "../styles/nyang-notify.css";
 
 const CAT = "/assets/notify/cat.png";
 const NCOIN = "/assets/notify/ncoin.png";
-const PAW = "/assets/menu/icon-paw-mini.svg";
+/** Cream snack / sheet backgrounds — use dark paw so the icon stays visible. */
+const PAW = "/assets/menu/icon-paw-mini-dark.svg";
 const TICKET = "/assets/menu/icon-ticket.svg";
 
 function Icon({ kind }: { kind: NyKind }) {

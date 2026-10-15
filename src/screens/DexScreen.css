@@ -1355,7 +1355,7 @@
 .dex-claim-chip-reward {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   flex: 0 0 auto;
   font-weight: 700;
   letter-spacing: 0.02em;

@@ -526,6 +526,7 @@ export function DrawRevealScreen({
           ) : null}
           <div className="t">
             TODAY&apos;S CARD
+            <br />
             <small>고양이가 골라 준 오늘의 행운</small>
           </div>
           <div className="draw-reveal-chip" id="chip">

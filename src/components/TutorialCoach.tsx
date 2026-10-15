@@ -60,6 +60,8 @@ function fixedFrameRect(): DOMRect {
 
 export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   const [rect, setRect] = useState<DOMRect | null>(null);
+  /** Primary target rect — finger parks here (e.g. ✓), not the hole center. */
+  const [fingerRect, setFingerRect] = useState<DOMRect | null>(null);
   const [frame, setFrame] = useState<DOMRect>(() =>
     typeof document === "undefined" ? new DOMRect(0, 0, 390, 844) : fixedFrameRect(),
   );
@@ -69,18 +71,26 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   useEffect(() => {
     if (!mark) {
       setRect(null);
+      setFingerRect(null);
       return;
     }
     const measure = () => {
       setFrame(fixedFrameRect());
       if (!mark.target) {
         setRect(null);
+        setFingerRect(null);
         return;
       }
       try {
         const els: Element[] = [];
         const primary = document.querySelector(mark.target);
-        if (primary) els.push(primary);
+        if (primary) {
+          els.push(primary);
+          const pr = primary.getBoundingClientRect();
+          setFingerRect(pr.width > 0 || pr.height > 0 ? pr : null);
+        } else {
+          setFingerRect(null);
+        }
         for (const sel of mark.alsoHighlight ?? []) {
           try {
             document.querySelectorAll(sel).forEach((node) => els.push(node));
@@ -111,6 +121,7 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
         setRect(new DOMRect(left, top, right - left, bottom - top));
       } catch {
         setRect(null);
+        setFingerRect(null);
       }
     };
     measure();
@@ -236,11 +247,17 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
       : hole.top + hole.height + BUBBLE_GAP;
     let above = placeAbove;
     // Room tutorial pick: park copy above the drawer so it doesn't sit on ITEMS chrome.
-    // Only when the spotlight hole is in/near the drawer — never for stage targets
-    // like #placement-confirm, where parking on the drawer covers the preview item.
+    // Never for stage targets like #placement-confirm — parking on the drawer covers
+    // the preview item / "여기 놓을게요!" copy.
+    const isStagePlacement =
+      Boolean(mark.target) &&
+      (mark.target.includes("placement-confirm") ||
+        (mark.alsoHighlight ?? []).some(
+          (sel) => sel.includes("placement-hud") || sel.includes("placement-toolbar"),
+        ));
     try {
       const drawer = document.querySelector(".lucky-drawer");
-      if (drawer) {
+      if (drawer && !isStagePlacement) {
         const drawerTop = drawer.getBoundingClientRect().top - frame.top;
         const holeNearDrawer = hole.top + hole.height >= drawerTop - 48;
         if (holeNearDrawer) {
@@ -435,7 +452,14 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
         {showFinger && hasHole ? (
           <div
             className="tut-finger"
-            style={{ left: hole.left + hole.width / 2, top: hole.top + hole.height / 2 }}
+            style={{
+              left: fingerRect
+                ? fingerRect.left - frame.left + fingerRect.width / 2
+                : hole.left + hole.width / 2,
+              top: fingerRect
+                ? fingerRect.top - frame.top + fingerRect.height / 2
+                : hole.top + hole.height / 2,
+            }}
             aria-hidden="true"
           >
             👆
