@@ -64,6 +64,7 @@
    "label": "MORE",
    "rows": [
     "rates",
+    "helpEarn",
     "notice",
     "invite",
     "settings"
@@ -150,6 +151,17 @@
    },
    "required": true,
    "_note": "확률 공개는 필수 — enabled=false로 내리지 마세요"
+  },
+  "helpEarn": {
+   "label": "냥코인·포인트 얻는 법",
+   "icon": "icon-help.svg",
+   "enabled": true,
+   "open": "sheet:helpEarn",
+   "meta": "",
+   "data": "help.json + economy.json ncoinSources / pawSources",
+   "badge": {
+    "type": "none"
+   }
   },
   "notice": {
    "label": "공지·이벤트",

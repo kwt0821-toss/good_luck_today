@@ -31,6 +31,7 @@ import { getWithdrawRules } from "./lib/mockWallet";
 import { configureNavigationBar, haptic } from "./lib/native";
 import { loadOpsConfig } from "./lib/opsConfig";
 import {
+  buildPawAdRequestId,
   confirmDrawAfterAd,
   grantPawAdReward,
 } from "./lib/opsRewards";
@@ -122,6 +123,8 @@ type AdSession = {
   kind: MockAdKind;
   purpose: "draw" | "paw" | "attendanceDay7";
   drawId?: string;
+  /** Idempotency key for point-ad reward (tossUserKey + requestId). */
+  requestId?: string;
   /** sdk = Toss full-screen ad group; mock = browser AdModal fallback. */
   presentation: "sdk" | "mock";
 };
@@ -576,7 +579,8 @@ export default function App() {
       return;
     }
     if (ad.purpose === "paw") {
-      const result = await grantPawAdReward(ops);
+      const requestId = ad.requestId || buildPawAdRequestId();
+      const result = await grantPawAdReward(ops, { requestId });
       setAd(null);
       setMenuOpen(true);
       if ("error" in result) {
@@ -590,6 +594,16 @@ export default function App() {
         return;
       }
       await persistOps(result.state);
+      if (result.adPawNyangCoin > 0) {
+        nyNotify({
+          key: `ad-paw-ncoin:${requestId}`,
+          kind: "reward",
+          title:
+            result.adPawNotice ??
+            `광고를 봐서 냥코인x${result.adPawNyangCoin}이 지급되었습니다.`,
+          count: result.adPawNyangCoin,
+        });
+      }
       nyNotify({
         key: "paw-ad",
         kind: "reward",
@@ -1299,7 +1313,12 @@ export default function App() {
         onOpenRoom={() => setScreen({ name: "room" })}
         onPawAd={() => {
           // Keep the menu open under the ad so we return to it afterward.
-          setAd({ kind: "short", purpose: "paw", presentation: startAdPresentation() });
+          setAd({
+            kind: "short",
+            purpose: "paw",
+            requestId: buildPawAdRequestId(),
+            presentation: startAdPresentation(),
+          });
         }}
         onAttendanceDay7Ad={() => runAttendanceDay7Ad()}
         onRateUpDraw={() => {

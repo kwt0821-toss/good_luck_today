@@ -189,27 +189,115 @@ export async function confirmDrawAfterAd(
   };
 }
 
-export async function grantPawAdReward(state: OpsState): Promise<
-  { state: OpsState; gained: number } | { error: string }
+function adPawRewardId(requestId: string) {
+  return `adPaw:${requestId}`;
+}
+
+export function buildPawAdRequestId(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `pawAd_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * Point-ad complete callback. Grants paw (+ weekend 2×) and adPaw 냥코인
+ * in the same transaction. Idempotent on tossUserKey + requestId.
+ */
+export async function grantPawAdReward(
+  state: OpsState,
+  body: { requestId: string },
+): Promise<
+  | {
+      state: OpsState;
+      gained: number;
+      adPawNyangCoin: number;
+      adPawNotice: string | null;
+    }
+  | { error: string }
 > {
   await delay(40);
+  const { requestId } = body;
+  if (!requestId) {
+    return { error: "requestId가 필요해요" };
+  }
   const config = await loadOpsConfig();
   const today = toKstDateKey();
   let next = applyOpsDailyReset(state, today);
+
+  const prior = (next.pawAdLedger ?? []).find((row) => row.requestId === requestId);
+  const notice =
+    config.economy.ncoinSources?.adPawRule?.notice ??
+    "광고를 봐서 냥코인x1이 지급되었습니다.";
+  if (prior) {
+    return {
+      state: next,
+      gained: prior.paw,
+      adPawNyangCoin: prior.nyangCoin,
+      adPawNotice: prior.nyangCoin > 0 ? notice : null,
+    };
+  }
+
   if (remainingPawAds(next, config) <= 0) {
     return { error: "오늘 포인트 광고를 모두 봤어요" };
   }
+
   let gained = config.economy.pawSources.rewardedAd.pawPerAd;
   if (isWeekendDoublePaw(config.economy)) {
     gained *= config.economy.events.weekendDoublePaw.multiplier;
   }
+
+  // Weekend 2× applies to paw only — 냥코인은 1개 그대로.
+  const wantNyang = config.economy.ncoinSources?.adPaw ?? 0;
+  const dailyMax = config.economy.ncoinSources?.adPawRule?.dailyMax ?? 10;
+  const grantNyang =
+    wantNyang > 0 && (next.adPawNyangToday ?? 0) < dailyMax ? wantNyang : 0;
+
   next = {
     ...next,
     pawAdsUsed: next.pawAdsUsed + 1,
     pawBalance: next.pawBalance + gained,
   };
+
+  let adPawNyangCoin = 0;
+  if (grantNyang > 0) {
+    const toss = await grantNyangCoinOnce(next, {
+      tossUserKey: next.userId,
+      rewardId: adPawRewardId(requestId),
+      amount: grantNyang,
+    });
+    next = toss.state;
+    if (toss.result.ok && !toss.result.alreadyGranted) {
+      adPawNyangCoin = toss.result.amount;
+      next = {
+        ...next,
+        adPawNyangToday: (next.adPawNyangToday ?? 0) + adPawNyangCoin,
+      };
+    } else if (toss.result.ok && toss.result.alreadyGranted) {
+      adPawNyangCoin = grantNyang;
+    }
+  }
+
+  next = {
+    ...next,
+    pawAdLedger: [
+      ...(next.pawAdLedger ?? []),
+      {
+        requestId,
+        createdAt: Date.now(),
+        paw: gained,
+        nyangCoin: adPawNyangCoin,
+        pawBalance: next.pawBalance,
+        nyangCoinBalance: next.nyangCoinBalance,
+      },
+    ],
+  };
   await saveOpsState(next);
-  return { state: next, gained };
+  return {
+    state: next,
+    gained,
+    adPawNyangCoin,
+    adPawNotice: adPawNyangCoin > 0 ? notice : null,
+  };
 }
 
 /** Convert `qty` duplicate copies (default 1) to paw. Prefer postDupExchange for idempotent writes. */

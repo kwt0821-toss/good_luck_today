@@ -1,11 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 26 26" fill="none">
-  <circle cx="13" cy="13" r="9" stroke="#D9A66A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="13" cy="13" r="6.2" stroke="#D9A66A" stroke-width="1" stroke-dasharray="1.2 2" opacity=".7"/>
-  <g transform="translate(13,13.3) scale(1.2)" fill="#F4A9A8">
-    <ellipse cx="0" cy="1.6" rx="2.2" ry="1.8"/>
-    <circle cx="-2.6" cy="-1.2" r=".9"/>
-    <circle cx="-.9" cy="-2.7" r=".9"/>
-    <circle cx=".9" cy="-2.7" r=".9"/>
-    <circle cx="2.6" cy="-1.2" r=".9"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="22" fill="#FFC48A" stroke="#F3E9D7" stroke-width="2"/><circle cx="32" cy="32" r="16" fill="none" stroke="#C98A3E" stroke-width="1.5" stroke-dasharray="2 3"/><g fill="#8A5A2B"><ellipse cx="32" cy="36" rx="6" ry="5"/><circle cx="24.5" cy="28.5" r="2.6"/><circle cx="29.5" cy="24.5" r="2.6"/><circle cx="34.5" cy="24.5" r="2.6"/><circle cx="39.5" cy="28.5" r="2.6"/></g></svg>

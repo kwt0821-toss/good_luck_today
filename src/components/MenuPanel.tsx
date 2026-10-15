@@ -40,6 +40,8 @@ import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
 import type { MenuSheetId } from "../lib/menuTypes";
 import { haptic } from "../lib/native";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
+import type { HelpTabId } from "../lib/helpConfig";
+import { HelpEarnSheet } from "./HelpEarnSheet";
 import { NyChip } from "./NyChip";
 import "./MenuPanel.css";
 
@@ -145,6 +147,8 @@ export function MenuPanel({
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
   const [withdrawBusy, setWithdrawBusy] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [helpTab, setHelpTab] = useState<HelpTabId>("ncoin");
   const [ticketBuyBusy, setTicketBuyBusy] = useState(false);
   const [exchangeView, setExchangeView] = useState<ExchangeView>("summary");
   const [exchangeBusy, setExchangeBusy] = useState(false);
@@ -417,6 +421,15 @@ export function MenuPanel({
     if (dy > 120) closeSheet();
   };
 
+  useEffect(() => {
+    if (!open) setHelpOpen(false);
+  }, [open]);
+
+  const openHelp = (tab: HelpTabId = "ncoin") => {
+    setHelpTab(tab);
+    setHelpOpen(true);
+  };
+
   const onRow = (open: string, enabled: boolean, id: string) => {
     if (!enabled && id !== "points" && id !== "exchange") return;
     if (open === "action:rewardedAd(paw)") {
@@ -430,6 +443,10 @@ export function MenuPanel({
         return;
       }
       onPawAd();
+      return;
+    }
+    if (open === "sheet:helpEarn") {
+      openHelp("ncoin");
       return;
     }
     if (open.startsWith("sheet:")) {
@@ -1338,6 +1355,14 @@ export function MenuPanel({
                   ) : (
                     <>
                       <div className="wallet-card" id="wallet-card">
+                        <button
+                          type="button"
+                          className="wallet-card-help"
+                          aria-label="냥코인·포인트 얻는 법"
+                          onClick={() => openHelp("ncoin")}
+                        >
+                          ?
+                        </button>
                         <div className="wallet-card-label">
                           {model.menu.sheets.rewards.wallet?.title ?? "내 냥코인"}
                         </div>
@@ -1829,6 +1854,10 @@ export function MenuPanel({
             </div>
           </div>
         </div>
+      ) : null}
+
+      {helpOpen ? (
+        <HelpEarnSheet initialTab={helpTab} onClose={() => setHelpOpen(false)} />
       ) : null}
     </div>
   );
