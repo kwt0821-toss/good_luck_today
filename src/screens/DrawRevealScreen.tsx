@@ -120,6 +120,7 @@ type DrawRevealScreenProps = {
   onToDex: () => void;
   onDrawAgain: () => void;
   onRetry: () => void;
+  onBack?: () => void;
 };
 
 const clamp = (x: number, a = 0, b = 1) => Math.max(a, Math.min(b, x));
@@ -160,6 +161,7 @@ export function DrawRevealScreen({
   onToDex,
   onDrawAgain,
   onRetry,
+  onBack,
 }: DrawRevealScreenProps) {
   const screenRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
@@ -508,6 +510,20 @@ export function DrawRevealScreen({
 
       <div className="draw-reveal-content">
         <div className="draw-reveal-head">
+          {onBack ? (
+            <button type="button" className="draw-reveal-back" aria-label="뒤로 가기" onClick={onBack}>
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M15 5l-7 7 7 7"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          ) : null}
           <div className="t">
             TODAY&apos;S CARD
             <small>고양이가 골라 준 오늘의 행운</small>
@@ -563,8 +579,13 @@ export function DrawRevealScreen({
                 : "none",
           }}
         >
-          <div className="ic" aria-hidden="true">
-            <img src={ncoinIcon(18)} alt="" width={18} height={18} />
+          <div className="draw-reveal-toast-icons" aria-hidden="true">
+            <div className="ic">
+              <img src={ncoinIcon(18)} alt="" width={18} height={18} />
+            </div>
+            <div className="ic is-paw">
+              <img src="/assets/menu/icon-paw-mini.svg" alt="" width={18} height={18} />
+            </div>
           </div>
           <div>
             {toastText ?? (

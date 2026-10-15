@@ -288,7 +288,14 @@ export function RoomDrawer({
       return;
     }
     const paint = isPaintItem(item);
-    if (state.locked || paint || state.remaining > 0) {
+    // Locked / shoppable tiles always open pick (buy sheet) on the first tap,
+    // even while another item is mid-preview — do not require a second click.
+    if (state.locked) {
+      setInfoItem(null);
+      onPick(item);
+      return;
+    }
+    if (paint || state.remaining > 0) {
       setInfoItem(null);
       onPick(item);
       return;

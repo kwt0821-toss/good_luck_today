@@ -116,7 +116,7 @@
 .tut-inline-token {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   white-space: nowrap;
   vertical-align: -0.15em;
 }
@@ -155,12 +155,12 @@
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  gap: 6px;
+  gap: 3px;
 }
 
 .tut-lines.is-rewards .tut-line.is-reward-qty {
-  /* Equal spacing: icon · x · number */
-  gap: 6px;
+  /* Equal spacing: icon · x · number (tight) */
+  gap: 3px;
 }
 
 .tut-lines.is-rewards .tut-line-icon {

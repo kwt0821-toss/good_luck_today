@@ -44,10 +44,28 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
   z-index: 3;
 }
 
+.draw-reveal-back {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(243, 233, 215, 0.1);
+  color: #f3e9d7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 .draw-reveal-head .t {
+  flex: 1 1 auto;
+  min-width: 0;
+}
   font-family: Poppins, "Noto Sans KR", sans-serif;
   font-weight: 800;
   font-size: 22px;
@@ -360,6 +378,13 @@
   pointer-events: none;
 }
 
+.draw-reveal-toast-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
 .draw-reveal-toast .ic {
   width: 28px;
   height: 28px;
@@ -369,6 +394,10 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
+}
+
+.draw-reveal-toast .ic.is-paw {
+  background: rgba(143, 227, 195, 0.18);
 }
 
 .draw-reveal-toast .ic img {

@@ -136,6 +136,7 @@ export function MenuPanel({
   const [ticketBuyBusy, setTicketBuyBusy] = useState(false);
   const [exchangeView, setExchangeView] = useState<ExchangeView>("summary");
   const [exchangeBusy, setExchangeBusy] = useState(false);
+  const [pawTipOpen, setPawTipOpen] = useState(false);
   const reduce = shouldReduceMenuMotion(settings);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const sheetDrag = useRef<{ y: number; active: boolean }>({ y: 0, active: false });
@@ -483,7 +484,7 @@ export function MenuPanel({
           key: "attend-paw",
           kind: "reward",
           title: "출석 선물 도착!",
-          sub: `발바닥 <b>${pawReward.paw}P</b>`,
+          sub: `{paw} <b>${pawReward.paw}</b>`,
           count: pawReward.paw,
         });
       } else {
@@ -525,7 +526,7 @@ export function MenuPanel({
       nyNotify({
         key: "dup-exchange-done",
         kind: "reward",
-        title: `포인트 <b>+${result.response.gained}</b> 받았어요`,
+        title: `{paw} <b>+${result.response.gained}</b> 받았어요`,
         count: result.response.gained,
       });
       AudioManager.playSfx("reward-coin");
@@ -679,13 +680,29 @@ export function MenuPanel({
               </button>
 
               <div className="menu-stats">
-                <div className="menu-stat">
+                <button
+                  type="button"
+                  className={`menu-stat is-paw-tip ${pawTipOpen ? "is-tip-open" : ""}`}
+                  aria-label="내 포인트 안내"
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    setPawTipOpen(true);
+                  }}
+                  onPointerUp={() => setPawTipOpen(false)}
+                  onPointerLeave={() => setPawTipOpen(false)}
+                  onPointerCancel={() => setPawTipOpen(false)}
+                >
                   <div className="menu-stat-value">
                     <img src={menuAsset("icon-paw-mini.svg")} alt="" />
                     {model.pawBalance.toLocaleString("ko-KR")}
                   </div>
                   <div className="menu-stat-label">내 포인트</div>
-                </div>
+                  {pawTipOpen ? (
+                    <span className="menu-paw-tip" role="status">
+                      방꾸미기와 뽑기권 구매에 사용돼요
+                    </span>
+                  ) : null}
+                </button>
                 <button type="button" className="menu-stat is-tap" onClick={() => openSheet("rewards")}>
                   <div className="menu-stat-value">
                     <img src={ncoinIcon(14)} alt="" />
@@ -1454,7 +1471,7 @@ export function MenuPanel({
                             };
                             onOpsChange(next);
                             void buildMenuViewModel(next).then(setModel);
-                            nyNotify({ key: "ncoin", kind: "reward", title: "냥코인 <b>{n}개</b> 받았어요", count: 10, sub: "DEV" });
+                            nyNotify({ key: "ncoin", kind: "reward", title: "{ncoin} <b>{n}개</b> 받았어요", count: 10, sub: "DEV" });
                             AudioManager.playSfx("reward-coin");
                           }}
                         >
@@ -1542,7 +1559,7 @@ export function MenuPanel({
                           String(model.ticketShop.pricePaw),
                         )}
                   </button>
-                  {model.ticketShop.ticketsHeld > 0 && onRateUpDraw ? (
+                  {onRateUpDraw ? (
                     <button
                       type="button"
                       className="menu-sheet-cta is-secondary"
@@ -1552,7 +1569,20 @@ export function MenuPanel({
                         onRateUpDraw();
                       }}
                     >
-                      {model.menu.sheets.ticketShop.ctaDraw}
+                      {model.ticketShop.ticketsHeld > 0 ? (
+                        "확률업 이용권 사용"
+                      ) : (
+                        <span className="ticket-shop-draw-cta">
+                          <img
+                            className="ticket-shop-ad-icon"
+                            src="/assets/menu/icon-ad.svg"
+                            alt=""
+                            width={18}
+                            height={18}
+                          />
+                          {model.menu.sheets.ticketShop.ctaDraw}
+                        </span>
+                      )}
                     </button>
                   ) : null}
                 </div>

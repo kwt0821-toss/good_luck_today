@@ -76,11 +76,26 @@ function Icon({ kind }: { kind: NyKind }) {
   );
 }
 
-function RichTitle({ text }: { text: string }) {
-  const parts = text.split(/(<b>.*?<\/b>)/g);
+/** Renders `<b>`, `{ncoin}`, `{paw}`, and common bare “냥코인” / “N P” tokens. */
+function RichCopy({ text, inlineIcons = true }: { text: string; inlineIcons?: boolean }) {
+  let normalized = text;
+  if (inlineIcons) {
+    normalized = normalized
+      .replace(/\{ncoin\}/g, "⟦NCOIN⟧")
+      .replace(/\{paw\}/g, "⟦PAW⟧")
+      .replace(/냥코인/g, "⟦NCOIN⟧")
+      .replace(/(^|[^\w])(\+?\d+)\s*P\b/g, "$1⟦PAW⟧$2");
+  }
+  const parts = normalized.split(/(<b>.*?<\/b>|⟦NCOIN⟧|⟦PAW⟧)/g).filter(Boolean);
   return (
     <>
       {parts.map((part, index) => {
+        if (part === "⟦NCOIN⟧") {
+          return <img key={index} className="ny-inline-ic" src={NCOIN} alt="" width={14} height={14} />;
+        }
+        if (part === "⟦PAW⟧") {
+          return <img key={index} className="ny-inline-ic" src={PAW} alt="" width={14} height={14} />;
+        }
         const m = part.match(/^<b>(.*?)<\/b>$/);
         if (m) return <b key={index}>{m[1]}</b>;
         return <span key={index}>{part}</span>;
@@ -196,20 +211,20 @@ export function NyangNotifyHost() {
             <Icon kind="celebrate" />
             <div>
               <div className="t">
-                <RichTitle text={nyResolveText(current.title, current.count)} />
+                <RichCopy text={nyResolveText(current.title, current.count)} />
               </div>
               {current.rewards?.length ? (
                 <div className="rw">
                   {current.rewards.map((reward) => (
                     <span key={reward.label}>
                       <img src={rewardIcon(reward.icon)} alt="" width={14} height={14} />
-                      {reward.label}
+                      <RichCopy text={reward.label} inlineIcons={false} />
                     </span>
                   ))}
                 </div>
               ) : current.sub ? (
                 <div className="s" style={{ marginTop: 4, color: "var(--ny-sub)", fontSize: 13 }}>
-                  {nyResolveText(current.sub, current.count)}
+                  <RichCopy text={nyResolveText(current.sub, current.count)} />
                 </div>
               ) : null}
             </div>
@@ -233,10 +248,12 @@ export function NyangNotifyHost() {
             <Icon kind={current.kind} />
             <div className="tx">
               <div className="t">
-                <RichTitle text={nyResolveText(current.title, current.count)} />
+                <RichCopy text={nyResolveText(current.title, current.count)} />
               </div>
               {current.sub ? (
-                <div className="s">{nyResolveText(current.sub, current.count)}</div>
+                <div className="s">
+                  <RichCopy text={nyResolveText(current.sub, current.count)} />
+                </div>
               ) : null}
             </div>
             {current.action ? (

@@ -78,8 +78,37 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
         return;
       }
       try {
-        const el = document.querySelector(mark.target);
-        setRect(el?.getBoundingClientRect() ?? null);
+        const els: Element[] = [];
+        const primary = document.querySelector(mark.target);
+        if (primary) els.push(primary);
+        for (const sel of mark.alsoHighlight ?? []) {
+          try {
+            document.querySelectorAll(sel).forEach((node) => els.push(node));
+          } catch {
+            // ignore bad selectors
+          }
+        }
+        if (!els.length) {
+          setRect(null);
+          return;
+        }
+        let left = Infinity;
+        let top = Infinity;
+        let right = -Infinity;
+        let bottom = -Infinity;
+        for (const node of els) {
+          const r = node.getBoundingClientRect();
+          if (r.width <= 0 && r.height <= 0) continue;
+          left = Math.min(left, r.left);
+          top = Math.min(top, r.top);
+          right = Math.max(right, r.right);
+          bottom = Math.max(bottom, r.bottom);
+        }
+        if (!Number.isFinite(left)) {
+          setRect(null);
+          return;
+        }
+        setRect(new DOMRect(left, top, right - left, bottom - top));
       } catch {
         setRect(null);
       }
@@ -98,40 +127,51 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   useEffect(() => {
     if (!mark?.target) return;
     if (!mark.passThrough && !mark.activateTarget) return;
-    let elevated: HTMLElement | null = null;
+    const elevatedNodes: HTMLElement[] = [];
     let panel: HTMLElement | null = null;
     let cancelled = false;
     let timer = 0;
 
+    const elevateOne = (el: HTMLElement) => {
+      el.classList.add("tut-elevated-target");
+      if (getComputedStyle(el).position === "static") {
+        el.classList.add("tut-elevated-static");
+      }
+      elevatedNodes.push(el);
+    };
+
     const tryElevate = () => {
       if (cancelled) return;
       try {
-        elevated = document.querySelector(mark.target) as HTMLElement | null;
-        panel = elevated?.closest(
+        const primary = document.querySelector(mark.target) as HTMLElement | null;
+        if (!primary) {
+          timer = window.setTimeout(tryElevate, 100);
+          return;
+        }
+        elevateOne(primary);
+        for (const sel of mark.alsoHighlight ?? []) {
+          try {
+            document.querySelectorAll(sel).forEach((node) => elevateOne(node as HTMLElement));
+          } catch {
+            // ignore
+          }
+        }
+        panel = primary.closest(
           ".menu-root, .lucky-drawer, .main-screen, .home-screen, .lucky-room",
         ) as HTMLElement | null;
+        panel?.classList.add("tut-elevated-panel");
       } catch {
-        elevated = null;
-        panel = null;
-      }
-      if (!elevated) {
         timer = window.setTimeout(tryElevate, 100);
-        return;
       }
-      elevated.classList.add("tut-elevated-target");
-      // Absolute/fixed badges (dex claim coin) must keep their position — only
-      // static elements need relative for z-index to take effect.
-      if (getComputedStyle(elevated).position === "static") {
-        elevated.classList.add("tut-elevated-static");
-      }
-      panel?.classList.add("tut-elevated-panel");
     };
     tryElevate();
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
-      elevated?.classList.remove("tut-elevated-target");
-      elevated?.classList.remove("tut-elevated-static");
+      for (const el of elevatedNodes) {
+        el.classList.remove("tut-elevated-target");
+        el.classList.remove("tut-elevated-static");
+      }
       panel?.classList.remove("tut-elevated-panel");
     };
   }, [mark]);

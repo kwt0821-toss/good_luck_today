@@ -160,6 +160,13 @@ export function roomDragCoachMark(step: TutorialStep): CoachMark | null {
     stepLabel: step.stepLabel ?? "STEP 4/5",
     // Above the ✓ toolbar (not parked on the drawer) so it won't cover the item.
     bubble: "above",
+    // Keep the selected preview item + drawer tile bright with the ✓ button.
+    alsoHighlight: [
+      "#drawer-item-0",
+      ".lucky-sprite.is-preview-ghost",
+      ".lucky-placement-hud",
+      ".lucky-select-hud",
+    ],
   };
 }
 

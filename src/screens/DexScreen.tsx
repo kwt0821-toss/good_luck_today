@@ -255,7 +255,7 @@ export function DexScreen({
         nyNotify({
           key: "ncoin-10",
           kind: "reward",
-          title: "냥코인 10개!",
+          title: "{ncoin} 10개!",
           sub: "토스포인트로 바꿀 수 있어요",
           action: {
             label: "보상함",
@@ -277,8 +277,8 @@ export function DexScreen({
           kind: "reward",
           title:
             sum.nyangCoin > 0
-              ? `냥코인 <b>{n}개</b> + ${sum.paw}P 받았어요`
-              : `발바닥 <b>+${sum.paw}P</b> 받았어요`,
+              ? `{ncoin} <b>{n}개</b> + {paw}<b>${sum.paw}</b> 받았어요`
+              : `{paw} <b>+${sum.paw}</b> 받았어요`,
           count: sum.nyangCoin > 0 ? sum.nyangCoin : sum.paw,
         });
         onTutorialClaimed?.();
@@ -312,7 +312,7 @@ export function DexScreen({
               ...(sum.nyangCoin > 0 ? [{ label: `+${sum.nyangCoin} 냥코인`, icon: "ncoin" as const }] : []),
               ...(sum.paw > 0 ? [{ label: `+${sum.paw}P`, icon: "paw" as const }] : []),
             ],
-            sub: sum.nyangCoin > 0 ? `+${sum.nyangCoin} 냥코인 +${sum.paw}P` : `+${sum.paw}P`,
+            sub: sum.nyangCoin > 0 ? `{ncoin}+${sum.nyangCoin} + {paw}+${sum.paw}` : `{paw}+${sum.paw}`,
           });
         } else {
           nyNotify({
@@ -320,8 +320,8 @@ export function DexScreen({
             kind: "reward",
             title:
               sum.nyangCoin > 0
-                ? `냥코인 <b>{n}개</b> + ${sum.paw}P 받았어요`
-                : `발바닥 <b>+${sum.paw}P</b> 받았어요`,
+                ? `{ncoin} <b>{n}개</b> + {paw}<b>${sum.paw}</b> 받았어요`
+                : `{paw} <b>+${sum.paw}</b> 받았어요`,
             count: sum.nyangCoin > 0 ? sum.nyangCoin : sum.paw,
             sub: claimed[0]?.label,
           });
@@ -402,8 +402,8 @@ export function DexScreen({
                   count: pending,
                   sub:
                     sum.nyangCoin > 0
-                      ? `도감에서 냥코인 ${sum.nyangCoin} + ${sum.paw}P 받기`
-                      : `도감에서 +${sum.paw}P 받기`,
+                      ? `도감에서 {ncoin}${sum.nyangCoin} + {paw}${sum.paw} 받기`
+                      : `도감에서 {paw}+${sum.paw} 받기`,
                   action: {
                     label: "보러 가기",
                     onClick: () => {
@@ -657,7 +657,7 @@ export function DexScreen({
             nyNotify({
               key: "dup-exchange-done",
               kind: "reward",
-              title: `포인트 <b>+${result.response.gained}</b> 받았어요`,
+              title: `{paw} <b>+${result.response.gained}</b> 받았어요`,
               count: result.response.gained,
             });
             void haptic("success");

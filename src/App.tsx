@@ -39,7 +39,6 @@ import {
   daysSinceInstall,
   nextDrawSlot,
   remainingNormalDraws,
-  remainingRateUpAdSlots,
   remainingRateUpDraws,
   remainingTotalDraws,
   willUseRateUpTicket,
@@ -249,7 +248,7 @@ export default function App() {
 
   useEffect(() => {
     void configureNavigationBar({
-      withBackButton: screen.name !== "home" && screen.name !== "reveal",
+      withBackButton: screen.name !== "home",
     });
   }, [screen]);
 
@@ -261,7 +260,6 @@ export default function App() {
   const remainingDraws = ops && config ? remainingTotalDraws(ops, config) : 0;
   const remainingNormal = ops && config ? remainingNormalDraws(ops, config) : 0;
   const remainingRateUp = ops && config ? remainingRateUpDraws(ops, config) : 0;
-  const rateUpAdSlots = ops && config ? remainingRateUpAdSlots(ops, config) : 0;
   const rateLabels = config ? highlightRatesFromEconomy(config.economy) : { normalPct: "0%", rateUpPct: "0%" };
   const rateUpAdSeconds = config ? rateUpAdSecondsFromEconomy(config.economy) : 30;
   const offerTicketShop = ops && config ? shouldOfferTicketShopOnRateUp(ops, config) : false;
@@ -550,7 +548,7 @@ export default function App() {
       nyNotify({
         key: "paw-ad",
         kind: "reward",
-        title: `발바닥 <b>+${result.gained}P</b> 받았어요`,
+        title: `{paw} <b>+${result.gained}</b> 받았어요`,
         sub: "메뉴 › 포인트 받기",
         count: result.gained,
       });
@@ -1148,6 +1146,13 @@ export default function App() {
               setWaitFailed(false);
             });
           }}
+          onBack={() => {
+            // Leave reveal without consuming further tutorial gates.
+            setRevealTutPhase(null);
+            setHideRevealToast(false);
+            setStepThenActive(false);
+            setScreen({ name: "home" });
+          }}
         />
       ) : null}
 
@@ -1157,7 +1162,7 @@ export default function App() {
           normalPerDay={config.economy.draws.normalPerDay}
           remainingRateUp={remainingRateUp}
           rateUpTickets={ops.rateUpTickets}
-          useRateUpTicket={willUseRateUpTicket(ops, config) || (rateUpAdSlots <= 0 && ops.rateUpTickets > 0)}
+          useRateUpTicket={willUseRateUpTicket(ops, config)}
           rateUpAdSeconds={rateUpAdSeconds}
           offerTicketShop={offerTicketShop}
           ticketShopPricePaw={ticketShopPricePaw}

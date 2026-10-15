@@ -1033,15 +1033,10 @@ export function RoomScreen({
   };
 
   const pickDrawerItem = async (item: RoomItem) => {
-    let layoutNow: RoomLayoutState = layout;
-    // Cancel any active preview when picking another drawer item.
-    if (preview) {
-      layoutNow = cancelPreview(layout);
-      patchLayoutLocal(layoutNow);
-    }
-
     if (tutLock && suggestItemId && item.id !== suggestItemId) return;
 
+    // Open buy sheet first when locked, then clear preview — avoids a wasted
+    // first tap that only cancelled placement without showing the shop.
     if ((state.owned[item.id] ?? 0) < 1) {
       if (item.attendanceOnly) {
         showToast("출석 체크에서만 받을 수 있어요");
@@ -1049,7 +1044,18 @@ export function RoomScreen({
       }
       setBuyMore(false);
       setBuyItem(item);
+      if (preview) {
+        const cleared = cancelPreview(layout);
+        patchLayoutLocal(cleared);
+      }
       return;
+    }
+
+    let layoutNow: RoomLayoutState = layout;
+    // Cancel any active preview when picking another drawer item.
+    if (preview) {
+      layoutNow = cancelPreview(layout);
+      patchLayoutLocal(layoutNow);
     }
 
     if (isPaintItem(item)) {

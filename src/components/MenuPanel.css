@@ -139,6 +139,52 @@
   grid-template-columns: repeat(4, 1fr);
 }
 
+.menu-stat.is-paw-tip {
+  position: relative;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+
+.menu-paw-tip {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  z-index: 6;
+  min-width: 168px;
+  max-width: 220px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #fff6e6;
+  color: #2a2238;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(6, 5, 16, 0.35);
+  pointer-events: none;
+}
+
+.menu-paw-tip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  background: #fff6e6;
+  transform: translateX(-50%) rotate(45deg);
+}
+
 .menu-stat {
   position: relative;
   border: 0;
@@ -1509,6 +1555,35 @@
   text-align: center;
   font-size: 11px;
   color: rgba(243, 233, 215, 0.42);
+}
+
+.ticket-shop-draw-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ticket-shop-ad-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.ticket-shop-ad-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #ff8a80;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
 }
 
 .ticket-shop-actions {

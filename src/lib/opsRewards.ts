@@ -65,10 +65,10 @@ export async function confirmDrawAfterAd(
       normalDrawsUsed: next.normalDrawsUsed + 1,
       tutorialFirstDrawUsed: true,
     };
+  } else if (next.rateUpTickets > 0) {
+    next = consumeRateUpTicket(next);
   } else if (remainingRateUpAdSlots(next, config) > 0) {
     next = { ...next, rateUpUsed: next.rateUpUsed + 1 };
-  } else {
-    next = consumeRateUpTicket(next);
   }
 
   const dupPaw = isNew ? 0 : dupPawForCard(card, config.economy);

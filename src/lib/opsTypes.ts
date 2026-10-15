@@ -352,6 +352,8 @@ export type CoachMark = {
   hideSkip?: boolean;
   /** When false, no dim overlay (drag phase needs free interaction). */
   dim?: boolean;
+  /** Extra selectors merged into the spotlight hole (kept bright with the target). */
+  alsoHighlight?: string[];
 };
 
 export type OpsTutorial = {
