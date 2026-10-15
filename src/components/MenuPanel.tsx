@@ -880,9 +880,15 @@ export function MenuPanel({
                       <span className="menu-row-label">
                         {row.label}
                         {row.id === "points" ? (
-                          <span className="menu-ad-tag" aria-label="광고">
-                            광고
-                          </span>
+                          <>
+                            <span className="menu-ad-tag" aria-label="광고">
+                              광고
+                            </span>
+                            <span className="menu-ncoin-tag" aria-label="냥코인 1개">
+                              <img src={ncoinIcon(12)} alt="" width={12} height={12} />
+                              +1
+                            </span>
+                          </>
                         ) : null}
                       </span>
                       <span className="menu-row-meta">

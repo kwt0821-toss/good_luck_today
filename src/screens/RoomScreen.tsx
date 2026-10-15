@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
 import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
 import { NyChip } from "../components/NyChip";
-import { TitleRibbon } from "../components/TitleRibbon";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
 import { RoomDrawer, type DrawerItemMeta } from "../components/RoomDrawer";
 import { RoomWorld } from "../components/RoomWorld";
@@ -98,13 +97,6 @@ type RoomScreenProps = {
   onTutorialComplete?: () => void;
   /** Fires once when catalog/layout/ops are ready (after loading gate). */
   onReady?: () => void;
-  titleRibbon?: {
-    equippedId?: string | null;
-    equippedName?: string | null;
-    emptyCopy: string;
-    hasClaimable: boolean;
-  };
-  onOpenTitles?: () => void;
 };
 
 function formatPoints(value: number) {
@@ -121,8 +113,6 @@ export function RoomScreen({
   onTutorialPlaced,
   onTutorialComplete,
   onReady,
-  titleRibbon,
-  onOpenTitles,
 }: RoomScreenProps) {
   const [items, setItems] = useState<RoomItem[]>([]);
   const [grid, setGrid] = useState<RoomGridFile | null>(null);
@@ -1243,15 +1233,6 @@ export function RoomScreen({
           </div>
           <div className="lucky-brand">
             <img className="lucky-logo" src={roomAsset("ui/logo-myroom.svg")} alt="MY ROOM." />
-            {titleRibbon && onOpenTitles ? (
-              <TitleRibbon
-                equippedId={titleRibbon.equippedId}
-                equippedName={titleRibbon.equippedName}
-                emptyCopy={titleRibbon.emptyCopy}
-                hasClaimable={titleRibbon.hasClaimable}
-                onOpen={onOpenTitles}
-              />
-            ) : null}
           </div>
           <div className="lucky-meta">
             <strong id="cozy-meter">COZY Lv.{state.cozyLevel}</strong>
