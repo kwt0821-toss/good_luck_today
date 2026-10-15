@@ -519,7 +519,10 @@ export default function App() {
       });
 
       if (slot === "tutorial" || (slot === "rateUp" && willUseRateUpTicket(ops, config))) {
-        const confirmed = await confirmDrawAfterAd(reserved.state, reserved.reservation.drawId);
+        // Free / ticket draws: no ad → no ad-draw 냥코인.
+        const confirmed = await confirmDrawAfterAd(reserved.state, reserved.reservation.drawId, {
+          adCompleted: false,
+        });
         if ("error" in confirmed) {
           nyNotify({
             key: "draw-confirm-fail",
@@ -602,7 +605,8 @@ export default function App() {
       setAd(null);
       return;
     }
-    const confirmed = await confirmDrawAfterAd(ops, ad.drawId);
+    // Ad completed → confirm draw + ad-draw 냥코인 in one server transaction.
+    const confirmed = await confirmDrawAfterAd(ops, ad.drawId, { adCompleted: true });
     setAd(null);
     if ("error" in confirmed) {
       nyNotify({
@@ -615,6 +619,17 @@ export default function App() {
       return;
     }
     await persistOps(confirmed.state);
+    // Show ad-draw 냥코인 notice before the reveal card.
+    if (confirmed.adNyangCoin > 0) {
+      nyNotify({
+        key: `ad-draw-ncoin:${confirmed.reservation.drawId}`,
+        kind: "reward",
+        title:
+          confirmed.adNyangNotice ??
+          `카드를 뽑아 냥코인x${confirmed.adNyangCoin}이 지급되었습니다.`,
+        count: confirmed.adNyangCoin,
+      });
+    }
     setReservation(confirmed.reservation);
     setRevealCard(confirmed.card);
     setRevealToast(confirmed.toast);

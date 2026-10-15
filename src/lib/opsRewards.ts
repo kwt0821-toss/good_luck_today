@@ -4,6 +4,7 @@ import { loadDexOwned, saveDexOwned } from "./dexCollection";
 import type { DexCard, DexOwnedMap } from "./dexTypes";
 import { duplicateRevealCopy, isManualDexClaim, newCardRevealCopy } from "./dexRewards";
 import { dupPawForCard } from "./drawRates";
+import { grantNyangCoinOnce } from "./mockToss";
 import { isWeekendDoublePaw, loadOpsConfig } from "./opsConfig";
 import {
   applyOpsDailyReset,
@@ -13,18 +14,46 @@ import {
   remainingTotalDraws,
 } from "./opsState";
 import { saveOpsState } from "./opsStorage";
-import type { ConfirmDrawResult, DrawReservation, OpsState } from "./opsTypes";
+import type { ConfirmDrawResult, DrawReservation, OpsConfig, OpsState } from "./opsTypes";
 
 function delay(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+export type ConfirmDrawOpts = {
+  /** True only after a completed ad callback (server-validated). */
+  adCompleted?: boolean;
+};
+
+function adDrawRewardId(drawId: string) {
+  return `adDraw:${drawId}`;
+}
+
+function shouldGrantAdDrawNyang(
+  reservation: DrawReservation,
+  state: OpsState,
+  config: OpsConfig,
+  adCompleted: boolean,
+): boolean {
+  if (!adCompleted) return false;
+  if (reservation.slot === "tutorial") return false;
+  // Ticket rate-up never watches an ad for the draw.
+  if (reservation.slot === "rateUp" && state.rateUpTickets > 0) return false;
+  const amount = config.economy.ncoinSources?.adDraw ?? 0;
+  if (amount <= 0) return false;
+  const dailyMax = config.economy.ncoinSources?.adDrawRule?.dailyMax ?? 4;
+  if ((state.adDrawNyangToday ?? 0) >= dailyMax) return false;
+  return reservation.slot === "normal" || reservation.slot === "rateUp";
+}
+
 /**
  * Ad-complete callback path. Consumes the draw quota and grants rewards only here.
+ * Ad-draw 냥코인 is granted in the same transaction when `adCompleted` is true.
  */
 export async function confirmDrawAfterAd(
   state: OpsState,
   drawId: string,
+  opts: ConfirmDrawOpts = {},
 ): Promise<ConfirmDrawResult | { error: string }> {
   await delay(60);
   const config = await loadOpsConfig();
@@ -34,11 +63,38 @@ export async function confirmDrawAfterAd(
   if (!reservation || reservation.drawId !== drawId) {
     return { error: "뽑기 예약을 찾을 수 없어요" };
   }
+
+  const adCompleted = Boolean(opts.adCompleted);
+  const notice =
+    config.economy.ncoinSources?.adDrawRule?.notice ??
+    "카드를 뽑아 냥코인x1이 지급되었습니다.";
+
   if (reservation.confirmed) {
+    // Idempotent replay: same drawId → same response (including ad 냥코인).
     const catalog = await loadDexCatalog();
     const card = catalog.cards.find((item) => item.id === reservation.cardId);
     if (!card) return { error: "카드 정보를 찾지 못했어요" };
-    return { state: next, reservation, card, toast: null, setRewards: [] };
+    const adNyangCoin = reservation.adNyangCoin ?? 0;
+    return {
+      state: next,
+      reservation,
+      card,
+      toast: null,
+      setRewards: [],
+      adNyangCoin,
+      nyangCoinBalance: next.nyangCoinBalance,
+      adNyangNotice: adNyangCoin > 0 ? notice : null,
+    };
+  }
+
+  // Ad must complete for ad-path draws; without it, cancel reservation path is used instead.
+  // Ticket / tutorial call confirm with adCompleted=false intentionally.
+  if (
+    !adCompleted &&
+    reservation.slot !== "tutorial" &&
+    !(reservation.slot === "rateUp" && next.rateUpTickets > 0)
+  ) {
+    return { error: "광고를 끝까지 보지 못했어요" };
   }
 
   const catalog = await loadDexCatalog();
@@ -59,6 +115,9 @@ export async function confirmDrawAfterAd(
   };
   await saveDexOwned(owned);
 
+  const grantAdNyang = shouldGrantAdDrawNyang(reservation, next, config, adCompleted);
+  const wantNyang = grantAdNyang ? (config.economy.ncoinSources?.adDraw ?? 1) : 0;
+
   if (reservation.slot === "tutorial" || reservation.slot === "normal") {
     next = {
       ...next,
@@ -76,12 +135,34 @@ export async function confirmDrawAfterAd(
     };
   }
 
+  let adNyangCoin = 0;
+  if (wantNyang > 0) {
+    const toss = await grantNyangCoinOnce(next, {
+      tossUserKey: next.userId,
+      rewardId: adDrawRewardId(drawId),
+      amount: wantNyang,
+    });
+    next = toss.state;
+    if (toss.result.ok && !toss.result.alreadyGranted) {
+      adNyangCoin = toss.result.amount;
+      next = {
+        ...next,
+        adDrawNyangToday: (next.adDrawNyangToday ?? 0) + adNyangCoin,
+      };
+    } else if (toss.result.ok && toss.result.alreadyGranted) {
+      // Same drawRequestId replay mid-transaction — treat as already counted.
+      adNyangCoin = wantNyang;
+    }
+  }
+
   const dupPaw = isNew ? 0 : dupPawForCard(card, config.economy);
   const confirmed: DrawReservation = {
     ...reservation,
     isNew,
     dupPaw,
     confirmed: true,
+    usedAd: adCompleted,
+    adNyangCoin,
     remainingAfter: Math.max(0, remainingTotalDraws(next, config)),
   };
 
@@ -102,6 +183,9 @@ export async function confirmDrawAfterAd(
     card,
     toast,
     setRewards: [],
+    adNyangCoin,
+    nyangCoinBalance: next.nyangCoinBalance,
+    adNyangNotice: adNyangCoin > 0 ? notice : null,
   };
 }
 

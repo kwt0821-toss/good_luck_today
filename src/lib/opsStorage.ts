@@ -84,6 +84,8 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
       normalDrawsUsed:
         typeof parsed.normalDrawsUsed === "number" ? parsed.normalDrawsUsed : fallback.normalDrawsUsed,
       rateUpUsed: typeof parsed.rateUpUsed === "number" ? parsed.rateUpUsed : fallback.rateUpUsed,
+      adDrawNyangToday:
+        typeof parsed.adDrawNyangToday === "number" ? parsed.adDrawNyangToday : 0,
       pawAdsUsed: typeof parsed.pawAdsUsed === "number" ? parsed.pawAdsUsed : fallback.pawAdsUsed,
       tutorialFirstDrawUsed: Boolean(parsed.tutorialFirstDrawUsed),
       tutorialDone: Boolean(parsed.tutorialDone),

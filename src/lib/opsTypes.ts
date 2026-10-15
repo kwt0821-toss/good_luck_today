@@ -98,6 +98,27 @@ export type OpsEconomy = {
           noReset?: boolean;
         };
   };
+  /** economy 2.0+ — 냥코인 지급 소스 */
+  ncoinSources?: {
+    adDraw: number;
+    adDrawRule?: {
+      applies?: string[];
+      excluded?: string[];
+      newOrDuplicate?: string;
+      separateFrom?: string;
+      grantOn?: string;
+      idempotency?: string;
+      notice?: string;
+      noticeStyle?: string;
+      dailyMax?: number;
+      dailyMaxNote?: string;
+      yearlyMax?: number;
+    };
+    dexNewCard?: string;
+    dexSets?: string;
+    achievements?: string;
+    attendanceDay7?: string;
+  };
   /** Manual claim from dex (claimMode: manual). Amounts still come from pawSources. */
   dexRewards?: {
     claimMode: "manual" | "auto";
@@ -510,6 +531,10 @@ export type DrawReservation = {
   remainingAfter: number;
   createdAt: number;
   confirmed: boolean;
+  /** Ad completed before confirm (server-validated). */
+  usedAd?: boolean;
+  /** 냥코인 granted with this ad draw (0 if excluded / capped). */
+  adNyangCoin?: number;
 };
 
 export type WalletWithdrawStatus = "pending" | "done" | "failed";
@@ -533,6 +558,8 @@ export type OpsState = {
   normalDrawsUsed: number;
   rateUpUsed: number;
   pawAdsUsed: number;
+  /** Ad-draw 냥코인 grants today (ncoinSources.adDrawRule.dailyMax). */
+  adDrawNyangToday: number;
   /** Lifetime: tutorial first free draw already consumed */
   tutorialFirstDrawUsed: boolean;
   tutorialDone: boolean;
@@ -655,6 +682,11 @@ export type ConfirmDrawResult = {
   card: DexCard;
   toast: string | null;
   setRewards: Array<{ id: string; paw: number; nyangCoin: number; label: string }>;
+  /** Ad-draw 냥코인 granted in this confirm (0 if none). */
+  adNyangCoin: number;
+  nyangCoinBalance: number;
+  /** Copy from economy.ncoinSources.adDrawRule.notice when granted. */
+  adNyangNotice?: string | null;
 };
 
 export type DupConvertKey = DexCardType | "common" | "rare";
