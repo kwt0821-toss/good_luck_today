@@ -1,6 +1,6 @@
 {
  "_version": "economy-1.7 (2026-10-15)",
- "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요. 1.7: 새 카드 냥코인은 nyangCoinByGrade.",
+ "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
  "currency": {
   "paw": {
    "nameKo": "포인트(발바닥)",
@@ -30,8 +30,17 @@
   },
   "newCardFirstGet": {
    "paw": 20,
-   "nyangCoin": 1,
-   "note": "paw는 공통. 냥코인 실제 지급은 nyangCoinByGrade(카드 등급별)."
+   "nyangCoinByGrade": {
+    "b1": 1,
+    "b2": 1,
+    "b3": 1,
+    "b4": 5,
+    "b5": 10,
+    "special": 5,
+    "character": 7,
+    "legend": 50
+   },
+   "note": "1–3★ 1 · 4★ 5 · 5★ 10 · 밈(스페셜) 5 · 캐릭터 7 · 레전드 50"
   },
   "duplicateConvert": {
    "common_1to2star": 10,
@@ -86,20 +95,11 @@
    ],
    "noReset": true
   },
-  "claimMode": "manual",
-  "nyangCoinByGrade": {
-   "breed_1to3": 1,
-   "breed_4": 5,
-   "breed_5": 10,
-   "special": 5,
-   "character": 7,
-   "legend": 50,
-   "note": "special = 밈 카드. 계정당 카드·세트·fullDex 보상 id별 1회."
-  }
+  "claimMode": "manual"
  },
  "nyangCoin": {
-  "maxEarnPerUser": 417,
-  "formula": "107×1 + 18×10 + 3×10 + 100",
+  "maxEarnPerUser": 988,
+  "formula": "새 카드 597 (54×1 + 18×5 + 18×10 + 9×5 + 4×7 + 4×50) + 세트 210 (18×10 + 3×10) + 도감 완성 100 + 업적 81 = 988",
   "grant": {
    "oncePerTossAccountPerReward": true,
    "serverVerified": true,
@@ -111,7 +111,6 @@
    "min": 10,
    "maxPerRequest": "floor(balance/10)*10",
    "remainderStays": true,
-   "chips": "10, 20, 30 … floor(balance/10)*10 (칩이 5개 넘으면 10 · 20 · 50 · 100 · 최대)",
    "serverValidated": true,
    "validate": [
     "amount % 10 == 0",
@@ -150,8 +149,32 @@
    "dailyLimitUnit": "토스포인트 원 (= 냥코인 개수), KST 00:00 초기화",
    "ui": "−/+ 스테퍼 (10 단위, 최소 10, 최대 min(잔액 내림 10단위, 오늘 남은 한도))"
   },
-  "maxPerUserKRW": 907,
-  "maxNote": "새 카드 등급별 597 + 세트·전체 310 = 907"
+  "maxWithdrawable": 980,
+  "sustainability": {
+   "model": "모든 뽑기에 광고(짧은 광고 3 + 긴 광고 1)가 붙어 있어 냥코인 지급은 광고 노출과 함께 늘어나요",
+   "simMedianKRW": {
+    "engaged(3+1/일)": {
+     "d7": 65,
+     "d30": 263,
+     "d90": 571,
+     "d365": 907
+    },
+    "casual(1/일)": {
+     "d7": 14,
+     "d30": 58,
+     "d90": 166,
+     "d365": 482,
+     "d1460": 787
+    },
+    "note": "업적 제외, /workspace/sim/payout.py"
+   },
+   "breakevenGrossEcpmKRW": "초반 뽑기 광고 1회당 지급 ≈ 2.3원 → 손익분기 총 eCPM ≈ 3,300원 (운영비 30% 차감), 수수료 15% 부활 시 ≈ 3,900원",
+   "watch": [
+    "레전드 50 한 번에 크게 지급 → 일 출금 한도 50으로 분산",
+    "다계정 어뷰징: 토스 계정당 1회 지급 + antiAbuse",
+    "실제 eCPM이 손익분기보다 낮으면 4★/5★ 지급을 먼저 낮추기"
+   ]
+  }
  },
  "draws": {
   "resetTimeKST": "00:00",
@@ -502,7 +525,12 @@
   "claimApi": "POST /dex/rewards/claim {rewardIds:[...]|'all', requestId} → {claimed:[{id,nyangCoin,paw}], pawBalance, nyangCoinBalance, unclaimedCount}",
   "idempotency": "보상 id별 계정당 1회(유니크 키 tossUserKey+rewardId) + requestId 재시도 시 같은 응답",
   "atomic": "지급 + claimed 표시 한 트랜잭션",
-  "badges": "unclaimedCount>0 → 메인 도감 아이콘 빨간 점, 도감 탭 점(해당 그룹), 메뉴 보상함 행 meta",
-  "note": "도감에서 직접 수령. 자동 지급 없음. 새 카드 냥코인=nyangCoinByGrade, paw=newCardFirstGet.paw. 세트/fullDex는 setComplete. 보상 id: newCard:{cardId}, set:breed:{id}, set:{special|character|legend}, fullDex. 계정당 1회(tossUserKey+rewardId), POST /dex/rewards/claim 멱등키 tossUserKey+requestId."
+  "badges": "unclaimedCount>0 → 메인 도감 아이콘 빨간 점, 도감 탭 점(해당 그룹), 메뉴 보상함 행 meta"
+ },
+ "achievements": {
+  "ref": "achievements.json",
+  "nyangCoinTotal": 81,
+  "pawTotal": 2820,
+  "claimMode": "manual"
  }
 }
