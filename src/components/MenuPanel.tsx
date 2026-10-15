@@ -26,7 +26,8 @@ import {
   postShopTicketsBuy,
 } from "../lib/mockTicketShop";
 import { buildDupExchangeRequestId, postDupExchange } from "../lib/dupExchange";
-import { claimAttendanceGift } from "../lib/opsRewards";
+import { buildAttendanceDay7RequestId, readDay7BonusConfig } from "../lib/attendanceServer";
+import { claimAttendanceDay7, claimAttendanceGift } from "../lib/opsRewards";
 import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
 import type { MenuSheetId } from "../lib/menuTypes";
 import { haptic } from "../lib/native";
@@ -64,6 +65,8 @@ type MenuPanelProps = {
   onOpenDex: () => void;
   onOpenRoom: () => void;
   onPawAd: () => void;
+  /** Play long ad for weekly day7 bonus; retries load once upstream. */
+  onAttendanceDay7Ad?: () => Promise<"completed" | "cancelled" | "failed">;
   onReplayTutorial: () => void;
   onDevResetNewUser?: () => void;
   /** Start rate-up draw from ticket shop CTA. */
@@ -109,6 +112,7 @@ export function MenuPanel({
   onOpenDex,
   onOpenRoom,
   onPawAd,
+  onAttendanceDay7Ad,
   onReplayTutorial,
   onDevResetNewUser,
   onRateUpDraw,
@@ -137,6 +141,9 @@ export function MenuPanel({
   const [exchangeView, setExchangeView] = useState<ExchangeView>("summary");
   const [exchangeBusy, setExchangeBusy] = useState(false);
   const [pawTipOpen, setPawTipOpen] = useState(false);
+  const [day7Busy, setDay7Busy] = useState(false);
+  const [day7AdExhausted, setDay7AdExhausted] = useState(false);
+  const day7RequestIdRef = useRef<string | null>(null);
   const reduce = shouldReduceMenuMotion(settings);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const sheetDrag = useRef<{ y: number; active: boolean }>({ y: 0, active: false });
@@ -424,9 +431,118 @@ export function MenuPanel({
     if (open === "page:settings") openSheet("settings");
   };
 
+  const notifyDay7Claim = (
+    withAd: boolean,
+    nyangCoin: number,
+    paw: number,
+    tickets: number,
+  ) => {
+    const parts = [`+${nyangCoin} 냥코인`, `+${paw}P`];
+    if (withAd && tickets > 0) parts.push("뽑기권 1장");
+    nyNotify({
+      key: withAd ? "attend-day7-ad" : "attend-day7-base",
+      kind: "reward",
+      title: parts.join(" · "),
+    });
+  };
+
+  const finishDay7Claim = async (withAd: boolean, adToken?: string) => {
+    if (!model || day7Busy) return;
+    const cycleNo = model.attendance.cycleNo;
+    if (cycleNo == null) {
+      nyNotify({
+        key: "attend-day7-nocycle",
+        kind: "error",
+        title: "출석 주기를 확인하지 못했어요",
+      });
+      return;
+    }
+    setDay7Busy(true);
+    try {
+      if (!day7RequestIdRef.current) {
+        day7RequestIdRef.current = buildAttendanceDay7RequestId(cycleNo);
+      }
+      const result = await claimAttendanceDay7(ops, {
+        cycleNo,
+        withAd,
+        adToken,
+        requestId: day7RequestIdRef.current,
+      });
+      if (!result.response.ok) {
+        nyNotify({
+          key: "attend-day7-fail",
+          kind: "error",
+          title: "보너스를 받지 못했어요",
+          sub: result.response.reason,
+        });
+        return;
+      }
+      day7RequestIdRef.current = null;
+      setDay7AdExhausted(false);
+      onOpsChange(result.state);
+      setPopDay(7);
+      setStampDay(7);
+      void haptic("success");
+      window.setTimeout(() => AudioManager.playSfx("stamp"), 180);
+      window.setTimeout(() => {
+        setPopDay(null);
+        AudioManager.playSfx("reward-coin");
+        notifyDay7Claim(
+          result.response.ok ? result.response.withAd : withAd,
+          result.response.ok ? result.response.nyangCoin : 0,
+          result.response.ok ? result.response.paw : 0,
+          result.response.ok ? result.response.tickets : 0,
+        );
+      }, 320);
+    } finally {
+      setDay7Busy(false);
+    }
+  };
+
+  const claimDay7WithAd = async () => {
+    if (!onAttendanceDay7Ad || day7Busy || day7AdExhausted) return;
+    setDay7Busy(true);
+    try {
+      let result = await onAttendanceDay7Ad();
+      // One automatic retry on load fail / mid-ad cancel.
+      if (result !== "completed") {
+        nyNotify({
+          key: "attend-day7-ad-retry",
+          kind: "info",
+          title: "광고를 다시 불러올게요",
+          sub: "한 번만 더 시도해요",
+        });
+        result = await onAttendanceDay7Ad();
+      }
+      if (result !== "completed") {
+        setDay7AdExhausted(true);
+        nyNotify({
+          key: "attend-day7-ad-fail",
+          kind: "error",
+          title: "광고를 보지 못했어요",
+          sub: "그냥 받기로 보너스를 받을 수 있어요",
+        });
+        return;
+      }
+      setDay7Busy(false);
+      const token = `ad:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
+      await finishDay7Claim(true, token);
+    } finally {
+      setDay7Busy(false);
+    }
+  };
+
   const claimAttendance = async () => {
+    if (model?.attendance.isWeeklyDay7) {
+      // Dual-button footer handles weekly day7; ignore accidental single CTA.
+      return;
+    }
     const result = await claimAttendanceGift(ops);
     if (result.error) {
+      if (result.error === "DAY7_BONUS_REQUIRED") {
+        void buildMenuViewModel(ops).then(setModel);
+        return;
+      }
       nyNotify({
         key: "attend-fail",
         kind: "error",
@@ -638,6 +754,11 @@ export function MenuPanel({
 
   const attState = model ? attendanceSheetState(model.attendance) : "firstWeek";
   const attCopy = model?.menu.sheets.attendance.states?.[attState];
+  const isWeeklyDay7Claim =
+    Boolean(model?.attendance.canClaimToday && model.attendance.isWeeklyDay7);
+  const day7Bonus = model ? readDay7BonusConfig(model.config) : null;
+  const ticketMaxHold = model?.config.economy.tickets?.rateUpTicket?.maxHold ?? 3;
+  const ticketsFull = Boolean(model && model.attendance.rateUpTickets >= ticketMaxHold);
   const attCta = model
     ? model.attendance.canClaimToday
       ? (attCopy?.cta ?? model.menu.sheets.attendance.cta ?? "오늘 출석하기").replace(
@@ -1007,6 +1128,10 @@ export function MenuPanel({
                             }
                             onClick={() => {
                               if (!canTapClaim) return;
+                              if (cell.day === 7 && model.attendance.isWeeklyDay7) {
+                                // Dual CTA in footer — scroll/focus handled by buttons.
+                                return;
+                              }
                               void claimAttendance();
                             }}
                           >
@@ -1020,6 +1145,17 @@ export function MenuPanel({
                         );
                       })}
                     </div>
+                    {isWeeklyDay7Claim && day7Bonus ? (
+                      <div className="att-day7-bonus">
+                        <p className="att-day7-bonus-title">7일차 보너스</p>
+                        <p className="att-day7-bonus-desc">
+                          기본 {day7Bonus.base.nyangCoin}냥코인 + {day7Bonus.base.paw}P
+                          {day7Bonus.adBonus
+                            ? ` · 광고 시 ${day7Bonus.adBonus.nyangCoin}냥코인 + ${day7Bonus.adBonus.paw}P + 뽑기권`
+                            : ""}
+                        </p>
+                      </div>
+                    ) : null}
                   </>
                 ) : null}
 
@@ -1503,14 +1639,47 @@ export function MenuPanel({
 
               {sheet === "attendance" ? (
                 <>
-                  <button
-                    type="button"
-                    className="menu-sheet-cta"
-                    disabled={!model.attendance.canClaimToday}
-                    onClick={() => void claimAttendance()}
-                  >
-                    {attCta}
-                  </button>
+                  {isWeeklyDay7Claim ? (
+                    <div className="att-day7-actions">
+                      <button
+                        type="button"
+                        className="menu-sheet-cta is-secondary"
+                        disabled={day7Busy || !model.attendance.canClaimToday}
+                        onClick={() => void finishDay7Claim(false)}
+                      >
+                        {day7Busy ? "처리 중…" : "그냥 받기"}
+                      </button>
+                      <button
+                        type="button"
+                        className="menu-sheet-cta"
+                        disabled={
+                          day7Busy ||
+                          day7AdExhausted ||
+                          !model.attendance.canClaimToday ||
+                          !onAttendanceDay7Ad
+                        }
+                        onClick={() => void claimDay7WithAd()}
+                      >
+                        {day7AdExhausted
+                          ? "광고 불가 · 그냥 받기 이용"
+                          : `30초 광고 보고 2배 + 뽑기권`}
+                      </button>
+                      {ticketsFull ? (
+                        <p className="att-day7-ticket-full">
+                          뽑기권 보관함이 가득 찼어요 · 냥코인·포인트만 2배
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="menu-sheet-cta"
+                      disabled={!model.attendance.canClaimToday}
+                      onClick={() => void claimAttendance()}
+                    >
+                      {attCta}
+                    </button>
+                  )}
                   <p className="menu-sheet-note">
                     {attCopy?.note ?? model.menu.sheets.attendance.note ?? ""}
                   </p>

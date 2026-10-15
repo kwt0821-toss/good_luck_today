@@ -1,11 +1,19 @@
-import { toKstDateKey } from "./date";
+import { toKstDateKey, toKstYearKey } from "./date";
 import type {
   AttendanceClaimResponse,
+  AttendanceDay7ClaimBody,
+  AttendanceDay7ClaimResponse,
   AttendancePhase,
   AttendanceReward,
 } from "./attendanceTypes";
+import { grantNyangCoinOnce } from "./mockToss";
 import { loadOpsConfig } from "./opsConfig";
-import type { OpsConfig, OpsStarter, OpsState } from "./opsTypes";
+import type {
+  AttendanceDay7BonusConfig,
+  OpsConfig,
+  OpsStarter,
+  OpsState,
+} from "./opsTypes";
 import { saveOpsState } from "./opsStorage";
 
 function delay(ms: number) {
@@ -25,6 +33,19 @@ export function cycleInfo(n: number): { cycleNo: number; cycleDay: number } | nu
 
 export function canClaimAttendanceToday(state: OpsState, today = toKstDateKey()): boolean {
   return state.lastAttendDateKST !== today;
+}
+
+/** Next claimable attendance day is weekly-cycle day 7 (day ≥ 8). */
+export function isUpcomingWeeklyDay7(state: OpsState, today = toKstDateKey()): boolean {
+  if (!canClaimAttendanceToday(state, today)) return false;
+  const cycle = cycleInfo(state.attendanceDays + 1);
+  return cycle?.cycleDay === 7;
+}
+
+export function readDay7BonusConfig(config: OpsConfig): AttendanceDay7BonusConfig | null {
+  const att = config.economy.pawSources.attendance;
+  if (!att || typeof att === "string") return null;
+  return att.weeklyCycle?.day7Bonus ?? null;
 }
 
 export function nextMilestone(
@@ -124,7 +145,9 @@ export function todayRewardLabel(
   }
   if (first.kind === "paw") return `${first.paw}P`;
   if (first.kind === "rateUpTicket") return config.economy.tickets?.rateUpTicket?.nameKo ?? "확률업 이용권";
-  return first.labelKo ?? first.badgeId;
+  if (first.kind === "nyangCoin") return `${first.nyangCoin}냥코인`;
+  if (first.kind === "badge") return first.labelKo ?? first.badgeId;
+  return "출석 선물";
 }
 
 function applyRewards(state: OpsState, rewards: AttendanceReward[], milestoneDays: number[]): OpsState {
@@ -200,6 +223,23 @@ export async function claimAttendanceOnServer(
   }
 
   const n = state.attendanceDays + 1;
+  const upcoming = cycleInfo(n);
+  if (upcoming?.cycleDay === 7) {
+    return {
+      state,
+      response: {
+        attendanceDays: state.attendanceDays,
+        phase: "weeklyCycle",
+        cycleNo: upcoming.cycleNo,
+        cycleDay: 7,
+        rewards: [],
+        nextMilestone: nextMilestone(config.starter, state.attendanceDays, state.claimedMilestoneDays),
+        canClaimToday: true,
+        error: "DAY7_BONUS_REQUIRED",
+      },
+    };
+  }
+
   const rewards = buildRewardsForDay(n, config, state.ownedItemIds, state.rateUpTickets);
   const milestoneHit = (config.starter.attendance.milestones ?? [])
     .filter((m) => m.days === n)
@@ -324,6 +364,7 @@ export async function getAttendanceStatus(state: OpsState): Promise<{
       : canClaim
         ? attendancePhase(previewN)
         : attendancePhase(days);
+  const isWeeklyDay7 = Boolean(canClaim && cycleInfo(previewN)?.cycleDay === 7);
 
   return {
     state,
@@ -338,9 +379,226 @@ export async function getAttendanceStatus(state: OpsState): Promise<{
       lastAttendDateKST: state.lastAttendDateKST,
       rateUpTickets: state.rateUpTickets,
       badges: state.attendanceBadges,
-      todayRewardLabel: label,
-      weekCells,
+      todayRewardLabel: isWeeklyDay7 ? "7일 보너스" : label,
+      isWeeklyDay7,
+      weekCells: weekCells.map((cell) =>
+        cell.day === 7 && isWeeklyDay7
+          ? { ...cell, rewardLabel: "5냥코인+" }
+          : cell,
+      ),
       firstWeekGifts,
+    },
+  };
+}
+
+export function buildAttendanceDay7RequestId(cycleNo: number): string {
+  const id =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `d7_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  return `att7:${cycleNo}:${id}`;
+}
+
+function day7CycleIdempotencyKey(userId: string, cycleNo: number) {
+  return `${userId}+att7:${cycleNo}`;
+}
+
+/**
+ * POST /attendance/day7/claim { cycleNo, withAd, adToken?, requestId }
+ * Grants existing day7 gift + base/ad bonus. Once per cycle (tossUserKey+cycleNo).
+ */
+export async function claimAttendanceDay7OnServer(
+  state: OpsState,
+  body: AttendanceDay7ClaimBody,
+): Promise<{ state: OpsState; response: AttendanceDay7ClaimResponse }> {
+  await delay(40);
+  const { cycleNo, withAd, adToken, requestId } = body;
+  if (!requestId || !cycleNo || cycleNo < 1) {
+    return { state, response: { ok: false, reason: "요청이 올바르지 않아요" } };
+  }
+
+  const priorByRequest = (state.attendanceDay7Ledger ?? []).find(
+    (row) => row.requestId === requestId,
+  );
+  if (priorByRequest) {
+    return {
+      state,
+      response: {
+        ok: true,
+        cycleNo: priorByRequest.cycleNo,
+        withAd: priorByRequest.withAd,
+        alreadyProcessed: true,
+        nyangCoin: priorByRequest.nyangCoin,
+        paw: priorByRequest.paw,
+        tickets: priorByRequest.tickets,
+        itemOrTicket: null,
+        rewards: [],
+        balances: {
+          pawBalance: priorByRequest.pawBalance,
+          nyangCoinBalance: priorByRequest.nyangCoinBalance,
+          rateUpTickets: priorByRequest.rateUpTickets,
+        },
+        attendanceDays: state.attendanceDays,
+      },
+    };
+  }
+
+  const config = await loadOpsConfig();
+  const bonus = readDay7BonusConfig(config);
+  if (!bonus || !config.starter.attendance) {
+    return { state, response: { ok: false, reason: "출석 보너스 설정이 없어요" } };
+  }
+
+  const today = toKstDateKey();
+  if (!canClaimAttendanceToday(state, today)) {
+    return { state, response: { ok: false, reason: "오늘 이미 출석했어요" } };
+  }
+
+  const n = state.attendanceDays + 1;
+  const cycle = cycleInfo(n);
+  if (!cycle || cycle.cycleDay !== 7 || cycle.cycleNo !== cycleNo) {
+    return { state, response: { ok: false, reason: "7일차 보너스를 받을 수 없어요" } };
+  }
+
+  const cycleKey = day7CycleIdempotencyKey(state.userId, cycleNo);
+  if (
+    state.grantedNyangCoinRewardIds.includes(cycleKey) ||
+    (state.attendanceDay7Ledger ?? []).some((row) => row.cycleNo === cycleNo)
+  ) {
+    return { state, response: { ok: false, reason: "이번 주기 보너스는 이미 받았어요" } };
+  }
+
+  if (withAd && !adToken) {
+    return { state, response: { ok: false, reason: "광고 완료를 확인하지 못했어요" } };
+  }
+
+  const maxHold = config.economy.tickets?.rateUpTicket?.maxHold ?? 3;
+  const existingRewards = buildRewardsForDay(n, config, state.ownedItemIds, state.rateUpTickets);
+  // Strip milestone handling into apply path below — buildRewards includes milestones.
+  const milestoneHit = (config.starter.attendance.milestones ?? [])
+    .filter((m) => m.days === n)
+    .map((m) => m.days);
+
+  const pack = withAd ? bonus.adBonus : bonus.base;
+  let wantNyang = pack.nyangCoin;
+  let wantPaw = pack.paw;
+  let wantTickets = withAd ? (bonus.adBonus.rateUpTicket ?? 0) : 0;
+
+  let next: OpsState = {
+    ...state,
+    attendanceDays: n,
+    lastAttendDateKST: today,
+    attendanceClaimed: Math.min(n, 7),
+    lastAttendanceDateKey: today,
+  };
+
+  next = applyRewards(next, existingRewards, milestoneHit);
+
+  // Yearly 냥코인 cap → overflow to P (10P each)
+  const yearKey = toKstYearKey();
+  let yearGranted =
+    next.attendanceNyangYearKey === yearKey ? next.attendanceNyangCoinYear : 0;
+  let overflowPaw = 0;
+  const cap = bonus.yearlyCoinCap;
+  if (cap?.enabled) {
+    const limit = cap.proposal ?? 300;
+    const room = Math.max(0, limit - yearGranted);
+    if (wantNyang > room) {
+      overflowPaw = (wantNyang - room) * 10;
+      wantNyang = room;
+    }
+  }
+
+  if (wantTickets > 0) {
+    const room = Math.max(0, maxHold - next.rateUpTickets);
+    wantTickets = Math.min(wantTickets, room);
+  }
+
+  next = {
+    ...next,
+    pawBalance: next.pawBalance + wantPaw + overflowPaw,
+    rateUpTickets: Math.min(next.rateUpTickets + wantTickets, maxHold),
+    attendanceNyangYearKey: yearKey,
+    attendanceNyangCoinYear: yearGranted + wantNyang,
+  };
+
+  if (wantNyang > 0) {
+    const toss = await grantNyangCoinOnce(next, {
+      tossUserKey: next.userId,
+      rewardId: cycleKey,
+      amount: wantNyang,
+    });
+    next = toss.state;
+    if (toss.result.ok && toss.result.alreadyGranted) {
+      // Cycle already granted somehow — keep paw/tickets from this attempt? Prefer fail-safe.
+    }
+  } else {
+    // Still mark cycle claimed even when all 냥코인 converted to P
+    if (!next.grantedNyangCoinRewardIds.includes(cycleKey)) {
+      next = {
+        ...next,
+        grantedNyangCoinRewardIds: [...next.grantedNyangCoinRewardIds, cycleKey],
+      };
+    }
+  }
+
+  if (milestoneHit.length) {
+    const milestone = config.starter.attendance.milestones.find((m) => m.days === n);
+    if (milestone) {
+      const key = `${next.userId}+attendanceMilestone:${milestone.days}`;
+      if (!next.grantedNyangCoinRewardIds.includes(key)) {
+        next = { ...next, grantedNyangCoinRewardIds: [...next.grantedNyangCoinRewardIds, key] };
+      }
+    }
+  }
+
+  const itemOrTicket =
+    existingRewards.find(
+      (reward) =>
+        reward.kind === "item" || reward.kind === "rateUpTicket" || reward.kind === "paw",
+    ) ?? null;
+
+  const bonusRewards: AttendanceReward[] = [];
+  if (wantNyang > 0) bonusRewards.push({ kind: "nyangCoin", nyangCoin: wantNyang });
+  if (wantPaw + overflowPaw > 0) bonusRewards.push({ kind: "paw", paw: wantPaw + overflowPaw });
+  if (wantTickets > 0) bonusRewards.push({ kind: "rateUpTicket", count: wantTickets });
+
+  const entry = {
+    requestId,
+    cycleNo,
+    withAd,
+    createdAt: Date.now(),
+    nyangCoin: wantNyang,
+    paw: wantPaw + overflowPaw,
+    tickets: wantTickets,
+    pawBalance: next.pawBalance,
+    nyangCoinBalance: next.nyangCoinBalance,
+    rateUpTickets: next.rateUpTickets,
+  };
+  next = {
+    ...next,
+    attendanceDay7Ledger: [entry, ...(next.attendanceDay7Ledger ?? [])].slice(0, 80),
+  };
+
+  await saveOpsState(next);
+  return {
+    state: next,
+    response: {
+      ok: true,
+      cycleNo,
+      withAd,
+      nyangCoin: wantNyang,
+      paw: wantPaw + overflowPaw,
+      tickets: wantTickets,
+      itemOrTicket,
+      rewards: [...existingRewards, ...bonusRewards],
+      balances: {
+        pawBalance: next.pawBalance,
+        nyangCoinBalance: next.nyangCoinBalance,
+        rateUpTickets: next.rateUpTickets,
+      },
+      overflowPaw: overflowPaw || undefined,
+      attendanceDays: n,
     },
   };
 }

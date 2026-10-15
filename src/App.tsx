@@ -120,11 +120,13 @@ function initialMenuOpen(): boolean {
 
 type AdSession = {
   kind: MockAdKind;
-  purpose: "draw" | "paw";
+  purpose: "draw" | "paw" | "attendanceDay7";
   drawId?: string;
   /** sdk = Toss full-screen ad group; mock = browser AdModal fallback. */
   presentation: "sdk" | "mock";
 };
+
+type AttendanceDay7AdResult = "completed" | "cancelled" | "failed";
 
 function startAdPresentation(): AdSession["presentation"] {
   return isTossFullScreenAdSupported() ? "sdk" : "mock";
@@ -163,6 +165,9 @@ export default function App() {
   const [revealToast, setRevealToast] = useState<string | null>(null);
   const [bootError, setBootError] = useState<string | null>(null);
   const [featureIntro, setFeatureIntro] = useState<FeatureIntro | null>(null);
+  const attendanceDay7AdResolverRef = useRef<((result: AttendanceDay7AdResult) => void) | null>(
+    null,
+  );
 
   const today = toKstDateKey();
 
@@ -560,6 +565,13 @@ export default function App() {
 
   const completeAd = useCallback(async () => {
     if (!ad || !ops) return;
+    if (ad.purpose === "attendanceDay7") {
+      setAd(null);
+      setMenuOpen(true);
+      attendanceDay7AdResolverRef.current?.("completed");
+      attendanceDay7AdResolverRef.current = null;
+      return;
+    }
     if (ad.purpose === "paw") {
       const result = await grantPawAdReward(ops);
       setAd(null);
@@ -632,6 +644,15 @@ export default function App() {
   const cancelAd = useCallback(async () => {
     if (!ops) {
       setAd(null);
+      attendanceDay7AdResolverRef.current?.("cancelled");
+      attendanceDay7AdResolverRef.current = null;
+      return;
+    }
+    if (ad?.purpose === "attendanceDay7") {
+      setAd(null);
+      setMenuOpen(true);
+      attendanceDay7AdResolverRef.current?.("cancelled");
+      attendanceDay7AdResolverRef.current = null;
       return;
     }
     if (ad?.purpose === "draw") {
@@ -649,6 +670,17 @@ export default function App() {
     // Paw ads start with the menu left open; restore it if anything closed it.
     if (ad?.purpose === "paw") setMenuOpen(true);
   }, [ad, ops, persistOps]);
+
+  const runAttendanceDay7Ad = useCallback((): Promise<AttendanceDay7AdResult> => {
+    return new Promise((resolve) => {
+      attendanceDay7AdResolverRef.current = resolve;
+      setAd({
+        kind: "long",
+        purpose: "attendanceDay7",
+        presentation: startAdPresentation(),
+      });
+    });
+  }, []);
 
   const completeAdRef = useRef(completeAd);
   const cancelAdRef = useRef(cancelAd);
@@ -674,6 +706,15 @@ export default function App() {
         return;
       }
       // unsupported / failed → mock modal (browser preview or load miss)
+      // For attendance day7: load already retried once inside playTossFullScreenAd;
+      // if still failed, resolve as failed so UI can offer [그냥 받기].
+      if (result === "failed" && snap.purpose === "attendanceDay7") {
+        setAd(null);
+        setMenuOpen(true);
+        attendanceDay7AdResolverRef.current?.("failed");
+        attendanceDay7AdResolverRef.current = null;
+        return;
+      }
       setAd((prev) => {
         if (!prev || prev.presentation !== "sdk") return prev;
         if (prev.kind !== snap.kind || prev.purpose !== snap.purpose || prev.drawId !== snap.drawId) {
@@ -1245,6 +1286,7 @@ export default function App() {
           // Keep the menu open under the ad so we return to it afterward.
           setAd({ kind: "short", purpose: "paw", presentation: startAdPresentation() });
         }}
+        onAttendanceDay7Ad={() => runAttendanceDay7Ad()}
         onRateUpDraw={() => {
           closeMenu();
           void beginDraw("rateUp");

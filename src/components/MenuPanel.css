@@ -878,6 +878,48 @@
   font-size: 8px;
 }
 
+.att-day7-bonus {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(62, 207, 154, 0.12);
+  border: 1px solid rgba(62, 207, 154, 0.28);
+}
+
+.att-day7-bonus-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #8fe3c3;
+}
+
+.att-day7-bonus-desc {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(243, 233, 215, 0.72);
+}
+
+.att-day7-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.att-day7-actions .menu-sheet-cta {
+  width: 100%;
+}
+
+.att-day7-ticket-full {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: rgba(243, 233, 215, 0.7);
+}
+
 /* rates */
 .rates-tabs {
   display: grid;

@@ -10,6 +10,14 @@ export function toKstDateKey(date = new Date()): string {
   }).format(date);
 }
 
+/** Asia/Seoul calendar year as `"2026"`. */
+export function toKstYearKey(date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+  }).format(date);
+}
+
 export function formatKoreanDate(date = new Date()): string {
   const parts = new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",

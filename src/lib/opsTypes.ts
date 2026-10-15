@@ -2,6 +2,33 @@ import type { DexCard, DexCardType } from "./dexTypes";
 
 export type NyangCoinReward = { paw: number; nyangCoin: number };
 
+/** economy.pawSources.attendance.weeklyCycle.day7Bonus (1.8+) */
+export type AttendanceDay7BonusConfig = {
+  base: { nyangCoin: number; paw: number; note?: string };
+  adBonus: {
+    optional?: boolean;
+    adType?: string;
+    adSeconds?: number;
+    effect?: string;
+    nyangCoin: number;
+    paw: number;
+    rateUpTicket: number;
+    ticketCapNote?: string;
+    oncePerCycle?: boolean;
+    grantOn?: string;
+    adFailFallback?: string;
+  };
+  ui?: string[];
+  api?: string;
+  idempotency?: string;
+  yearlyCoinCap?: {
+    enabled: boolean;
+    proposal?: number;
+    overflow?: string;
+    period?: string;
+  };
+};
+
 export type OpsEconomy = {
   currency: {
     paw: { nameKo: string; startBalance: number };
@@ -56,7 +83,20 @@ export type OpsEconomy = {
       legend: NyangCoinReward;
       fullDex: NyangCoinReward;
     };
-    attendance?: string;
+    attendance?:
+      | string
+      | {
+          ref?: string;
+          firstWeek?: string;
+          weeklyCycle?: {
+            pawDays1to6?: number[];
+            pawPerWeek?: number;
+            day7?: string;
+            day7Bonus?: AttendanceDay7BonusConfig;
+          };
+          milestones?: number[];
+          noReset?: boolean;
+        };
   };
   /** Manual claim from dex (claimMode: manual). Amounts still come from pawSources. */
   dexRewards?: {
@@ -208,13 +248,20 @@ export type AttendanceConfig = {
   rule?: string;
   firstWeek: Array<{ day: number; itemId: string; tier: string }>;
   weeklyCycle: {
-    days: Array<{ day: number; paw: number }>;
+    days: Array<{ day: number; paw: number; reward?: string }>;
     day7: {
       mode: "alternate" | string;
-      itemBox: { pool: string[]; fallbackWhenAllOwned: { paw: number } };
-      rateUpTicket: boolean;
+      alternate?: { oddCycle?: string; evenCycle?: string };
+      itemBox: {
+        nameKo?: string;
+        pool: string[];
+        pick?: string;
+        fallbackWhenAllOwned: { paw: number; copy?: string };
+      };
+      rateUpTicket?: boolean | { nameKo?: string; count?: number; ref?: string };
       note?: string;
     };
+    day7Bonus?: { ref?: string; base?: string; withAd?: string };
   };
   milestones: Array<{ days: number; itemId: string; badgeId: string; labelKo?: string }>;
 };
@@ -553,6 +600,26 @@ export type OpsState = {
     pawBalance: number;
     nyangCoinBalance: number;
   }>;
+  /**
+   * Idempotent ledger for POST /attendance/day7/claim
+   * (requestId replay + tossUserKey+cycleNo once-per-cycle).
+   */
+  attendanceDay7Ledger: Array<{
+    requestId: string;
+    cycleNo: number;
+    withAd: boolean;
+    createdAt: number;
+    nyangCoin: number;
+    paw: number;
+    tickets: number;
+    pawBalance: number;
+    nyangCoinBalance: number;
+    rateUpTickets: number;
+  }>;
+  /** KST year key for attendance 냥코인 yearly cap window. */
+  attendanceNyangYearKey: string;
+  /** 냥코인 granted from attendance day7 bonus in the current KST year. */
+  attendanceNyangCoinYear: number;
 };
 
 export type TicketShopLedgerItem = {

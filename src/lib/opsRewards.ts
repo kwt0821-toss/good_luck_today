@@ -163,6 +163,25 @@ export async function claimAttendanceGift(
   return { state: result.state, itemId, response: result.response };
 }
 
+/** POST /attendance/day7/claim — weekly cycle day 7 + optional ad bonus. */
+export async function claimAttendanceDay7(
+  state: OpsState,
+  body: {
+    cycleNo: number;
+    withAd: boolean;
+    adToken?: string;
+    requestId: string;
+  },
+): Promise<{
+  state: OpsState;
+  response: import("./attendanceTypes").AttendanceDay7ClaimResponse;
+}> {
+  const { claimAttendanceDay7OnServer } = await import("./attendanceServer");
+  const today = toKstDateKey();
+  const next = applyOpsDailyReset(state, today);
+  return claimAttendanceDay7OnServer(next, body);
+}
+
 /** @deprecated attendance is never auto-granted on boot */
 export async function claimAttendanceIfNeeded(
   state: OpsState,

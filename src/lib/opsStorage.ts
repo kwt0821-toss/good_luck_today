@@ -269,6 +269,32 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
             }))
             .filter((item) => item.requestId && item.titleId)
         : fallback.achievementClaimLedger,
+      attendanceDay7Ledger: Array.isArray(parsed.attendanceDay7Ledger)
+        ? parsed.attendanceDay7Ledger
+            .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+            .map((item) => ({
+              requestId: typeof item.requestId === "string" ? item.requestId : "",
+              cycleNo: typeof item.cycleNo === "number" ? item.cycleNo : 0,
+              withAd: Boolean(item.withAd),
+              createdAt: typeof item.createdAt === "number" ? item.createdAt : 0,
+              nyangCoin: typeof item.nyangCoin === "number" ? item.nyangCoin : 0,
+              paw: typeof item.paw === "number" ? item.paw : 0,
+              tickets: typeof item.tickets === "number" ? item.tickets : 0,
+              pawBalance: typeof item.pawBalance === "number" ? item.pawBalance : 0,
+              nyangCoinBalance:
+                typeof item.nyangCoinBalance === "number" ? item.nyangCoinBalance : 0,
+              rateUpTickets: typeof item.rateUpTickets === "number" ? item.rateUpTickets : 0,
+            }))
+            .filter((item) => item.requestId && item.cycleNo > 0)
+        : fallback.attendanceDay7Ledger,
+      attendanceNyangYearKey:
+        typeof parsed.attendanceNyangYearKey === "string"
+          ? parsed.attendanceNyangYearKey
+          : fallback.attendanceNyangYearKey,
+      attendanceNyangCoinYear:
+        typeof parsed.attendanceNyangCoinYear === "number"
+          ? parsed.attendanceNyangCoinYear
+          : fallback.attendanceNyangCoinYear,
     };
   } catch {
     return fallback;

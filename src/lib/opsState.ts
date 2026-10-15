@@ -59,6 +59,9 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     claimedAchievementIds: [],
     equippedTitleId: "",
     achievementClaimLedger: [],
+    attendanceDay7Ledger: [],
+    attendanceNyangYearKey: today.slice(0, 4),
+    attendanceNyangCoinYear: 0,
   };
 }
 
