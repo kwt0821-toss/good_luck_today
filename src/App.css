@@ -914,12 +914,11 @@
   --night: #221e3a;
   --cta: #ffc48a;
   --cat-stage-scale: 1;
-  /* Bottom nav clearance: icon~45 + bottom offset 24 + safe-area */
-  --main-bottom-clearance: calc(24px + 52px + env(safe-area-inset-bottom, 0px));
   position: relative;
   flex: 1;
   min-height: 0;
   width: 100%;
+  /* Fill #root (100dvh on mobile; phone-frame height on desktop preview). */
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -928,7 +927,7 @@
   color: var(--cream);
   font-family: "Noto Sans KR", "Toss Product Sans", sans-serif;
   box-sizing: border-box;
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: 0;
   padding-right: env(safe-area-inset-right, 0px);
   padding-bottom: 0;
   padding-left: env(safe-area-inset-left, 0px);
@@ -946,6 +945,7 @@
   z-index: 0;
 }
 
+/* Full-bleed column: top → mid (flex:1) → bottom. No canvas transform scale. */
 #main-stage,
 .main-stage-canvas {
   position: relative;
@@ -956,8 +956,8 @@
   min-height: 0;
   width: 100%;
   max-width: 390px;
-  /* Horizontal padding only on header/meta/CTA — stage keeps full 390 width. */
-  padding: 18px 0 var(--main-bottom-clearance);
+  height: 100%;
+  padding: 0;
   box-sizing: border-box;
   color: var(--cream);
   overflow: hidden;
@@ -974,6 +974,16 @@
   z-index: 0;
 }
 
+/* ① Top: logo · title · date — flush to screen top */
+.main-top {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: 100%;
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  box-sizing: border-box;
+}
+
 .main-header,
 .main-rule,
 .main-meta,
@@ -981,11 +991,6 @@
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-}
-
-.main-flow {
-  position: relative;
-  z-index: 1;
 }
 
 .main-header {
@@ -1098,7 +1103,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin: 0 0 8px;
+  margin: 0;
   padding: 0 24px;
   box-sizing: border-box;
   font-size: 12px;
@@ -1116,19 +1121,33 @@
   white-space: nowrap;
 }
 
-/* Vertical flow: cat (shrinkable) → CTA → count. Bottom nav is fixed outside. */
-.main-flow {
+/* ② Mid: cat → CTA → count, vertically centered in leftover space */
+.main-mid {
+  position: relative;
+  z-index: 1;
   flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.main-mid-stack {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
-/* Stage tap group — design 390×386; shrinks for leftover *height* only. */
-.main-stage-row {
-  flex: 1 1 auto;
+/* Cat+card only — design 390×386; shrink via max-height, never grow past design */
+.main-stage-slot {
+  flex: 0 1 386px;
   min-height: 0;
   width: 100%;
   max-height: 386px;
@@ -1849,26 +1868,19 @@
   opacity: 0.45;
 }
 
-/* Pinned to the screen bottom — does not rise with short mid content. */
+/* ③ Bottom: dex · room — flush to screen bottom (in-flow) */
 .main-bottom {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  position: relative;
   z-index: 2;
+  flex: 0 0 auto;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   width: 100%;
   max-width: 390px;
-  margin: 0 auto;
-  padding: 0 22px;
+  margin: 0;
+  padding: 12px 22px calc(16px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
-  pointer-events: none;
-}
-
-.main-bottom .main-nav-btn {
-  pointer-events: auto;
 }
 
 @keyframes main-breathe {
