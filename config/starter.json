@@ -1,191 +1,196 @@
 {
- "_version": "starter-1.2 (2026-10-12)",
- "startPaw": 300,
- "startNyangCoin": 0,
- "firstRoom": {
-  "roomId": "moon_bedroom",
-  "floor": "floor_wood_honey",
-  "wall": {
-   "L": "wall_plum_sparkle",
-   "R": "wall_plum_sparkle"
-  },
-  "placed": [
-   {
-    "id": "catbed",
-    "hero": true,
-    "withCat": "heroCat",
-    "sprite": "catbed_cat",
-    "c": 3,
-    "r": 4,
-    "orientation": "default"
-   },
-   {
-    "id": "floorlamp",
-    "c": 0,
-    "r": 0,
-    "orientation": "default"
-   },
-   {
-    "id": "plant",
-    "c": 2,
-    "r": 0,
-    "orientation": "default"
-   },
-   {
-    "id": "pawrug",
-    "c": 3,
-    "r": 3,
-    "w": 2,
-    "d": 2
-   },
-   {
-    "id": "archwindow",
-    "wall": "L",
-    "t": 2.6,
-    "heightUnits": 92
-   },
-   {
-    "id": "cardframe",
-    "wall": "R",
-    "t": 1.0,
-    "heightUnits": 98
-   }
-  ],
-  "layoutNote": "좌표는 room-assets-v6/grid.json defaultLayout과 같은 칸 — 미배치 칸은 고양이 이동 가능"
- },
- "drawer": [
-  "floor_check_pink",
-  "wall_mint_gingham",
-  "cushions",
-  "yarnbasket"
- ],
- "attendance": {
-  "resetTimeKST": "00:00",
-  "countRule": "하루 1회 출석 = 누적 출석일(attendanceDays) +1. 보상 일차는 달력 날짜가 아니라 누적 출석일로 정해요.",
-  "noReset": true,
-  "noResetRule": "하루 빠져도 진행이 초기화되지 않아요. 다음에 들어온 날이 다음 일차예요(예: 3일차 받고 이틀 쉬면 다음 출석은 4일차).",
-  "firstWeek": [
-   {
-    "day": 1,
-    "itemId": "att_moon_cactus",
-    "tier": "small"
-   },
-   {
-    "day": 2,
-    "itemId": "att_stamp_calendar",
-    "tier": "wall"
-   },
-   {
-    "day": 3,
-    "itemId": "att_pink_starlight",
-    "tier": "small"
-   },
-   {
-    "day": 4,
-    "itemId": "att_night_bunting",
-    "tier": "wall"
-   },
-   {
-    "day": 5,
-    "itemId": "att_moon_globe",
-    "tier": "small"
-   },
-   {
-    "day": 6,
-    "itemId": "att_sakura_fishbowl",
-    "tier": "small"
-   },
-   {
-    "day": 7,
-    "itemId": "att_moon_cattower",
-    "tier": "large"
-   }
-  ],
-  "weeklyCycle": {
-   "startsAfterDay": 7,
-   "mapping": "n = attendanceDays (8 이상) → cycleNo = floor((n-8)/7)+1, cycleDay = ((n-8) % 7)+1",
-   "days": [
-    {
-     "day": 1,
-     "paw": 10
+  "_version": "starter-1.2 (2026-10-12)",
+  "startPaw": 300,
+  "startNyangCoin": 0,
+  "firstRoom": {
+    "roomId": "moon_bedroom",
+    "floor": "floor_wood_honey",
+    "wall": {
+      "L": "wall_plum_sparkle",
+      "R": "wall_plum_sparkle"
     },
-    {
-     "day": 2,
-     "paw": 10
-    },
-    {
-     "day": 3,
-     "paw": 15
-    },
-    {
-     "day": 4,
-     "paw": 15
-    },
-    {
-     "day": 5,
-     "paw": 20
-    },
-    {
-     "day": 6,
-     "paw": 20
-    },
-    {
-     "day": 7,
-     "reward": "day7"
-    }
-   ],
-   "day7": {
-    "mode": "alternate",
-    "modeOptions": [
-     "alternate",
-     "itemBox",
-     "rateUpTicket"
+    "placed": [
+      {
+        "id": "catbed",
+        "hero": true,
+        "withCat": "heroCat",
+        "sprite": "catbed_cat",
+        "c": 3,
+        "r": 4,
+        "orientation": "default"
+      },
+      {
+        "id": "floorlamp",
+        "c": 0,
+        "r": 0,
+        "orientation": "default"
+      },
+      {
+        "id": "plant",
+        "c": 2,
+        "r": 0,
+        "orientation": "default"
+      },
+      {
+        "id": "pawrug",
+        "c": 3,
+        "r": 3,
+        "w": 2,
+        "d": 2
+      },
+      {
+        "id": "archwindow",
+        "wall": "L",
+        "t": 2.6,
+        "heightUnits": 92
+      },
+      {
+        "id": "cardframe",
+        "wall": "R",
+        "t": 1.0,
+        "heightUnits": 98
+      }
     ],
-    "alternate": {
-     "oddCycle": "itemBox",
-     "evenCycle": "rateUpTicket"
-    },
-    "itemBox": {
-     "nameKo": "출석 선물 상자",
-     "pool": [
-      "att_lav_moonlamp",
-      "att_rose_gramophone",
-      "att_mint_yarnbasket",
-      "att_lav_cushions",
-      "att_sky_catclock"
-     ],
-     "pick": "미보유 아이템 중 균등 랜덤 (서버)",
-     "fallbackWhenAllOwned": {
-      "paw": 100,
-      "copy": "상자를 다 모았어요! 대신 100포인트를 드려요"
-     }
-    },
-    "rateUpTicket": {
-     "nameKo": "확률업 뽑기권",
-     "count": 1,
-     "ref": "economy.json → tickets.rateUpTicket"
-    }
-   },
-   "weeklyPaw": 90,
-   "note": "광고 포인트(하루 최대 100)보다 작게 — 출석은 습관용 보너스"
+    "layoutNote": "좌표는 room-assets-v6/grid.json defaultLayout과 같은 칸 — 미배치 칸은 고양이 이동 가능"
   },
-  "milestones": [
-   {
-    "days": 30,
-    "itemId": "att_m30_goldneon",
-    "badgeId": "badge_att_30",
-    "badgeImage": "badge-att-30.svg",
-    "titleKo": "30일 기념 보상"
-   },
-   {
-    "days": 100,
-    "itemId": "att_m100_nightlamp",
-    "badgeId": "badge_att_100",
-    "badgeImage": "badge-att-100.svg",
-    "titleKo": "100일 기념 보상"
-   }
+  "drawer": [
+    "floor_check_pink",
+    "wall_mint_gingham",
+    "cushions",
+    "yarnbasket"
   ],
-  "milestoneRule": "누적 출석일이 정확히 해당 일수가 되는 날, 그날의 일반 출석 보상과 별개로 추가 지급. 목록은 서버에서 늘릴 수 있어요(예: 200, 365).",
-  "attendanceOnlyItems": "prices.json → attendanceOnly.ids (상점·서랍·방 해금·다른 보상 풀에 넣지 않음)"
- }
+  "attendance": {
+    "resetTimeKST": "00:00",
+    "countRule": "하루 1회 출석 = 누적 출석일(attendanceDays) +1. 보상 일차는 달력 날짜가 아니라 누적 출석일로 정해요.",
+    "noReset": true,
+    "noResetRule": "하루 빠져도 진행이 초기화되지 않아요. 다음에 들어온 날이 다음 일차예요(예: 3일차 받고 이틀 쉬면 다음 출석은 4일차).",
+    "firstWeek": [
+      {
+        "day": 1,
+        "itemId": "att_moon_cactus",
+        "tier": "small"
+      },
+      {
+        "day": 2,
+        "itemId": "att_stamp_calendar",
+        "tier": "wall"
+      },
+      {
+        "day": 3,
+        "itemId": "att_pink_starlight",
+        "tier": "small"
+      },
+      {
+        "day": 4,
+        "itemId": "att_night_bunting",
+        "tier": "wall"
+      },
+      {
+        "day": 5,
+        "itemId": "att_moon_globe",
+        "tier": "small"
+      },
+      {
+        "day": 6,
+        "itemId": "att_sakura_fishbowl",
+        "tier": "small"
+      },
+      {
+        "day": 7,
+        "itemId": "att_moon_cattower",
+        "tier": "large"
+      }
+    ],
+    "weeklyCycle": {
+      "startsAfterDay": 7,
+      "mapping": "n = attendanceDays (8 이상) → cycleNo = floor((n-8)/7)+1, cycleDay = ((n-8) % 7)+1",
+      "days": [
+        {
+          "day": 1,
+          "paw": 10
+        },
+        {
+          "day": 2,
+          "paw": 10
+        },
+        {
+          "day": 3,
+          "paw": 15
+        },
+        {
+          "day": 4,
+          "paw": 15
+        },
+        {
+          "day": 5,
+          "paw": 20
+        },
+        {
+          "day": 6,
+          "paw": 20
+        },
+        {
+          "day": 7,
+          "reward": "day7"
+        }
+      ],
+      "day7": {
+        "mode": "alternate",
+        "modeOptions": [
+          "alternate",
+          "itemBox",
+          "rateUpTicket"
+        ],
+        "alternate": {
+          "oddCycle": "itemBox",
+          "evenCycle": "rateUpTicket"
+        },
+        "itemBox": {
+          "nameKo": "출석 선물 상자",
+          "pool": [
+            "att_lav_moonlamp",
+            "att_rose_gramophone",
+            "att_mint_yarnbasket",
+            "att_lav_cushions",
+            "att_sky_catclock"
+          ],
+          "pick": "미보유 아이템 중 균등 랜덤 (서버)",
+          "fallbackWhenAllOwned": {
+            "paw": 100,
+            "copy": "상자를 다 모았어요! 대신 100포인트를 드려요"
+          }
+        },
+        "rateUpTicket": {
+          "nameKo": "확률업 뽑기권",
+          "count": 1,
+          "ref": "economy.json → tickets.rateUpTicket"
+        }
+      },
+      "weeklyPaw": 90,
+      "note": "광고 포인트(하루 최대 100)보다 작게 — 출석은 습관용 보너스",
+      "day7Bonus": {
+        "ref": "economy.json → pawSources.attendance.weeklyCycle.day7Bonus",
+        "base": "5냥코인 + 100P",
+        "withAd": "10냥코인 + 200P + 뽑기권 1장"
+      }
+    },
+    "milestones": [
+      {
+        "days": 30,
+        "itemId": "att_m30_goldneon",
+        "badgeId": "badge_att_30",
+        "badgeImage": "badge-att-30.svg",
+        "titleKo": "30일 기념 보상"
+      },
+      {
+        "days": 100,
+        "itemId": "att_m100_nightlamp",
+        "badgeId": "badge_att_100",
+        "badgeImage": "badge-att-100.svg",
+        "titleKo": "100일 기념 보상"
+      }
+    ],
+    "milestoneRule": "누적 출석일이 정확히 해당 일수가 되는 날, 그날의 일반 출석 보상과 별개로 추가 지급. 목록은 서버에서 늘릴 수 있어요(예: 200, 365).",
+    "attendanceOnlyItems": "prices.json → attendanceOnly.ids (상점·서랍·방 해금·다른 보상 풀에 넣지 않음)"
+  }
 }
