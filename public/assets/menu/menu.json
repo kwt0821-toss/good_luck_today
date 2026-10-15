@@ -90,7 +90,7 @@
    "enabled": true,
    "open": "action:rewardedAd(paw)",
    "meta": "'남은 횟수 {remaining}/{economy.pawSources.rewardedAd.maxPerDay}'",
-   "data": "economy.json → pawSources.rewardedAd (pawPerAd 10, maxPerDay 10), events.weekendDoublePaw",
+   "data": "economy.json → pawSources.rewardedAd (pawPerAd 10, maxPerDay 10) + ncoinSources.adPaw 1, events.weekendDoublePaw",
    "badge": {
     "type": "pill",
     "text": "주말 2배",
@@ -101,6 +101,10 @@
    "adTag": {
     "text": "광고",
     "style": "cream-border (main-draw-pill-ad)"
+   },
+   "ncoinTag": {
+    "text": "+1",
+    "note": "광고 완료 시 냥코인 1개 (주말 2배는 포인트만)"
    }
   },
   "exchange": {

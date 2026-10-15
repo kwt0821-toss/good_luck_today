@@ -1176,19 +1176,6 @@ export default function App() {
           }
           suggestTile={tutorialStep?.screen === "room" ? (tutorialStep.suggestTile ?? null) : null}
           reduceMotion={reduceMotion}
-          titleRibbon={
-            ops
-              ? {
-                  equippedId: ops.equippedTitleId || null,
-                  equippedName:
-                    achvList.find((item) => item.def.id === ops.equippedTitleId)?.def.title ??
-                    null,
-                  emptyCopy: EMPTY_RIBBON_COPY,
-                  hasClaimable: claimableAchvCount(achvList) > 0,
-                }
-              : undefined
-          }
-          onOpenTitles={() => setAchvOpen(true)}
           onReady={() => setRoomScreenReady(true)}
           onTutorialPicked={() => {
             if (roomTutPhase === "pick") setRoomTutPhase("preview");
