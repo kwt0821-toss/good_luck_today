@@ -170,8 +170,25 @@ export type OpsEconomy = {
     rates_proposal: {
       normal: Record<string, number>;
       rateUp: Record<string, number>;
-      keys: string;
-      disclosure: string;
+      keys?: string;
+      /** @deprecated string note — prefer disclosure.rows (economy 1.9+) */
+      disclosure?:
+        | string
+        | {
+            screen?: string;
+            rows: Array<{
+              grade: string;
+              nameKo: string;
+              cards: number;
+              normalPct: number;
+              rateUpPct: number;
+              normalPerCardPct: number;
+              rateUpPerCardPct: number;
+            }>;
+            note?: string;
+          };
+      _confirmed?: string;
+      simNote?: string;
     };
   };
   ads: {

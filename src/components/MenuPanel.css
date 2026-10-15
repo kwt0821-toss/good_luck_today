@@ -921,31 +921,32 @@
 }
 
 /* rates */
-.rates-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 14px;
-  background: rgba(243, 233, 215, 0.06);
-  margin-bottom: 12px;
-}
-
-.rates-tabs button {
-  height: 38px;
-  border: 0;
-  border-radius: 11px;
-  background: transparent;
-  color: rgba(243, 233, 215, 0.65);
-  font: inherit;
-  font-weight: 700;
-  font-size: 13px;
+.rates-table-disclosure .rates-row-main {
   cursor: pointer;
 }
 
-.rates-tabs button.is-on {
-  background: var(--menu-cream);
-  color: #1e1a2b;
+.rates-table-disclosure .rates-row-main:active {
+  opacity: 0.88;
+}
+
+.rates-table-disclosure .rates-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: rgba(243, 233, 215, 0.72);
+}
+
+.rates-table-disclosure .rates-expand-hint {
+  color: rgba(243, 233, 215, 0.45);
+  font-weight: 700;
+}
+
+.rates-table-disclosure .rates-row-detail td {
+  padding-top: 0;
+  padding-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(143, 227, 195, 0.92);
+  line-height: 1.35;
 }
 
 .rates-table {

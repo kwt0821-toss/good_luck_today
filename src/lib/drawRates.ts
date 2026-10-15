@@ -35,18 +35,107 @@ function poolForRarity(catalog: DexCatalog, rarity: DrawRarityKey): DexCard[] {
   return catalog.cards.filter((c) => c.type === "breed" && (c.stars ?? 0) === stars);
 }
 
+const RARITY_KEYS: readonly DrawRarityKey[] = [
+  "b1",
+  "b2",
+  "b3",
+  "b4",
+  "b5",
+  "special",
+  "character",
+  "legend",
+];
+
+function isRarityKey(key: string): key is DrawRarityKey {
+  return (RARITY_KEYS as readonly string[]).includes(key);
+}
+
+/** Weighted grade pick from economy.draws.rates_proposal — no client hardcoding. */
 export function pickRarity(economy: OpsEconomy, rateUp: boolean, random = Math.random): DrawRarityKey {
   const table = rateUp ? economy.draws.rates_proposal.rateUp : economy.draws.rates_proposal.normal;
-  const entries = Object.entries(table).filter(([key]) => key !== "_proposal") as Array<
-    [DrawRarityKey, number]
-  >;
+  const entries = Object.entries(table).filter(
+    (entry): entry is [DrawRarityKey, number] =>
+      isRarityKey(entry[0]) && typeof entry[1] === "number" && entry[1] > 0,
+  );
   const total = entries.reduce((sum, [, w]) => sum + w, 0);
+  if (!entries.length || total <= 0) return "b1";
   let roll = random() * total;
   for (const [key, weight] of entries) {
     roll -= weight;
     if (roll < 0) return key;
   }
   return entries[entries.length - 1]?.[0] ?? "b1";
+}
+
+export type RatesDisclosureRow = {
+  grade: string;
+  nameKo: string;
+  cards: number;
+  normalPct: number;
+  rateUpPct: number;
+  normalPerCardPct: number;
+  rateUpPerCardPct: number;
+};
+
+/** Prefer economy.disclosure.rows; fall back to computing from normal/rateUp + catalog counts. */
+export function ratesDisclosureRows(economy: OpsEconomy): RatesDisclosureRow[] {
+  const raw = economy.draws.rates_proposal.disclosure;
+  if (raw && typeof raw === "object" && Array.isArray(raw.rows) && raw.rows.length) {
+    return raw.rows.map((row) => ({
+      grade: row.grade,
+      nameKo: row.nameKo,
+      cards: row.cards,
+      normalPct: row.normalPct,
+      rateUpPct: row.rateUpPct,
+      normalPerCardPct: row.normalPerCardPct,
+      rateUpPerCardPct: row.rateUpPerCardPct,
+    }));
+  }
+  const normal = economy.draws.rates_proposal.normal;
+  const rateUp = economy.draws.rates_proposal.rateUp;
+  const fallbackCards: Record<string, number> = {
+    b1: 18,
+    b2: 18,
+    b3: 18,
+    b4: 18,
+    b5: 18,
+    special: 9,
+    character: 4,
+    legend: 4,
+  };
+  const labels: Record<string, string> = {
+    b1: "1★",
+    b2: "2★",
+    b3: "3★",
+    b4: "4★",
+    b5: "5★",
+    special: "밈(스페셜)",
+    character: "캐릭터",
+    legend: "레전드",
+  };
+  return RARITY_KEYS.map((grade) => {
+    const cards = fallbackCards[grade] ?? 1;
+    const n = normal[grade] ?? 0;
+    const u = rateUp[grade] ?? 0;
+    return {
+      grade,
+      nameKo: labels[grade] ?? grade,
+      cards,
+      normalPct: Math.round(n * 1000) / 10,
+      rateUpPct: Math.round(u * 1000) / 10,
+      normalPerCardPct: Math.round((n / cards) * 1000000) / 10000,
+      rateUpPerCardPct: Math.round((u / cards) * 1000000) / 10000,
+    };
+  });
+}
+
+export function ratesDisclosureNote(economy: OpsEconomy): string {
+  const raw = economy.draws.rates_proposal.disclosure;
+  if (raw && typeof raw === "object" && typeof raw.note === "string" && raw.note.trim()) {
+    return raw.note;
+  }
+  if (typeof raw === "string" && raw.trim()) return raw;
+  return "같은 등급 안에서는 카드별 확률이 같아요 · 합계 100%";
 }
 
 export function pickCardFromCatalog(

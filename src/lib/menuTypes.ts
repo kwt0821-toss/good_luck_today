@@ -105,11 +105,13 @@ export type MenuConfig = {
       title: string;
       eyebrow: string;
       desc: string;
-      tabs: string[];
-      rows: Array<[string, string, number]>;
-      highlight: string[];
-      perCardDecimals: number;
-      note: string;
+      /** @deprecated rates come from economy.disclosure.rows */
+      tabs?: string[];
+      /** @deprecated rates come from economy.disclosure.rows */
+      rows?: Array<[string, string, number]>;
+      highlight?: string[];
+      perCardDecimals?: number;
+      note?: string;
     };
     exchange: {
       title: string;

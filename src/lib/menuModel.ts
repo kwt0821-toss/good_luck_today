@@ -52,7 +52,8 @@ export type MenuViewModel = {
 
 function ratesHighlightSum(menu: MenuConfig, config: OpsConfig): number {
   const table = config.economy.draws.rates_proposal.normal;
-  return menu.sheets.rates.highlight.reduce((sum, key) => sum + (table[key] ?? 0), 0);
+  const keys = menu.sheets.rates.highlight ?? ["b5", "special", "character", "legend"];
+  return keys.reduce((sum, key) => sum + (table[key] ?? 0), 0);
 }
 
 export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> {

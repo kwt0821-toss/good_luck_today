@@ -1,5 +1,5 @@
 {
-  "_version": "1.8",
+  "_version": "1.9",
   "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
   "currency": {
     "paw": {
@@ -255,29 +255,129 @@
     "tutorialNote": "생애 첫 뽑기만 광고 없이 무료, 그날 남은 일반 뽑기는 2회(추가 광고 뽑기)",
     "adFailFallback": "광고 로드 실패 시 재시도 1회, 그래도 실패면 뽑기 소진 없이 '잠시 후 다시 시도해 주세요'",
     "rates_proposal": {
-      "_proposal": true,
       "normal": {
-        "b1": 0.345,
-        "b2": 0.285,
+        "b1": 0.372,
+        "b2": 0.3,
         "b3": 0.17,
-        "b4": 0.1,
-        "b5": 0.035,
-        "special": 0.04,
-        "character": 0.015,
-        "legend": 0.01
+        "b4": 0.09,
+        "b5": 0.025,
+        "special": 0.03,
+        "character": 0.008,
+        "legend": 0.005
       },
       "rateUp": {
-        "b1": 0.15,
-        "b2": 0.2,
+        "b1": 0.193,
+        "b2": 0.25,
         "b3": 0.22,
-        "b4": 0.16,
-        "b5": 0.1,
-        "special": 0.1,
-        "character": 0.045,
-        "legend": 0.025
+        "b4": 0.15,
+        "b5": 0.08,
+        "special": 0.07,
+        "character": 0.025,
+        "legend": 0.012
       },
       "keys": "b1~b5 = 품종 n★ (18품종 균등), special 9장, character 4장, legend 4장 — 같은 등급 안에서는 균등",
-      "disclosure": "확률은 앱 내 '확률 안내'에 공개"
+      "disclosure": {
+        "screen": "확률 안내",
+        "rows": [
+          {
+            "grade": "b1",
+            "nameKo": "1★",
+            "cards": 18,
+            "normalPct": 37.2,
+            "rateUpPct": 19.3,
+            "normalPerCardPct": 2.0667,
+            "rateUpPerCardPct": 1.0722
+          },
+          {
+            "grade": "b2",
+            "nameKo": "2★",
+            "cards": 18,
+            "normalPct": 30.0,
+            "rateUpPct": 25.0,
+            "normalPerCardPct": 1.6667,
+            "rateUpPerCardPct": 1.3889
+          },
+          {
+            "grade": "b3",
+            "nameKo": "3★",
+            "cards": 18,
+            "normalPct": 17.0,
+            "rateUpPct": 22.0,
+            "normalPerCardPct": 0.9444,
+            "rateUpPerCardPct": 1.2222
+          },
+          {
+            "grade": "b4",
+            "nameKo": "4★",
+            "cards": 18,
+            "normalPct": 9.0,
+            "rateUpPct": 15.0,
+            "normalPerCardPct": 0.5,
+            "rateUpPerCardPct": 0.8333
+          },
+          {
+            "grade": "b5",
+            "nameKo": "5★",
+            "cards": 18,
+            "normalPct": 2.5,
+            "rateUpPct": 8.0,
+            "normalPerCardPct": 0.1389,
+            "rateUpPerCardPct": 0.4444
+          },
+          {
+            "grade": "special",
+            "nameKo": "밈(스페셜)",
+            "cards": 9,
+            "normalPct": 3.0,
+            "rateUpPct": 7.0,
+            "normalPerCardPct": 0.3333,
+            "rateUpPerCardPct": 0.7778
+          },
+          {
+            "grade": "character",
+            "nameKo": "캐릭터",
+            "cards": 4,
+            "normalPct": 0.8,
+            "rateUpPct": 2.5,
+            "normalPerCardPct": 0.2,
+            "rateUpPerCardPct": 0.625
+          },
+          {
+            "grade": "legend",
+            "nameKo": "레전드",
+            "cards": 4,
+            "normalPct": 0.5,
+            "rateUpPct": 1.2,
+            "normalPerCardPct": 0.125,
+            "rateUpPerCardPct": 0.3
+          }
+        ],
+        "note": "같은 등급 안에서는 카드별 균등. 합계 100%"
+      },
+      "_confirmed": "1.9 (옵션 B)",
+      "previous_1.8": {
+        "normal": {
+          "b1": 0.345,
+          "b2": 0.285,
+          "b3": 0.17,
+          "b4": 0.1,
+          "b5": 0.035,
+          "special": 0.04,
+          "character": 0.015,
+          "legend": 0.01
+        },
+        "rateUp": {
+          "b1": 0.15,
+          "b2": 0.2,
+          "b3": 0.22,
+          "b4": 0.16,
+          "b5": 0.1,
+          "special": 0.1,
+          "character": 0.045,
+          "legend": 0.025
+        }
+      },
+      "simNote": "10k 시뮬(dex2.py): 도감 완성 중앙값 열심 389일 / 보통 569일 (1.8 대비 273/400일)"
     }
   },
   "ads": {

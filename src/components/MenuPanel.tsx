@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 
 import { AudioManager } from "../audio/AudioManager";
 import { isDevBuild, progressResetUnlockedByDefault } from "../lib/devMode";
@@ -27,6 +34,7 @@ import {
 } from "../lib/mockTicketShop";
 import { buildDupExchangeRequestId, postDupExchange } from "../lib/dupExchange";
 import { buildAttendanceDay7RequestId, readDay7BonusConfig } from "../lib/attendanceServer";
+import { ratesDisclosureNote, ratesDisclosureRows } from "../lib/drawRates";
 import { claimAttendanceDay7, claimAttendanceGift } from "../lib/opsRewards";
 import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
 import type { MenuSheetId } from "../lib/menuTypes";
@@ -124,7 +132,7 @@ export function MenuPanel({
   const [closing, setClosing] = useState(false);
   const [sheet, setSheet] = useState<MenuSheetId>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [ratesTab, setRatesTab] = useState<"normal" | "rateUp">("normal");
+  const [ratesExpandedGrade, setRatesExpandedGrade] = useState<string | null>(null);
   const [settings, setSettings] = useState<MenuSettings>(() => loadMenuSettings());
   const [stampDay, setStampDay] = useState<number | null>(null);
   const [popDay, setPopDay] = useState<number | null>(null);
@@ -709,45 +717,18 @@ export function MenuPanel({
 
   const ratesRows = useMemo(() => {
     if (!model) return [];
-    const table =
-      ratesTab === "rateUp"
-        ? model.config.economy.draws.rates_proposal.rateUp
-        : model.config.economy.draws.rates_proposal.normal;
-    return model.menu.sheets.rates.rows.map(([key, label, count]) => {
-      const rate = table[key] ?? 0;
-      const perCard = rate / count;
-      const decimals = model.menu.sheets.rates.perCardDecimals;
-      const pct = rate * 100;
-      return {
-        key,
-        label,
-        count,
-        rate,
-        percent: Number.isInteger(pct) ? `${pct}%` : `${pct.toFixed(1)}%`,
-        perCard: `${(perCard * 100).toFixed(decimals)}%`,
-        highlight: model.menu.sheets.rates.highlight.includes(key),
-      };
-    });
-  }, [model, ratesTab]);
-
-  const highlightSum = useMemo(() => {
-    if (!model) return 0;
-    const table =
-      ratesTab === "rateUp"
-        ? model.config.economy.draws.rates_proposal.rateUp
-        : model.config.economy.draws.rates_proposal.normal;
-    return model.menu.sheets.rates.highlight.reduce((sum, key) => sum + (table[key] ?? 0), 0);
-  }, [model, ratesTab]);
-
-  const rateUpHighlightSum = useMemo(() => {
-    if (!model) return 0;
-    const table = model.config.economy.draws.rates_proposal.rateUp;
-    return model.menu.sheets.rates.highlight.reduce((sum, key) => sum + (table[key] ?? 0), 0);
+    return ratesDisclosureRows(model.config.economy);
   }, [model]);
 
-  const formatGradePct = (rate: number) => {
-    const pct = rate * 100;
-    return Number.isInteger(pct) ? `${pct}%` : `${pct.toFixed(1)}%`;
+  const ratesNote = useMemo(() => {
+    if (!model) return "같은 등급 안에서는 카드별 확률이 같아요 · 합계 100%";
+    return ratesDisclosureNote(model.config.economy);
+  }, [model]);
+
+  const formatDisclosurePct = (pct: number) => {
+    if (Number.isInteger(pct)) return `${pct}%`;
+    const fixed = pct.toFixed(4).replace(/\.?0+$/, "");
+    return `${fixed}%`;
   };
 
   if (!open && !closing) return null;
@@ -990,7 +971,8 @@ export function MenuPanel({
                         model.attendance.firstWeekGifts[6]?.nameKo ?? "캣타워",
                       )
                     : sheet === "rates"
-                      ? model.menu.sheets.rates.desc
+                      ? model.menu.sheets.rates.desc ||
+                        "뽑기 결과는 서버에서 정해져요.\n같은 등급 안에서는 카드마다 확률이 같아요."
                       : sheet === "exchange"
                         ? model.menu.sheets.exchange.desc
                         : sheet === "ticketShop"
@@ -1161,58 +1143,59 @@ export function MenuPanel({
 
                 {sheet === "rates" ? (
                   <>
-                    <div className="rates-tabs">
-                      {model.menu.sheets.rates.tabs.map((label, index) => (
-                        <button
-                          key={label}
-                          type="button"
-                          className={ratesTab === (index === 0 ? "normal" : "rateUp") ? "is-on" : ""}
-                          onClick={() => setRatesTab(index === 0 ? "normal" : "rateUp")}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                    <table className="rates-table">
+                    <table className="rates-table rates-table-disclosure">
                       <thead>
                         <tr>
-                          <th style={{ width: 74 }}>등급</th>
-                          <th> </th>
-                          <th style={{ width: 60, textAlign: "right" }}>등급 확률</th>
-                          <th style={{ width: 64, textAlign: "right" }}>카드 1장</th>
+                          <th>등급</th>
+                          <th style={{ textAlign: "right" }}>장수</th>
+                          <th style={{ textAlign: "right" }}>일반 %</th>
+                          <th style={{ textAlign: "right" }}>확률업 %</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {ratesRows.map((row) => (
-                          <tr key={row.key} className={row.highlight ? "is-hi" : ""}>
-                            <td>
-                              {row.label}
-                              <small className="rates-count"> ({row.count}장)</small>
-                            </td>
-                            <td>
-                              <div className="rates-bar">
-                                <i style={{ width: `${Math.min(100, row.rate * 100 * 2)}%` }} />
-                              </div>
-                            </td>
-                            <td className="rates-pct">{row.percent}</td>
-                            <td className="rates-one">{row.perCard}</td>
-                          </tr>
-                        ))}
+                        {ratesRows.map((row) => {
+                          const open = ratesExpandedGrade === row.grade;
+                          const rare =
+                            row.grade === "b5" ||
+                            row.grade === "special" ||
+                            row.grade === "character" ||
+                            row.grade === "legend";
+                          return (
+                            <Fragment key={row.grade}>
+                              <tr
+                                className={`rates-row-main ${open ? "is-open" : ""} ${
+                                  rare ? "is-hi" : ""
+                                }`}
+                                onClick={() =>
+                                  setRatesExpandedGrade((prev) =>
+                                    prev === row.grade ? null : row.grade,
+                                  )
+                                }
+                              >
+                                <td>
+                                  {row.nameKo}
+                                  <span className="rates-expand-hint" aria-hidden="true">
+                                    {open ? " ▾" : " ›"}
+                                  </span>
+                                </td>
+                                <td className="rates-num">{row.cards}</td>
+                                <td className="rates-pct">{formatDisclosurePct(row.normalPct)}</td>
+                                <td className="rates-pct">{formatDisclosurePct(row.rateUpPct)}</td>
+                              </tr>
+                              {open ? (
+                                <tr className="rates-row-detail">
+                                  <td colSpan={4}>
+                                    카드 1장당 · 일반 {formatDisclosurePct(row.normalPerCardPct)} ·
+                                    확률업 {formatDisclosurePct(row.rateUpPerCardPct)}
+                                  </td>
+                                </tr>
+                              ) : null}
+                            </Fragment>
+                          );
+                        })}
                       </tbody>
                     </table>
-                    <div className="rates-sum">
-                      <span>5성 + 스페셜 + 캐릭터 + 레전드</span>
-                      <b>{formatGradePct(highlightSum)}</b>
-                    </div>
-                    <p className="rates-note">
-                      {ratesTab === "normal" ? (
-                        <>
-                          확률업 뽑기에선 이 합계가 {formatGradePct(rateUpHighlightSum)}로 올라가요
-                          <br />
-                        </>
-                      ) : null}
-                      {model.menu.sheets.rates.note}
-                    </p>
+                    <p className="rates-note">{ratesNote}</p>
                   </>
                 ) : null}
 
