@@ -10,6 +10,11 @@
   pointer-events: none;
 }
 
+/* Help earn sheet must sit above tutorial coach (z≈135–140). */
+.menu-root.is-help-open {
+  z-index: 150;
+}
+
 .menu-root.is-open {
   pointer-events: auto;
 }
@@ -1294,11 +1299,28 @@
 
 /* —— Rewards wallet (menu-screen-d) —— */
 .wallet-card {
+  position: relative;
   margin: 4px 0 14px;
   padding: 14px 16px;
   border-radius: 16px;
   border: 1px solid rgba(243, 233, 215, 0.18);
   background: linear-gradient(145deg, rgba(255, 226, 154, 0.12), rgba(243, 233, 215, 0.04));
+}
+
+.wallet-card-help {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(243, 233, 215, 0.28);
+  border-radius: 50%;
+  background: rgba(243, 233, 215, 0.1);
+  color: rgba(243, 233, 215, 0.85);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .wallet-card-label {

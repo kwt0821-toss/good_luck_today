@@ -86,7 +86,23 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
       rateUpUsed: typeof parsed.rateUpUsed === "number" ? parsed.rateUpUsed : fallback.rateUpUsed,
       adDrawNyangToday:
         typeof parsed.adDrawNyangToday === "number" ? parsed.adDrawNyangToday : 0,
+      adPawNyangToday:
+        typeof parsed.adPawNyangToday === "number" ? parsed.adPawNyangToday : 0,
       pawAdsUsed: typeof parsed.pawAdsUsed === "number" ? parsed.pawAdsUsed : fallback.pawAdsUsed,
+      pawAdLedger: Array.isArray(parsed.pawAdLedger)
+        ? parsed.pawAdLedger
+            .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+            .map((item) => ({
+              requestId: typeof item.requestId === "string" ? item.requestId : "",
+              createdAt: typeof item.createdAt === "number" ? item.createdAt : 0,
+              paw: typeof item.paw === "number" ? item.paw : 0,
+              nyangCoin: typeof item.nyangCoin === "number" ? item.nyangCoin : 0,
+              pawBalance: typeof item.pawBalance === "number" ? item.pawBalance : 0,
+              nyangCoinBalance:
+                typeof item.nyangCoinBalance === "number" ? item.nyangCoinBalance : 0,
+            }))
+            .filter((item) => item.requestId)
+        : fallback.pawAdLedger,
       tutorialFirstDrawUsed: Boolean(parsed.tutorialFirstDrawUsed),
       tutorialDone: Boolean(parsed.tutorialDone),
       tutorialStep: typeof parsed.tutorialStep === "number" ? parsed.tutorialStep : 1,

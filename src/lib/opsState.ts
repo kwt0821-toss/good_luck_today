@@ -26,6 +26,8 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     rateUpUsed: 0,
     pawAdsUsed: 0,
     adDrawNyangToday: 0,
+    adPawNyangToday: 0,
+    pawAdLedger: [],
     tutorialFirstDrawUsed: false,
     tutorialDone: false,
     tutorialStep: 1,
@@ -89,6 +91,7 @@ export function applyOpsDailyReset(state: OpsState, today = toKstDateKey()): Ops
     rateUpUsed: 0,
     pawAdsUsed: 0,
     adDrawNyangToday: 0,
+    adPawNyangToday: 0,
     pendingDraw: null,
   };
 }

@@ -1,5 +1,5 @@
 {
-  "_version": "2.0",
+  "_version": "2.1",
   "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
   "currency": {
     "paw": {
@@ -15,7 +15,7 @@
         "unit": "KRW",
         "text": "1냥코인 = 토스포인트 1원"
       },
-      "earnOnly": "광고 뽑기(1회 1개), 도감 보상(새 카드·세트·전체 완성), 업적, 출석 7일차로 얻어요. 구매·무료/뽑기권 뽑기·포인트 광고로는 안 줘요. (ncoinSources)",
+      "earnOnly": "광고 뽑기·포인트 광고(1회 1개), 도감 보상(새 카드·세트·전체 완성), 업적, 출석 7일차로 얻어요. 구매·무료 뽑기·뽑기권 뽑기로는 안 줘요. (ncoinSources)",
       "spendInApp": false,
       "note": "앱 안에서 쓰지 않고 토스포인트로 받기만 해요. 포인트(발바닥, paw)와 별개 화폐예요."
     }
@@ -26,7 +26,8 @@
       "maxPerDay": 10,
       "maxPawPerDay": 100,
       "adType": "short",
-      "grantOn": "adCompleteCallback"
+      "grantOn": "adCompleteCallback",
+      "nyangCoinPerAd": 1
     },
     "newCardFirstGet": {
       "paw": 20,
@@ -130,7 +131,7 @@
     "claimMode": "manual"
   },
   "nyangCoin": {
-    "maxEarnPerUser": "고정 아님: 광고 뽑기 하루 최대 4 + 도감·업적 988 + 출석 7일차",
+    "maxEarnPerUser": "고정 아님: 광고 하루 최대 14(뽑기 4 + 포인트 광고 10) + 도감·업적 988 + 출석 7일차",
     "formula": "새 카드 597 (54×1 + 18×5 + 18×10 + 9×5 + 4×7 + 4×50) + 세트 210 (18×10 + 3×10) + 도감 완성 100 + 업적 81 = 988",
     "grant": {
       "oncePerTossAccountPerReward": true,
@@ -614,7 +615,7 @@
       "appliesTo": [
         "rewardedAd"
       ],
-      "note": "광고 포인트만 2배 (냥코인·중복 전환은 제외)"
+      "note": "광고 포인트만 2배 (광고 냥코인 1개·중복 전환은 그대로)"
     },
     "monthlyCardPack": {
       "enabled": false,
@@ -720,6 +721,18 @@
     "dexNewCard": "pawSources.newCardFirstGet.nyangCoinByGrade",
     "dexSets": "pawSources.setComplete",
     "achievements": "achievements.json",
-    "attendanceDay7": "pawSources.attendance.weeklyCycle.day7Bonus"
+    "attendanceDay7": "pawSources.attendance.weeklyCycle.day7Bonus",
+    "adPaw": 1,
+    "adPawRule": {
+      "applies": "포인트 광고(pawSources.rewardedAd) 완료 1회마다",
+      "dailyMax": 10,
+      "weekendDouble": "포인트만 2배, 냥코인은 1개 그대로",
+      "grantOn": "광고 완료 콜백 서버 검증 후 포인트와 같은 트랜잭션",
+      "idempotency": "tossUserKey + adRequestId",
+      "notice": "광고를 봐서 냥코인x1이 지급되었습니다."
+    },
+    "adsDailyMaxTotal": 14,
+    "adsYearlyMaxTotal": 5110,
+    "adsDailyMaxNote": "광고 뽑기 4 + 포인트 광고 10"
   }
 }

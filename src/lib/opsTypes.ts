@@ -118,6 +118,19 @@ export type OpsEconomy = {
     dexSets?: string;
     achievements?: string;
     attendanceDay7?: string;
+    /** economy 2.1 — 포인트 광고 1회당 냥코인 */
+    adPaw?: number;
+    adPawRule?: {
+      applies?: string;
+      dailyMax?: number;
+      weekendDouble?: string;
+      grantOn?: string;
+      idempotency?: string;
+      notice?: string;
+    };
+    adsDailyMaxTotal?: number;
+    adsYearlyMaxTotal?: number;
+    adsDailyMaxNote?: string;
   };
   /** Manual claim from dex (claimMode: manual). Amounts still come from pawSources. */
   dexRewards?: {
@@ -560,6 +573,17 @@ export type OpsState = {
   pawAdsUsed: number;
   /** Ad-draw 냥코인 grants today (ncoinSources.adDrawRule.dailyMax). */
   adDrawNyangToday: number;
+  /** Point-ad 냥코인 grants today (ncoinSources.adPawRule.dailyMax). */
+  adPawNyangToday: number;
+  /** Idempotent ledger for POST /ads/paw/reward (tossUserKey + requestId). */
+  pawAdLedger: Array<{
+    requestId: string;
+    createdAt: number;
+    paw: number;
+    nyangCoin: number;
+    pawBalance: number;
+    nyangCoinBalance: number;
+  }>;
   /** Lifetime: tutorial first free draw already consumed */
   tutorialFirstDrawUsed: boolean;
   tutorialDone: boolean;
