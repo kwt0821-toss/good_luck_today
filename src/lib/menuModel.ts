@@ -10,12 +10,13 @@ import {
   remainingTodayAmount,
   withdrawnTodayAmount,
 } from "./mockWallet";
-import { isWeekendDoublePaw, loadOpsConfig, computeOwnedCozy, cozyLevelFromPoints } from "./opsConfig";
+import { isWeekendDoublePaw, loadOpsConfig } from "./opsConfig";
 import { getTicketShopStatus } from "./mockTicketShop";
 import { remainingPawAds } from "./opsState";
 import type { OpsConfig, OpsState } from "./opsTypes";
 import { loadMenuConfig, menuAsset } from "./menuConfig";
 import type { MenuBadge, MenuConfig, MenuRowView } from "./menuTypes";
+import { getRoomCozy } from "./roomCozy";
 
 export type MenuViewModel = {
   menu: MenuConfig;
@@ -68,11 +69,9 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
   const attendance = attendancePack.status;
   const dexOwned = Object.values(owned).filter((r) => r.count > 0).length;
   const dexTotal = catalog.total || 107;
-  const cozyPoints = computeOwnedCozy(config.prices, ops.ownedItemIds);
-  const cozyLevel =
-    typeof ops.devForceCozyLevel === "number" && ops.devForceCozyLevel > 0
-      ? ops.devForceCozyLevel
-      : cozyLevelFromPoints(config.economy, cozyPoints);
+  const cozy = await getRoomCozy();
+  const cozyPoints = cozy.cozyPoints;
+  const cozyLevel = cozy.level;
 
   const exchangeSummary = summarizeDupExchange(catalog.cards, owned, config.economy);
   const duplicateCount = exchangeSummary.duplicateCount;

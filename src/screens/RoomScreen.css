@@ -130,11 +130,26 @@
   text-align: right;
 }
 
-.lucky-meta strong {
+.lucky-meta strong,
+.lucky-cozy-chip {
   display: block;
   font-family: Poppins, sans-serif;
   font-weight: 800;
   font-size: 12px;
+}
+
+.lucky-cozy-chip {
+  margin: 0 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: right;
+}
+
+.lucky-cozy-chip:active {
+  opacity: 0.75;
 }
 
 .lucky-meta span {

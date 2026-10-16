@@ -154,6 +154,10 @@ export function cozyLevelFromPoints(economy: OpsEconomy, cozyPoints: number): nu
   return level;
 }
 
+/**
+ * @deprecated Prefer {@link computeCozyPointsFromOwned} / {@link getRoomCozy}
+ * (economy 2.2 count-aware formula). Kept as a unique-id fallback (count=1 each).
+ */
 export function computeOwnedCozy(prices: OpsPrices, ownedItemIds: string[]): number {
   const byId = new Map(prices.items.map((item) => [item.id, item]));
   let total = 0;
@@ -161,7 +165,10 @@ export function computeOwnedCozy(prices: OpsPrices, ownedItemIds: string[]): num
   for (const id of ownedItemIds) {
     if (seen.has(id)) continue;
     seen.add(id);
-    total += byId.get(id)?.cozy ?? 0;
+    const priced = byId.get(id);
+    if (!priced) continue;
+    // Fallback without economy context: use catalog cozy field (legacy).
+    total += priced.cozy ?? 0;
   }
   return total;
 }

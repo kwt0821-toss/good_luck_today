@@ -1,5 +1,6 @@
-import { computeOwnedCozy, cozyLevelFromPoints, loadOpsConfig, priceById } from "./opsConfig";
+import { loadOpsConfig, priceById } from "./opsConfig";
 import { loadOpsState, saveOpsState } from "./opsStorage";
+import { resolveCozyStatus } from "./roomCozy";
 import type { RoomItem, RoomSaveState } from "./roomTypes";
 
 /** Overlay prices/cozy from prices.json onto catalog items. */
@@ -55,11 +56,13 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
     .map(([id]) => id);
   // Prefer ops inventory; room-owned fills gaps without letting mock seeds rewrite unlocks.
   const mergedOwned = [...new Set([...ops.ownedItemIds, ...ownedIds])];
-  const cozyPoints = computeOwnedCozy(config.prices, mergedOwned);
-  const cozyLevel =
-    typeof ops.devForceCozyLevel === "number" && ops.devForceCozyLevel > 0
-      ? ops.devForceCozyLevel
-      : cozyLevelFromPoints(config.economy, cozyPoints);
+  const ownedCounts: Record<string, number> = {
+    ...state.owned,
+    ...Object.fromEntries(mergedOwned.map((id) => [id, Math.max(1, state.owned[id] ?? 1)])),
+  };
+  const cozy = resolveCozyStatus(ownedCounts, config.prices, config.economy, {
+    forceLevel: ops.devForceCozyLevel,
+  });
 
   // Prefer ops balance as source of truth when room still has mock seed.
   const points = ops.pawBalance > 0 || state.points === 1240 ? ops.pawBalance : state.points;
@@ -71,7 +74,7 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
       if (ops.unlockedRoomIds.includes(room.id)) return true;
       const needPaw = room.unlock.paw ?? 0;
       const needLv = room.unlock.cozyLevel ?? 0;
-      return points >= needPaw && cozyLevel >= needLv;
+      return points >= needPaw && cozy.level >= needLv;
     })
     .map((room) => room.id)
     .filter((id) => Boolean(state.rooms[id]));
@@ -91,14 +94,20 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
   return {
     ...state,
     points,
-    cozyLevel,
+    cozyLevel: cozy.level,
     unlocked: nextUnlocked,
     currentRoomId,
-    owned: {
-      ...state.owned,
-      ...Object.fromEntries(mergedOwned.map((id) => [id, Math.max(1, state.owned[id] ?? 1)])),
-    },
+    owned: ownedCounts,
   };
+}
+
+/** Recalculate cozy after buy/sell (economy 2.2). Returns updated room save. */
+export async function recalculateRoomCozy(state: RoomSaveState): Promise<RoomSaveState> {
+  const [config, ops] = await Promise.all([loadOpsConfig(), loadOpsState()]);
+  const cozy = resolveCozyStatus(state.owned, config.prices, config.economy, {
+    forceLevel: ops.devForceCozyLevel,
+  });
+  return { ...state, cozyLevel: cozy.level };
 }
 
 export async function spendRoomPoints(pointsAfter: number): Promise<void> {
