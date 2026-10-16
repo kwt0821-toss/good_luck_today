@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import { loadOpsConfig } from "../lib/opsConfig";
-import type { OpsEconomy, PriceTier } from "../lib/opsTypes";
+import type { OpsEconomy, OpsPrices, PriceTier } from "../lib/opsTypes";
 import {
   COZY_SHEET_TIER_LABEL,
   COZY_SHEET_TIER_ORDER,
@@ -25,31 +25,29 @@ type TierCard = {
   dupLabel: string;
 };
 
-function buildTierCards(economy: OpsEconomy): TierCard[] {
-  return COZY_SHEET_TIER_ORDER.map((tier) => {
-    const points = economy.cozy.pointsPerTier[tier] ?? 0;
-    const dup = economy.cozy.duplicatePointsPerTier?.[tier];
-    const dupLabel =
-      tier === "tile" || dup == null ? "1번" : `+${dup}`;
-    return {
-      tier,
-      label: COZY_SHEET_TIER_LABEL[tier],
-      points,
-      dupLabel,
-    };
-  });
-}
-
-function legendNote(economy: OpsEconomy): string {
-  const base = economy.cozy.pointsPerTier.legend ?? 60;
-  const dup = economy.cozy.duplicatePointsPerTier?.legend ?? 30;
-  return `레전드급 한정 아이템은 ${base}점 (+${dup})`;
+/** Only tiers that have at least one priced item (legend excluded from the sheet). */
+function buildTierCards(economy: OpsEconomy, prices: OpsPrices): TierCard[] {
+  const present = new Set(
+    prices.items.map((item) => item.tier).filter((tier): tier is PriceTier => Boolean(tier)),
+  );
+  return COZY_SHEET_TIER_ORDER.filter((tier) => tier !== "legend" && present.has(tier)).map(
+    (tier) => {
+      const points = economy.cozy.pointsPerTier[tier] ?? 0;
+      const dup = economy.cozy.duplicatePointsPerTier?.[tier];
+      const dupLabel = tier === "tile" || dup == null ? "1번" : `+${dup}`;
+      return {
+        tier,
+        label: COZY_SHEET_TIER_LABEL[tier],
+        points,
+        dupLabel,
+      };
+    },
+  );
 }
 
 export function CozySheet({ open, onClose, onBrowseItems }: CozySheetProps) {
   const [status, setStatus] = useState<RoomCozyResponse | null>(null);
   const [cards, setCards] = useState<TierCard[]>([]);
-  const [legend, setLegend] = useState("레전드급 한정 아이템은 60점 (+30)");
   const sheetRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
   const [dragY, setDragY] = useState(0);
@@ -63,8 +61,7 @@ export function CozySheet({ open, onClose, onBrowseItems }: CozySheetProps) {
     void Promise.all([getRoomCozy(), loadOpsConfig()]).then(([cozy, config]) => {
       if (cancelled) return;
       setStatus(cozy);
-      setCards(buildTierCards(config.economy));
-      setLegend(legendNote(config.economy));
+      setCards(buildTierCards(config.economy, config.prices));
     });
     return () => {
       cancelled = true;
@@ -160,10 +157,6 @@ export function CozySheet({ open, onClose, onBrowseItems }: CozySheetProps) {
               <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />
             </span>
             방에 놓지 않아도 가지고 있으면 점수가 올라요
-          </div>
-          <div className="cozy-sheet-nt">
-            <span aria-hidden="true">★</span>
-            {legend}
           </div>
         </div>
 
