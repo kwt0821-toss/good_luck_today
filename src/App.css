@@ -1674,13 +1674,13 @@
   opacity: 0;
 }
 
-/* Card → CTA 16px, CTA → count 12px (flex column, not absolute). */
+/* Card → CTA: keep tight under the art; CTA → count 12px. */
 .main-after-stage {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 8px;
   padding: 0 24px;
   box-sizing: border-box;
   width: 100%;
