@@ -1,9 +1,7 @@
 #root {
   width: 100%;
   height: 100%;
-  height: 100dvh;
   min-height: 100%;
-  min-height: 100dvh;
   box-sizing: border-box;
   background: #f7fcfb;
   position: relative;
@@ -914,18 +912,19 @@
   --night: #221e3a;
   --cta: #ffc48a;
   --cat-stage-scale: 1;
-  --main-safe-top: env(safe-area-inset-top, 0px);
-  --main-safe-bottom: max(
-    env(safe-area-inset-bottom, 0px),
-    var(--toss-safe-area-bottom, 0px)
+  /* From useTossSafeArea → SafeArea.get(); fallback to CSS env outside Toss. */
+  --main-inset-bottom: max(
+    var(--toss-inset-bottom, 0px),
+    env(safe-area-inset-bottom, 0px)
   );
+  --main-inset-left: max(var(--toss-inset-left, 0px), env(safe-area-inset-left, 0px));
+  --main-inset-right: max(var(--toss-inset-right, 0px), env(safe-area-inset-right, 0px));
   position: relative;
   flex: 1;
   min-height: 0;
   width: 100%;
-  /* Fill the Toss webview / #root edge-to-edge. */
+  /* Fill #root = Toss webview content area (below opaque title bar). */
   height: 100%;
-  height: 100dvh;
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -935,17 +934,10 @@
   font-family: "Noto Sans KR", "Toss Product Sans", sans-serif;
   box-sizing: border-box;
   padding-top: 0;
-  padding-right: env(safe-area-inset-right, 0px);
+  padding-right: var(--main-inset-right);
   padding-bottom: 0;
-  padding-left: env(safe-area-inset-left, 0px);
+  padding-left: var(--main-inset-left);
   background: #14132a;
-}
-
-@media (min-width: 481px) {
-  .main-screen {
-    height: 100%;
-    max-height: 100%;
-  }
 }
 
 /* Letterbox / pillarbox — same night sky as the design frame. */
@@ -988,14 +980,15 @@
   z-index: 0;
 }
 
-/* ① Top: logo · title · date — flush to content top.
-   Prefer safe-area alone; keep a small 8px floor when inset is 0. */
+/* ① Top: logo · title · date — flush to webview top.
+   Opaque Toss title bar already sits above the webview (layout-spec §0),
+   so do NOT add safe-area-inset-top here. */
 .main-top {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
   width: 100%;
-  padding-top: max(8px, var(--main-safe-top));
+  padding-top: 16px;
   box-sizing: border-box;
 }
 
@@ -1886,7 +1879,7 @@
   opacity: 0.45;
 }
 
-/* ③ Bottom: dex · room — flush to screen bottom (safe-area only + 2px) */
+/* ③ Bottom: dex · room — flush to webview bottom + Toss SafeArea.bottom */
 .main-bottom {
   position: relative;
   z-index: 2;
@@ -1897,7 +1890,7 @@
   width: 100%;
   max-width: 390px;
   margin: 0;
-  padding: 2px 22px calc(2px + var(--main-safe-bottom));
+  padding: 4px 22px calc(6px + var(--main-inset-bottom));
   box-sizing: border-box;
 }
 

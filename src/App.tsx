@@ -29,6 +29,7 @@ import { newCardPaw, nyangCoinForCard } from "./lib/nyangCoinGrade";
 import { cancelDrawReservation, preloadDrawImages, reserveDraw } from "./lib/mockDrawApi";
 import { getWithdrawRules } from "./lib/mockWallet";
 import { configureNavigationBar, haptic } from "./lib/native";
+import { useTossSafeArea } from "./lib/useTossSafeArea";
 import { loadOpsConfig } from "./lib/opsConfig";
 import {
   buildPawAdRequestId,
@@ -136,6 +137,9 @@ function startAdPresentation(): AdSession["presentation"] {
 }
 
 export default function App() {
+  // Opaque Toss title bar → webview is already below it; sync bottom/side insets.
+  useTossSafeArea();
+
   const [ops, setOps] = useState<OpsState | null>(null);
   const [config, setConfig] = useState<OpsConfig | null>(null);
   const [screen, setScreen] = useState<Screen>(initialScreen);

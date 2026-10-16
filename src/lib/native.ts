@@ -18,11 +18,15 @@ export async function configureNavigationBar(options: {
   withBackButton?: boolean;
 }): Promise<void> {
   try {
+    // Opaque title bar: webview content starts below it (layout-spec §0).
+    // transparentBackground:true would overlay the bar and require SafeArea.top.
     await NavigationBar.setOptions({
       withBackButton: options.withBackButton ?? false,
       withHomeButton: true,
       withTitle: true,
-      theme: "light",
+      transparentBackground: false,
+      backgroundColor: "#14132A",
+      theme: "dark",
     });
   } catch {
     // 브라우저 미리보기에서는 네이티브 내비게이션이 없어요.
