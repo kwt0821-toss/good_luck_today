@@ -130,6 +130,13 @@ function buildRewardsForDay(
   return rewards;
 }
 
+/** Menu gift thumb: prefer baseArtFrom (gift-calendar.png) over att_* id. */
+export function attendanceGiftThumb(itemId: string, config: OpsConfig): string {
+  const price = config.prices.items.find((item) => item.id === itemId);
+  const artId = price?.baseArtFrom || itemId;
+  return `/assets/menu/gift-${artId}.png`;
+}
+
 export function todayRewardLabel(
   nPreview: number,
   config: OpsConfig,
@@ -327,7 +334,7 @@ export async function getAttendanceStatus(state: OpsState): Promise<{
       day: gift.day,
       itemId: gift.itemId,
       nameKo: price?.nameKo ?? gift.itemId,
-      thumb: `/assets/menu/gift-${gift.itemId}.png`,
+      thumb: attendanceGiftThumb(gift.itemId, config),
       claimed,
       isToday,
       attendanceOnly: true,
