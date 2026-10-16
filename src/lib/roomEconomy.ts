@@ -56,7 +56,10 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
   // Prefer ops inventory; room-owned fills gaps without letting mock seeds rewrite unlocks.
   const mergedOwned = [...new Set([...ops.ownedItemIds, ...ownedIds])];
   const cozyPoints = computeOwnedCozy(config.prices, mergedOwned);
-  const cozyLevel = cozyLevelFromPoints(config.economy, cozyPoints);
+  const cozyLevel =
+    typeof ops.devForceCozyLevel === "number" && ops.devForceCozyLevel > 0
+      ? ops.devForceCozyLevel
+      : cozyLevelFromPoints(config.economy, cozyPoints);
 
   // Prefer ops balance as source of truth when room still has mock seed.
   const points = ops.pawBalance > 0 || state.points === 1240 ? ops.pawBalance : state.points;

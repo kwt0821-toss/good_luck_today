@@ -69,7 +69,10 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
   const dexOwned = Object.values(owned).filter((r) => r.count > 0).length;
   const dexTotal = catalog.total || 107;
   const cozyPoints = computeOwnedCozy(config.prices, ops.ownedItemIds);
-  const cozyLevel = cozyLevelFromPoints(config.economy, cozyPoints);
+  const cozyLevel =
+    typeof ops.devForceCozyLevel === "number" && ops.devForceCozyLevel > 0
+      ? ops.devForceCozyLevel
+      : cozyLevelFromPoints(config.economy, cozyPoints);
 
   const exchangeSummary = summarizeDupExchange(catalog.cards, owned, config.economy);
   const duplicateCount = exchangeSummary.duplicateCount;
