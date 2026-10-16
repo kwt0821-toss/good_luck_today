@@ -9,7 +9,7 @@ import {
 
 import { AudioManager } from "../audio/AudioManager";
 import { isDevBuild, progressResetUnlockedByDefault } from "../lib/devMode";
-import { resetToNewUserState } from "../lib/devReset";
+import { DEV_MAX_COZY_LEVEL, resetToNewUserState, unlockMaxDevState } from "../lib/devReset";
 import { menuAsset } from "../lib/menuConfig";
 import { NCOIN_ICON, ncoinIcon } from "../lib/ncoinIcon";
 import {
@@ -142,6 +142,7 @@ export function MenuPanel({
   const [devResetting, setDevResetting] = useState(false);
   const [progressResetVisible, setProgressResetVisible] = useState(() => readProgressResetUnlocked());
   const [progressResetConfirm, setProgressResetConfirm] = useState(false);
+  const [progressMaxConfirm, setProgressMaxConfirm] = useState(false);
   const versionTapRef = useRef({ count: 0, timer: 0, lastMs: 0 });
   const [rewardsView, setRewardsView] = useState<RewardsView>("inbox");
   const [withdrawAmount, setWithdrawAmount] = useState(0);
@@ -340,7 +341,7 @@ export function MenuPanel({
   };
 
   const unlockProgressReset = () => {
-    if (devResetting || progressResetConfirm) return;
+    if (devResetting || progressResetConfirm || progressMaxConfirm) return;
     const stamp = versionTapRef.current;
     const now = Date.now();
     // pointerdown-only counting; ignore rapid duplicates from the same gesture.
@@ -369,6 +370,15 @@ export function MenuPanel({
     }, 2800);
   };
 
+  const reloadAfterDevProgress = () => {
+    // Hard reload — Toss WebViews sometimes keep the old SPA shell on assign("/").
+    const url = `${window.location.pathname}?reset=${Date.now()}`;
+    window.location.replace(url);
+    window.setTimeout(() => {
+      window.location.href = url;
+    }, 200);
+  };
+
   const runProgressReset = () => {
     if (devResetting) return;
     setDevResetting(true);
@@ -376,12 +386,7 @@ export function MenuPanel({
       .then((next) => {
         onOpsChange(next);
         onDevResetNewUser?.();
-        // Hard reload — Toss WebViews sometimes keep the old SPA shell on assign("/").
-        const url = `${window.location.pathname}?reset=${Date.now()}`;
-        window.location.replace(url);
-        window.setTimeout(() => {
-          window.location.href = url;
-        }, 200);
+        reloadAfterDevProgress();
       })
       .catch((err) => {
         console.error("progress reset failed", err);
@@ -393,6 +398,29 @@ export function MenuPanel({
           title: "초기화하지 못했어요",
           sub: "네트워크를 확인하고 다시 눌러 주세요",
           action: { label: "다시 시도", onClick: () => runProgressReset() },
+        });
+      });
+  };
+
+  const runProgressMaxUnlock = () => {
+    if (devResetting) return;
+    setDevResetting(true);
+    void unlockMaxDevState()
+      .then((next) => {
+        onOpsChange(next);
+        onDevResetNewUser?.();
+        reloadAfterDevProgress();
+      })
+      .catch((err) => {
+        console.error("progress max unlock failed", err);
+        setDevResetting(false);
+        setProgressMaxConfirm(false);
+        nyNotify({
+          key: "progress-max-fail",
+          kind: "error",
+          title: "풀 진행도를 적용하지 못했어요",
+          sub: "네트워크를 확인하고 다시 눌러 주세요",
+          action: { label: "다시 시도", onClick: () => runProgressMaxUnlock() },
         });
       });
   };
@@ -1630,19 +1658,36 @@ export function MenuPanel({
                       </div>
                     ) : null}
                     {progressResetVisible ? (
-                      <div className="settings-row settings-row-dev">
-                        <button
-                          type="button"
-                          className="link is-danger"
-                          disabled={devResetting}
-                          onClick={() => {
-                            if (devResetting) return;
-                            setProgressResetConfirm(true);
-                          }}
-                        >
-                          {devResetting ? "초기화 중…" : "진행도 초기화"}
-                        </button>
-                      </div>
+                      <>
+                        <div className="settings-row settings-row-dev">
+                          <button
+                            type="button"
+                            className="link is-danger"
+                            disabled={devResetting}
+                            onClick={() => {
+                              if (devResetting) return;
+                              setProgressMaxConfirm(false);
+                              setProgressResetConfirm(true);
+                            }}
+                          >
+                            {devResetting ? "적용 중…" : "진행도 초기화"}
+                          </button>
+                        </div>
+                        <div className="settings-row settings-row-dev">
+                          <button
+                            type="button"
+                            className="link is-max"
+                            disabled={devResetting}
+                            onClick={() => {
+                              if (devResetting) return;
+                              setProgressResetConfirm(false);
+                              setProgressMaxConfirm(true);
+                            }}
+                          >
+                            {devResetting ? "적용 중…" : "풀 진행도 적용"}
+                          </button>
+                        </div>
+                      </>
                     ) : null}
                     {creditsText ? (
                       <pre className="menu-credits">{creditsText}</pre>
@@ -1856,6 +1901,45 @@ export function MenuPanel({
                 onClick={runProgressReset}
               >
                 {devResetting ? "초기화 중…" : "초기화"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {progressMaxConfirm ? (
+        <div className="settings-reset-overlay" role="dialog" aria-modal="true" aria-label="풀 진행도 적용 확인">
+          <button
+            type="button"
+            className="settings-reset-overlay-dim"
+            aria-label="닫기"
+            disabled={devResetting}
+            onClick={() => {
+              if (!devResetting) setProgressMaxConfirm(false);
+            }}
+          />
+          <div className="settings-reset-confirm is-modal">
+            <strong>풀 진행도를 적용할까요?</strong>
+            <p>
+              도감 카드를 모두 보유하고, 방꾸미기 아이템을 전부 소유하며, 코지 Lv.{DEV_MAX_COZY_LEVEL}·모든 방
+              해금 상태로 맞춰요.
+            </p>
+            <div className="settings-reset-confirm-actions">
+              <button
+                type="button"
+                className="menu-sheet-cta is-secondary"
+                disabled={devResetting}
+                onClick={() => setProgressMaxConfirm(false)}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="menu-sheet-cta"
+                disabled={devResetting}
+                onClick={runProgressMaxUnlock}
+              >
+                {devResetting ? "적용 중…" : "적용"}
               </button>
             </div>
           </div>

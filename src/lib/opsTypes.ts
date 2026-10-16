@@ -688,6 +688,11 @@ export type OpsState = {
   attendanceNyangYearKey: string;
   /** 냥코인 granted from attendance day7 bonus in the current KST year. */
   attendanceNyangCoinYear: number;
+  /**
+   * Hidden debug: when set, menu/room cozy level uses this instead of owned-item sum.
+   * Cleared by 진행도 초기화.
+   */
+  devForceCozyLevel?: number | null;
 };
 
 export type TicketShopLedgerItem = {
