@@ -914,12 +914,19 @@
   --night: #221e3a;
   --cta: #ffc48a;
   --cat-stage-scale: 1;
+  --main-safe-top: env(safe-area-inset-top, 0px);
+  --main-safe-bottom: max(
+    env(safe-area-inset-bottom, 0px),
+    var(--toss-safe-area-bottom, 0px)
+  );
   position: relative;
   flex: 1;
   min-height: 0;
   width: 100%;
-  /* Fill #root (100dvh on mobile; phone-frame height on desktop preview). */
+  /* Fill the Toss webview / #root edge-to-edge. */
   height: 100%;
+  height: 100dvh;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -932,6 +939,13 @@
   padding-bottom: 0;
   padding-left: env(safe-area-inset-left, 0px);
   background: #14132a;
+}
+
+@media (min-width: 481px) {
+  .main-screen {
+    height: 100%;
+    max-height: 100%;
+  }
 }
 
 /* Letterbox / pillarbox — same night sky as the design frame. */
@@ -974,13 +988,15 @@
   z-index: 0;
 }
 
-/* ① Top: logo · title · date — flush to screen top */
+/* ① Top: logo · title · date — flush to content top.
+   Use max(16px, safe-area) so we don't stack 16+notch when the webview
+   is already edge-to-edge (Toss nav sits outside the webview). */
 .main-top {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
   width: 100%;
-  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  padding-top: max(16px, var(--main-safe-top));
   box-sizing: border-box;
 }
 
@@ -1007,21 +1023,21 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 
 .main-logo {
   margin: 0;
-  width: 228px;
-  height: 87px;
+  width: 220px;
+  height: 80px;
   flex: 0 0 auto;
 }
 
 .main-logo svg {
   display: block;
-  width: 228px;
-  height: 87px;
+  width: 220px;
+  height: 80px;
   overflow: visible;
 }
 
@@ -1093,7 +1109,7 @@
 .main-rule {
   width: calc(100% - 48px);
   height: 1px;
-  margin: 10px 24px 8px;
+  margin: 8px 24px 6px;
   background: rgba(243, 235, 215, 0.28);
   box-sizing: border-box;
 }
@@ -1121,7 +1137,9 @@
   white-space: nowrap;
 }
 
-/* ② Mid: cat → CTA → count, vertically centered in leftover space */
+/* ② Mid: stage slot absorbs leftover height; CTA/count stay glued under it.
+   Cat stays ≤ design size and centers inside the slot (no letterbox bands
+   above the header or below the count). */
 .main-mid {
   position: relative;
   z-index: 1;
@@ -1131,7 +1149,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: stretch;
   overflow: hidden;
 }
 
@@ -1139,20 +1157,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   width: 100%;
+  flex: 1 1 auto;
+  height: 100%;
   max-height: 100%;
   min-height: 0;
   overflow: hidden;
 }
 
-/* Cat+card only — design 390×386; shrink via max-height, never grow past design */
+/* Cat+card only — grows to fill mid leftover; art scale capped at 1 via JS.
+   Pin art to the top of the slot so leftover night-sky sits above the CTA,
+   not as empty bands outside the header/footer. */
 .main-stage-slot {
-  flex: 0 1 386px;
+  flex: 1 1 auto;
   min-height: 0;
   width: 100%;
-  max-height: 386px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   margin: 0;
   overflow: visible;
@@ -1868,7 +1890,7 @@
   opacity: 0.45;
 }
 
-/* ③ Bottom: dex · room — flush to screen bottom (in-flow) */
+/* ③ Bottom: dex · room — flush to screen bottom (layout-spec: safe + 6px) */
 .main-bottom {
   position: relative;
   z-index: 2;
@@ -1879,7 +1901,7 @@
   width: 100%;
   max-width: 390px;
   margin: 0;
-  padding: 12px 22px calc(16px + env(safe-area-inset-bottom, 0px));
+  padding: 4px 22px calc(6px + var(--main-safe-bottom));
   box-sizing: border-box;
 }
 

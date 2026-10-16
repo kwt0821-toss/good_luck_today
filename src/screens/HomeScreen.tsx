@@ -208,10 +208,10 @@ export function HomeScreen({
           <header className="main-header">
             <div className="main-brand">
               <h1 className="main-logo">
-                <svg viewBox="0 0 252 96" role="img" aria-label="LUCKY CAT.">
+                <svg viewBox="0 4 252 92" role="img" aria-label="LUCKY CAT.">
                   <text
                     x="2"
-                    y="42"
+                    y="40"
                     fill="#F3EBD7"
                     fontFamily="Poppins, 'Noto Sans KR', sans-serif"
                     fontSize="42"
@@ -222,7 +222,7 @@ export function HomeScreen({
                   </text>
                   <text
                     x="2"
-                    y="90"
+                    y="88"
                     fill="#221E3A"
                     stroke="#F3EBD7"
                     strokeWidth="2.3"
