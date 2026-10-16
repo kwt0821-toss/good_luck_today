@@ -3,9 +3,10 @@
     "Segoe UI", sans-serif;
   color: #191f28;
   background: #14132a;
-  --sa-bottom: 0px;
-  --sa-left: 0px;
-  --sa-right: 0px;
+  /* Fallback when SafeArea SDK is unavailable; JS overwrites in Toss. */
+  --sa-bottom: env(safe-area-inset-bottom, 0px);
+  --sa-left: env(safe-area-inset-left, 0px);
+  --sa-right: env(safe-area-inset-right, 0px);
 }
 
 * {

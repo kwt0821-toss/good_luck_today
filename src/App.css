@@ -11,6 +11,13 @@
   overflow: hidden;
 }
 
+/* Home fills the webview even when overlay siblings sit under #root. */
+#root > #main {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
 @media (min-width: 481px) {
   #root {
     width: 390px;
@@ -914,11 +921,9 @@
   --cream-dim: #c9c0b0;
   --night: #221e3a;
   --cta: #ffc48a;
-  --sa-bottom-eff: max(var(--sa-bottom, 0px), env(safe-area-inset-bottom, 0px));
-  --sa-left-eff: max(var(--sa-left, 0px), env(safe-area-inset-left, 0px));
-  --sa-right-eff: max(var(--sa-right, 0px), env(safe-area-inset-right, 0px));
   position: relative;
-  flex: 1;
+  flex: 1 1 auto;
+  align-self: stretch;
   min-height: 0;
   width: 100%;
   height: 100%;
@@ -929,7 +934,7 @@
   font-family: "Noto Sans KR", "Toss Product Sans", sans-serif;
   box-sizing: border-box;
   margin: 0;
-  padding: 0 var(--sa-right-eff) 0 var(--sa-left-eff);
+  padding: 0 var(--sa-right, 0px) 0 var(--sa-left, 0px);
   background-color: #14132a;
   background-size: cover;
   background-position: top center;
@@ -1576,12 +1581,11 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  margin: 0;
-  padding: 8px 24px 4px;
+  margin: 0 auto;
+  padding: 8px 24px 0;
   box-sizing: border-box;
   width: 100%;
   max-width: 390px;
-  margin-inline: auto;
   flex: none;
 }
 
@@ -1788,7 +1792,7 @@
   opacity: 0.45;
 }
 
-/* footer — dex · room */
+/* footer — dex · room; margin-top:auto pins to #main bottom */
 .main-footer {
   position: relative;
   z-index: 2;
@@ -1798,8 +1802,8 @@
   justify-content: space-between;
   width: 100%;
   max-width: 390px;
-  margin: 0 auto;
-  padding: 4px 22px calc(16px + var(--sa-bottom-eff));
+  margin: auto auto 0;
+  padding: 8px 22px calc(8px + var(--sa-bottom, 0px));
   box-sizing: border-box;
 }
 

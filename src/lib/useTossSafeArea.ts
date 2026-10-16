@@ -21,10 +21,11 @@ function readInsets(): SafeAreaInsets {
 }
 
 /**
- * Push bottom/left/right onto :root as --sa-*.
- * Top is omitted — opaque Toss NavigationBar already owns the top inset.
+ * Push bottom/left/right onto :root as --sa-* (no top — title bar owns it).
+ * Only overwrite when running inside Toss so CSS `env()` fallback stays outside.
  */
 function applyCssVars(insets: SafeAreaInsets) {
+  if (!isInTossApp()) return;
   const root = document.documentElement;
   root.style.setProperty("--sa-bottom", `${insets.bottom}px`);
   root.style.setProperty("--sa-left", `${insets.left}px`);
