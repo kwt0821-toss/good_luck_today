@@ -20,19 +20,19 @@ function readInsets(): SafeAreaInsets {
   }
 }
 
-/** Push Toss SafeArea insets onto :root as --toss-inset-* (px). */
+/**
+ * Push bottom/left/right onto :root as --sa-*.
+ * Top is omitted — opaque Toss NavigationBar already owns the top inset.
+ */
 function applyCssVars(insets: SafeAreaInsets) {
   const root = document.documentElement;
-  root.style.setProperty("--toss-inset-top", `${insets.top}px`);
-  root.style.setProperty("--toss-inset-right", `${insets.right}px`);
-  root.style.setProperty("--toss-inset-bottom", `${insets.bottom}px`);
-  root.style.setProperty("--toss-inset-left", `${insets.left}px`);
+  root.style.setProperty("--sa-bottom", `${insets.bottom}px`);
+  root.style.setProperty("--sa-left", `${insets.left}px`);
+  root.style.setProperty("--sa-right", `${insets.right}px`);
 }
 
 /**
  * Sync Apps-in-Toss SafeAreaInsets into CSS variables.
- * Opaque NavigationBar: webview already starts below the title bar — use
- * bottom/left/right for home-indicator; do not pad the main header with top.
  * @see https://developers-apps-in-toss.toss.im/documentation/common/screen/safe-area
  */
 export function useTossSafeArea(): SafeAreaInsets {

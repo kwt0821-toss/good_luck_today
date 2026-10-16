@@ -1,5 +1,7 @@
 import { defineConfig } from "@apps-in-toss/web-framework/config";
 
+import { TOSS_NAV_BG } from "./src/lib/tossTheme";
+
 export default defineConfig({
   appName: "lucky-cat",
   brand: {
@@ -7,7 +9,7 @@ export default defineConfig({
     primaryColor: "#6EC8D4",
   },
   /**
-   * Opaque Toss title bar — webview lays out below it.
+   * Opaque title bar — webview content starts below it.
    * @see https://developers-apps-in-toss.toss.im/documentation/common/navigationbar
    */
   navigationBar: {
@@ -16,6 +18,9 @@ export default defineConfig({
     withTitle: true,
     transparentBackground: false,
     theme: "dark",
+    // backgroundColor is applied at runtime via NavigationBar.setOptions
+    // (config typings omit it; same value as TOSS_NAV_BG).
+    ...({ backgroundColor: TOSS_NAV_BG } as Record<string, string>),
   },
   webBundleDir: "dist",
   permissions: [],

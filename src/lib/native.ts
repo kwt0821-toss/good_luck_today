@@ -6,6 +6,8 @@ import {
   getAppsInTossGlobals,
 } from "@apps-in-toss/web-framework";
 
+import { TOSS_NAV_BG } from "./tossTheme";
+
 export function isInTossApp(): boolean {
   try {
     return getAppsInTossGlobals() != null;
@@ -19,13 +21,12 @@ export async function configureNavigationBar(options: {
 }): Promise<void> {
   try {
     // Opaque title bar: webview content starts below it (layout-spec §0).
-    // transparentBackground:true would overlay the bar and require SafeArea.top.
     await NavigationBar.setOptions({
       withBackButton: options.withBackButton ?? false,
       withHomeButton: true,
       withTitle: true,
       transparentBackground: false,
-      backgroundColor: "#14132A",
+      backgroundColor: TOSS_NAV_BG,
       theme: "dark",
     });
   } catch {

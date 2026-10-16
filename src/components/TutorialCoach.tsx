@@ -168,7 +168,7 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
           }
         }
         panel = primary.closest(
-          ".menu-root, .lucky-drawer, .main-screen, .home-screen, .lucky-room",
+          ".menu-root, .lucky-drawer, #main, .main-screen, .home-screen, .lucky-room",
         ) as HTMLElement | null;
         panel?.classList.add("tut-elevated-panel");
       } catch {
