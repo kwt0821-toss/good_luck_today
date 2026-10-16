@@ -989,14 +989,13 @@
 }
 
 /* ① Top: logo · title · date — flush to content top.
-   Use max(16px, safe-area) so we don't stack 16+notch when the webview
-   is already edge-to-edge (Toss nav sits outside the webview). */
+   Prefer safe-area alone; keep a small 8px floor when inset is 0. */
 .main-top {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
   width: 100%;
-  padding-top: max(16px, var(--main-safe-top));
+  padding-top: max(8px, var(--main-safe-top));
   box-sizing: border-box;
 }
 
@@ -1023,21 +1022,21 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
 }
 
 .main-logo {
   margin: 0;
-  width: 220px;
-  height: 80px;
+  width: 200px;
+  height: 72px;
   flex: 0 0 auto;
 }
 
 .main-logo svg {
   display: block;
-  width: 220px;
-  height: 80px;
+  width: 200px;
+  height: 72px;
   overflow: visible;
 }
 
@@ -1109,7 +1108,7 @@
 .main-rule {
   width: calc(100% - 48px);
   height: 1px;
-  margin: 8px 24px 6px;
+  margin: 6px 24px 4px;
   background: rgba(243, 235, 215, 0.28);
   box-sizing: border-box;
 }
@@ -1137,9 +1136,8 @@
   white-space: nowrap;
 }
 
-/* ② Mid: stage slot absorbs leftover height; CTA/count stay glued under it.
-   Cat stays ≤ design size and centers inside the slot (no letterbox bands
-   above the header or below the count). */
+/* ② Mid: stage slot fills leftover height; cat scales to match (aspect locked).
+   CTA/count stay glued under the slot — no empty bands at screen edges. */
 .main-mid {
   position: relative;
   z-index: 1;
@@ -1166,18 +1164,16 @@
   overflow: hidden;
 }
 
-/* Cat+card only — grows to fill mid leftover; art scale capped at 1 via JS.
-   Pin art to the top of the slot so leftover night-sky sits above the CTA,
-   not as empty bands outside the header/footer. */
+/* Cat+card — fills slot height via JS scale; left-align to keep rate-up visible. */
 .main-stage-slot {
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
   display: flex;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: flex-start;
   margin: 0;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .main-stage-fit {
@@ -1674,13 +1670,13 @@
   opacity: 0;
 }
 
-/* Card → CTA: keep tight under the art; CTA → count 12px. */
+/* Card → CTA: tight under the art; CTA → count. */
 .main-after-stage {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 4px;
   padding: 0 24px;
   box-sizing: border-box;
   width: 100%;
@@ -1890,7 +1886,7 @@
   opacity: 0.45;
 }
 
-/* ③ Bottom: dex · room — flush to screen bottom (layout-spec: safe + 6px) */
+/* ③ Bottom: dex · room — flush to screen bottom (safe-area only + 2px) */
 .main-bottom {
   position: relative;
   z-index: 2;
@@ -1901,7 +1897,7 @@
   width: 100%;
   max-width: 390px;
   margin: 0;
-  padding: 4px 22px calc(6px + var(--main-safe-bottom));
+  padding: 2px 22px calc(2px + var(--main-safe-bottom));
   box-sizing: border-box;
 }
 

@@ -10,7 +10,8 @@ export const CAT_STAGE_H = 386;
 
 /**
  * Scale the cat/card stage into `rowRef`'s box. Buttons / bottom nav stay full size —
- * only this group shrinks when height is tight. Caps at 1.
+ * only this group resizes. Fills leftover mid height (may grow past design) so the
+ * main screen doesn't letterbox; keeps aspect ratio (sides may crop slightly).
  */
 export function useCatStageFit(rowRef: RefObject<HTMLElement | null>): number {
   const [scale, setScale] = useState(1);
@@ -23,8 +24,9 @@ export function useCatStageFit(rowRef: RefObject<HTMLElement | null>): number {
       const aw = el.clientWidth;
       const ah = el.clientHeight;
       if (aw <= 0 || ah <= 0) return;
-      // Prefer height fit; only shrink for width when the shell is narrower than 390.
-      const next = Math.min(ah / CAT_STAGE_H, aw < CAT_STAGE_W ? aw / CAT_STAGE_W : 1, 1);
+      // Fill slot height exactly (aspect locked). Stage is left-aligned in CSS
+      // so the rate-up control stays on-screen; right side may crop slightly.
+      const next = ah / CAT_STAGE_H;
       setScale(Number.isFinite(next) && next > 0 ? next : 1);
     };
 
