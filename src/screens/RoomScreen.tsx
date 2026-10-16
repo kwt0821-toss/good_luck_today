@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
+import { CozySheet } from "../components/CozySheet";
 import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
 import { NyChip } from "../components/NyChip";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
@@ -24,7 +25,7 @@ import {
   type RoomGridFile,
   type RoomsFile,
 } from "../lib/roomCatalog";
-import { applyOpsPrices, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
+import { applyOpsPrices, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import {
   cloneLayout,
   hitTestPaint,
@@ -135,6 +136,7 @@ export function RoomScreen({
   const [snapshot, setSnapshot] = useState<RoomLayoutState | null>(null);
   const [buyItem, setBuyItem] = useState<RoomItem | null>(null);
   const [buyMore, setBuyMore] = useState(false);
+  const [cozySheetOpen, setCozySheetOpen] = useState(false);
   const [confirm, setConfirm] = useState<
     "reset" | "discard" | "close-edit" | "save-ph" | "clear-furniture" | null
   >(null);
@@ -1124,10 +1126,16 @@ export function RoomScreen({
     }
     if (state.points < item.price) return;
     const nextPoints = state.points - item.price;
-    persist({
+    const nextOwned = { ...state.owned, [item.id]: (state.owned[item.id] ?? 0) + 1 };
+    const draft = {
       ...state,
       points: nextPoints,
-      owned: { ...state.owned, [item.id]: (state.owned[item.id] ?? 0) + 1 },
+      owned: nextOwned,
+    };
+    // Optimistic UI, then server cozy recalculation (GET /room/cozy rules).
+    persist(draft);
+    void recalculateRoomCozy(draft).then((withCozy) => {
+      persist(withCozy);
     });
     void spendRoomPoints(nextPoints);
     setBuyItem(null);
@@ -1138,6 +1146,13 @@ export function RoomScreen({
       title: `${item.nameKo}을 서랍에 넣었어요`,
       action: { label: "놓으러 가기", onClick: () => { /* stay in room edit */ setMode("edit"); } },
     });
+  };
+
+  const openShopFromCozy = () => {
+    if (mode !== "edit") enterEdit();
+    setTab("가구");
+    setSelectedId(null);
+    setPreview(null);
   };
 
   const screen = screenOf(mode);
@@ -1235,7 +1250,15 @@ export function RoomScreen({
             <img className="lucky-logo" src={roomAsset("ui/logo-myroom.svg")} alt="MY ROOM." />
           </div>
           <div className="lucky-meta">
-            <strong id="cozy-meter">COZY Lv.{state.cozyLevel}</strong>
+            <button
+              type="button"
+              id="cozy-meter"
+              className="lucky-cozy-chip"
+              aria-label={`COZY 레벨 ${state.cozyLevel}`}
+              onClick={() => setCozySheetOpen(true)}
+            >
+              COZY Lv.{state.cozyLevel}
+            </button>
             <span>ITEMS {String(placedCount).padStart(2, "0")}</span>
           </div>
         </header>
@@ -1734,6 +1757,12 @@ export function RoomScreen({
           onBuy={() => buy(buyItem)}
         />
       ) : null}
+
+      <CozySheet
+        open={cozySheetOpen}
+        onClose={() => setCozySheetOpen(false)}
+        onBrowseItems={openShopFromCozy}
+      />
 
       {confirm === "reset" ? (
         <RoomConfirm

@@ -1,5 +1,5 @@
 {
-  "_version": "2.1",
+  "_version": "2.2",
   "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
   "currency": {
     "paw": {
@@ -439,7 +439,7 @@
       "tile": "벽지/바닥",
       "legend": "레전드급 한정"
     },
-    "countRule": "보유한 아이템 1개당 1회 (배치 여부 무관, 같은 아이템 중복 구매 불가)",
+    "countRule": "보유 아이템마다 점수 (배치 여부 무관). 같은 아이템 2번째 개수부터는 등급 점수의 50% 올림(duplicatePointsPerTier). 최대 보유 maxOwn 5(큰 가구 3)까지. 출석 한정은 1개만. 벽지/바닥(tile)은 한 번 사면 무제한이라 중복 없음.",
     "levels": [
       {
         "lv": 1,
@@ -487,7 +487,18 @@
       "lv5": "활성 유저 10–14일차",
       "lv8": "25–30일차"
     },
-    "simulation": "activeUser(광고 8회/일, 뽑기 4회/일, 하루 최대 3개 구매) 중앙값: Lv5 12일차, Lv8 28일차"
+    "simulation": "activeUser(광고 8회/일, 뽑기 4회/일, 하루 최대 3개 구매) 중앙값: Lv5 12일차, Lv8 28일차",
+    "duplicateRate": 0.5,
+    "duplicatePointsPerTier": {
+      "small": 2,
+      "normal": 5,
+      "large": 13,
+      "wall": 3,
+      "tile": null,
+      "legend": 30
+    },
+    "formula": "cozyPoints = Σ아이템 [ pointsPerTier[tier] + max(0, min(count, maxOwn)-1) × ceil(pointsPerTier[tier]×duplicateRate) ] (서버 계산)",
+    "pacingCheck2_2": "중복 1개당 점수/가격 비율(최대 0.030)이 새 아이템 중앙값(0.036)보다 낮아 효율적으로 사는 유저는 새 아이템을 먼저 사요 → Lv5·Lv8 도달일 변화 없음(하루 120~180P 가정 그리디 시뮬). 중복은 레벨 10 이후 상한만 늘려요."
   },
   "shop": {
     "tierPriceRange": {

@@ -245,8 +245,14 @@ export type OpsEconomy = {
   };
   cozy: {
     pointsPerTier: Record<string, number>;
+    tierNameKo?: Record<string, string>;
+    countRule?: string;
     levels: { lv: number; minCozy: number }[];
     beyondLv10: string;
+    duplicateRate?: number;
+    /** null = no duplicate scoring (e.g. tile). */
+    duplicatePointsPerTier?: Record<string, number | null>;
+    formula?: string;
   };
   rooms: Array<{
     id: string;
