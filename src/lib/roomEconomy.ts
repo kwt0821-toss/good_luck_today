@@ -7,17 +7,41 @@ export async function applyOpsPrices(items: RoomItem[]): Promise<RoomItem[]> {
   const config = await loadOpsConfig();
   const attendanceIds = new Set(config.prices.attendanceOnly?.ids ?? []);
   const exclude = new Set(config.economy.shop?.excludeSources ?? ["attendance"]);
-  return items.map((item) => {
+  const byId = new Map(items.map((item) => [item.id, item]));
+
+  // Materialize attendance-only variants that reuse base room art (baseArtFrom).
+  for (const priced of config.prices.items) {
+    if (!priced.baseArtFrom || byId.has(priced.id)) continue;
+    const base = byId.get(priced.baseArtFrom);
+    if (!base) continue;
+    byId.set(priced.id, {
+      ...base,
+      id: priced.id,
+      nameKo: priced.nameKo || base.nameKo,
+      price: priced.price ?? 0,
+      attendanceOnly: true,
+      ownedDefault: false,
+    });
+  }
+
+  return [...byId.values()].map((item) => {
     const priced = priceById(config.prices, item.id);
-    const attendanceOnly =
-      item.attendanceOnly ||
-      attendanceIds.has(item.id) ||
-      Boolean(priced?.flags?.includes("attendance")) ||
-      (priced?.source != null && exclude.has(priced.source));
+    // Prefer prices.json as source of truth when the item is listed there.
+    const attendanceOnly = priced
+      ? Boolean(
+          priced.attendanceOnly ||
+            priced.flags?.includes("attendanceOnly") ||
+            attendanceIds.has(item.id) ||
+            (priced.source != null && exclude.has(priced.source)),
+        )
+      : Boolean(
+          item.attendanceOnly ||
+            attendanceIds.has(item.id),
+        );
     if (!priced) return { ...item, attendanceOnly, ownedDefault: attendanceOnly ? false : item.ownedDefault };
     return {
       ...item,
-      price: priced.price,
+      price: priced.price ?? 0,
       attendanceOnly,
       ownedDefault: attendanceOnly ? false : item.ownedDefault,
     };

@@ -1,5 +1,5 @@
 {
- "_version": "prices-1.1",
+ "_version": "prices-1.1 (2026-10-11)",
  "_note": "모든 방 아이템·타일 가격/코지 포인트. id는 room-assets-v6/items.json, room-assets-themes/items-themes.json 기준. price 0 = 방 기본 타일(방 해금 시 지급).",
  "tiers": {
   "small": {
@@ -59,7 +59,7 @@
  "items": [
   {
    "id": "cattower",
-   "source": "attendance",
+   "source": "room-assets-v6",
    "room": "moon_bedroom",
    "nameKo": "캣타워",
    "category": "가구",
@@ -68,9 +68,7 @@
    "price": 600,
    "cozy": 25,
    "tierKo": "큰/테마 대표 가구",
-   "flags": [
-    "attendance"
-   ]
+   "note": "출석 1주차 선물이었지만 상점 아이템이라 출석 전용 변형(att_*)으로 교체됨 — 일반 상점 아이템으로 유지"
   },
   {
    "id": "catbed",
@@ -301,7 +299,7 @@
   },
   {
    "id": "fishbowl",
-   "source": "attendance",
+   "source": "room-assets-v6",
    "room": "moon_bedroom",
    "nameKo": "금붕어 어항",
    "category": "소품",
@@ -310,9 +308,7 @@
    "price": 120,
    "cozy": 4,
    "tierKo": "작은 소품",
-   "flags": [
-    "attendance"
-   ]
+   "note": "출석 1주차 선물이었지만 상점 아이템이라 출석 전용 변형(att_*)으로 교체됨 — 일반 상점 아이템으로 유지"
   },
   {
    "id": "moonlamp",
@@ -416,7 +412,7 @@
   },
   {
    "id": "globe",
-   "source": "attendance",
+   "source": "room-assets-v6",
    "room": "moon_bedroom",
    "nameKo": "지구본",
    "category": "소품",
@@ -425,13 +421,11 @@
    "price": 120,
    "cozy": 4,
    "tierKo": "작은 소품",
-   "flags": [
-    "attendance"
-   ]
+   "note": "출석 1주차 선물이었지만 상점 아이템이라 출석 전용 변형(att_*)으로 교체됨 — 일반 상점 아이템으로 유지"
   },
   {
    "id": "catcactus",
-   "source": "attendance",
+   "source": "room-assets-v6",
    "room": "moon_bedroom",
    "nameKo": "냥이 선인장",
    "category": "소품",
@@ -440,9 +434,7 @@
    "price": 80,
    "cozy": 4,
    "tierKo": "작은 소품",
-   "flags": [
-    "attendance"
-   ]
+   "note": "출석 1주차 선물이었지만 상점 아이템이라 출석 전용 변형(att_*)으로 교체됨 — 일반 상점 아이템으로 유지"
   },
   {
    "id": "archmirror",
@@ -472,7 +464,7 @@
   },
   {
    "id": "starlight",
-   "source": "attendance",
+   "source": "room-assets-v6",
    "room": "moon_bedroom",
    "nameKo": "별 수면등",
    "category": "소품",
@@ -481,9 +473,7 @@
    "price": 110,
    "cozy": 4,
    "tierKo": "작은 소품",
-   "flags": [
-    "attendance"
-   ]
+   "note": "출석 1주차 선물이었지만 상점 아이템이라 출석 전용 변형(att_*)으로 교체됨 — 일반 상점 아이템으로 유지"
   },
   {
    "id": "gifts",
@@ -598,7 +588,7 @@
   },
   {
    "id": "bunting",
-   "source": "attendance",
+   "source": "room-assets-v6",
    "room": "moon_bedroom",
    "nameKo": "발바닥 가랜드",
    "category": "벽 꾸미기",
@@ -607,9 +597,7 @@
    "price": 130,
    "cozy": 6,
    "tierKo": "벽 꾸미기",
-   "flags": [
-    "attendance"
-   ]
+   "note": "출석 1주차 선물이었지만 상점 아이템이라 출석 전용 변형(att_*)으로 교체됨 — 일반 상점 아이템으로 유지"
   },
   {
    "id": "starlamp",
@@ -704,7 +692,7 @@
   },
   {
    "id": "calendar",
-   "source": "attendance",
+   "source": "room-assets-v6",
    "room": "moon_bedroom",
    "nameKo": "발바닥 달력",
    "category": "벽 꾸미기",
@@ -713,9 +701,7 @@
    "price": 100,
    "cozy": 6,
    "tierKo": "벽 꾸미기",
-   "flags": [
-    "attendance"
-   ]
+   "note": "출석 1주차 선물이었지만 상점 아이템이라 출석 전용 변형(att_*)으로 교체됨 — 일반 상점 아이템으로 유지"
   },
   {
    "id": "floor_wood_honey",
@@ -2000,18 +1986,334 @@
    "cozy": 8,
    "tierKo": "벽지/바닥",
    "flags": []
+  },
+  {
+   "id": "att_moon_cactus",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "달빛 냥이 선인장",
+   "category": "소품",
+   "placement": "floor",
+   "tier": "small",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 4,
+   "tierKo": "작은 소품",
+   "flags": [
+    "attendanceOnly",
+    "attendance:firstWeek:1"
+   ],
+   "baseArtFrom": "catcactus"
+  },
+  {
+   "id": "att_stamp_calendar",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "출석 도장 달력",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "tier": "wall",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 6,
+   "tierKo": "벽 꾸미기",
+   "flags": [
+    "attendanceOnly",
+    "attendance:firstWeek:2"
+   ],
+   "baseArtFrom": "calendar"
+  },
+  {
+   "id": "att_pink_starlight",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "핑크 별 수면등",
+   "category": "소품",
+   "placement": "floor",
+   "tier": "small",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 4,
+   "tierKo": "작은 소품",
+   "flags": [
+    "attendanceOnly",
+    "attendance:firstWeek:3"
+   ],
+   "baseArtFrom": "starlight"
+  },
+  {
+   "id": "att_night_bunting",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "밤하늘 가랜드",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "tier": "wall",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 6,
+   "tierKo": "벽 꾸미기",
+   "flags": [
+    "attendanceOnly",
+    "attendance:firstWeek:4"
+   ],
+   "baseArtFrom": "bunting"
+  },
+  {
+   "id": "att_moon_globe",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "달빛 지구본",
+   "category": "소품",
+   "placement": "floor",
+   "tier": "small",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 4,
+   "tierKo": "작은 소품",
+   "flags": [
+    "attendanceOnly",
+    "attendance:firstWeek:5"
+   ],
+   "baseArtFrom": "globe"
+  },
+  {
+   "id": "att_sakura_fishbowl",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "벚꽃 금붕어 어항",
+   "category": "소품",
+   "placement": "floor",
+   "tier": "small",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 4,
+   "tierKo": "작은 소품",
+   "flags": [
+    "attendanceOnly",
+    "attendance:firstWeek:6"
+   ],
+   "baseArtFrom": "fishbowl"
+  },
+  {
+   "id": "att_moon_cattower",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "달밤 캣타워",
+   "category": "가구",
+   "placement": "floor",
+   "tier": "large",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 25,
+   "tierKo": "큰/테마 대표 가구",
+   "flags": [
+    "attendanceOnly",
+    "attendance:firstWeek:7"
+   ],
+   "baseArtFrom": "cattower"
+  },
+  {
+   "id": "att_lav_moonlamp",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "라벤더 달 무드등",
+   "category": "소품",
+   "placement": "floor",
+   "tier": "small",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 4,
+   "tierKo": "작은 소품",
+   "flags": [
+    "attendanceOnly",
+    "attendance:weeklyBox"
+   ],
+   "baseArtFrom": "moonlamp"
+  },
+  {
+   "id": "att_rose_gramophone",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "로즈 축음기",
+   "category": "소품",
+   "placement": "floor",
+   "tier": "small",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 4,
+   "tierKo": "작은 소품",
+   "flags": [
+    "attendanceOnly",
+    "attendance:weeklyBox"
+   ],
+   "baseArtFrom": "gramophone"
+  },
+  {
+   "id": "att_mint_yarnbasket",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "민트 털실 바구니",
+   "category": "소품",
+   "placement": "floor",
+   "tier": "small",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 4,
+   "tierKo": "작은 소품",
+   "flags": [
+    "attendanceOnly",
+    "attendance:weeklyBox"
+   ],
+   "baseArtFrom": "yarnbasket"
+  },
+  {
+   "id": "att_lav_cushions",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "파스텔 방석 더미",
+   "category": "소품",
+   "placement": "floor",
+   "tier": "small",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 4,
+   "tierKo": "작은 소품",
+   "flags": [
+    "attendanceOnly",
+    "attendance:weeklyBox"
+   ],
+   "baseArtFrom": "cushions"
+  },
+  {
+   "id": "att_sky_catclock",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "하늘빛 냥이 벽시계",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "tier": "wall",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 6,
+   "tierKo": "벽 꾸미기",
+   "flags": [
+    "attendanceOnly",
+    "attendance:weeklyBox"
+   ],
+   "baseArtFrom": "catclock"
+  },
+  {
+   "id": "att_m30_goldneon",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "30일 골드 하트 네온",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "tier": "wall",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 6,
+   "tierKo": "벽 꾸미기",
+   "flags": [
+    "attendanceOnly",
+    "attendance:milestone:30"
+   ],
+   "baseArtFrom": "heartneon"
+  },
+  {
+   "id": "att_m100_nightlamp",
+   "source": "attendance",
+   "artSource": "attendance-items",
+   "room": "any",
+   "nameKo": "100일 별밤 벽등",
+   "category": "벽 꾸미기",
+   "placement": "wall",
+   "tier": "wall",
+   "price": null,
+   "purchasable": false,
+   "inShop": false,
+   "attendanceOnly": true,
+   "tagKo": "출석 한정",
+   "cozy": 6,
+   "tierKo": "벽 꾸미기",
+   "flags": [
+    "attendanceOnly",
+    "attendance:milestone:100"
+   ],
+   "baseArtFrom": "starlamp"
   }
  ],
  "attendanceOnly": {
+  "rule": "source==\"attendance\" 아이템은 출석(1주차·7일차 상자·누적 기념)으로만 얻어요. 가격 없음, 상점·서랍 기본 지급·방 해금 선물·다른 보상 풀에 넣지 않아요. 서버가 지급 경로를 검증해요.",
   "ids": [
-   "catcactus",
-   "calendar",
-   "starlight",
-   "bunting",
-   "globe",
-   "fishbowl",
-   "cattower"
+   "att_moon_cactus",
+   "att_stamp_calendar",
+   "att_pink_starlight",
+   "att_night_bunting",
+   "att_moon_globe",
+   "att_sakura_fishbowl",
+   "att_moon_cattower",
+   "att_lav_moonlamp",
+   "att_rose_gramophone",
+   "att_mint_yarnbasket",
+   "att_lav_cushions",
+   "att_sky_catclock",
+   "att_m30_goldneon",
+   "att_m100_nightlamp"
   ],
-  "note": "source==attendance. 상점·구매 불가, 출석 API만 지급."
+  "uiTag": "출석 한정"
  }
 }

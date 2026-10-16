@@ -278,13 +278,17 @@ export type PriceItem = {
   id: string;
   nameKo: string;
   tier: PriceTier;
-  price: number;
+  /** null = not for sale (e.g. attendance-only grants). */
+  price: number | null;
   cozy: number;
   flags?: string[];
   source?: string;
   room?: string;
   category?: string;
   placement?: string;
+  attendanceOnly?: boolean;
+  /** Reuse menu gift / room art from this catalog id until unique art ships. */
+  baseArtFrom?: string;
 };
 
 export type OpsPrices = {
