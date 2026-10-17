@@ -1,42 +1,289 @@
 {
- "pink": {
-  "win": {
-   "left": 12.549019607843137,
-   "top": 17.76937618147448,
-   "width": 74.90196078431373,
-   "height": 73.47195967233773
-  },
-  "plate": {
-   "left": 25.19607843137255,
-   "top": 9.073724007561438,
-   "width": 49.6078431372549,
-   "height": 5.103969754253308
-  },
-  "ribbon": {
-   "left": 31.372549019607842,
-   "top": 93.38374291115312,
-   "width": 37.254901960784316,
-   "height": 4.095778197857593
-  }
+ "_version": "frames-v7",
+ "_units": "% of card box (aspect 900:1400)",
+ "flipButtonZone": {
+  "left": 83,
+  "top": 86,
+  "width": 17,
+  "height": 14
  },
- "gold": {
-  "win": {
-   "left": 15.686274509803921,
-   "top": 18.3994959042218,
-   "width": 68.62745098039215,
-   "height": 69.50220541902962
+ "nameFont": {
+  "family": "Jua",
+  "startOfCardHeight": 0.034,
+  "minOfCardHeight": 0.018,
+  "lineHeight": 1
+ },
+ "starsFont": {
+  "sizeOfCardWidth": 0.062,
+  "size5OfCardWidth": 0.056,
+  "color": "#FFC93D",
+  "stroke": "#5A3508"
+ },
+ "labelFont": {
+  "sizeOfCardWidth": 0.066,
+  "sizeMemeCharOfCardWidth": 0.05,
+  "color": "#FFD54A",
+  "stroke": "#4A2A05",
+  "glow": "rgba(255,210,90,.95)"
+ },
+ "nameColor": {
+  "basic-1": "#5A4030",
+  "basic-2": "#26466E",
+  "basic-3": "#7A3A28",
+  "4star": "#1F5A47",
+  "5star": "#8A2A52",
+  "meme": "#5A4600",
+  "character": "#3E2E7A",
+  "legend": "#5A3A10"
+ },
+ "tiers": {
+  "basic-1": {
+   "win": {
+    "left": 12.55,
+    "top": 17.77,
+    "width": 74.9,
+    "height": 73.47
+   },
+   "plate": {
+    "left": 27.2,
+    "top": 9.47,
+    "width": 45.61,
+    "height": 4.3
+   },
+   "stars": {
+    "left": 30,
+    "top": 84.84,
+    "width": 40,
+    "height": 5
+   },
+   "stamp": {
+    "left": 16,
+    "top": 79.74,
+    "width": 13,
+    "height": 8.36
+   },
+   "windowBg": "window-1star",
+   "ribbonText": null,
+   "showStars": true,
+   "starCount": 1,
+   "label": null
   },
-  "plate": {
-   "left": 25.098039215686274,
-   "top": 10.459987397605545,
-   "width": 49.80392156862745,
-   "height": 5.040957781978576
+  "basic-2": {
+   "win": {
+    "left": 12.55,
+    "top": 17.77,
+    "width": 74.9,
+    "height": 73.47
+   },
+   "plate": {
+    "left": 27.2,
+    "top": 9.47,
+    "width": 45.61,
+    "height": 4.3
+   },
+   "stars": {
+    "left": 30,
+    "top": 84.84,
+    "width": 40,
+    "height": 5
+   },
+   "stamp": {
+    "left": 16,
+    "top": 79.74,
+    "width": 13,
+    "height": 8.36
+   },
+   "windowBg": "window-2star",
+   "ribbonText": null,
+   "showStars": true,
+   "starCount": 2,
+   "label": null
   },
-  "ribbon": {
-   "left": 32.84313725490196,
-   "top": 89.35097668557026,
-   "width": 34.31372549019608,
-   "height": 4.662885948330183
+  "basic-3": {
+   "win": {
+    "left": 12.55,
+    "top": 17.77,
+    "width": 74.9,
+    "height": 73.47
+   },
+   "plate": {
+    "left": 27.2,
+    "top": 9.47,
+    "width": 45.61,
+    "height": 4.3
+   },
+   "stars": {
+    "left": 30,
+    "top": 84.84,
+    "width": 40,
+    "height": 5
+   },
+   "stamp": {
+    "left": 16,
+    "top": 79.74,
+    "width": 13,
+    "height": 8.36
+   },
+   "windowBg": "window-3star",
+   "ribbonText": null,
+   "showStars": true,
+   "starCount": 3,
+   "label": null
+  },
+  "4star": {
+   "win": {
+    "left": 12.55,
+    "top": 17.77,
+    "width": 74.9,
+    "height": 70.45
+   },
+   "plate": {
+    "left": 27.2,
+    "top": 9.47,
+    "width": 45.61,
+    "height": 4.3
+   },
+   "stars": {
+    "left": 30,
+    "top": 81.82,
+    "width": 40,
+    "height": 5
+   },
+   "stamp": {
+    "left": 16,
+    "top": 76.72,
+    "width": 13,
+    "height": 8.36
+   },
+   "windowBg": "window-4star",
+   "ribbonText": null,
+   "showStars": true,
+   "starCount": 4,
+   "label": null
+  },
+  "5star": {
+   "win": {
+    "left": 12.55,
+    "top": 17.77,
+    "width": 74.9,
+    "height": 70.45
+   },
+   "plate": {
+    "left": 27.2,
+    "top": 9.47,
+    "width": 45.61,
+    "height": 4.3
+   },
+   "stars": {
+    "left": 30,
+    "top": 81.82,
+    "width": 40,
+    "height": 5
+   },
+   "stamp": {
+    "left": 16,
+    "top": 76.72,
+    "width": 13,
+    "height": 8.36
+   },
+   "windowBg": "window-5star",
+   "ribbonText": null,
+   "showStars": true,
+   "starCount": 5,
+   "label": null
+  },
+  "meme": {
+   "win": {
+    "left": 12.55,
+    "top": 17.77,
+    "width": 74.9,
+    "height": 73.47
+   },
+   "plate": {
+    "left": 27.2,
+    "top": 9.47,
+    "width": 45.61,
+    "height": 4.3
+   },
+   "stars": {
+    "left": 30,
+    "top": 84.84,
+    "width": 40,
+    "height": 5
+   },
+   "stamp": {
+    "left": 16,
+    "top": 79.74,
+    "width": 13,
+    "height": 8.36
+   },
+   "windowBg": "window-meme",
+   "ribbonText": null,
+   "showStars": false,
+   "starCount": 0,
+   "label": "MEME"
+  },
+  "character": {
+   "win": {
+    "left": 12.55,
+    "top": 17.77,
+    "width": 74.9,
+    "height": 73.47
+   },
+   "plate": {
+    "left": 27.2,
+    "top": 9.47,
+    "width": 45.61,
+    "height": 4.3
+   },
+   "stars": {
+    "left": 30,
+    "top": 84.84,
+    "width": 40,
+    "height": 5
+   },
+   "stamp": {
+    "left": 16,
+    "top": 79.74,
+    "width": 13,
+    "height": 8.36
+   },
+   "windowBg": "window-character",
+   "ribbonText": null,
+   "showStars": false,
+   "starCount": 0,
+   "label": "CHAR"
+  },
+  "legend": {
+   "win": {
+    "left": 15.69,
+    "top": 18.4,
+    "width": 68.63,
+    "height": 69.5
+   },
+   "plate": {
+    "left": 27.1,
+    "top": 10.86,
+    "width": 45.8,
+    "height": 4.24
+   },
+   "stars": {
+    "left": 30,
+    "top": 81.5,
+    "width": 40,
+    "height": 5
+   },
+   "stamp": {
+    "left": 16,
+    "top": 76.4,
+    "width": 13,
+    "height": 8.36
+   },
+   "windowBg": "window-legend",
+   "ribbonText": null,
+   "showStars": false,
+   "starCount": 0,
+   "label": "LEGEND"
   }
  }
 }
