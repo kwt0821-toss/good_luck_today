@@ -1,15 +1,19 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
-import { duplicateRevealCopy, newCardRevealCopy } from "../lib/dexRewards";
+import { loadDexOwned } from "../lib/dexCollection";
 import type { DexCard } from "../lib/dexTypes";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import type { DrawReservation } from "../lib/opsTypes";
+import { dexCardBreedLabel, dexCardGradeLabel } from "../lib/tutorialFlow";
 import "./DrawRevealScreen.css";
 
 const FACEDOWN = "/assets/main/card-facedown.png";
 const FINAL_MS = 1500;
+const FLIP_MS = 1000;
+const FLIP_DEG = 900;
 const WAIT_MAX_MS = 1500;
+const AD_NCOIN_TOAST_MS = 2600;
 
 type RarityTheme = {
   g1: string;
@@ -22,47 +26,48 @@ type RarityTheme = {
   holo?: boolean | "gold";
 };
 
+/** Grade glow: 1–3★ cream, 4★ mint, 5★ gold, meme lemon, character lavender, legend gold+rays. */
 const RAR: Record<string, RarityTheme> = {
   b1: {
-    g1: "rgba(255,240,215,.38)",
-    g2: "rgba(255,220,180,.12)",
+    g1: "rgba(255,246,230,.32)",
+    g2: "rgba(243,233,215,.1)",
     acc: "#F3E9D7",
     rays: null,
-    parts: ["#FFF3E2", "#F3E9D7"],
+    parts: ["#FFF6E6", "#F3E9D7"],
     n: 8,
   },
   b2: {
-    g1: "rgba(255,240,215,.38)",
-    g2: "rgba(255,220,180,.12)",
+    g1: "rgba(255,246,230,.34)",
+    g2: "rgba(243,233,215,.12)",
     acc: "#F3E9D7",
     rays: null,
-    parts: ["#FFF3E2", "#F3E9D7"],
+    parts: ["#FFF6E6", "#F3E9D7"],
     n: 8,
   },
   b3: {
-    g1: "rgba(255,196,120,.55)",
-    g2: "rgba(255,170,90,.2)",
-    acc: "#FFC48A",
-    rays: "#FFC07A",
-    parts: ["#FFD9A0", "#FFB36B"],
-    n: 12,
+    g1: "rgba(255,246,230,.38)",
+    g2: "rgba(243,233,215,.14)",
+    acc: "#F3E9D7",
+    rays: null,
+    parts: ["#FFF6E6", "#FFE2B8"],
+    n: 10,
   },
   b4: {
-    g1: "rgba(255,196,120,.55)",
-    g2: "rgba(255,170,90,.2)",
-    acc: "#FFC48A",
-    rays: "#FFC07A",
-    parts: ["#FFD9A0", "#FFB36B"],
+    g1: "rgba(143,227,195,.5)",
+    g2: "rgba(110,200,170,.18)",
+    acc: "#8FE3C3",
+    rays: "#8FE3C3",
+    parts: ["#B8F0DC", "#8FE3C3", "#FFFFFF"],
     n: 12,
   },
   b5: {
-    g1: "rgba(255,214,170,.6)",
-    g2: "rgba(200,170,255,.22)",
-    acc: "#FFD9A0",
-    rays: "rainbow",
-    parts: ["#FF9EC4", "#FFE07A", "#8EF0C8", "#8EC2FF", "#C99BFF"],
+    g1: "rgba(245,210,122,.62)",
+    g2: "rgba(255,196,138,.22)",
+    acc: "#F5D27A",
+    rays: "#F5D27A",
+    parts: ["#FAE296", "#F5D27A", "#FFE7A8"],
     n: 18,
-    holo: true,
+    holo: "gold",
   },
   special: {
     g1: "rgba(255,236,120,.6)",
@@ -76,15 +81,15 @@ const RAR: Record<string, RarityTheme> = {
   character: {
     g1: "rgba(200,170,255,.6)",
     g2: "rgba(170,140,255,.22)",
-    acc: "#CDB6FF",
+    acc: "#C7B0FF",
     rays: "#C7B0FF",
     parts: ["#E2D4FF", "#B89CFF", "#FFFFFF"],
     n: 18,
     burst: true,
   },
   legend: {
-    g1: "rgba(245,210,122,.7)",
-    g2: "rgba(201,151,46,.28)",
+    g1: "rgba(245,210,122,.72)",
+    g2: "rgba(201,151,46,.3)",
     acc: "#F5D27A",
     rays: "#F5D27A",
     parts: ["#FAE296", "#F5D27A", "#C9972E", "#FFFFFF"],
@@ -106,15 +111,15 @@ type Particle = {
 
 type DrawRevealScreenProps = {
   reservation: DrawReservation;
-  /** Resolved catalog card for rarity-aware copy (manual dex claim). */
   card?: DexCard | null;
   ready: boolean;
   waitFailed: boolean;
-  toastText: string | null;
+  /** Legacy / tutorial dex toast (new-card copy). Not used for ad 냥코인. */
+  toastText?: string | null;
+  /** Ad-draw only: "카드를 뽑아 냥코인xN이 지급되었습니다." */
+  adNyangToast?: string | null;
   remainingDraws: number;
-  /** Keep #dex-toast visible (tutorial ncoin-intro). */
   holdToast?: boolean;
-  /** Force-hide toast (after ncoin-intro CTA). */
   hideToast?: boolean;
   onToastShown?: () => void;
   onToDex: () => void;
@@ -148,12 +153,18 @@ function prefersReducedMotion() {
   }
 }
 
+function dupChipCopy(ownedCount: number, dupPaw: number) {
+  const n = Math.max(2, ownedCount);
+  return `x${n} 중복 · +${dupPaw}P로 바꿀 수 있어요`;
+}
+
 export function DrawRevealScreen({
   reservation,
   card = null,
   ready,
   waitFailed,
-  toastText,
+  toastText = null,
+  adNyangToast = null,
   remainingDraws,
   holdToast = false,
   hideToast = false,
@@ -173,9 +184,12 @@ export function DrawRevealScreen({
   const dupRef = useRef<HTMLDivElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
   const toastRef = useRef<HTMLDivElement>(null);
+  const adToastRef = useRef<HTMLDivElement>(null);
   const toastShownRef = useRef(false);
   const [toastDismissed, setToastDismissed] = useState(false);
   const [toastHasShown, setToastHasShown] = useState(false);
+  const [adToastVisible, setAdToastVisible] = useState(Boolean(adNyangToast));
+  const [ownedCount, setOwnedCount] = useState(1);
   const holdToastRef = useRef(holdToast);
   const hideToastRef = useRef(hideToast);
   const onToastShownRef = useRef(onToastShown);
@@ -203,11 +217,34 @@ export function DrawRevealScreen({
     toastShownRef.current = false;
     setToastDismissed(false);
     setToastHasShown(false);
-  }, [reservation.drawId]);
+    setAdToastVisible(Boolean(adNyangToast));
+    setManualFlip(false);
+  }, [reservation.drawId, adNyangToast]);
 
   useEffect(() => {
     if (hideToast) setToastDismissed(true);
   }, [hideToast]);
+
+  useEffect(() => {
+    if (!adNyangToast) {
+      setAdToastVisible(false);
+      return;
+    }
+    setAdToastVisible(true);
+    const timer = window.setTimeout(() => setAdToastVisible(false), AD_NCOIN_TOAST_MS);
+    return () => window.clearTimeout(timer);
+  }, [adNyangToast, reservation.drawId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadDexOwned().then((owned) => {
+      if (cancelled) return;
+      setOwnedCount(Math.max(1, owned[reservation.cardId]?.count ?? 1));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [reservation.cardId, reservation.drawId]);
 
   useEffect(() => {
     if (!ready || revealSoundRef.current) return;
@@ -224,12 +261,22 @@ export function DrawRevealScreen({
     return () => window.clearTimeout(timer);
   }, [toastText, reservation.isNew, toastDismissed, holdToast, toastHasShown, reservation.drawId]);
 
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onBack?.();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onBack]);
+
   const theme = RAR[reservation.rarity] ?? RAR.b1;
   const frontSrc = reservation.frontUrl || reservation.thumbUrl;
-  const revealCopy = card
-    ? newCardRevealCopy(card)
-    : { title: "새 고양이를 만났어요", sub: "도감에서 보상을 받아 보세요" };
-  const dupCopy = duplicateRevealCopy(reservation.dupPaw);
+  const breedName = dexCardBreedLabel(card) || reservation.nameKo;
+  const gradeLabel = dexCardGradeLabel(card) || reservation.starsLabel;
+  const dupCopy = dupChipCopy(ownedCount, reservation.dupPaw);
 
   useEffect(() => {
     const screen = screenRef.current;
@@ -239,12 +286,9 @@ export function DrawRevealScreen({
     screen.style.setProperty("--acc", theme.acc);
 
     if (raysRef.current) {
-      raysRef.current.style.background =
-        theme.rays === "rainbow"
-          ? "repeating-conic-gradient(from 0deg,rgba(255,158,196,.55) 0 4deg,transparent 4deg 15deg,rgba(255,224,122,.5) 15deg 19deg,transparent 19deg 30deg,rgba(142,240,200,.5) 30deg 34deg,transparent 34deg 45deg,rgba(142,194,255,.5) 45deg 49deg,transparent 49deg 60deg)"
-          : theme.rays
-            ? `repeating-conic-gradient(from 0deg,${theme.rays} 0 5deg,transparent 5deg 18deg)`
-            : "none";
+      raysRef.current.style.background = theme.rays
+        ? `repeating-conic-gradient(from 0deg,${theme.rays} 0 5deg,transparent 5deg 18deg)`
+        : "none";
     }
     if (holoRef.current) {
       holoRef.current.style.background =
@@ -259,7 +303,7 @@ export function DrawRevealScreen({
     for (let i = 0; i < 10; i += 1) {
       const a = (i / 10) * Math.PI * 2 + r() * 0.4;
       parts.push({
-        t0: 150,
+        t0: 80,
         dur: 520,
         a,
         d: 120 + r() * 60,
@@ -271,7 +315,7 @@ export function DrawRevealScreen({
     for (let i = 0; i < theme.n; i += 1) {
       const a = r() * Math.PI * 2;
       parts.push({
-        t0: 560 + r() * 160,
+        t0: 420 + r() * 160,
         dur: theme.burst ? 800 : 900,
         a,
         d: (theme.burst ? 150 : 110) + r() * 90,
@@ -317,21 +361,38 @@ export function DrawRevealScreen({
       const dup = dupRef.current;
       const info = infoRef.current;
       const toast = toastRef.current;
+      const adToast = adToastRef.current;
       const btns = btnsRef.current;
       if (!glow || !cardbox || !inner) return;
 
-      const toastVisible =
+      const dexToastVisible =
         Boolean(reservation.isNew && toastText) &&
         !toastDismissed &&
         !hideToastRef.current;
 
+      if (adToast) {
+        adToast.style.opacity = adToastVisible ? "1" : "0";
+        adToast.style.transform = adToastVisible ? "translateY(0)" : "translateY(-12px)";
+      }
+
       if (reduce) {
-        // Spec: short crossfade only — skip shake/rays/particles.
+        // Crossfade facedown → front (no spin). `.is-reduce` keeps faces coplanar.
         const p = clamp(t / 250);
-        inner.style.transform = `rotateY(${180 * (1 - p)}deg)`;
         cardbox.style.transform = `scale(${0.9 + 0.1 * p})`;
         glow.style.opacity = "0.7";
         glow.style.transform = "scale(1.05)";
+        if (flipped) {
+          // After reveal, use a normal 3D flip to the info back.
+          screenRef.current?.classList.remove("is-reduce-reveal");
+          inner.style.transform = "rotateY(180deg)";
+          if (frontRef.current) frontRef.current.style.opacity = "1";
+          if (rearRef.current) rearRef.current.style.opacity = "1";
+        } else {
+          screenRef.current?.classList.add("is-reduce-reveal");
+          inner.style.transform = "rotateY(0deg)";
+          if (frontRef.current) frontRef.current.style.opacity = String(p);
+          if (rearRef.current) rearRef.current.style.opacity = String(1 - p);
+        }
         if (info) {
           info.style.opacity = String(p);
           info.style.transform = "translateY(0)";
@@ -345,9 +406,9 @@ export function DrawRevealScreen({
           dup.style.transform = "translateX(-50%) scale(1)";
         }
         if (toast) {
-          toast.style.opacity = toastVisible ? String(p) : "0";
+          toast.style.opacity = dexToastVisible ? String(p) : "0";
           toast.style.transform = "translateY(0)";
-          if (toastVisible && p > 0.85 && !toastShownRef.current) {
+          if (dexToastVisible && p > 0.85 && !toastShownRef.current) {
             toastShownRef.current = true;
             setToastHasShown(true);
             onToastShownRef.current?.();
@@ -362,29 +423,32 @@ export function DrawRevealScreen({
         return;
       }
 
-      const shake = t >= 150 && t < 350 ? (t - 150) / 200 : null;
-      const pulse = 1 + 0.04 * Math.sin(t / 180);
-      glow.style.transform = `scale(${t < 350 ? pulse : 1 + 0.12 * eOutC(clamp((t - 350) / 600))})`;
-      glow.style.opacity = String(t < 350 ? 0.55 + 0.15 * Math.sin(t / 180) : 0.7 + 0.3 * eOutC(clamp((t - 500) / 400)));
+      if (frontRef.current) frontRef.current.style.opacity = "1";
+      if (rearRef.current) rearRef.current.style.opacity = "1";
 
+      const pulse = 1 + 0.04 * Math.sin(t / 180);
+      glow.style.transform = `scale(${t < FLIP_MS ? pulse : 1 + 0.12 * eOutC(clamp((t - 200) / 600))})`;
+      glow.style.opacity = String(
+        t < 200 ? 0.55 + 0.15 * Math.sin(t / 180) : 0.7 + 0.3 * eOutC(clamp((t - 200) / 400)),
+      );
+
+      // Facedown at 180° → +900° spin → 1080° ≡ 0° (front).
       let rot = 180;
       let sc = 0.9;
-      let rz = 0;
-      if (shake !== null) {
-        rz = Math.sin(shake * Math.PI * 4) * 3 * (1 - shake);
-        sc = 0.9 + 0.04 * Math.sin(shake * Math.PI);
-      }
-      if (t >= 350) {
-        const p = clamp((t - 350) / 450);
-        rot = 180 * (1 - eOutC(p));
+      if (t >= 0 && t < FLIP_MS) {
+        const p = clamp(t / FLIP_MS);
+        rot = 180 + FLIP_DEG * eOutC(p);
         sc = 0.9 + 0.1 * eBack(p);
+      } else if (t >= FLIP_MS) {
+        rot = 180 + FLIP_DEG;
+        sc = 1;
       }
       if (flipped) rot = 180;
       inner.style.transform = `rotateY(${rot}deg)`;
-      cardbox.style.transform = `translateY(0px) scale(${sc}) rotate(${rz}deg)`;
+      cardbox.style.transform = `translateY(0px) scale(${sc})`;
 
       if (rays) {
-        const rp = clamp((t - 560) / 500);
+        const rp = clamp((t - 420) / 500);
         rays.style.opacity = theme.rays ? String(rp * (theme.burst ? 0.95 : 0.75)) : "0";
         rays.style.transform = `rotate(${t * 0.02}deg) scale(${0.6 + 0.4 * eOutC(rp)})`;
       }
@@ -396,6 +460,9 @@ export function DrawRevealScreen({
         holo.style.backgroundPosition = `${100 - hp * 100}% 0`;
       }
 
+      const stage = cardbox.parentElement;
+      const cx = stage ? stage.clientWidth / 2 : 195;
+      const cy = stage ? stage.clientHeight / 2 : 235;
       partsRef.current.forEach((p, i) => {
         const el = document.getElementById(`dr-p${i}`);
         if (!el) return;
@@ -405,14 +472,14 @@ export function DrawRevealScreen({
           return;
         }
         const e = eOutC(q);
-        const x = 195 + Math.cos(p.a) * p.d * e;
-        const y = 235 + Math.sin(p.a) * p.d * e * 0.9;
+        const x = cx + Math.cos(p.a) * p.d * e;
+        const y = cy + Math.sin(p.a) * p.d * e * 0.9;
         const s = (p.sz / 6) * (1 - 0.4 * q) * (p.kind === "paw" ? 1.2 : 1);
         el.setAttribute("transform", `translate(${x},${y}) scale(${s}) rotate(${q * 90})`);
         el.setAttribute("opacity", String((q < 0.15 ? q / 0.15 : 1) * (1 - q)));
       });
 
-      const bp = clamp((t - 900) / 260);
+      const bp = clamp((t - 780) / 260);
       if (badge) {
         badge.style.opacity = reservation.isNew ? (bp ? "1" : "0") : "0";
         badge.style.transform = `scale(${0.4 + 0.6 * eBack(bp)}) rotate(${-14 + 2 * bp}deg)`;
@@ -422,22 +489,22 @@ export function DrawRevealScreen({
         dup.style.transform = `translateX(-50%) scale(${0.6 + 0.4 * eBack(bp)})`;
       }
       if (toast) {
-        const tp = clamp((t - 900) / 300);
-        toast.style.opacity = toastVisible ? String(tp) : "0";
+        const tp = clamp((t - 780) / 300);
+        toast.style.opacity = dexToastVisible ? String(tp) : "0";
         toast.style.transform = `translateY(${-24 * (1 - eOutC(tp))}px)`;
-        if (toastVisible && tp >= 1 && !toastShownRef.current) {
+        if (dexToastVisible && tp >= 1 && !toastShownRef.current) {
           toastShownRef.current = true;
           setToastHasShown(true);
           onToastShownRef.current?.();
         }
       }
       if (info) {
-        const ip = clamp((t - 820) / 280);
+        const ip = clamp((t - 700) / 280);
         info.style.opacity = String(ip);
         info.style.transform = `translateY(${8 * (1 - eOutC(ip))}px)`;
       }
       if (btns) {
-        const btp = clamp((t - 950) / 300);
+        const btp = clamp((t - 820) / 300);
         btns.style.opacity = String(btp);
         btns.style.transform = `translateY(${14 * (1 - eOutC(btp))}px)`;
         btns.style.pointerEvents = btp > 0.5 ? "auto" : "none";
@@ -458,16 +525,34 @@ export function DrawRevealScreen({
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [manualFlip, reservation.isNew, theme, toastText, toastDismissed]);
+  }, [
+    manualFlip,
+    reservation.isNew,
+    theme,
+    toastText,
+    toastDismissed,
+    adToastVisible,
+  ]);
 
   useEffect(() => {
     if (frontRef.current) frontRef.current.src = frontSrc;
+    // Facedown on rear for the opening reveal; info-back swaps in on tap.
     if (rearRef.current) rearRef.current.src = FACEDOWN;
+    if (reduceRef.current) {
+      screenRef.current?.classList.add("is-reduce-reveal");
+    }
   }, [frontSrc, reservation.drawId]);
 
   const onScreenClick = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
-    if (target.closest(".draw-reveal-btn") || target.closest(".draw-reveal-wait")) return;
+    if (
+      target.closest(".draw-reveal-btn") ||
+      target.closest(".draw-reveal-wait") ||
+      target.closest(".draw-reveal-close") ||
+      target.closest(".draw-reveal-back")
+    ) {
+      return;
+    }
 
     if (!readyRef.current) return;
     const elapsed = performance.now() - t0Ref.current;
@@ -496,11 +581,12 @@ export function DrawRevealScreen({
     <div
       ref={screenRef}
       className="draw-reveal-screen"
-      id="screen"
+      id="card-reveal"
       onClick={onScreenClick}
-      role="presentation"
+      role="dialog"
+      aria-label="뽑기 결과"
     >
-      <svg className="draw-reveal-grain" width="390" height="844" aria-hidden="true">
+      <svg className="draw-reveal-grain" aria-hidden="true" preserveAspectRatio="none">
         <filter id="draw-grain">
           <feTurbulence type="fractalNoise" baseFrequency="1.0" numOctaves="3" seed="11" stitchTiles="stitch" />
           <feColorMatrix type="saturate" values="0" />
@@ -523,17 +609,34 @@ export function DrawRevealScreen({
                 />
               </svg>
             </button>
-          ) : null}
+          ) : (
+            <span className="draw-reveal-head-spacer" />
+          )}
           <div className="t">
             TODAY&apos;S CARD
             <br />
             <small>고양이가 골라 준 오늘의 행운</small>
           </div>
-          <div className="draw-reveal-chip" id="chip">
-            <i />
-            {remainingDraws > 0 ? `남은 뽑기 ${remainingDraws}` : "오늘 뽑기 완료"}
-          </div>
+          <button
+            type="button"
+            className="draw-reveal-close"
+            aria-label="닫기"
+            onClick={() => onBack?.()}
+          >
+            ✕
+          </button>
         </div>
+
+        {adNyangToast ? (
+          <div
+            ref={adToastRef}
+            className={`draw-reveal-ad-toast ${adToastVisible ? "is-on" : ""}`}
+            role="status"
+          >
+            <img src={ncoinIcon(18)} alt="" width={18} height={18} />
+            <span>{adNyangToast}</span>
+          </div>
+        ) : null}
 
         <div className="draw-reveal-stage">
           <div ref={raysRef} className="draw-reveal-rays" id="rays" />
@@ -566,7 +669,13 @@ export function DrawRevealScreen({
               </div>
             </div>
           </div>
-          <svg ref={fxRef} className="draw-reveal-fx" id="fx" viewBox="0 0 390 470" preserveAspectRatio="xMidYMid meet" />
+          <svg
+            ref={fxRef}
+            className="draw-reveal-fx"
+            id="fx"
+            viewBox="0 0 390 470"
+            preserveAspectRatio="xMidYMid meet"
+          />
         </div>
 
         <div
@@ -588,15 +697,7 @@ export function DrawRevealScreen({
               <img src="/assets/menu/icon-paw-mini.svg" alt="" width={18} height={18} />
             </div>
           </div>
-          <div>
-            {toastText ?? (
-              <>
-                {revealCopy.title}
-                <br />
-                {revealCopy.sub}
-              </>
-            )}
-          </div>
+          <div>{toastText}</div>
         </div>
 
         {waitFailed ? (
@@ -611,17 +712,17 @@ export function DrawRevealScreen({
         <div className="draw-reveal-footer">
           <div ref={infoRef} className="draw-reveal-info" id="info">
             <div className="n" id="name">
-              {reservation.nameKo}
+              {breedName}
             </div>
             <div className="s" id="stars">
-              {reservation.starsLabel}
+              {gradeLabel}
             </div>
             <div className="h">카드를 톡 누르면 뒷면을 볼 수 있어요</div>
           </div>
 
           <div ref={btnsRef} className="draw-reveal-btns" id="btns">
             <button type="button" className="draw-reveal-btn is-primary" id="btn-to-dex" onClick={onToDex}>
-              {reservation.isNew ? "도감에서 보상 받기" : "도감 보기"}
+              도감에서 보기
             </button>
             <button
               type="button"
@@ -632,7 +733,7 @@ export function DrawRevealScreen({
             >
               {remainingDraws > 0 ? (
                 <>
-                  한 장 더 뽑기 [광고] <em id="remain">(남은 {remainingDraws}장)</em>
+                  한 장 더 뽑기 · 광고 · 남은 <em id="remain">{remainingDraws}회</em>
                 </>
               ) : (
                 "내일 또 만나요"

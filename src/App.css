@@ -11,8 +11,9 @@
   overflow: hidden;
 }
 
-/* Home fills the webview even when overlay siblings sit under #root. */
-#root > #main {
+/* Home / reveal fill the webview even when overlay siblings sit under #root. */
+#root > #main,
+#root > #card-reveal {
   flex: 1 1 auto;
   min-height: 0;
   height: 100%;

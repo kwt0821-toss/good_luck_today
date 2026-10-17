@@ -1,12 +1,12 @@
-/* Ported from docs/draw-reveal/draw-reveal.html — Concept B night tokens */
+/* #card-reveal — fills Toss webview below nav (no device px hardcoding) */
 
 .draw-reveal-screen {
   position: relative;
+  flex: 1 1 auto;
   width: 100%;
-  max-width: 390px;
   height: 100%;
   min-height: 0;
-  margin: 0 auto;
+  margin: 0;
   overflow: hidden;
   user-select: none;
   cursor: pointer;
@@ -23,6 +23,8 @@
 .draw-reveal-grain {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   opacity: 0.45;
   mix-blend-mode: soft-light;
   pointer-events: none;
@@ -35,7 +37,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 18px 24px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  padding: 12px 20px calc(var(--sa-bottom, env(safe-area-inset-bottom, 0px)) + 16px);
   box-sizing: border-box;
 }
 
@@ -48,7 +50,14 @@
   z-index: 3;
 }
 
-.draw-reveal-back {
+.draw-reveal-head-spacer {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+}
+
+.draw-reveal-back,
+.draw-reveal-close {
   flex: 0 0 auto;
   width: 36px;
   height: 36px;
@@ -60,6 +69,8 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .draw-reveal-head .t {
@@ -82,31 +93,51 @@
   margin-top: 2px;
 }
 
-.draw-reveal-chip {
+.draw-reveal-ad-toast {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 56px;
+  z-index: 12;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 9px;
-  border-radius: 999px;
-  border: 1px solid rgba(243, 233, 215, 0.35);
-  font-size: 10.5px;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(28, 24, 48, 0.94);
+  border: 1px solid rgba(243, 233, 215, 0.22);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
   color: #f3e9d7;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
 }
 
-.draw-reveal-chip i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ffb36b;
-  box-shadow: 0 0 6px #ffb36b;
+.draw-reveal-ad-toast.is-on {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.draw-reveal-ad-toast img {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
 }
 
 .draw-reveal-stage {
   position: relative;
   flex: 1 1 auto;
-  min-height: 160px;
+  min-height: 0;
   width: 100%;
   margin: 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
 }
 
 .draw-reveal-glow {
@@ -147,15 +178,15 @@
 }
 
 .draw-reveal-cardbox {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: min(236px, 62%);
-  aspect-ratio: 236 / 367;
+  position: relative;
+  z-index: 2;
+  /* Cap by width 82% or by stage height while keeping 900:1400. */
+  width: min(82cqw, calc(100cqh * 900 / 1400));
+  max-width: 82%;
+  max-height: 100%;
+  aspect-ratio: 900 / 1400;
   height: auto;
-  max-height: 92%;
-  margin: 0;
-  translate: -50% -50%;
+  margin: 0 auto;
   perspective: 1100px;
   will-change: transform;
 }
@@ -163,15 +194,16 @@
 .draw-reveal-shadow {
   position: absolute;
   left: 50%;
-  top: 50%;
-  width: min(220px, 58%);
+  bottom: 4%;
+  width: min(70%, 260px);
   height: 22px;
   margin: 0;
-  translate: -50% calc(min(186px, 42%) + 8px);
+  translate: -50% 0;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.5);
   filter: blur(10px);
-  opacity: 0.6;
+  opacity: 0.55;
+  z-index: 1;
 }
 
 .draw-reveal-inner {
@@ -201,6 +233,16 @@
 
 .draw-reveal-face.is-rear {
   transform: rotateY(180deg);
+}
+
+/* Reduced-motion reveal: stack both faces coplanar so opacity crossfade works. */
+.draw-reveal-screen.is-reduce-reveal .draw-reveal-face {
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
+
+.draw-reveal-screen.is-reduce-reveal .draw-reveal-face.is-rear {
+  transform: none;
 }
 
 .draw-reveal-holo {

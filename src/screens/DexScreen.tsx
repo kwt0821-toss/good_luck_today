@@ -138,8 +138,11 @@ export function DexScreen({
   useEffect(() => {
     if (!focusCardId || !catalog) return;
     const found = catalog.cards.find((item) => item.id === focusCardId);
-    if (found && tab !== found.type) setTab(found.type);
-  }, [focusCardId, catalog, tab]);
+    if (!found) return;
+    setTab(found.type);
+    // Reveal CTA "도감에서 보기" — open the card when not mid-tutorial.
+    if (!tutorialPhase) setOpenCard(found);
+  }, [focusCardId, catalog, tutorialPhase]);
 
   useEffect(() => {
     void refreshClaimable(ops, owned);

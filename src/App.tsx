@@ -170,6 +170,8 @@ export default function App() {
   const [revealReady, setRevealReady] = useState(false);
   const [waitFailed, setWaitFailed] = useState(false);
   const [revealToast, setRevealToast] = useState<string | null>(null);
+  const [adNyangToast, setAdNyangToast] = useState<string | null>(null);
+  const [dexFocusCardId, setDexFocusCardId] = useState<string | null>(null);
   const [bootError, setBootError] = useState<string | null>(null);
   const [featureIntro, setFeatureIntro] = useState<FeatureIntro | null>(null);
   const attendanceDay7AdResolverRef = useRef<((result: AttendanceDay7AdResult) => void) | null>(
@@ -558,6 +560,7 @@ export default function App() {
         }
         setRevealReady(true);
         setWaitFailed(false);
+        setAdNyangToast(null);
         await haptic("success");
         setScreen({ name: "reveal" });
         return;
@@ -637,17 +640,13 @@ export default function App() {
       return;
     }
     await persistOps(confirmed.state);
-    // Show ad-draw 냥코인 notice before the reveal card.
-    if (confirmed.adNyangCoin > 0) {
-      nyNotify({
-        key: `ad-draw-ncoin:${confirmed.reservation.drawId}`,
-        kind: "reward",
-        title:
-          confirmed.adNyangNotice ??
-          `카드를 뽑아 냥코인x${confirmed.adNyangCoin}이 지급되었습니다.`,
-        count: confirmed.adNyangCoin,
-      });
-    }
+    // Ad-draw 냥코인 toast lives on #card-reveal only (overlay does not grant again).
+    setAdNyangToast(
+      confirmed.adNyangCoin > 0
+        ? (confirmed.adNyangNotice ??
+            `카드를 뽑아 냥코인x${confirmed.adNyangCoin}이 지급되었습니다.`)
+        : null,
+    );
     setReservation(confirmed.reservation);
     setRevealCard(confirmed.card);
     setRevealToast(confirmed.toast);
@@ -1135,6 +1134,7 @@ export default function App() {
               Boolean(ops && !ops.tutorialDone && ops.tutorialStep === 3);
             if (dexTutPhase && tutStep3) return;
             setDexTutPhase(null);
+            setDexFocusCardId(null);
             setScreen({ name: "home" });
           }}
           ops={ops}
@@ -1145,7 +1145,9 @@ export default function App() {
               : null
           }
           focusCardId={
-            tutorialStep?.step === 3 || tutorialReplayStep === 3 ? tutorialCardId : null
+            tutorialStep?.step === 3 || tutorialReplayStep === 3
+              ? tutorialCardId
+              : dexFocusCardId
           }
           tutorialPhase={
             tutorialStep?.step === 3 || tutorialReplayStep === 3 ? dexTutPhase : null
@@ -1202,6 +1204,7 @@ export default function App() {
           ready={revealReady && !waitFailed}
           waitFailed={waitFailed && !revealReady}
           toastText={revealToast}
+          adNyangToast={adNyangToast}
           remainingDraws={remainingDraws}
           holdToast={
             Boolean(
@@ -1217,8 +1220,10 @@ export default function App() {
                 setTutorialReplayStep(3);
                 setRevealTutPhase(null);
                 setHideRevealToast(false);
+                setAdNyangToast(null);
                 setStepThenActive(false);
                 setDexTutPhase("scroll");
+                setDexFocusCardId(reservation.cardId);
                 setScreen({ name: "collection" });
                 return;
               }
@@ -1229,13 +1234,16 @@ export default function App() {
               }
               setRevealTutPhase(null);
               setHideRevealToast(false);
+              setAdNyangToast(null);
               setStepThenActive(false);
+              setDexFocusCardId(reservation.cardId);
               // Only start dex tutorial phase when still in the tutorial flow.
               setDexTutPhase(enterDexTutorial ? "scroll" : null);
               setScreen({ name: "collection" });
             })();
           }}
           onDrawAgain={() => {
+            setAdNyangToast(null);
             setScreen({ name: "home" });
             void beginDraw();
           }}
@@ -1254,6 +1262,7 @@ export default function App() {
             // Leave reveal without consuming further tutorial gates.
             setRevealTutPhase(null);
             setHideRevealToast(false);
+            setAdNyangToast(null);
             setStepThenActive(false);
             setScreen({ name: "home" });
           }}
