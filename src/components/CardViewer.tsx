@@ -1,6 +1,7 @@
 import { useEffect, useState, type MouseEvent, type ReactNode, type Ref } from "react";
 import { createPortal } from "react-dom";
 
+import { FLIP_BUTTON_ZONE, boxStyle, flipGuideStyle } from "../lib/cardFrames";
 import "./CardViewer.css";
 
 const FLIP_HINT_KEY = "lucky-cat.card-flip-hint";
@@ -59,7 +60,7 @@ export function CardFlipStack({
 
 function FlipGuide() {
   return (
-    <div className="card-viewer-guide" aria-hidden="true">
+    <div className="card-viewer-guide" style={flipGuideStyle()} aria-hidden="true">
       <span className="card-viewer-guide-label">뒷면보기</span>
       <svg className="card-viewer-guide-arrow" viewBox="0 0 96 58" fill="none">
         <path
@@ -89,14 +90,16 @@ function FlipButton({
   onFlip: (event: MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
-    <button
-      type="button"
-      className="card-viewer-flip"
-      aria-label={showingBack ? "앞면 보기" : "뒷면 보기"}
-      onClick={onFlip}
-    >
-      <img src="/assets/dex/icons/icon-flip.svg" alt="" />
-    </button>
+    <div className="card-viewer-flip-zone" style={boxStyle(FLIP_BUTTON_ZONE)}>
+      <button
+        type="button"
+        className="card-viewer-flip"
+        aria-label={showingBack ? "앞면 보기" : "뒷면 보기"}
+        onClick={onFlip}
+      >
+        <img src="/assets/dex/icons/icon-flip.svg" alt="" />
+      </button>
+    </div>
   );
 }
 

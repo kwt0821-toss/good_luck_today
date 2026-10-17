@@ -2,8 +2,8 @@ import layoutJson from "../../public/assets/frames/layout.json";
 import type { DexCard, DexCardType } from "./dexTypes";
 
 /**
- * Card chrome from public/assets/frames (frames-v5).
- * win / plate / ribbon boxes are the percentages in layout.json.
+ * Card chrome from public/assets/frames (frames-v7).
+ * win / plate / stars / stamp boxes are percentages of the 900×1400 card.
  */
 export type FrameBox = {
   left: number;
@@ -11,8 +11,6 @@ export type FrameBox = {
   width: number;
   height: number;
 };
-
-export type FrameFamily = "pink" | "gold";
 
 export type FrameKey =
   | "basic-1"
@@ -24,59 +22,59 @@ export type FrameKey =
   | "character"
   | "legend";
 
-export type WindowId =
-  | "1star"
-  | "2star"
-  | "3star"
-  | "4star"
-  | "5star"
-  | "meme"
-  | "character"
-  | "legend";
-
-/** Percent boxes from public/assets/frames/layout.json. */
-export const FRAME_LAYOUT = layoutJson as Record<
-  FrameFamily,
-  { win: FrameBox; plate: FrameBox; ribbon: FrameBox }
->;
-
-const FAMILY: Record<FrameKey, FrameFamily> = {
-  "basic-1": "pink",
-  "basic-2": "pink",
-  "basic-3": "pink",
-  "4star": "pink",
-  "5star": "pink",
-  meme: "pink",
-  character: "pink",
-  legend: "gold",
+export type TierLayout = {
+  win: FrameBox;
+  plate: FrameBox;
+  stars: FrameBox;
+  stamp: FrameBox;
+  windowBg: string;
+  ribbonText: null;
+  showStars: boolean;
+  starCount: number;
+  label: string | null;
 };
 
-/** 1★ window-1star, 2★ window-2star, 3★ window-3star. window-basic is retired. */
-const WINDOW: Record<FrameKey, WindowId> = {
-  "basic-1": "1star",
-  "basic-2": "2star",
-  "basic-3": "3star",
-  "4star": "4star",
-  "5star": "5star",
-  meme: "meme",
-  character: "character",
-  legend: "legend",
+type LayoutFile = {
+  flipButtonZone: FrameBox;
+  nameFont: {
+    family: string;
+    startOfCardHeight: number;
+    minOfCardHeight: number;
+    lineHeight: number;
+  };
+  starsFont: {
+    sizeOfCardWidth: number;
+    size5OfCardWidth: number;
+    color: string;
+    stroke: string;
+  };
+  labelFont: {
+    sizeOfCardWidth: number;
+    sizeMemeCharOfCardWidth: number;
+    color: string;
+    stroke: string;
+    glow: string;
+  };
+  nameColor: Record<FrameKey, string>;
+  tiers: Record<FrameKey, TierLayout>;
 };
 
-/** Ribbon breed-name color from frames-v5-spec. Plate grade is always gold. */
-const NAME_COLOR: Record<WindowId, string> = {
-  "1star": "#7A5236",
-  "2star": "#2F5E9E",
-  "3star": "#8A4A30",
-  "4star": "#1F6B52",
-  "5star": "#A3305E",
-  meme: "#5A4600",
-  character: "#5B3FC4",
-  legend: "#6E4510",
-};
+export const FRAME_LAYOUT = layoutJson as LayoutFile;
 
-/** Gold grade mark on the plate (★ and MEME / CHAR / LEGEND). */
-export const PLATE_GRADE_COLOR = "#FFD34D";
+/** Bottom-right corner reserved for the rotate button. */
+export const FLIP_BUTTON_ZONE = FRAME_LAYOUT.flipButtonZone;
+
+/** Handwritten hint sits above every tier's star row and clear of the stamp. */
+export function flipGuideStyle(): { left: string; right: string; bottom: string } {
+  const tiers = Object.values(FRAME_LAYOUT.tiers);
+  const starsTop = Math.min(...tiers.map((tier) => tier.stars.top));
+  const stampRight = Math.max(...tiers.map((tier) => tier.stamp.left + tier.stamp.width));
+  return {
+    left: `${(stampRight + 3).toFixed(2)}%`,
+    right: "2%",
+    bottom: `${(100 - starsTop + 0.6).toFixed(2)}%`,
+  };
+}
 
 export type FrameSubject = {
   type: DexCardType;
@@ -85,9 +83,7 @@ export type FrameSubject = {
 
 export type ResolvedFrame = {
   key: FrameKey;
-  windowId: WindowId;
-  family: FrameFamily;
-  layout: (typeof FRAME_LAYOUT)["pink"];
+  tier: TierLayout;
   nameColor: string;
   foil: boolean;
   glit: boolean;
@@ -117,18 +113,16 @@ export function frameKeyFor(card: FrameSubject): FrameKey {
 
 export function resolveFrame(card: FrameSubject): ResolvedFrame {
   const key = frameKeyFor(card);
-  const windowId = WINDOW[key];
+  const tier = FRAME_LAYOUT.tiers[key];
   const frame = assetPair(`frame-${key}`);
-  const win = assetPair(`window-${windowId}`);
+  const win = assetPair(tier.windowBg);
+  const basic = key === "basic-1" || key === "basic-2" || key === "basic-3";
   return {
     key,
-    windowId,
-    family: FAMILY[key],
-    layout: FRAME_LAYOUT[FAMILY[key]],
-    nameColor: NAME_COLOR[windowId],
-    // 1★·2★·3★ stay without foil. Glit is 4★, 5★, character, legend only.
-    foil: windowId !== "1star" && windowId !== "2star" && windowId !== "3star",
-    glit: windowId === "4star" || windowId === "5star" || windowId === "legend" || windowId === "character",
+    tier,
+    nameColor: FRAME_LAYOUT.nameColor[key],
+    foil: !basic,
+    glit: key === "4star" || key === "5star" || key === "legend" || key === "character",
     frameSrc: frame.src,
     frameSrcSet: frame.srcSet,
     windowSrc: win.src,
