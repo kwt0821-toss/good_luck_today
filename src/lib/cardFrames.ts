@@ -161,11 +161,6 @@ export function boxStyle(box: FrameBox): {
   };
 }
 
-/** Grade mark is 55% of the plate height from layout.json. */
-export function plateGradeFontSize(plate: FrameBox): string {
-  return `calc(100cqh * ${((plate.height / 100) * 0.55).toFixed(5)})`;
-}
-
 /** Breed name stays inside the ribbon box (height and width from layout.json). */
 export function ribbonNameFontSize(ribbon: FrameBox, name: string): string {
   const chars = Math.max(1, [...name].length);

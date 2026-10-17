@@ -51,14 +51,6 @@
   mix-blend-mode: multiply;
 }
 
-/* Baked English name, stars, and fortune sit outside the cat. Hide them
-   so the window shows, without a bottom fade. */
-.card-frame:not(.is-mini) .win img.cat,
-.draw-reveal-face .card-frame:not(.is-mini) img.cat,
-.face.dex-face .card-frame:not(.is-mini) img.cat {
-  clip-path: inset(8% 0 30% 0);
-}
-
 .card-frame .frame,
 .draw-reveal-face .card-frame img.frame,
 .face.dex-face .card-frame img.frame {
@@ -82,10 +74,16 @@
 }
 
 .card-frame .plate {
+  container-type: size;
   font-family: Poppins, "Noto Sans KR", sans-serif;
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.06em;
+}
+
+.card-frame .plate span {
+  font-size: 55cqh;
+  line-height: 1;
 }
 
 .card-frame .name {

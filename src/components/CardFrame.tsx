@@ -1,14 +1,14 @@
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useState } from "react";
 
 import {
   PLATE_GRADE_COLOR,
   boxStyle,
   miniRibbonLabel,
-  plateGradeFontSize,
   resolveFrame,
   ribbonNameFontSize,
   type FrameSubject,
 } from "../lib/cardFrames";
+import { loadPlainCat } from "../lib/plainCat";
 import "./CardFrame.css";
 
 type CardFrameProps = {
@@ -26,6 +26,22 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
   const frame = resolveFrame(card);
   const mini = variant === "mini";
   const grade = miniRibbonLabel(card);
+  const [artSrc, setArtSrc] = useState(catSrc);
+
+  useEffect(() => {
+    if (mini) {
+      setArtSrc(catSrc);
+      return;
+    }
+    let cancel = false;
+    setArtSrc(catSrc);
+    void loadPlainCat(catSrc).then((url) => {
+      if (!cancel) setArtSrc(url);
+    });
+    return () => {
+      cancel = true;
+    };
+  }, [catSrc, mini]);
   const classes = [
     "card-frame",
     mini ? "is-mini" : "",
@@ -40,19 +56,12 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
     <div ref={ref} className={classes}>
       <div className="win" style={boxStyle(frame.layout.win)}>
         <img className="bg" src={frame.windowSrc} srcSet={frame.windowSrcSet} alt="" draggable={false} />
-        <img className="cat" src={catSrc} alt="" draggable={false} />
+        <img className="cat" src={artSrc} alt="" draggable={false} />
       </div>
       <img className="frame" src={frame.frameSrc} srcSet={frame.frameSrcSet} alt="" draggable={false} />
       {!mini ? (
-        <div
-          className="plate"
-          style={{
-            ...boxStyle(frame.layout.plate),
-            color: PLATE_GRADE_COLOR,
-            fontSize: plateGradeFontSize(frame.layout.plate),
-          }}
-        >
-          {grade}
+        <div className="plate" style={{ ...boxStyle(frame.layout.plate), color: PLATE_GRADE_COLOR }}>
+          <span>{grade}</span>
         </div>
       ) : null}
       {mini ? (
