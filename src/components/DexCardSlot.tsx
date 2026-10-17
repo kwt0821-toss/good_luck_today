@@ -1,3 +1,4 @@
+import { CardFrame } from "./CardFrame";
 import { dexAsset } from "../lib/dexCatalog";
 import { formatDupBadge } from "../lib/dupExchange";
 import type { DexCard, DexOwnedRecord } from "../lib/dexTypes";
@@ -42,7 +43,6 @@ export function DexCardSlot({
   const dupBadge = formatDupBadge(record?.count ?? 0);
   const comingSoon = kind === "soon";
   const name = card?.type === "breed" ? card.breed?.en : card?.name?.ko;
-  const alt = owned && name ? name : "아직 만나지 못한 고양이";
 
   return (
     <button
@@ -54,11 +54,11 @@ export function DexCardSlot({
       aria-label={comingSoon ? "곧 만나요" : owned ? name : "잠긴 카드"}
     >
       {owned && card ? (
-        <img
+        <CardFrame
           className="dex-slot-img"
-          src={dexAsset(kind === "breed" ? card.thumb : card.front)}
-          alt={alt}
-          loading="lazy"
+          card={card}
+          catSrc={dexAsset(kind === "breed" ? card.thumb : card.front)}
+          variant="mini"
         />
       ) : comingSoon ? (
         <>

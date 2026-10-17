@@ -6,6 +6,9 @@ import type { DexCard } from "../lib/dexTypes";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import type { DrawReservation } from "../lib/opsTypes";
 import { dexCardBreedLabel, dexCardGradeLabel } from "../lib/tutorialFlow";
+import { cardKoreanName } from "../lib/dexCatalog";
+import type { FrameSubject } from "../lib/cardFrames";
+import { CardFrame } from "../components/CardFrame";
 import "./DrawRevealScreen.css";
 
 const FACEDOWN = "/assets/main/card-facedown.png";
@@ -198,7 +201,7 @@ export function DrawRevealScreen({
   onToastShownRef.current = onToastShown;
   const btnsRef = useRef<HTMLDivElement>(null);
   const fxRef = useRef<SVGSVGElement>(null);
-  const frontRef = useRef<HTMLImageElement>(null);
+  const frontRef = useRef<HTMLDivElement>(null);
   const rearRef = useRef<HTMLImageElement>(null);
 
   const [manualFlip, setManualFlip] = useState(false);
@@ -274,6 +277,12 @@ export function DrawRevealScreen({
 
   const theme = RAR[reservation.rarity] ?? RAR.b1;
   const frontSrc = reservation.frontUrl || reservation.thumbUrl;
+  const frameCard: FrameSubject = card
+    ? { type: card.type, stars: card.stars }
+    : reservation.rarity === "special" || reservation.rarity === "character" || reservation.rarity === "legend"
+      ? { type: reservation.rarity, stars: null }
+      : { type: "breed", stars: Number(reservation.rarity.replace(/\D/g, "")) || 1 };
+  const frameName = card ? cardKoreanName(card) || reservation.nameKo : reservation.nameKo;
   const breedName = dexCardBreedLabel(card) || reservation.nameKo;
   const gradeLabel = dexCardGradeLabel(card) || reservation.starsLabel;
   const dupCopy = dupChipCopy(ownedCount, reservation.dupPaw);
@@ -535,13 +544,12 @@ export function DrawRevealScreen({
   ]);
 
   useEffect(() => {
-    if (frontRef.current) frontRef.current.src = frontSrc;
     // Facedown on rear for the opening reveal; info-back swaps in on tap.
     if (rearRef.current) rearRef.current.src = FACEDOWN;
     if (reduceRef.current) {
       screenRef.current?.classList.add("is-reduce-reveal");
     }
-  }, [frontSrc, reservation.drawId]);
+  }, [reservation.drawId]);
 
   const onScreenClick = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
@@ -661,7 +669,12 @@ export function DrawRevealScreen({
             </div>
             <div ref={innerRef} className="draw-reveal-inner" id="inner">
               <div className="draw-reveal-face" id="reveal-card">
-                <img ref={frontRef} alt={reservation.nameKo} draggable={false} />
+                <CardFrame
+                  ref={frontRef}
+                  card={frameCard}
+                  catSrc={frontSrc}
+                  name={frameName}
+                />
                 <div ref={holoRef} className="draw-reveal-holo" id="holo" />
               </div>
               <div className="draw-reveal-face is-rear">

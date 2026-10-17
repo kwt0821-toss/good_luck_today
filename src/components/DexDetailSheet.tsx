@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { createPortal } from "react-dom";
 
 import { AudioManager } from "../audio/AudioManager";
+import { CardFrame } from "./CardFrame";
 import { cardDisplayName, cardKoreanName, dexAsset, formatMetDate } from "../lib/dexCatalog";
 import { loadMenuSettings, shouldReduceMenuMotion } from "../lib/menuSettings";
 import type { DexCard, DexOwnedMap } from "../lib/dexTypes";
@@ -535,7 +536,11 @@ export function DexDetailSheet({
               <div ref={shadowRef} className="dex-card-depth" aria-hidden="true" />
               <div ref={innerRef} className="card-inner dex-card-inner">
                 <div ref={frontFaceRef} className="face front dex-face">
-                  <img src={dexAsset(card.front)} alt={`${cardDisplayName(card)} 앞면`} draggable={false} />
+                  <CardFrame
+                    card={card}
+                    catSrc={dexAsset(card.front)}
+                    name={cardKoreanName(card) || cardDisplayName(card)}
+                  />
                 </div>
                 <div ref={backFaceRef} className="face back dex-face">
                   <img src={dexAsset(card.back)} alt={`${cardDisplayName(card)} 뒷면`} draggable={false} />

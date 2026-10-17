@@ -1,0 +1,157 @@
+.card-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  container-type: inline-size;
+  border-radius: calc(100cqw * 0.03);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.dex-slot-img.card-frame {
+  position: absolute;
+}
+
+.card-frame > * {
+  position: absolute;
+}
+
+.card-frame .win {
+  overflow: hidden;
+  border-radius: calc(100cqw * 0.035);
+}
+
+.card-frame .win img.bg,
+.draw-reveal-face .card-frame img.bg,
+.face.dex-face .card-frame img.bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  max-width: none;
+}
+
+/* Cat size is fixed: do not retune with the frame art. */
+.card-frame .win img.cat,
+.draw-reveal-face .card-frame img.cat,
+.face.dex-face .card-frame img.cat,
+.dex-slot .card-frame img.cat {
+  position: absolute;
+  left: -7%;
+  width: 114%;
+  top: 55%;
+  height: auto;
+  transform: translateY(-50%);
+  object-fit: contain;
+  max-width: none;
+  /* Flat card fill multiplies away so window-1star / window-2star show through. */
+  mix-blend-mode: multiply;
+}
+
+.card-frame .frame,
+.draw-reveal-face .card-frame img.frame,
+.face.dex-face .card-frame img.frame {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  max-width: none;
+}
+
+.card-frame .line,
+.card-frame .name {
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.card-frame .line {
+  font-size: calc(100cqw * 0.036);
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+}
+
+.card-frame .name {
+  font-family: "Noto Serif KR", "Noto Serif CJK KR", "Noto Sans KR", serif;
+  font-weight: 900;
+  font-size: calc(100cqw * 0.056);
+}
+
+.card-frame.is-mini .name {
+  left: 8% !important;
+  width: 84% !important;
+  top: auto !important;
+  bottom: 3% !important;
+  height: 16px !important;
+  font-family: Poppins, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  color: #ffd34d !important;
+  background: rgba(42, 30, 20, 0.78);
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+  line-height: 16px;
+}
+
+.card-frame.foil::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.5) 45%,
+    rgba(255, 215, 250, 0.32) 50%,
+    transparent 62%
+  );
+  background-size: 250% 100%;
+  background-position: 30% 0;
+  mix-blend-mode: soft-light;
+  animation: card-frame-foil 3.2s linear infinite;
+  pointer-events: none;
+}
+
+.card-frame.glit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.6px);
+  background-size: 23px 29px;
+  mix-blend-mode: screen;
+  opacity: 0.35;
+  animation: card-frame-tw 1.6s steps(2) infinite;
+}
+
+.card-frame.is-mini.glit::before {
+  background-size: 9px 11px;
+}
+
+@keyframes card-frame-foil {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+
+@keyframes card-frame-tw {
+  50% {
+    opacity: 0.12;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-frame.foil::after,
+  .card-frame.glit::before {
+    animation: none;
+  }
+}
