@@ -5,10 +5,10 @@ import { loadDexOwned } from "../lib/dexCollection";
 import type { DexCard } from "../lib/dexTypes";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import type { DrawReservation } from "../lib/opsTypes";
-import { cardFortune, cardKoreanName } from "../lib/dexCatalog";
+import { cardFortune, cardKoreanName, formatCardDexNo } from "../lib/dexCatalog";
 import type { FrameSubject } from "../lib/cardFrames";
 import { CardFrame } from "../components/CardFrame";
-import { CardBackLine, CardViewer } from "../components/CardViewer";
+import { CardFlipStack, CardViewer } from "../components/CardViewer";
 import "./DrawRevealScreen.css";
 
 const FACEDOWN = "/assets/main/card-facedown.png";
@@ -205,6 +205,7 @@ export function DrawRevealScreen({
   const rearRef = useRef<HTMLImageElement>(null);
 
   const [manualFlip, setManualFlip] = useState(false);
+  const [revealDone, setRevealDone] = useState(false);
   const partsRef = useRef<Particle[]>([]);
   const reduceRef = useRef(prefersReducedMotion());
   const readyRef = useRef(ready);
@@ -222,6 +223,7 @@ export function DrawRevealScreen({
     setToastHasShown(false);
     setAdToastVisible(Boolean(adNyangToast));
     setManualFlip(false);
+    setRevealDone(false);
   }, [reservation.drawId, adNyangToast]);
 
   useEffect(() => {
@@ -248,6 +250,12 @@ export function DrawRevealScreen({
       cancelled = true;
     };
   }, [reservation.cardId, reservation.drawId]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const timer = window.setTimeout(() => setRevealDone(true), FINAL_MS);
+    return () => window.clearTimeout(timer);
+  }, [ready, reservation.drawId]);
 
   useEffect(() => {
     if (!ready || revealSoundRef.current) return;
@@ -284,6 +292,7 @@ export function DrawRevealScreen({
       : { type: "breed", stars: Number(reservation.rarity.replace(/\D/g, "")) || 1 };
   const frameName = card ? cardKoreanName(card) || reservation.nameKo : reservation.nameKo;
   const fortune = cardFortune(card?.id ?? reservation.cardId);
+  const dexNo = formatCardDexNo(card?.id ?? reservation.cardId);
   const dupCopy = dupChipCopy(ownedCount, reservation.dupPaw);
 
   useEffect(() => {
@@ -451,7 +460,7 @@ export function DrawRevealScreen({
         rot = 180 + FLIP_DEG;
         sc = 1;
       }
-      if (flipped) rot = 180;
+      if (flipped) rot = 180 + FLIP_DEG + 180;
       inner.style.transform = `rotateY(${rot}deg)`;
       cardbox.style.transform = `translateY(0px) scale(${sc})`;
 
@@ -567,20 +576,22 @@ export function DrawRevealScreen({
     const t = elapsed - readyAt;
     if (t < FINAL_MS && !skipToFinalRef.current) {
       skipToFinalRef.current = true;
-      return;
+      setRevealDone(true);
     }
-    if (target.closest("#reveal-card") || target.closest(".draw-reveal-cardbox")) {
-      AudioManager.playSfx("card-flip");
-      setManualFlip((value) => !value);
-      if (rearRef.current) {
-        rearRef.current.src = manualFlip ? FACEDOWN : reservation.backUrl || FACEDOWN;
-      }
-      if (innerRef.current) {
-        innerRef.current.style.transition = "transform .45s cubic-bezier(.3,.7,.2,1.1)";
-        window.setTimeout(() => {
-          if (innerRef.current) innerRef.current.style.transition = "";
-        }, 460);
-      }
+  };
+
+  const flipCard = () => {
+    if (!revealDone) return;
+    AudioManager.playSfx("card-flip");
+    setManualFlip((value) => !value);
+    if (rearRef.current) {
+      rearRef.current.src = manualFlip ? FACEDOWN : reservation.backUrl || FACEDOWN;
+    }
+    if (innerRef.current) {
+      innerRef.current.style.transition = "transform .45s cubic-bezier(.3,.7,.2,1.1)";
+      window.setTimeout(() => {
+        if (innerRef.current) innerRef.current.style.transition = "";
+      }, 460);
     }
   };
 
@@ -653,8 +664,18 @@ export function DrawRevealScreen({
             className="draw-reveal-viewer"
             line={fortune}
             showingBack={manualFlip}
+            onFlip={flipCard}
+            flipEnabled={revealDone}
+            zoomEnabled={revealDone}
             captionRef={infoRef}
             captionClassName="draw-reveal-info"
+            renderZoom={() => (
+              <CardFlipStack
+                showingBack={manualFlip}
+                front={<CardFrame card={frameCard} catSrc={frontSrc} name={frameName} dexNo={dexNo} />}
+                back={<img src={reservation.backUrl || FACEDOWN} alt="" draggable={false} />}
+              />
+            )}
           >
           <div ref={cardboxRef} className="draw-reveal-cardbox" id="cardbox">
             <div
@@ -680,12 +701,12 @@ export function DrawRevealScreen({
                   card={frameCard}
                   catSrc={frontSrc}
                   name={frameName}
+                  dexNo={dexNo}
                 />
                 <div ref={holoRef} className="draw-reveal-holo" id="holo" />
               </div>
               <div className="draw-reveal-face is-rear">
                 <img ref={rearRef} alt="" draggable={false} />
-                {manualFlip ? <CardBackLine line={fortune} /> : null}
               </div>
             </div>
           </div>

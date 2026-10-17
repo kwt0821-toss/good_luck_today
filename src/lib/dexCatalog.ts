@@ -1,12 +1,25 @@
+import cardsJson from "../../public/assets/dex/cards.json";
 import linesJson from "../../public/assets/dex/lines.json";
 import type { DexCard, DexCardType, DexCatalog, DexOwnedMap, DexTab } from "./dexTypes";
 
 const FORTUNE_LINES = linesJson as Record<string, string>;
 
-/** 오늘의 한 줄 — off the card front, shown under the card and on the back. */
+const CARD_INDEX = new Map<string, number>(
+  cardsJson.cards.map((card, index) => [card.id, index + 1]),
+);
+
+/** 오늘의 한 줄 — under the card, outside the frame. */
 export function cardFortune(cardId: string | null | undefined): string {
   if (!cardId) return "";
   return FORTUNE_LINES[cardId] ?? "";
+}
+
+/** "No.023" from the 1-based order in cards.json. */
+export function formatCardDexNo(cardId: string | null | undefined): string {
+  if (!cardId) return "";
+  const index = CARD_INDEX.get(cardId);
+  if (!index) return "";
+  return `No.${String(index).padStart(3, "0")}`;
 }
 
 export const DEX_BASE = "/assets/dex";

@@ -160,11 +160,3 @@ export function boxStyle(box: FrameBox): {
     height: `${box.height.toFixed(2)}%`,
   };
 }
-
-/** Breed name stays inside the ribbon box (height and width from layout.json). */
-export function ribbonNameFontSize(ribbon: FrameBox, name: string): string {
-  const chars = Math.max(1, [...name].length);
-  const byHeight = (ribbon.height / 100) * 0.72;
-  const byWidth = (ribbon.width / 100 / chars) * 0.92;
-  return `min(calc(100cqh * ${byHeight.toFixed(5)}), calc(100cqw * ${byWidth.toFixed(5)}))`;
-}

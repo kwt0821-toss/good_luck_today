@@ -5,6 +5,12 @@
   min-width: 0;
 }
 
+.card-viewer-stage {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
 .card-viewer-caption {
   width: 100%;
   max-width: 100%;
@@ -14,8 +20,16 @@
   margin-top: 18px;
 }
 
-.card-viewer-line,
-.card-back-line {
+.dex-sheet .card-viewer-stage {
+  width: 220px;
+  margin: 22px auto 0;
+}
+
+.dex-sheet .card-viewer-stage .dex-flip-stage {
+  margin: 0;
+}
+
+.card-viewer-line {
   margin: 8px 0 0;
   text-align: center;
   font-size: 16px;
@@ -29,26 +43,177 @@
   overflow: hidden;
 }
 
-.card-viewer-hint {
-  margin: 6px 0 0;
-  text-align: center;
-  font-family: "Gamja Flower", "Noto Sans KR", sans-serif;
-  font-size: 19px;
-  color: rgba(243, 233, 215, 0.85);
-}
-
-.card-viewer-hint span {
-  color: #ffc48a;
-}
-
-.card-back-line {
+.card-viewer-flip {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-  margin: 0;
-  padding: 8px 12px;
+  right: -8px;
+  bottom: -8px;
+  z-index: 6;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: #f3e9d7;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.card-viewer-flip img {
+  width: 22px;
+  height: 22px;
   pointer-events: none;
-  background: rgba(20, 16, 36, 0.82);
+}
+
+.card-viewer-guide {
+  position: absolute;
+  right: 20px;
+  bottom: 34px;
+  z-index: 6;
+  width: 108px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.card-viewer-guide-label {
+  margin: 0 4px 0 0;
+  font-family: "Gaegu", cursive;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  color: #ffe08a;
+  transform: rotate(-6deg);
+  transform-origin: 100% 80%;
+}
+
+.card-viewer-guide-arrow {
+  display: block;
+  width: 84px;
+  height: 50px;
+  margin-right: -4px;
+}
+
+.card-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+
+.card-zoom-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(8, 7, 18, 0.78);
+  cursor: pointer;
+}
+
+.card-zoom-layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(92cqw, calc((100cqh - 108px) * 900 / 1400));
+  pointer-events: none;
+}
+
+.card-zoom-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 900 / 1400;
+  pointer-events: auto;
+}
+
+.card-zoom-layout .card-viewer-line {
+  width: 100%;
+  pointer-events: none;
+}
+
+.card-zoom-close {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top, 0px));
+  right: 14px;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #221d38;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.card-flip-scene {
+  width: 100%;
+  height: 100%;
+  perspective: 1400px;
+}
+
+.card-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.3, 0.7, 0.2, 1.1);
+}
+
+.card-flip-inner.is-back {
+  transform: rotateY(180deg);
+}
+
+.card-flip-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+}
+
+.card-flip-face.is-back {
+  transform: rotateY(180deg);
+}
+
+.card-flip-face > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-flip-inner {
+    transform: none !important;
+    transition: none;
+  }
+
+  .card-flip-face,
+  .card-flip-face.is-back {
+    transform: none;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+  }
+
+  .card-flip-face.is-back {
+    opacity: 0;
+  }
+
+  .card-flip-inner.is-back .card-flip-face {
+    opacity: 0;
+  }
+
+  .card-flip-inner.is-back .card-flip-face.is-back {
+    opacity: 1;
+  }
 }

@@ -3,8 +3,15 @@ import { createPortal } from "react-dom";
 
 import { AudioManager } from "../audio/AudioManager";
 import { CardFrame } from "./CardFrame";
-import { CardBackLine, CardViewer } from "./CardViewer";
-import { cardDisplayName, cardFortune, cardKoreanName, dexAsset, formatMetDate } from "../lib/dexCatalog";
+import { CardFlipStack, CardViewer } from "./CardViewer";
+import {
+  cardDisplayName,
+  cardFortune,
+  cardKoreanName,
+  dexAsset,
+  formatCardDexNo,
+  formatMetDate,
+} from "../lib/dexCatalog";
 import { loadMenuSettings, shouldReduceMenuMotion } from "../lib/menuSettings";
 import type { DexCard, DexOwnedMap } from "../lib/dexTypes";
 
@@ -22,35 +29,9 @@ type DexDetailSheetProps = {
   onConvertDuplicate?: (card: DexCard, qty: number) => void | Promise<void>;
 };
 
-const LIFT_MS = 100;
-const ROTATE_END_MS = 1000;
-const BOUNCE_MS = 160;
-const TOTAL_SPIN_MS = ROTATE_END_MS + BOUNCE_MS;
-const TAP_DELTA = 900; // 2.5 turns
-const SWIPE_PT = 40;
+const FLIP_MS = 450;
 const CROSSFADE_MS = 200;
 const SHINE_MS = 380;
-const LIFT_SCALE = 1.06;
-const LIFT_Y = -8;
-
-/** cubic-bezier(.15, .85, .25, 1) */
-function easeSpin(t: number): number {
-  const x1 = 0.15;
-  const y1 = 0.85;
-  const x2 = 0.25;
-  const y2 = 1;
-  let x = t;
-  for (let i = 0; i < 6; i += 1) {
-    const u = 1 - x;
-    const cx = 3 * u * u * x * x1 + 3 * u * x * x * x2 + x * x * x;
-    const dx = 3 * u * u * x1 + 6 * u * x * (x2 - x1) + 3 * x * x * (1 - x2);
-    if (Math.abs(dx) < 1e-6) break;
-    x -= (cx - t) / dx;
-    x = Math.min(1, Math.max(0, x));
-  }
-  const u = 1 - x;
-  return 3 * u * u * x * y1 + 3 * u * x * x * y2 + x * x * x;
-}
 
 function isBackFace(angle: number): boolean {
   const normalized = ((Math.round(angle / 180) % 2) + 2) % 2;
@@ -76,16 +57,6 @@ function prefetchCardFaces(card: DexCard) {
   front.src = dexAsset(card.front);
   const back = new Image();
   back.src = dexAsset(card.back);
-}
-
-/** Swipe speed (px/ms) → 1.5 / 2.5 / 3.5 turns (always lands on opposite face). */
-function spinDeltaFromSwipe(dx: number, durationMs: number): number {
-  const dir = dx >= 0 ? 1 : -1;
-  const speed = Math.abs(dx) / Math.max(16, durationMs);
-  let turns = 1.5;
-  if (speed >= 1.1) turns = 3.5;
-  else if (speed >= 0.45) turns = 2.5;
-  return dir * turns * 360;
 }
 
 export function DexDetailSheet({
@@ -114,18 +85,13 @@ export function DexDetailSheet({
 
   const angleRef = useRef(0);
   const spinningRef = useRef(false);
-  const rafRef = useRef(0);
-  const spinAnimRef = useRef<Animation | null>(null);
+  const flipTimerRef = useRef(0);
   const shineTimerRef = useRef(0);
   const reduceMotionRef = useRef(shouldReduceMenuMotion());
-  const lastAngleRef = useRef(0);
 
-  const pointerIdRef = useRef<number | null>(null);
   const startX = useRef(0);
   const startY = useRef(0);
-  const startAt = useRef(0);
-  const dragKind = useRef<"close" | "card" | null>(null);
-  const draggingRef = useRef(false);
+  const dragKind = useRef<"close" | null>(null);
 
   const record = owned[card.id];
   const ownedInGroup = group.filter((item) => (owned[item.id]?.count ?? 0) > 0);
@@ -190,7 +156,6 @@ export function DexDetailSheet({
 
   const resetPose = (angle = 0) => {
     angleRef.current = angle;
-    lastAngleRef.current = angle;
     setShowingBack(isBackFace(angle));
     if (reduceMotionRef.current) {
       const back = isBackFace(angle);
@@ -208,7 +173,6 @@ export function DexDetailSheet({
 
   const onLand = (finalAngle: number) => {
     angleRef.current = finalAngle;
-    lastAngleRef.current = finalAngle;
     const back = isBackFace(finalAngle);
     setShowingBack(back);
     applyPose(finalAngle, 1, 0, 0, 0);
@@ -222,21 +186,17 @@ export function DexDetailSheet({
     }
   };
 
-  const spinBy = (deltaDeg: number) => {
+  const onFlipClick = () => {
     if (spinningRef.current) return;
-    spinningRef.current = true;
-
-    const from = angleRef.current;
-    // Snap delta so we always finish on a half-turn boundary (0 / 180 mod 360)
-    const rawTo = from + deltaDeg;
-    const to = Math.round(rawTo / 180) * 180;
+    const to = isBackFace(angleRef.current) ? 0 : 180;
     const willShowBack = isBackFace(to);
-
+    spinningRef.current = true;
+    setShowingBack(willShowBack);
     AudioManager.playSfx("card-flip");
 
     if (reduceMotionRef.current) {
       const start = performance.now();
-      const tickFade = (now: number) => {
+      const tick = (now: number) => {
         const t = Math.min(1, (now - start) / CROSSFADE_MS);
         if (willShowBack) {
           if (frontFaceRef.current) frontFaceRef.current.style.opacity = String(1 - t);
@@ -246,12 +206,12 @@ export function DexDetailSheet({
           if (backFaceRef.current) backFaceRef.current.style.opacity = String(1 - t);
         }
         if (t < 1) {
-          rafRef.current = requestAnimationFrame(tickFade);
+          requestAnimationFrame(tick);
           return;
         }
-        onLand(willShowBack ? 180 : 0);
+        onLand(to);
       };
-      rafRef.current = requestAnimationFrame(tickFade);
+      requestAnimationFrame(tick);
       return;
     }
 
@@ -260,103 +220,13 @@ export function DexDetailSheet({
       spinningRef.current = false;
       return;
     }
-
-    spinAnimRef.current?.cancel();
-    cancelAnimationFrame(rafRef.current);
-    lastAngleRef.current = from;
-
-    const pose = (angle: number, scale: number, y: number) =>
-      `translateY(${y}px) scale(${scale}) rotateY(${angle}deg)`;
-
-    // Compositor-driven transform — rAF style writes were hard to see under SwiftShader.
-    const liftEnd = LIFT_MS / TOTAL_SPIN_MS;
-    const rotateEnd = ROTATE_END_MS / TOTAL_SPIN_MS;
-    const bounceMid = (ROTATE_END_MS + BOUNCE_MS * 0.55) / TOTAL_SPIN_MS;
-    const anim = inner.animate(
-      [
-        { transform: pose(from, 1, 0), offset: 0, easing: "ease-out" },
-        {
-          transform: pose(from, LIFT_SCALE, LIFT_Y),
-          offset: liftEnd,
-          easing: "cubic-bezier(0.15, 0.85, 0.25, 1)",
-        },
-        {
-          transform: pose(to, LIFT_SCALE, LIFT_Y),
-          offset: rotateEnd,
-          easing: "ease-out",
-        },
-        {
-          transform: pose(to, 0.985, LIFT_Y * 0.2),
-          offset: bounceMid,
-          easing: "ease-out",
-        },
-        { transform: pose(to, 1, 0), offset: 1 },
-      ],
-      { duration: TOTAL_SPIN_MS, fill: "forwards" },
-    );
-    spinAnimRef.current = anim;
-
-    let landed = false;
-    const finish = () => {
-      if (landed) return;
-      landed = true;
-      cancelAnimationFrame(rafRef.current);
-      try {
-        anim.commitStyles();
-      } catch {
-        applyPose(to, 1, 0, 0, 0);
-      }
-      anim.cancel();
-      spinAnimRef.current = null;
-      applyFaceBlur(0);
-      if (shadowRef.current) {
-        shadowRef.current.style.opacity = "0.42";
-        shadowRef.current.style.transform = "translateX(-50%) scaleX(1) scaleY(1)";
-      }
+    inner.style.transition = "transform .45s cubic-bezier(.3,.7,.2,1.1)";
+    applyPose(to, 1, 0, 0, 0);
+    window.clearTimeout(flipTimerRef.current);
+    flipTimerRef.current = window.setTimeout(() => {
+      if (innerRef.current) innerRef.current.style.transition = "";
       onLand(to);
-    };
-
-    const start = performance.now();
-    const tickFx = (now: number) => {
-      if (landed) return;
-      const elapsed = now - start;
-      let blur = 0;
-      let intensity = 0;
-      let angle = from;
-
-      if (elapsed < LIFT_MS) {
-        angle = from;
-      } else if (elapsed < ROTATE_END_MS) {
-        const p = easeSpin((elapsed - LIFT_MS) / (ROTATE_END_MS - LIFT_MS));
-        angle = from + (to - from) * p;
-        const speedApprox = Math.min(1, Math.abs(easeSpin(Math.min(1, p + 0.02)) - p) * 40);
-        intensity = 0.35 + speedApprox * 0.65;
-        blur = 0.6 * intensity;
-      } else {
-        const p = Math.min(1, (elapsed - ROTATE_END_MS) / BOUNCE_MS);
-        angle = to;
-        blur = 0.6 * (1 - p);
-        intensity = 1 - p;
-      }
-
-      applyFaceBlur(blur);
-      const shadow = shadowRef.current;
-      if (shadow) {
-        const t = Math.min(1, Math.max(0, intensity));
-        shadow.style.opacity = String(0.42 - t * 0.3);
-        shadow.style.transform = `translateX(-50%) scaleX(${1 - t * 0.7}) scaleY(${1 - t * 0.12})`;
-      }
-      lastAngleRef.current = angle;
-
-      if (elapsed >= TOTAL_SPIN_MS) {
-        finish();
-        return;
-      }
-      rafRef.current = requestAnimationFrame(tickFx);
-    };
-
-    rafRef.current = requestAnimationFrame(tickFx);
-    void anim.finished.then(finish).catch(() => finish());
+    }, FLIP_MS + 20);
   };
 
   const close = () => {
@@ -367,9 +237,7 @@ export function DexDetailSheet({
 
   useEffect(() => {
     reduceMotionRef.current = shouldReduceMenuMotion();
-    cancelAnimationFrame(rafRef.current);
-    spinAnimRef.current?.cancel();
-    spinAnimRef.current = null;
+    window.clearTimeout(flipTimerRef.current);
     spinningRef.current = false;
     setShining(false);
     resetPose(0);
@@ -389,9 +257,7 @@ export function DexDetailSheet({
       window.clearTimeout(arm);
       window.clearTimeout(settle);
       window.clearTimeout(shineTimerRef.current);
-      cancelAnimationFrame(rafRef.current);
-      spinAnimRef.current?.cancel();
-      spinAnimRef.current = null;
+      window.clearTimeout(flipTimerRef.current);
     };
   }, []);
 
@@ -408,70 +274,6 @@ export function DexDetailSheet({
     const dy = event.clientY - startY.current;
     const dx = event.clientX - startX.current;
     if (dy > 80 && Math.abs(dy) > Math.abs(dx)) close();
-  };
-
-  const onCardPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (spinningRef.current) return;
-    if (event.button != null && event.button !== 0) return;
-    pointerIdRef.current = event.pointerId;
-    startX.current = event.clientX;
-    startY.current = event.clientY;
-    startAt.current = performance.now();
-    dragKind.current = "card";
-    draggingRef.current = false;
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const onCardPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (dragKind.current !== "card" || spinningRef.current) return;
-    if (pointerIdRef.current != null && event.pointerId !== pointerIdRef.current) return;
-
-    const dx = event.clientX - startX.current;
-    const dy = event.clientY - startY.current;
-    if (!draggingRef.current) {
-      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12) {
-        dragKind.current = null;
-        return;
-      }
-      draggingRef.current = true;
-    }
-  };
-
-  const onCardPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (dragKind.current !== "card") return;
-    dragKind.current = null;
-    if (pointerIdRef.current != null && event.pointerId !== pointerIdRef.current) return;
-    pointerIdRef.current = null;
-    if (spinningRef.current) return;
-
-    const dx = event.clientX - startX.current;
-    const dy = event.clientY - startY.current;
-    const duration = performance.now() - startAt.current;
-
-    if (draggingRef.current) {
-      draggingRef.current = false;
-      if (Math.abs(dx) >= SWIPE_PT && Math.abs(dx) > Math.abs(dy)) {
-        spinBy(spinDeltaFromSwipe(dx, duration));
-        return;
-      }
-      return;
-    }
-
-    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) {
-      spinBy(TAP_DELTA);
-    }
-  };
-
-  const onCardPointerCancel = () => {
-    dragKind.current = null;
-    pointerIdRef.current = null;
-    draggingRef.current = false;
-  };
-
-  const onFlipClick = () => {
-    if (spinningRef.current) return;
-    spinBy(TAP_DELTA);
   };
 
   const selectOwned = (item: DexCard) => {
@@ -515,24 +317,38 @@ export function DexDetailSheet({
           ) : null}
         </p>
 
-        <CardViewer line={fortune} showingBack={showingBack}>
+        <CardViewer
+          line={fortune}
+          showingBack={showingBack}
+          onFlip={onFlipClick}
+          renderZoom={() => (
+            <CardFlipStack
+              showingBack={showingBack}
+              front={
+                <CardFrame
+                  card={card}
+                  catSrc={dexAsset(card.front)}
+                  name={cardKoreanName(card) || cardDisplayName(card)}
+                  dexNo={formatCardDexNo(card.id)}
+                />
+              }
+              back={<img src={dexAsset(card.back)} alt="" draggable={false} />}
+            />
+          )}
+        >
         <div className="dex-flip-stage">
           <div className="dex-flip-stage-tilt">
             <div className="dex-card-glow" />
             <div
               ref={cardRef}
               className={`card dex-card ${reduceMotionRef.current ? "is-reduced" : ""}`}
-              onPointerDown={onCardPointerDown}
-              onPointerMove={onCardPointerMove}
-              onPointerUp={onCardPointerUp}
-              onPointerCancel={onCardPointerCancel}
               role="button"
               tabIndex={0}
-              aria-label={showingBack ? "앞면 보기" : "뒷면 보기"}
+              aria-label="카드 크게 보기"
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
-                  onFlipClick();
+                  event.currentTarget.click();
                 }
               }}
             >
@@ -543,11 +359,11 @@ export function DexDetailSheet({
                     card={card}
                     catSrc={dexAsset(card.front)}
                     name={cardKoreanName(card) || cardDisplayName(card)}
+                    dexNo={formatCardDexNo(card.id)}
                   />
                 </div>
                 <div ref={backFaceRef} className="face back dex-face">
                   <img src={dexAsset(card.back)} alt={`${cardDisplayName(card)} 뒷면`} draggable={false} />
-                  <CardBackLine line={fortune} />
                 </div>
               </div>
               <div
@@ -555,9 +371,6 @@ export function DexDetailSheet({
                 aria-hidden="true"
               />
             </div>
-            <button type="button" className="dex-flip-btn" aria-label="카드 뒤집기" onClick={onFlipClick}>
-              <img src={dexAsset("icons/icon-flip.svg")} alt="" />
-            </button>
           </div>
         </div>
         </CardViewer>
