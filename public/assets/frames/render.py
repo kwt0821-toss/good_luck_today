@@ -7,7 +7,7 @@ CSS='''*{margin:0;box-sizing:border-box}body{background:#1E1A2B;font-family:'Pre
 .card{position:relative;width:var(--w);aspect-ratio:900/1400;border-radius:calc(var(--w)*.03);overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .card>*{position:absolute}
 .win{overflow:hidden;border-radius:calc(var(--w)*.035)}.win img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.win img.cat{position:absolute;left:-7%;width:114%;top:55%;transform:translateY(-50%);height:auto}
+.win img.cat{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%}
 .frame{inset:0;width:100%;height:100%}
 .line,.name{display:flex;align-items:center;justify-content:center;text-align:center}
 .line{font-size:calc(var(--w)*.036);font-weight:800;line-height:1.22;letter-spacing:-.02em}

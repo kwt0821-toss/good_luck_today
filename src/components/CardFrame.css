@@ -2,7 +2,7 @@
   position: relative;
   width: 100%;
   height: 100%;
-  container-type: inline-size;
+  container-type: size;
   border-radius: calc(100cqw * 0.03);
   overflow: hidden;
   z-index: 1;
@@ -32,21 +32,31 @@
   max-width: none;
 }
 
-/* Cat size is fixed: do not retune with the frame art. */
+/* Fill layout.json win at 100%. center 40% keeps the cat in the window. */
 .card-frame .win img.cat,
 .draw-reveal-face .card-frame img.cat,
 .face.dex-face .card-frame img.cat,
 .dex-slot .card-frame img.cat {
   position: absolute;
-  left: -7%;
-  width: 114%;
-  top: 55%;
-  height: auto;
-  transform: translateY(-50%);
-  object-fit: contain;
+  inset: 0;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+  object-fit: cover;
+  object-position: center 40%;
   max-width: none;
-  /* Flat card fill multiplies away so window-1star / window-2star show through. */
+  /* Pale card fill multiplies away so the window art shows through. */
   mix-blend-mode: multiply;
+}
+
+/* Baked English name, stars, and fortune sit outside the cat. Hide them
+   so the window shows, without a bottom fade. */
+.card-frame:not(.is-mini) .win img.cat,
+.draw-reveal-face .card-frame:not(.is-mini) img.cat,
+.face.dex-face .card-frame:not(.is-mini) img.cat {
+  clip-path: inset(8% 0 30% 0);
 }
 
 .card-frame .frame,
@@ -60,27 +70,29 @@
   max-width: none;
 }
 
-.card-frame .line,
+.card-frame .plate,
 .card-frame .name {
-  z-index: 2;
+  z-index: 4;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   pointer-events: none;
+  overflow: hidden;
 }
 
-.card-frame .line {
-  font-size: calc(100cqw * 0.036);
+.card-frame .plate {
+  font-family: Poppins, "Noto Sans KR", sans-serif;
   font-weight: 800;
-  line-height: 1.22;
-  letter-spacing: -0.02em;
+  line-height: 1;
+  letter-spacing: 0.06em;
 }
 
 .card-frame .name {
   font-family: "Noto Serif KR", "Noto Serif CJK KR", "Noto Sans KR", serif;
   font-weight: 900;
-  font-size: calc(100cqw * 0.056);
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .card-frame.is-mini .name {

@@ -1,24 +1,31 @@
 import { forwardRef } from "react";
 
-import { boxStyle, miniRibbonLabel, resolveFrame, type FrameSubject } from "../lib/cardFrames";
+import {
+  PLATE_GRADE_COLOR,
+  boxStyle,
+  miniRibbonLabel,
+  plateGradeFontSize,
+  resolveFrame,
+  ribbonNameFontSize,
+  type FrameSubject,
+} from "../lib/cardFrames";
 import "./CardFrame.css";
 
 type CardFrameProps = {
   card: FrameSubject;
   catSrc: string;
   name?: string;
-  line?: string;
   variant?: "full" | "mini";
   className?: string;
 };
 
 export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function CardFrame(
-  { card, catSrc, name = "", line = "", variant = "full", className },
+  { card, catSrc, name = "", variant = "full", className },
   ref,
 ) {
   const frame = resolveFrame(card);
   const mini = variant === "mini";
-  const ribbon = mini ? miniRibbonLabel(card) : name;
+  const grade = miniRibbonLabel(card);
   const classes = [
     "card-frame",
     mini ? "is-mini" : "",
@@ -36,17 +43,30 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
         <img className="cat" src={catSrc} alt="" draggable={false} />
       </div>
       <img className="frame" src={frame.frameSrc} srcSet={frame.frameSrcSet} alt="" draggable={false} />
-      {!mini && line ? (
-        <div className="line" style={{ ...boxStyle(frame.layout.plate), color: frame.lineColor }}>
-          {line}
+      {!mini ? (
+        <div
+          className="plate"
+          style={{
+            ...boxStyle(frame.layout.plate),
+            color: PLATE_GRADE_COLOR,
+            fontSize: plateGradeFontSize(frame.layout.plate),
+          }}
+        >
+          {grade}
         </div>
       ) : null}
-      {ribbon ? (
+      {mini ? (
+        <div className="name">{grade}</div>
+      ) : name ? (
         <div
           className="name"
-          style={mini ? undefined : { ...boxStyle(frame.layout.ribbon), color: frame.nameColor }}
+          style={{
+            ...boxStyle(frame.layout.ribbon),
+            color: frame.nameColor,
+            fontSize: ribbonNameFontSize(frame.layout.ribbon, name),
+          }}
         >
-          {ribbon}
+          {name}
         </div>
       ) : null}
     </div>

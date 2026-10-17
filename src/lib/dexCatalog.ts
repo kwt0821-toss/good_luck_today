@@ -1,4 +1,13 @@
+import linesJson from "../../public/assets/dex/lines.json";
 import type { DexCard, DexCardType, DexCatalog, DexOwnedMap, DexTab } from "./dexTypes";
+
+const FORTUNE_LINES = linesJson as Record<string, string>;
+
+/** 오늘의 한 줄 — off the card front, shown under the card and on the back. */
+export function cardFortune(cardId: string | null | undefined): string {
+  if (!cardId) return "";
+  return FORTUNE_LINES[cardId] ?? "";
+}
 
 export const DEX_BASE = "/assets/dex";
 

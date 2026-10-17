@@ -1,9 +1,9 @@
+import layoutJson from "../../public/assets/frames/layout.json";
 import type { DexCard, DexCardType } from "./dexTypes";
 
 /**
  * Card chrome from public/assets/frames (frames-v5).
- * Boxes match layout.json. Cat placement stays in CardFrame.css
- * (left -7%, width 114%, top 55%).
+ * win / plate / ribbon boxes are the percentages in layout.json.
  */
 export type FrameBox = {
   left: number;
@@ -34,19 +34,11 @@ export type WindowId =
   | "character"
   | "legend";
 
-/** Same numbers as public/assets/frames/layout.json. */
-export const FRAME_LAYOUT: Record<FrameFamily, { win: FrameBox; plate: FrameBox; ribbon: FrameBox }> = {
-  pink: {
-    win: { left: 12.549019607843137, top: 17.76937618147448, width: 74.90196078431373, height: 73.47195967233773 },
-    plate: { left: 25.19607843137255, top: 9.073724007561438, width: 49.6078431372549, height: 5.103969754253308 },
-    ribbon: { left: 31.372549019607842, top: 93.38374291115312, width: 37.254901960784316, height: 4.095778197857593 },
-  },
-  gold: {
-    win: { left: 15.686274509803921, top: 18.3994959042218, width: 68.62745098039215, height: 69.50220541902962 },
-    plate: { left: 25.098039215686274, top: 10.459987397605545, width: 49.80392156862745, height: 5.040957781978576 },
-    ribbon: { left: 32.84313725490196, top: 89.35097668557026, width: 34.31372549019608, height: 4.662885948330183 },
-  },
-};
+/** Percent boxes from public/assets/frames/layout.json. */
+export const FRAME_LAYOUT = layoutJson as Record<
+  FrameFamily,
+  { win: FrameBox; plate: FrameBox; ribbon: FrameBox }
+>;
 
 const FAMILY: Record<FrameKey, FrameFamily> = {
   "basic-1": "pink",
@@ -71,17 +63,20 @@ const WINDOW: Record<FrameKey, WindowId> = {
   legend: "legend",
 };
 
-/** [한 줄, 이름] */
-const TEXT: Record<WindowId, readonly [string, string]> = {
-  "1star": ["#5A4030", "#7A5236"],
-  "2star": ["#26466E", "#2F5E9E"],
-  "3star": ["#6E3A28", "#8A4A30"],
-  "4star": ["#1F5A47", "#1F6B52"],
-  "5star": ["#7A2A4A", "#A3305E"],
-  meme: ["#4A3A00", "#5A4600"],
-  character: ["#3E2E7A", "#5B3FC4"],
-  legend: ["#4A3210", "#6E4510"],
+/** Ribbon breed-name color from frames-v5-spec. Plate grade is always gold. */
+const NAME_COLOR: Record<WindowId, string> = {
+  "1star": "#7A5236",
+  "2star": "#2F5E9E",
+  "3star": "#8A4A30",
+  "4star": "#1F6B52",
+  "5star": "#A3305E",
+  meme: "#5A4600",
+  character: "#5B3FC4",
+  legend: "#6E4510",
 };
+
+/** Gold grade mark on the plate (★ and MEME / CHAR / LEGEND). */
+export const PLATE_GRADE_COLOR = "#FFD34D";
 
 export type FrameSubject = {
   type: DexCardType;
@@ -93,7 +88,6 @@ export type ResolvedFrame = {
   windowId: WindowId;
   family: FrameFamily;
   layout: (typeof FRAME_LAYOUT)["pink"];
-  lineColor: string;
   nameColor: string;
   foil: boolean;
   glit: boolean;
@@ -124,7 +118,6 @@ export function frameKeyFor(card: FrameSubject): FrameKey {
 export function resolveFrame(card: FrameSubject): ResolvedFrame {
   const key = frameKeyFor(card);
   const windowId = WINDOW[key];
-  const [lineColor, nameColor] = TEXT[windowId];
   const frame = assetPair(`frame-${key}`);
   const win = assetPair(`window-${windowId}`);
   return {
@@ -132,8 +125,7 @@ export function resolveFrame(card: FrameSubject): ResolvedFrame {
     windowId,
     family: FAMILY[key],
     layout: FRAME_LAYOUT[FAMILY[key]],
-    lineColor,
-    nameColor,
+    nameColor: NAME_COLOR[windowId],
     // 1★·2★·3★ stay without foil. Glit is 4★, 5★, character, legend only.
     foil: windowId !== "1star" && windowId !== "2star" && windowId !== "3star",
     glit: windowId === "4star" || windowId === "5star" || windowId === "legend" || windowId === "character",
@@ -167,4 +159,17 @@ export function boxStyle(box: FrameBox): {
     width: `${box.width.toFixed(2)}%`,
     height: `${box.height.toFixed(2)}%`,
   };
+}
+
+/** Grade mark is 55% of the plate height from layout.json. */
+export function plateGradeFontSize(plate: FrameBox): string {
+  return `calc(100cqh * ${((plate.height / 100) * 0.55).toFixed(5)})`;
+}
+
+/** Breed name stays inside the ribbon box (height and width from layout.json). */
+export function ribbonNameFontSize(ribbon: FrameBox, name: string): string {
+  const chars = Math.max(1, [...name].length);
+  const byHeight = (ribbon.height / 100) * 0.72;
+  const byWidth = (ribbon.width / 100 / chars) * 0.92;
+  return `min(calc(100cqh * ${byHeight.toFixed(5)}), calc(100cqw * ${byWidth.toFixed(5)}))`;
 }

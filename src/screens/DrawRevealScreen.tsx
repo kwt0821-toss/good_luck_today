@@ -5,10 +5,10 @@ import { loadDexOwned } from "../lib/dexCollection";
 import type { DexCard } from "../lib/dexTypes";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import type { DrawReservation } from "../lib/opsTypes";
-import { dexCardBreedLabel, dexCardGradeLabel } from "../lib/tutorialFlow";
-import { cardKoreanName } from "../lib/dexCatalog";
+import { cardFortune, cardKoreanName } from "../lib/dexCatalog";
 import type { FrameSubject } from "../lib/cardFrames";
 import { CardFrame } from "../components/CardFrame";
+import { CardBackLine, CardViewer } from "../components/CardViewer";
 import "./DrawRevealScreen.css";
 
 const FACEDOWN = "/assets/main/card-facedown.png";
@@ -283,8 +283,7 @@ export function DrawRevealScreen({
       ? { type: reservation.rarity, stars: null }
       : { type: "breed", stars: Number(reservation.rarity.replace(/\D/g, "")) || 1 };
   const frameName = card ? cardKoreanName(card) || reservation.nameKo : reservation.nameKo;
-  const breedName = dexCardBreedLabel(card) || reservation.nameKo;
-  const gradeLabel = dexCardGradeLabel(card) || reservation.starsLabel;
+  const fortune = cardFortune(card?.id ?? reservation.cardId);
   const dupCopy = dupChipCopy(ownedCount, reservation.dupPaw);
 
   useEffect(() => {
@@ -650,6 +649,13 @@ export function DrawRevealScreen({
           <div ref={raysRef} className="draw-reveal-rays" id="rays" />
           <div ref={glowRef} className="draw-reveal-glow" id="glow" />
           <div className="draw-reveal-shadow" id="shadow" />
+          <CardViewer
+            className="draw-reveal-viewer"
+            line={fortune}
+            showingBack={manualFlip}
+            captionRef={infoRef}
+            captionClassName="draw-reveal-info"
+          >
           <div ref={cardboxRef} className="draw-reveal-cardbox" id="cardbox">
             <div
               ref={badgeRef}
@@ -679,9 +685,11 @@ export function DrawRevealScreen({
               </div>
               <div className="draw-reveal-face is-rear">
                 <img ref={rearRef} alt="" draggable={false} />
+                {manualFlip ? <CardBackLine line={fortune} /> : null}
               </div>
             </div>
           </div>
+          </CardViewer>
           <svg
             ref={fxRef}
             className="draw-reveal-fx"
@@ -723,16 +731,6 @@ export function DrawRevealScreen({
         ) : null}
 
         <div className="draw-reveal-footer">
-          <div ref={infoRef} className="draw-reveal-info" id="info">
-            <div className="n" id="name">
-              {breedName}
-            </div>
-            <div className="s" id="stars">
-              {gradeLabel}
-            </div>
-            <div className="h">카드를 톡 누르면 뒷면을 볼 수 있어요</div>
-          </div>
-
           <div ref={btnsRef} className="draw-reveal-btns" id="btns">
             <button type="button" className="draw-reveal-btn is-primary" id="btn-to-dex" onClick={onToDex}>
               도감에서 보기

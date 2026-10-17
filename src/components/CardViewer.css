@@ -1,0 +1,54 @@
+.card-viewer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.card-viewer-caption {
+  width: 100%;
+  max-width: 100%;
+}
+
+.dex-sheet .card-viewer-line {
+  margin-top: 18px;
+}
+
+.card-viewer-line,
+.card-back-line {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.card-viewer-hint {
+  margin: 6px 0 0;
+  text-align: center;
+  font-family: "Gamja Flower", "Noto Sans KR", sans-serif;
+  font-size: 19px;
+  color: rgba(243, 233, 215, 0.85);
+}
+
+.card-viewer-hint span {
+  color: #ffc48a;
+}
+
+.card-back-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 8px 12px;
+  pointer-events: none;
+  background: rgba(20, 16, 36, 0.82);
+}

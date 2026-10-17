@@ -3,7 +3,8 @@ import { createPortal } from "react-dom";
 
 import { AudioManager } from "../audio/AudioManager";
 import { CardFrame } from "./CardFrame";
-import { cardDisplayName, cardKoreanName, dexAsset, formatMetDate } from "../lib/dexCatalog";
+import { CardBackLine, CardViewer } from "./CardViewer";
+import { cardDisplayName, cardFortune, cardKoreanName, dexAsset, formatMetDate } from "../lib/dexCatalog";
 import { loadMenuSettings, shouldReduceMenuMotion } from "../lib/menuSettings";
 import type { DexCard, DexOwnedMap } from "../lib/dexTypes";
 
@@ -131,6 +132,7 @@ export function DexDetailSheet({
   const ownedCount = ownedInGroup.length;
   const total = group.length;
   const ko = cardKoreanName(card);
+  const fortune = cardFortune(card.id);
   const met = record ? formatMetDate(record.firstSeen) : null;
   const rare = isRareCard(card);
   const legend = card.type === "legend";
@@ -513,6 +515,7 @@ export function DexDetailSheet({
           ) : null}
         </p>
 
+        <CardViewer line={fortune} showingBack={showingBack}>
         <div className="dex-flip-stage">
           <div className="dex-flip-stage-tilt">
             <div className="dex-card-glow" />
@@ -544,6 +547,7 @@ export function DexDetailSheet({
                 </div>
                 <div ref={backFaceRef} className="face back dex-face">
                   <img src={dexAsset(card.back)} alt={`${cardDisplayName(card)} 뒷면`} draggable={false} />
+                  <CardBackLine line={fortune} />
                 </div>
               </div>
               <div
@@ -556,10 +560,7 @@ export function DexDetailSheet({
             </button>
           </div>
         </div>
-
-        <p className="dex-flip-hint">
-          <span>톡,</span> {showingBack ? "뒤집어서 앞면 보기" : "뒤집어서 뒷면 보기"}
-        </p>
+        </CardViewer>
 
         <div className="dex-stats">
           <div>

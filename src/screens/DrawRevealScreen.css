@@ -177,6 +177,19 @@
   height: 100%;
 }
 
+.draw-reveal-stage .draw-reveal-viewer {
+  position: relative;
+  z-index: 2;
+  width: min(82cqw, calc((100cqh - 108px) * 900 / 1400));
+  max-width: 86%;
+  max-height: 100%;
+}
+
+.draw-reveal-stage .draw-reveal-viewer .draw-reveal-cardbox {
+  width: 100%;
+  max-width: 100%;
+}
+
 .draw-reveal-cardbox {
   position: relative;
   z-index: 2;
@@ -320,7 +333,7 @@
   flex: 0 0 auto;
   text-align: center;
   opacity: 0;
-  margin-top: 6px;
+  margin-top: 2px;
   padding: 0 4px;
 }
 
