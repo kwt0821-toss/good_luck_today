@@ -20,7 +20,9 @@ export function framePreloadUrls(): string[] {
 export function preloadFrameAssets(): void {
   const urls = framePreloadUrls();
   const run = () => {
-    for (const url of urls) {
+    const hi = window.devicePixelRatio >= 1.5;
+    const chosen = urls.filter((url) => (url.includes("@2x.webp") ? hi : !hi));
+    for (const url of chosen) {
       const img = new Image();
       img.decoding = "async";
       img.src = url;

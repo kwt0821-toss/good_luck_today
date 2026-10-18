@@ -241,6 +241,10 @@
   height: 100%;
   display: block;
   object-fit: cover;
+}
+
+/* Only the facedown back uses a dark fill while its image arrives. */
+.draw-reveal-face.is-rear img {
   background: #1c1830;
 }
 
