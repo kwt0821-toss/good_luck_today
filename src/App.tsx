@@ -91,7 +91,7 @@ import { preloadFrameAssets } from "./lib/preloadFrames";
 
 const DRAW_LOADING_MESSAGES = ["카드를 섞는 중이냥...", "거의 다 됐다냥!", "하암~ 곧 일어날게냥"];
 import { preloadLoadingAssets } from "./lib/preloadLoading";
-import { useLoadingHold } from "./lib/loadingGate";
+import { setLoadingBlocked, useLoadingHold } from "./lib/loadingGate";
 import { useExitConfirmOnBack, useGraniteBack } from "./hooks/useExitConfirmOnBack";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
@@ -1134,6 +1134,15 @@ export default function App() {
       (screen.name === "reveal" && Boolean(reservation) && !revealReady && !waitFailed));
   useLoadingHold("boot", booting);
   useLoadingHold("draw", drawLoading, drawProgress, DRAW_LOADING_MESSAGES);
+  // The dream window sits above the coach and swallows taps. Keep it off for the whole tutorial.
+  const tutorialLive = Boolean((ops && !ops.tutorialDone) || tutorialReplayStep != null);
+  useEffect(() => {
+    setLoadingBlocked(tutorialLive);
+    return () => setLoadingBlocked(false);
+  }, [tutorialLive]);
+  const onDexTutorialScrollDone = useCallback(() => {
+    setDexTutPhase((phase) => (phase === "scroll" ? "slot" : phase));
+  }, []);
 
   const leaveDex = useCallback(() => {
     const tutStep3 =
@@ -1200,9 +1209,7 @@ export default function App() {
             tutorialStep?.step === 3 || tutorialReplayStep === 3 ? dexTutPhase : null
           }
           reduceMotion={reduceMotion}
-          onTutorialScrollDone={() => {
-            if (dexTutPhase === "scroll") setDexTutPhase("slot");
-          }}
+          onTutorialScrollDone={onDexTutorialScrollDone}
           onTutorialClaimed={() => {
             if (dexTutPhase !== "claim") return;
             setDexTutPhase("toast");

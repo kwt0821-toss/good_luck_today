@@ -14,13 +14,21 @@ const MIN_VISIBLE_MS = 1000;
  * `open` is the in-flight request. The dialog mounts 300ms later so a fast
  * response never flashes, unless `eager` (show immediately). Either way it
  * stays at least 1s after it does appear.
+ * `closeNow` hides it on the next frame and skips that minimum — used when a
+ * tutorial must stay visible.
  */
-function useDelayedOpen(open: boolean, eager: boolean): boolean {
+function useDelayedOpen(open: boolean, eager: boolean, closeNow: boolean): boolean {
   const [visible, setVisible] = useState(false);
   const visibleRef = useRef(false);
   const shownAtRef = useRef(0);
 
   useEffect(() => {
+    if (closeNow) {
+      if (!visibleRef.current) return;
+      visibleRef.current = false;
+      setVisible(false);
+      return;
+    }
     let timer = 0;
     if (open) {
       if (visibleRef.current) return;
@@ -39,7 +47,7 @@ function useDelayedOpen(open: boolean, eager: boolean): boolean {
       setVisible(false);
     }, wait);
     return () => window.clearTimeout(timer);
-  }, [open, eager]);
+  }, [open, eager, closeNow]);
 
   return visible;
 }
@@ -63,6 +71,8 @@ export type LoadingModalProps = {
   intervalMs?: number;
   /** Show immediately instead of waiting 300ms. Still stays up for 1s. */
   eager?: boolean;
+  /** Hide immediately, even if the window has not finished its minimum time. */
+  closeNow?: boolean;
 };
 
 /** Twinkling background stars inside the stage (fixed positions, no randomness per render). */
@@ -105,8 +115,9 @@ export function LoadingModal({
   title = "잠깐 꿈나라.",
   intervalMs = 2500,
   eager = false,
+  closeNow = false,
 }: LoadingModalProps) {
-  const visible = useDelayedOpen(open, eager);
+  const visible = useDelayedOpen(open, eager, closeNow);
   const list = messages.length ? messages : DEFAULT_LOADING_MESSAGES;
   const [index, setIndex] = useState(0);
 

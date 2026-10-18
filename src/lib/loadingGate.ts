@@ -9,9 +9,18 @@ type Hold = {
 
 const holds = new Map<string, Hold>();
 const listeners = new Set<() => void>();
+/** While a tutorial is on screen, the dream window must not cover its copy. */
+let blocked = false;
 
 function emit() {
   listeners.forEach((listener) => listener());
+}
+
+/** Hide the shared loading window immediately and ignore new holds until cleared. */
+export function setLoadingBlocked(next: boolean) {
+  if (blocked === next) return;
+  blocked = next;
+  emit();
 }
 
 export function setLoadingHold(id: string, open: boolean, extra?: Hold) {
@@ -44,7 +53,14 @@ export function useLoadingHoldSnapshot() {
     if (!messages && hold.messages?.length) messages = hold.messages;
     if (hold.eager) eager = true;
   }
-  return { open: holds.size > 0, progress, messages, eager };
+  return {
+    open: holds.size > 0 && !blocked,
+    progress,
+    messages,
+    eager,
+    /** Drop a window that is already up, without waiting out the minimum time. */
+    closeNow: blocked,
+  };
 }
 
 let overlayVisible = false;

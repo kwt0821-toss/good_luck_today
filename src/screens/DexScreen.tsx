@@ -194,26 +194,42 @@ export function DexScreen({
     setUnderline({ left: el.offsetLeft, width: el.offsetWidth });
   }, [tab, catalog, owned, claimable]);
 
+  const onTutorialScrollDoneRef = useRef(onTutorialScrollDone);
+  onTutorialScrollDoneRef.current = onTutorialScrollDone;
+
   /** Tutorial 3-1: scroll focused slot to center, then notify (no coach during scroll). */
   useEffect(() => {
     if (tutorialPhase !== "scroll" || !focusCardId || !catalog) return;
     const focus = catalog.cards.find((item) => item.id === focusCardId);
     if (!focus) {
-      onTutorialScrollDone?.();
+      onTutorialScrollDoneRef.current?.();
       return;
     }
     if (tab !== focus.type) return;
     if (scrollDoneRef.current) return;
 
     let cancelled = false;
+    let timer = 0;
     setScrollLock(true);
     const scrollMs = reduceMotion ? 0 : 400;
 
-    const run = () => {
+    const finish = () => {
+      if (cancelled || scrollDoneRef.current) return;
+      scrollDoneRef.current = true;
+      setScrollLock(false);
+      onTutorialScrollDoneRef.current?.();
+    };
+
+    const attempt = (left: number) => {
+      if (cancelled) return;
       const el = document.getElementById(`dex-slot-${focusCardId}`);
-      if (!el) {
-        setScrollLock(false);
-        onTutorialScrollDone?.();
+      const rect = el?.getBoundingClientRect();
+      if (!el || !rect || rect.width < 1 || rect.height < 1) {
+        if (left > 0) {
+          timer = window.setTimeout(() => attempt(left - 1), 50);
+          return;
+        }
+        finish();
         return;
       }
       el.scrollIntoView({
@@ -221,22 +237,18 @@ export function DexScreen({
         behavior: reduceMotion ? "auto" : "smooth",
         inline: "nearest",
       });
-      window.setTimeout(() => {
-        if (cancelled) return;
-        scrollDoneRef.current = true;
-        setScrollLock(false);
-        onTutorialScrollDone?.();
-      }, scrollMs);
+      timer = window.setTimeout(finish, scrollMs);
     };
 
     const raf = window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(run);
+      window.requestAnimationFrame(() => attempt(20));
     });
     return () => {
       cancelled = true;
       window.cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
     };
-  }, [tutorialPhase, focusCardId, catalog, tab, reduceMotion, onTutorialScrollDone]);
+  }, [tutorialPhase, focusCardId, catalog, tab, reduceMotion]);
 
   useEffect(() => {
     if (tutorialPhase !== "scroll") scrollDoneRef.current = false;
@@ -431,7 +443,8 @@ export function DexScreen({
     if (!imagesReady && overlayVisible) setArtOverlay(true);
     if (imagesReady && !overlayVisible) setArtOverlay(false);
   }, [imagesReady, overlayVisible]);
-  const preparing = !imagesReady || artOverlay;
+  // The preparing class hides the grid, so the coach has nothing to point at.
+  const preparing = tutorialPhase == null && (!imagesReady || artOverlay);
   useLoadingHold("dex-art", !imagesReady, imagesReady ? undefined : artProgress);
   useLoadingHold("dex-claim", claimBusy && !claimAllBusy);
   useLoadingHold("dex-claim-all", claimAllBusy, undefined, undefined, true);
