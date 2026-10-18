@@ -88,6 +88,10 @@ import {
 import type { DexTutorialPhase } from "./screens/DexScreen";
 import { DrawRevealScreen } from "./screens/DrawRevealScreen";
 import { preloadFrameAssets } from "./lib/preloadFrames";
+
+const DRAW_LOADING_MESSAGES = ["카드를 섞는 중이냥...", "거의 다 됐다냥!", "하암~ 곧 일어날게냥"];
+import { preloadLoadingAssets } from "./lib/preloadLoading";
+import { useLoadingHold } from "./lib/loadingGate";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { RatesGuideScreen } from "./screens/RatesGuideScreen";
@@ -170,6 +174,8 @@ export default function App() {
   const [reservation, setReservation] = useState<DrawReservation | null>(null);
   const [revealReady, setRevealReady] = useState(false);
   const [waitFailed, setWaitFailed] = useState(false);
+  const [drawBusy, setDrawBusy] = useState(false);
+  const [drawProgress, setDrawProgress] = useState<number | undefined>(undefined);
   const [revealToast, setRevealToast] = useState<string | null>(null);
   const [adNyangToast, setAdNyangToast] = useState<string | null>(null);
   const [dexFocusCardId, setDexFocusCardId] = useState<string | null>(null);
@@ -182,6 +188,7 @@ export default function App() {
   const today = toKstDateKey();
 
   useEffect(() => {
+    preloadLoadingAssets();
     preloadFrameAssets();
   }, []);
 
@@ -507,10 +514,13 @@ export default function App() {
       setRevealReady(false);
       setWaitFailed(false);
       setRevealToast(null);
+      setDrawProgress(undefined);
+      setDrawBusy(true);
 
       const reserved = await reserveDraw(ops, { forceSlot: slot });
       await persistOps(reserved.state);
       if (!reserved.reservation) {
+        setDrawBusy(false);
         nyNotify({
           key: "draw-reserve-fail",
           kind: "error",
@@ -528,14 +538,17 @@ export default function App() {
 
       setReservation(reserved.reservation);
       // Decode the large art and this grade's frame while the ad plays.
-      void preloadDrawImages(reserved.reservation).then((quality) => {
-        if (quality === "none") {
-          setWaitFailed(true);
-          return;
-        }
-        setWaitFailed(false);
-        setRevealReady(true);
-      });
+      setDrawProgress(0);
+      void preloadDrawImages(reserved.reservation, (progress) => setDrawProgress(progress)).then(
+        (quality) => {
+          if (quality === "none") {
+            setWaitFailed(true);
+            return;
+          }
+          setWaitFailed(false);
+          setRevealReady(true);
+        },
+      );
 
       if (slot === "tutorial" || (slot === "rateUp" && willUseRateUpTicket(ops, config))) {
         // Free / ticket draws: no ad → no ad-draw 냥코인.
@@ -543,6 +556,7 @@ export default function App() {
           adCompleted: false,
         });
         if ("error" in confirmed) {
+          setDrawBusy(false);
           nyNotify({
             key: "draw-confirm-fail",
             kind: "error",
@@ -574,6 +588,7 @@ export default function App() {
         return;
       }
 
+      setDrawBusy(false);
       setAd({
         kind: slot === "rateUp" ? "long" : "short",
         purpose: "draw",
@@ -583,6 +598,10 @@ export default function App() {
     },
     [ops, config, persistOps],
   );
+
+  useEffect(() => {
+    if (revealReady || waitFailed) setDrawBusy(false);
+  }, [revealReady, waitFailed]);
 
   const completeAd = useCallback(async () => {
     if (!ad || !ops) return;
@@ -1099,6 +1118,15 @@ export default function App() {
     rewardsTutPhase,
   ]);
 
+  const booting = !bootError && (!ops || !config);
+  const drawLoading =
+    !booting &&
+    !ad &&
+    (drawBusy ||
+      (screen.name === "reveal" && Boolean(reservation) && !revealReady && !waitFailed));
+  useLoadingHold("boot", booting);
+  useLoadingHold("draw", drawLoading, drawProgress, DRAW_LOADING_MESSAGES);
+
   if (bootError) {
     return (
       <div className="boot-error">
@@ -1109,12 +1137,7 @@ export default function App() {
   }
 
   if (!ops || !config) {
-    return (
-      <div className="boot-error">
-        <p>럭키캣</p>
-        <small>화면을 불러오는 중이에요.</small>
-      </div>
-    );
+    return <div className="boot-error" />;
   }
 
   return (
@@ -1246,14 +1269,19 @@ export default function App() {
           }}
           onRetry={() => {
             if (!reservation) return;
-            void preloadDrawImages(reservation).then((quality) => {
-              if (quality === "none") {
-                setWaitFailed(true);
-                return;
-              }
-              setRevealReady(true);
-              setWaitFailed(false);
-            });
+            setWaitFailed(false);
+            setRevealReady(false);
+            setDrawProgress(0);
+            void preloadDrawImages(reservation, (progress) => setDrawProgress(progress)).then(
+              (quality) => {
+                if (quality === "none") {
+                  setWaitFailed(true);
+                  return;
+                }
+                setRevealReady(true);
+                setWaitFailed(false);
+              },
+            );
           }}
           onBack={() => {
             // Leave reveal without consuming further tutorial gates.

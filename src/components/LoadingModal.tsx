@@ -1,6 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
+import { withAssetVersion } from "../lib/cardArt";
 import "./LoadingModal.css";
+
+/** Stay hidden for requests that finish inside this window. */
+const SHOW_AFTER_MS = 300;
+/** Once the window is on screen, keep it up at least this long. */
+const MIN_VISIBLE_MS = 600;
+
+/**
+ * `open` is the in-flight request. The dialog mounts 300ms later so a fast
+ * response never flashes, and stays at least 600ms after it does appear.
+ */
+function useDelayedOpen(open: boolean): boolean {
+  const [visible, setVisible] = useState(false);
+  const visibleRef = useRef(false);
+  const shownAtRef = useRef(0);
+
+  useEffect(() => {
+    let timer = 0;
+    if (open) {
+      if (visibleRef.current) return;
+      timer = window.setTimeout(() => {
+        shownAtRef.current = performance.now();
+        visibleRef.current = true;
+        setVisible(true);
+      }, SHOW_AFTER_MS);
+      return () => window.clearTimeout(timer);
+    }
+    if (!visibleRef.current) return;
+    const elapsed = performance.now() - shownAtRef.current;
+    const wait = Math.max(0, MIN_VISIBLE_MS - elapsed);
+    timer = window.setTimeout(() => {
+      visibleRef.current = false;
+      setVisible(false);
+    }, wait);
+    return () => window.clearTimeout(timer);
+  }, [open]);
+
+  return visible;
+}
 
 export const DEFAULT_LOADING_MESSAGES = [
   "잠시만 기다려달라냥",
@@ -33,13 +73,19 @@ const TWINKLES: Array<{ x: number; y: number; s: number; d: number }> = [
 
 const STAR_POS = [12, 30, 48, 66, 84];
 
+function loadingSrc(file: string) {
+  return withAssetVersion(`${ASSET_BASE}/${file}`);
+}
+
 function FadeImg({ name, className }: { name: string; className: string }) {
   const [loaded, setLoaded] = useState(false);
+  const one = loadingSrc(`${name}.webp`);
+  const two = loadingSrc(`${name}@2x.webp`);
   return (
     <img
       className={`lc-img ${className} ${loaded ? "is-loaded" : ""}`}
-      src={`${ASSET_BASE}/${name}.webp`}
-      srcSet={`${ASSET_BASE}/${name}.webp 1x, ${ASSET_BASE}/${name}@2x.webp 2x`}
+      src={one}
+      srcSet={`${one} 1x, ${two} 2x`}
       alt=""
       draggable={false}
       decoding="async"
@@ -55,24 +101,25 @@ export function LoadingModal({
   title = "잠깐 꿈나라.",
   intervalMs = 2500,
 }: LoadingModalProps) {
+  const visible = useDelayedOpen(open);
   const list = messages.length ? messages : DEFAULT_LOADING_MESSAGES;
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    if (!open) return;
+    if (!visible) return;
     setIndex(0);
     if (list.length < 2) return;
     const id = window.setInterval(() => setIndex((i) => (i + 1) % list.length), intervalMs);
     return () => window.clearInterval(id);
-  }, [open, list.length, intervalMs]);
+  }, [visible, list.length, intervalMs]);
 
-  if (!open) return null;
+  if (!visible) return null;
 
   const determinate = typeof progress === "number" && Number.isFinite(progress);
   const pct = determinate ? Math.round(Math.min(1, Math.max(0, progress as number)) * 100) : 0;
   const message = list[index % list.length];
 
-  return (
+  return createPortal(
     <div className="lc-overlay" role="dialog" aria-modal="true" aria-busy="true" aria-label={title}>
       <div className="lc-card">
         <svg className="lc-ears" viewBox="0 0 292 40" preserveAspectRatio="none" aria-hidden="true">
@@ -136,7 +183,8 @@ export function LoadingModal({
           {message}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

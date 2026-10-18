@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
+import { useLoadingHold } from "../lib/loadingGate";
 import { isDevBuild, progressResetUnlockedByDefault } from "../lib/devMode";
 import { DEV_MAX_COZY_LEVEL, resetToNewUserState, unlockMaxDevState } from "../lib/devReset";
 import { menuAsset } from "../lib/menuConfig";
@@ -148,6 +149,8 @@ export function MenuPanel({
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
   const [withdrawBusy, setWithdrawBusy] = useState(false);
+  const [attendBusy, setAttendBusy] = useState(false);
+  const [day7AdWaiting, setDay7AdWaiting] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpTab, setHelpTab] = useState<HelpTabId>("ncoin");
   const [ticketBuyBusy, setTicketBuyBusy] = useState(false);
@@ -156,6 +159,9 @@ export function MenuPanel({
   const [pawTipOpen, setPawTipOpen] = useState(false);
   const [day7Busy, setDay7Busy] = useState(false);
   const [day7AdExhausted, setDay7AdExhausted] = useState(false);
+  const menuRequestBusy =
+    withdrawBusy || exchangeBusy || ticketBuyBusy || attendBusy || (day7Busy && !day7AdWaiting);
+  useLoadingHold("menu-request", menuRequestBusy);
   const day7RequestIdRef = useRef<string | null>(null);
   const reduce = shouldReduceMenuMotion(settings);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
@@ -555,6 +561,7 @@ export function MenuPanel({
   const claimDay7WithAd = async () => {
     if (!onAttendanceDay7Ad || day7Busy || day7AdExhausted) return;
     setDay7Busy(true);
+    setDay7AdWaiting(true);
     try {
       let result = await onAttendanceDay7Ad();
       // One automatic retry on load fail / mid-ad cancel.
@@ -578,10 +585,12 @@ export function MenuPanel({
         return;
       }
       setDay7Busy(false);
+      setDay7AdWaiting(false);
       const token = `ad:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
       await finishDay7Claim(true, token);
     } finally {
       setDay7Busy(false);
+      setDay7AdWaiting(false);
     }
   };
 
@@ -590,7 +599,13 @@ export function MenuPanel({
       // Dual-button footer handles weekly day7; ignore accidental single CTA.
       return;
     }
-    const result = await claimAttendanceGift(ops);
+    setAttendBusy(true);
+    let result;
+    try {
+      result = await claimAttendanceGift(ops);
+    } finally {
+      setAttendBusy(false);
+    }
     if (result.error) {
       if (result.error === "DAY7_BONUS_REQUIRED") {
         void buildMenuViewModel(ops).then(setModel);
@@ -1706,7 +1721,7 @@ export function MenuPanel({
                         disabled={day7Busy || !model.attendance.canClaimToday}
                         onClick={() => void finishDay7Claim(false)}
                       >
-                        {day7Busy ? "처리 중…" : "그냥 받기"}
+                        그냥 받기
                       </button>
                       <button
                         type="button"
@@ -1733,7 +1748,7 @@ export function MenuPanel({
                     <button
                       type="button"
                       className="menu-sheet-cta"
-                      disabled={!model.attendance.canClaimToday}
+                      disabled={!model.attendance.canClaimToday || attendBusy}
                       onClick={() => void claimAttendance()}
                     >
                       {attCta}
@@ -1749,15 +1764,13 @@ export function MenuPanel({
                 <button
                   type="button"
                   className="menu-sheet-cta"
-                  disabled={model.exchange.duplicateCount <= 0}
+                  disabled={exchangeBusy || model.exchange.duplicateCount <= 0}
                   onClick={() => void doExchange()}
                 >
-                  {exchangeBusy
-                    ? "처리 중…"
-                    : model.menu.sheets.exchange.cta.replace(
-                        "{total}",
-                        String(model.exchange.totalPaw),
-                      )}
+                  {model.menu.sheets.exchange.cta.replace(
+                    "{total}",
+                    String(model.exchange.totalPaw),
+                  )}
                 </button>
               ) : null}
 
@@ -1780,12 +1793,10 @@ export function MenuPanel({
                     disabled={!model.ticketShop.canBuy || ticketBuyBusy}
                     onClick={() => void doBuyRateUpTicket()}
                   >
-                    {ticketBuyBusy
-                      ? "구매 중…"
-                      : model.menu.sheets.ticketShop.ctaBuy.replace(
-                          "{price}",
-                          String(model.ticketShop.pricePaw),
-                        )}
+                    {model.menu.sheets.ticketShop.ctaBuy.replace(
+                      "{price}",
+                      String(model.ticketShop.pricePaw),
+                    )}
                   </button>
                   {onRateUpDraw ? (
                     <button
@@ -1832,7 +1843,7 @@ export function MenuPanel({
                     disabled={withdrawBusy}
                     onClick={() => void doWithdraw()}
                   >
-                    {withdrawBusy ? "처리 중…" : `받기 · ${withdrawAmount}원`}
+                    {`받기 · ${withdrawAmount}원`}
                   </button>
                 ) : model.rewards.dexClaimableCount > 0 ? (
                   <button

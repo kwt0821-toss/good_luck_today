@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
 import { CoinBurst } from "../components/CoinBurst";
+import { useLoadingHold } from "../lib/loadingGate";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import { DexCardSlot } from "../components/DexCardSlot";
 import { DexDetailSheet } from "../components/DexDetailSheet";
@@ -382,6 +383,8 @@ export function DexScreen({
     setSlotChip({ cardId: card.id, text: "아직 못 만난 고양이예요" });
     slotChipTimer.current = window.setTimeout(() => setSlotChip(null), 1800);
   };
+
+  useLoadingHold("dex", !catalog || claimBusy);
 
   return (
     <div className="dex-screen">

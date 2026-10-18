@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
+import { useLoadingHold } from "../lib/loadingGate";
 import {
   EMPTY_RIBBON_COPY,
   achvBadgeSrc,
@@ -53,6 +54,7 @@ export function AchievementsSheet({
   const [view, setView] = useState<View>("grid");
   const [selected, setSelected] = useState<AchvProgress | null>(null);
   const [busy, setBusy] = useState(false);
+  useLoadingHold("achievement", busy);
   const [celebrate, setCelebrate] = useState<AchvProgress | null>(null);
   const [openedInitial, setOpenedInitial] = useState(false);
 

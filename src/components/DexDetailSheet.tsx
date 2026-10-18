@@ -5,6 +5,7 @@ import { AudioManager } from "../audio/AudioManager";
 import { cardBackUrl, cardLargeUrl, cardThumbUrl, decodeImage } from "../lib/cardArt";
 import { resolveFrame } from "../lib/cardFrames";
 import { CardFrame } from "./CardFrame";
+import { useLoadingHold } from "../lib/loadingGate";
 import { CardFlipStack, CardViewer } from "./CardViewer";
 import {
   cardDisplayName,
@@ -79,6 +80,7 @@ export function DexDetailSheet({
   const [dupPhase, setDupPhase] = useState<DupConvertPhase>("idle");
   const [dupQty, setDupQty] = useState(1);
   const [dupBusy, setDupBusy] = useState(false);
+  useLoadingHold("dex-dup", dupBusy);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -522,7 +524,7 @@ export function DexDetailSheet({
                   })();
                 }}
               >
-                {dupBusy ? "처리 중…" : "바꾸기"}
+                바꾸기
               </button>
             </div>
           </div>

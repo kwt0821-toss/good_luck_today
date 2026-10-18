@@ -88,21 +88,40 @@ export async function cancelDrawReservation(state: OpsState): Promise<OpsState> 
   return next;
 }
 
-export async function preloadDrawImages(reservation: DrawReservation): Promise<"full" | "thumb" | "none"> {
+export async function preloadDrawImages(
+  reservation: DrawReservation,
+  onProgress?: (progress: number) => void,
+): Promise<"full" | "thumb" | "none"> {
   const catalog = await loadDexCatalog();
   const card = catalog.cards.find((item) => item.id === reservation.cardId);
   const chrome = card ? frameAssetUrls(card) : [];
   const extras = [reservation.backUrl, ...chrome].filter(Boolean);
-  await Promise.all(extras.map((url) => decodeImage(url).catch(() => undefined)));
+  const total = Math.max(1, extras.length + 1);
+  let done = 0;
+  const bump = () => {
+    done += 1;
+    onProgress?.(Math.min(1, done / total));
+  };
+  onProgress?.(0);
+  await Promise.all(
+    extras.map((url) =>
+      decodeImage(url)
+        .then(bump)
+        .catch(() => bump()),
+    ),
+  );
 
   try {
     await decodeImage(reservation.frontUrl);
+    bump();
     return "full";
   } catch {
     try {
       await decodeImage(reservation.thumbUrl);
+      bump();
       return "thumb";
     } catch {
+      bump();
       return "none";
     }
   }

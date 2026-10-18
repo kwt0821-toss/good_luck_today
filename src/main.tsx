@@ -3,6 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
+import { LoadingHost } from "./components/LoadingHost.tsx";
 import App from "./App.tsx";
 import "./styles/fonts.css";
 import "./index.css";
@@ -12,6 +13,7 @@ createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
       <TDSMobileAITProvider brandPrimaryColor="#6EC8D4">
         <App />
+        <LoadingHost />
       </TDSMobileAITProvider>
     </ErrorBoundary>
   </StrictMode>,

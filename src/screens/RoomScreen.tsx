@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
 import { CozySheet } from "../components/CozySheet";
+import { useLoadingHold } from "../lib/loadingGate";
 import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
 import { NyChip } from "../components/NyChip";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
@@ -325,8 +326,10 @@ export function RoomScreen({
     });
   };
 
+  useLoadingHold("room", !state || !roomsFile);
+
   if (!state || !roomsFile) {
-    return <div className="lucky-room is-loading">방을 불러오는 중이에요.</div>;
+    return <div className="lucky-room is-loading" />;
   }
 
   const unlockedIds = roomsFile.switcher.order.filter((id) => state.unlocked.includes(id) && state.rooms[id]);

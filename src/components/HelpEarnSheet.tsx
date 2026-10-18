@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { useLoadingHold } from "../lib/loadingGate";
 import { loadHelpConfig, type HelpConfig, type HelpTabId } from "../lib/helpConfig";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import "./HelpEarnSheet.css";
@@ -14,6 +15,7 @@ type HelpEarnSheetProps = {
 
 export function HelpEarnSheet({ onClose, initialTab = "ncoin" }: HelpEarnSheetProps) {
   const [config, setConfig] = useState<HelpConfig | null>(null);
+  const [loading, setLoading] = useState(true);
   const [tabId, setTabId] = useState<HelpTabId>(initialTab);
 
   useEffect(() => {
@@ -24,6 +26,9 @@ export function HelpEarnSheet({ onClose, initialTab = "ncoin" }: HelpEarnSheetPr
       })
       .catch(() => {
         if (!cancelled) setConfig(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -35,6 +40,7 @@ export function HelpEarnSheet({ onClose, initialTab = "ncoin" }: HelpEarnSheetPr
   }, [initialTab]);
 
   const tab = config?.tabs.find((row) => row.id === tabId) ?? config?.tabs[0] ?? null;
+  useLoadingHold("help", loading && !tab);
   const isNcoin = tab?.id === "ncoin";
   const leadIcon = isNcoin ? ncoinIcon(44) : PAW_COIN_ICON;
   const amtIcon = isNcoin ? ncoinIcon(16) : PAW_COIN_ICON;
@@ -119,9 +125,9 @@ export function HelpEarnSheet({ onClose, initialTab = "ncoin" }: HelpEarnSheetPr
               {config?.footnote ? <p className="help-earn-foot">{config.footnote}</p> : null}
             </div>
           </>
-        ) : (
+        ) : loading ? null : (
           <div className="help-earn-body">
-            <p className="help-earn-foot">도움말을 불러오는 중이에요</p>
+            <p className="help-earn-foot">도움말을 불러오지 못했어요</p>
           </div>
         )}
       </div>
