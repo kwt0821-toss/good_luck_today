@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 
 import { AudioManager } from "../audio/AudioManager";
 import { cardBackUrl, cardLargeUrl, cardThumbUrl, decodeImage } from "../lib/cardArt";
+import { resolveFrame } from "../lib/cardFrames";
 import { CardFrame } from "./CardFrame";
 import { CardFlipStack, CardViewer } from "./CardViewer";
 import {
@@ -333,6 +334,7 @@ export function DexDetailSheet({
 
         <CardViewer
           line={fortune}
+          accentColor={resolveFrame(card).nameColor}
           showingBack={showingBack}
           onFlip={onFlipClick}
           renderZoom={() => (

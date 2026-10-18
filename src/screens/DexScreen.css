@@ -851,9 +851,11 @@
   width: 220px;
   height: 342px;
   border: 0;
+  border-radius: 15px;
   padding: 0;
   background: transparent;
   cursor: pointer;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
   outline: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
@@ -879,7 +881,6 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   overflow: hidden;
-  box-shadow: 0 24px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(243, 233, 215, 0.15);
   will-change: opacity, filter;
 }
 

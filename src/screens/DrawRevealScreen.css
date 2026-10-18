@@ -180,7 +180,7 @@
 .draw-reveal-stage .draw-reveal-viewer {
   position: relative;
   z-index: 2;
-  width: min(82cqw, calc((100cqh - 108px) * 900 / 1400));
+  width: min(82cqw, calc((100cqh - 168px) * 900 / 1400));
   max-width: 86%;
   max-height: 100%;
 }
@@ -202,6 +202,8 @@
   margin: 0 auto;
   perspective: 1100px;
   will-change: transform;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
 }
 
 .draw-reveal-shadow {
@@ -233,7 +235,6 @@
   -webkit-backface-visibility: hidden;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
 }
 
 .draw-reveal-face img {
@@ -337,8 +338,7 @@
   flex: 0 0 auto;
   text-align: center;
   opacity: 0;
-  margin-top: 2px;
-  padding: 0 4px;
+  animation: none;
 }
 
 .draw-reveal-info .n {
@@ -543,5 +543,10 @@
   .draw-reveal-spark i {
     animation: none;
     opacity: 0.9;
+  }
+
+  .draw-reveal-info {
+    opacity: 1;
+    transform: none;
   }
 }

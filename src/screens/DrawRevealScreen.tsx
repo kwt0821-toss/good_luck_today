@@ -12,8 +12,11 @@ import { CardFlipStack, CardViewer } from "../components/CardViewer";
 import "./DrawRevealScreen.css";
 
 const FACEDOWN = "/assets/main/card-facedown.png";
-const FINAL_MS = 1500;
 const FLIP_MS = 1000;
+const FORTUNE_DELAY_MS = 300;
+const FORTUNE_IN_MS = 300;
+/** Card settle, then the fortune line finishes its 300ms rise. */
+const FINAL_MS = FLIP_MS + FORTUNE_DELAY_MS + FORTUNE_IN_MS;
 const FLIP_DEG = 900;
 const WAIT_MAX_MS = 1500;
 const AD_NCOIN_TOAST_MS = 2600;
@@ -411,8 +414,8 @@ export function DrawRevealScreen({
           if (rearRef.current) rearRef.current.style.opacity = String(1 - p);
         }
         if (info) {
-          info.style.opacity = String(p);
-          info.style.transform = "translateY(0)";
+          info.style.opacity = "1";
+          info.style.transform = "none";
         }
         if (badge) {
           badge.style.opacity = reservation.isNew ? String(p) : "0";
@@ -516,9 +519,9 @@ export function DrawRevealScreen({
         }
       }
       if (info) {
-        const ip = clamp((t - 700) / 280);
+        const ip = clamp((t - (FLIP_MS + FORTUNE_DELAY_MS)) / FORTUNE_IN_MS);
         info.style.opacity = String(ip);
-        info.style.transform = `translateY(${8 * (1 - eOutC(ip))}px)`;
+        info.style.transform = `translateY(${8 * (1 - ip)}px)`;
       }
       if (btns) {
         const btp = clamp((t - 820) / 300);
@@ -682,6 +685,7 @@ export function DrawRevealScreen({
           <CardViewer
             className="draw-reveal-viewer"
             line={fortune}
+            accentColor={resolveFrame(frameCard).nameColor}
             showingBack={manualFlip}
             onFlip={flipCard}
             flipEnabled={revealDone}

@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent, type ReactNode, type Ref } from "react";
+import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode, type Ref } from "react";
 import { createPortal } from "react-dom";
 
 import { FLIP_BUTTON_ZONE, boxStyle, flipGuideStyle } from "../lib/cardFrames";
@@ -25,6 +25,8 @@ function markFlipHintSeen(): void {
 type CardViewerProps = {
   /** 오늘의 한 줄, under the card and outside the frame. */
   line?: string;
+  /** Grade color from layout.nameColor[tier]. */
+  accentColor?: string;
   showingBack?: boolean;
   onFlip?: () => void;
   /** False while the draw reveal is still spinning. */
@@ -54,6 +56,16 @@ export function CardFlipStack({
         <div className="card-flip-face">{front}</div>
         <div className="card-flip-face is-back">{back}</div>
       </div>
+    </div>
+  );
+}
+
+function FortuneBubble({ line, accent }: { line: string; accent: string }) {
+  const style = { "--fortune-accent": accent } as CSSProperties;
+  return (
+    <div className="card-viewer-bubble" style={style}>
+      <p className="card-viewer-kicker">🍀 오늘의 한 줄</p>
+      <p className="card-viewer-line">{line}</p>
     </div>
   );
 }
@@ -106,6 +118,7 @@ function FlipButton({
 /** Shared draw + dex chrome: fortune under the card, flip button, enlarge overlay. */
 export function CardViewer({
   line = "",
+  accentColor = "#5A4030",
   showingBack = false,
   onFlip,
   flipEnabled = true,
@@ -166,7 +179,7 @@ export function CardViewer({
         ref={captionRef}
         className={["card-viewer-caption", captionClassName ?? ""].filter(Boolean).join(" ")}
       >
-        {line ? <p className="card-viewer-line">{line}</p> : null}
+        {line ? <FortuneBubble line={line} accent={accentColor} /> : null}
       </div>
       {zoom && renderZoom
         ? createPortal(
@@ -181,7 +194,11 @@ export function CardViewer({
                   {canFlip ? <FlipButton showingBack={showingBack} onFlip={handleFlip} /> : null}
                   {hintOn && canFlip ? <FlipGuide /> : null}
                 </div>
-                {line ? <p className="card-viewer-line">{line}</p> : null}
+                {line ? (
+                  <div className="card-viewer-caption">
+                    <FortuneBubble line={line} accent={accentColor} />
+                  </div>
+                ) : null}
               </div>
             </div>,
             document.body,
