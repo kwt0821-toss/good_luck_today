@@ -2,18 +2,20 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { withAssetVersion } from "../lib/cardArt";
+import { setOverlayVisible } from "../lib/loadingGate";
 import "./LoadingModal.css";
 
 /** Stay hidden for requests that finish inside this window. */
 const SHOW_AFTER_MS = 300;
 /** Once the window is on screen, keep it up at least this long. */
-const MIN_VISIBLE_MS = 600;
+const MIN_VISIBLE_MS = 1000;
 
 /**
  * `open` is the in-flight request. The dialog mounts 300ms later so a fast
- * response never flashes, and stays at least 600ms after it does appear.
+ * response never flashes, unless `eager` (show immediately). Either way it
+ * stays at least 1s after it does appear.
  */
-function useDelayedOpen(open: boolean): boolean {
+function useDelayedOpen(open: boolean, eager: boolean): boolean {
   const [visible, setVisible] = useState(false);
   const visibleRef = useRef(false);
   const shownAtRef = useRef(0);
@@ -26,7 +28,7 @@ function useDelayedOpen(open: boolean): boolean {
         shownAtRef.current = performance.now();
         visibleRef.current = true;
         setVisible(true);
-      }, SHOW_AFTER_MS);
+      }, eager ? 0 : SHOW_AFTER_MS);
       return () => window.clearTimeout(timer);
     }
     if (!visibleRef.current) return;
@@ -37,7 +39,7 @@ function useDelayedOpen(open: boolean): boolean {
       setVisible(false);
     }, wait);
     return () => window.clearTimeout(timer);
-  }, [open]);
+  }, [open, eager]);
 
   return visible;
 }
@@ -59,6 +61,8 @@ export type LoadingModalProps = {
   title?: string;
   /** Message rotation interval in ms. */
   intervalMs?: number;
+  /** Show immediately instead of waiting 300ms. Still stays up for 1s. */
+  eager?: boolean;
 };
 
 /** Twinkling background stars inside the stage (fixed positions, no randomness per render). */
@@ -100,8 +104,9 @@ export function LoadingModal({
   progress,
   title = "잠깐 꿈나라.",
   intervalMs = 2500,
+  eager = false,
 }: LoadingModalProps) {
-  const visible = useDelayedOpen(open);
+  const visible = useDelayedOpen(open, eager);
   const list = messages.length ? messages : DEFAULT_LOADING_MESSAGES;
   const [index, setIndex] = useState(0);
 
@@ -112,6 +117,13 @@ export function LoadingModal({
     const id = window.setInterval(() => setIndex((i) => (i + 1) % list.length), intervalMs);
     return () => window.clearInterval(id);
   }, [visible, list.length, intervalMs]);
+
+  useEffect(() => {
+    setOverlayVisible(visible);
+    return () => {
+      if (visible) setOverlayVisible(false);
+    };
+  }, [visible]);
 
   if (!visible) return null;
 

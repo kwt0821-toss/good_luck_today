@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 type Hold = {
   progress?: number;
   messages?: string[];
+  /** Skip the 300ms delay and show the window immediately. */
+  eager?: boolean;
 };
 
 const holds = new Map<string, Hold>();
@@ -36,18 +38,49 @@ export function useLoadingHoldSnapshot() {
   void version;
   let progress: number | undefined;
   let messages: string[] | undefined;
+  let eager = false;
   for (const hold of holds.values()) {
     if (progress == null && typeof hold.progress === "number") progress = hold.progress;
     if (!messages && hold.messages?.length) messages = hold.messages;
+    if (hold.eager) eager = true;
   }
-  return { open: holds.size > 0, progress, messages };
+  return { open: holds.size > 0, progress, messages, eager };
+}
+
+let overlayVisible = false;
+const overlayListeners = new Set<() => void>();
+
+/** The dream window is actually on screen (after the show delay, until the minimum time ends). */
+export function setOverlayVisible(next: boolean) {
+  if (overlayVisible === next) return;
+  overlayVisible = next;
+  overlayListeners.forEach((listener) => listener());
+}
+
+export function useOverlayVisible() {
+  const [value, setValue] = useState(overlayVisible);
+  useEffect(() => {
+    const listener = () => setValue(overlayVisible);
+    overlayListeners.add(listener);
+    listener();
+    return () => {
+      overlayListeners.delete(listener);
+    };
+  }, []);
+  return value;
 }
 
 /** Register one in-flight task. The shared loading window stays mounted above the app. */
-export function useLoadingHold(id: string, open: boolean, progress?: number, messages?: string[]) {
+export function useLoadingHold(
+  id: string,
+  open: boolean,
+  progress?: number,
+  messages?: string[],
+  eager = false,
+) {
   useEffect(() => {
-    setLoadingHold(id, open, { progress, messages });
-  }, [id, open, progress, messages]);
+    setLoadingHold(id, open, { progress, messages, eager });
+  }, [id, open, progress, messages, eager]);
 
   useEffect(() => () => setLoadingHold(id, false), [id]);
 }

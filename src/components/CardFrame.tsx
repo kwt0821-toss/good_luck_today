@@ -131,7 +131,6 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
           alt=""
           draggable={false}
           decoding="async"
-          loading={mini ? "lazy" : undefined}
           style={artStyle}
           onLoad={() => setSharpReady(true)}
         />

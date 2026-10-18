@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
 import { CoinBurst } from "../components/CoinBurst";
-import { useLoadingHold } from "../lib/loadingGate";
+import { cardThumbUrl, decodeImage } from "../lib/cardArt";
+import { resolveFrame } from "../lib/cardFrames";
+import { useLoadingHold, useOverlayVisible } from "../lib/loadingGate";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import { DexCardSlot } from "../components/DexCardSlot";
 import { DexDetailSheet } from "../components/DexDetailSheet";
@@ -59,6 +61,29 @@ type DexScreenProps = {
 
 type CelebrateKind = "breedSet" | "typeSet" | "fullDex";
 
+/** Every bitmap the dex paints, so the grid can appear in one frame. */
+function dexPaintUrls(catalog: DexCatalog, owned: DexOwnedMap): string[] {
+  const urls = new Set<string>([
+    dexAsset("bg-dex.webp"),
+    dexAsset("logo-collection.svg"),
+    dexAsset("locked/glyph-breed.svg"),
+    dexAsset("locked/glyph-special.svg"),
+    dexAsset("locked/glyph-character.svg"),
+    dexAsset("locked/glyph-legend.svg"),
+    dexAsset("locked/glyph-plus.svg"),
+    dexAsset("locked/glyph-legend-q.svg"),
+    dexAsset("icons/icon-sparkle.svg"),
+  ]);
+  for (const card of catalog.cards) {
+    if ((owned[card.id]?.count ?? 0) <= 0) continue;
+    urls.add(cardThumbUrl(card));
+    const frame = resolveFrame(card);
+    urls.add(frame.frameSrc);
+    urls.add(frame.windowSrc);
+  }
+  return [...urls];
+}
+
 type CelebrateState = {
   kind: CelebrateKind;
   title: string;
@@ -79,6 +104,9 @@ export function DexScreen({
   onTutorialClaimed,
 }: DexScreenProps) {
   const [catalog, setCatalog] = useState<DexCatalog | null>(null);
+  const [imagesReady, setImagesReady] = useState(false);
+  const [artProgress, setArtProgress] = useState(0);
+  const [claimAllBusy, setClaimAllBusy] = useState(false);
   const [economy, setEconomy] = useState<OpsEconomy | null>(null);
   const [owned, setOwned] = useState<DexOwnedMap>({});
   const [claimable, setClaimable] = useState<DexReward[]>([]);
@@ -117,22 +145,33 @@ export function DexScreen({
   };
 
   useEffect(() => {
-    void Promise.all([loadDexCatalog(), loadDexOwned(), loadOpsConfig()]).then(
-      ([nextCatalog, nextOwned, config]) => {
-        setCatalog(nextCatalog);
-        setOwned(nextOwned);
-        setEconomy(config.economy);
-        void refreshClaimable(ops, nextOwned);
-        const cardId = focusCardId ?? new URLSearchParams(window.location.search).get("card");
-        if (cardId) {
-          const found = nextCatalog.cards.find((item) => item.id === cardId);
-          if (found) {
-            setTab(found.type);
-            if (!focusCardId && (nextOwned[found.id]?.count ?? 0) > 0) setOpenCard(found);
-          }
+    let cancelled = false;
+    void Promise.all([loadDexCatalog(), loadDexOwned(), loadOpsConfig()]).then(async ([nextCatalog, nextOwned, config]) => {
+      if (cancelled) return;
+      setCatalog(nextCatalog);
+      setOwned(nextOwned);
+      setEconomy(config.economy);
+      void refreshClaimable(ops, nextOwned);
+      const cardId = focusCardId ?? new URLSearchParams(window.location.search).get("card");
+      if (cardId) {
+        const found = nextCatalog.cards.find((item) => item.id === cardId);
+        if (found) {
+          setTab(found.type);
+          if (!focusCardId && (nextOwned[found.id]?.count ?? 0) > 0) setOpenCard(found);
         }
-      },
-    );
+      }
+      const urls = dexPaintUrls(nextCatalog, nextOwned);
+      let done = 0;
+      const bump = () => {
+        done += 1;
+        if (!cancelled) setArtProgress(urls.length ? done / urls.length : 1);
+      };
+      await Promise.all(urls.map((url) => decodeImage(url).then(bump, bump)));
+      if (!cancelled) setImagesReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- boot once; ops claim refresh via claim handlers
   }, []);
 
@@ -235,6 +274,7 @@ export function DexScreen({
       return;
     }
     setClaimBusy(true);
+    if (rewardIds === "all") setClaimAllBusy(true);
     try {
       const result = await postDexRewardsClaim(ops, {
         rewardIds,
@@ -333,6 +373,7 @@ export function DexScreen({
       }
     } finally {
       setClaimBusy(false);
+      setClaimAllBusy(false);
     }
   };
 
@@ -384,10 +425,19 @@ export function DexScreen({
     slotChipTimer.current = window.setTimeout(() => setSlotChip(null), 1800);
   };
 
-  useLoadingHold("dex", !catalog || claimBusy);
+  const overlayVisible = useOverlayVisible();
+  const [artOverlay, setArtOverlay] = useState(false);
+  useEffect(() => {
+    if (!imagesReady && overlayVisible) setArtOverlay(true);
+    if (imagesReady && !overlayVisible) setArtOverlay(false);
+  }, [imagesReady, overlayVisible]);
+  const preparing = !imagesReady || artOverlay;
+  useLoadingHold("dex-art", !imagesReady, imagesReady ? undefined : artProgress);
+  useLoadingHold("dex-claim", claimBusy && !claimAllBusy);
+  useLoadingHold("dex-claim-all", claimAllBusy, undefined, undefined, true);
 
   return (
-    <div className="dex-screen">
+    <div className={`dex-screen ${preparing ? "is-preparing" : ""}`}>
       <img className="dex-bg" src={dexAsset("bg-dex.webp")} alt="" />
       <div className="dex-grain" aria-hidden="true" />
 

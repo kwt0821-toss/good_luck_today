@@ -1,3 +1,11 @@
+.dex-screen.is-preparing {
+  pointer-events: none;
+}
+
+.dex-screen.is-preparing > * {
+  visibility: hidden;
+}
+
 .dex-screen {
   --cream: #f3e9d7;
   --amber: #ffc48a;
