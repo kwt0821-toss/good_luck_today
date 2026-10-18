@@ -354,6 +354,7 @@ export function DexDetailSheet({
               front={
                 <CardFrame
                   card={card}
+                  artId={card.id}
                   catSrc={cardLargeUrl(card)}
                   thumbSrc={cardThumbUrl(card)}
                   name={cardKoreanName(card) || cardDisplayName(card)}
@@ -385,6 +386,7 @@ export function DexDetailSheet({
                 <div ref={frontFaceRef} className="face front dex-face">
                   <CardFrame
                     card={card}
+                    artId={card.id}
                     catSrc={cardLargeUrl(card)}
                   thumbSrc={cardThumbUrl(card)}
                     name={cardKoreanName(card) || cardDisplayName(card)}

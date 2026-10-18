@@ -34,6 +34,7 @@ function DexThumb({ card }: { card: DexCard }) {
       className="dex-slot-img"
       variant="mini"
       card={card}
+      artId={card.id}
       catSrc={cardThumbUrl(card)}
       name={cardKoreanName(card)}
     />

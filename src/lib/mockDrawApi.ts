@@ -1,7 +1,6 @@
 import { decodeImage } from "./cardArt";
 import { frameAssetUrls } from "./cardFrames";
 import { loadDexCatalog } from "./dexCatalog";
-import { loadPlainCat } from "./plainCat";
 import { loadDexOwned } from "./dexCollection";
 import {
   cardImageUrls,
@@ -98,7 +97,6 @@ export async function preloadDrawImages(reservation: DrawReservation): Promise<"
 
   try {
     await decodeImage(reservation.frontUrl);
-    await loadPlainCat(reservation.frontUrl);
     return "full";
   } catch {
     try {

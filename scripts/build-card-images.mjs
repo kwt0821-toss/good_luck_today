@@ -64,8 +64,23 @@ for (const name of (await readdir(frameDir)).filter((file) => /^(frame|window)-.
   hashes.push(createHash("sha1").update(await readFile(path.join(frameDir, name))).digest());
 }
 
-// Bump when frame bytes are unchanged but clients must drop immutable copies.
-const CACHE_GENERATION = "3";
+async function webpFiles(dir) {
+  const found = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) found.push(...(await webpFiles(full)));
+    else if (entry.name.endsWith(".webp")) found.push(full);
+  }
+  return found;
+}
+
+const artDir = path.join(root, "public/assets/cards-art");
+for (const file of (await webpFiles(artDir)).sort()) {
+  hashes.push(createHash("sha1").update(await readFile(file)).digest());
+}
+
+// Bump when image bytes are unchanged but clients must drop immutable copies.
+const CACHE_GENERATION = "4";
 const version = createHash("sha1")
   .update(Buffer.concat(hashes))
   .update(CACHE_GENERATION)

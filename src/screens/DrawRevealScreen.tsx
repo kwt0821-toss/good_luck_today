@@ -698,6 +698,7 @@ export function DrawRevealScreen({
                 front={
                   <CardFrame
                     card={frameCard}
+                    artId={reservation.cardId}
                     catSrc={frontSrc}
                     thumbSrc={reservation.thumbUrl}
                     name={frameName}
@@ -730,6 +731,7 @@ export function DrawRevealScreen({
                 <CardFrame
                   ref={frontRef}
                   card={frameCard}
+                  artId={reservation.cardId}
                   catSrc={frontSrc}
                   thumbSrc={reservation.thumbUrl}
                   name={frameName}

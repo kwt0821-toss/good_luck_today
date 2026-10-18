@@ -32,39 +32,38 @@
   max-width: none;
 }
 
-/* Slightly larger than the win so the cat fills toward the bottom. */
-.card-frame .win img.cat,
-.draw-reveal-face .card-frame img.cat,
-.face.dex-face .card-frame img.cat,
-.dex-slot .card-frame img.cat {
+/* Transparent cat inside the grade window: 5% / 3% / 3% / 11%.
+   Selfie overrides the box inline. Width and height are definite so
+   object-fit contain sizes the bitmap instead of the intrinsic pixels. */
+.card-frame .win img.art,
+.draw-reveal-face .card-frame img.art,
+.face.dex-face .card-frame img.art,
+.dex-slot .card-frame img.art {
   position: absolute;
-  left: -4%;
-  top: 0;
-  width: 108%;
-  height: 100%;
-  transform: none;
-  object-fit: cover;
-  object-position: center 35%;
+  top: 5%;
+  left: 3%;
+  width: 94%;
+  height: 84%;
   max-width: none;
-  /* Pale card fill multiplies away so the window art shows through. */
-  mix-blend-mode: multiply;
+  object-fit: contain;
+  object-position: 50% 62%;
+  transform: none;
 }
 
-.card-frame .win img.cat.is-preview {
+.card-frame .win img.art.is-preview {
   filter: blur(12px);
-  transform: scale(1.08);
   transition: opacity 200ms linear;
 }
 
-.card-frame.is-sharp-ready .win img.cat.is-preview {
+.card-frame.is-sharp-ready .win img.art.is-preview {
   opacity: 0;
 }
 
-.card-frame .win img.cat.is-pending {
+.card-frame .win img.art.is-pending {
   opacity: 0;
 }
 
-.card-frame .win img.cat.is-ready {
+.card-frame .win img.art.is-ready {
   opacity: 1;
   transition: opacity 200ms linear;
 }
