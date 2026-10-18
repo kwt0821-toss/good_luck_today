@@ -146,10 +146,33 @@ export function formatMetDate(dateKey: string): { day: string; year: string } {
   };
 }
 
+/** Special, character, and legend swipe in the same order as the dex grid. */
+export function dexGroupLoops(type: DexCard["type"]): boolean {
+  return type === "special" || type === "character" || type === "legend";
+}
+
+/** Next or previous owned card. Looping groups wrap the ends. */
+export function ownedNeighbor(
+  cards: DexCard[],
+  index: number,
+  step: 1 | -1,
+  loop: boolean,
+): DexCard | undefined {
+  const count = cards.length;
+  if (index < 0 || count === 0) return undefined;
+  const raw = index + step;
+  if (loop && count > 1) return cards[(raw + count) % count];
+  if (raw < 0 || raw >= count) return undefined;
+  return cards[raw];
+}
+
 export function groupForCard(catalog: DexCatalog, card: DexCard): DexCard[] {
   if (card.type === "breed" && card.breed) {
     return groupBreedRows(cardsOfType(catalog, "breed")).find((row) => row.breedId === card.breed?.id)
       ?.slots ?? [card];
+  }
+  if (dexGroupLoops(card.type)) {
+    return shuffleCards(cardsOfType(catalog, card.type), card.type);
   }
   return sortCardsAz(cardsOfType(catalog, card.type), card.type);
 }

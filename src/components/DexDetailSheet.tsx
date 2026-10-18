@@ -11,8 +11,10 @@ import {
   cardFortune,
   cardKoreanName,
   dexAsset,
+  dexGroupLoops,
   formatCardDexNo,
   formatMetDate,
+  ownedNeighbor,
 } from "../lib/dexCatalog";
 import { loadMenuSettings, shouldReduceMenuMotion } from "../lib/menuSettings";
 import type { DexCard, DexOwnedMap } from "../lib/dexTypes";
@@ -98,6 +100,7 @@ export function DexDetailSheet({
   const ownedInGroup = group.filter((item) => (owned[item.id]?.count ?? 0) > 0);
   const ownedCount = ownedInGroup.length;
   const ownedIndex = ownedInGroup.findIndex((item) => item.id === card.id);
+  const loops = dexGroupLoops(card.type) && ownedCount > 1;
   const total = group.length;
   const ko = cardKoreanName(card);
   const fortune = cardFortune(card.id);
@@ -253,7 +256,10 @@ export function DexDetailSheet({
   const preloadKey = (() => {
     const ownedCards = group.filter((item) => (owned[item.id]?.count ?? 0) > 0);
     const index = ownedCards.findIndex((item) => item.id === card.id);
-    return [ownedCards[index - 1]?.id ?? "", card.id, ownedCards[index + 1]?.id ?? ""].join("|");
+    const loop = dexGroupLoops(card.type) && ownedCards.length > 1;
+    const prev = ownedNeighbor(ownedCards, index, -1, loop);
+    const next = ownedNeighbor(ownedCards, index, 1, loop);
+    return [prev?.id ?? "", card.id, next?.id ?? ""].join("|");
   })();
 
   useEffect(() => {
@@ -294,9 +300,8 @@ export function DexDetailSheet({
   };
 
   const swipeToOwned = (direction: "prev" | "next") => {
-    const step = direction === "next" ? 1 : -1;
-    const next = ownedInGroup[ownedIndex + step];
-    if (!next) return;
+    const next = ownedNeighbor(ownedInGroup, ownedIndex, direction === "next" ? 1 : -1, loops);
+    if (!next || next.id === card.id) return;
     window.clearTimeout(flipTimerRef.current);
     spinningRef.current = false;
     resetPose(0);
@@ -344,8 +349,8 @@ export function DexDetailSheet({
           showingBack={showingBack}
           onFlip={onFlipClick}
           swipe={{
-            canPrev: ownedIndex > 0,
-            canNext: ownedIndex >= 0 && ownedIndex < ownedCount - 1,
+            canPrev: loops || ownedIndex > 0,
+            canNext: loops || (ownedIndex >= 0 && ownedIndex < ownedCount - 1),
             onSwipe: swipeToOwned,
           }}
           renderZoom={() => (
