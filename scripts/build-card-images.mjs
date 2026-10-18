@@ -64,8 +64,11 @@ for (const name of (await readdir(frameDir)).filter((file) => /^(frame|window)-.
   hashes.push(createHash("sha1").update(await readFile(path.join(frameDir, name))).digest());
 }
 
+// Bump when frame bytes are unchanged but clients must drop immutable copies.
+const CACHE_GENERATION = "2";
 const version = createHash("sha1")
   .update(Buffer.concat(hashes))
+  .update(CACHE_GENERATION)
   .digest("hex")
   .slice(0, 10);
 
