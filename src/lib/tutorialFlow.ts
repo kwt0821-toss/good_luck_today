@@ -409,6 +409,19 @@ export function ncoinIntroMark(then: NcoinIntroThen): CoachMark {
   };
 }
 
+/** Step 2, after the reveal toast: shade the screen and point at 도감에서 보기. */
+export function revealDexButtonMark(): CoachMark {
+  return {
+    id: "step-2-to-dex",
+    target: "#btn-to-dex",
+    showFinger: true,
+    ackOnly: true,
+    activateTarget: true,
+    passThrough: true,
+    bubble: "above",
+  };
+}
+
 export function ncoinNextMark(then: NcoinIntroThen): CoachMark | null {
   if (!then.next) return null;
   return {

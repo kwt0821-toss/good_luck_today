@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { createPortal } from "react-dom";
 
 import { AudioManager } from "../audio/AudioManager";
 import { loadDexOwned } from "../lib/dexCollection";
@@ -617,6 +618,29 @@ export function DrawRevealScreen({
     }
   };
 
+  const toastNode = (
+    <div
+      ref={toastRef}
+      className={`draw-reveal-toast ${holdToast ? "is-above-tutor" : ""}`}
+      id="dex-toast"
+      style={{
+        display:
+          reservation.isNew && toastText && !toastDismissed && !hideToast ? undefined : "none",
+      }}
+    >
+      <div className="draw-reveal-toast-icons" aria-hidden="true">
+        <div className="ic">
+          <img src={ncoinIcon(18)} alt="" width={18} height={18} />
+        </div>
+        <div className="ic is-paw">
+          <img src="/assets/menu/icon-paw-mini.svg" alt="" width={18} height={18} />
+        </div>
+      </div>
+      <div>{toastText}</div>
+    </div>
+  );
+  const toastHost = typeof document !== "undefined" ? document.getElementById("root") : null;
+
   return (
     <div
       ref={screenRef}
@@ -759,27 +783,7 @@ export function DrawRevealScreen({
           />
         </div>
 
-        <div
-          ref={toastRef}
-          className="draw-reveal-toast"
-          id="dex-toast"
-          style={{
-            display:
-              reservation.isNew && toastText && !toastDismissed && !hideToast
-                ? undefined
-                : "none",
-          }}
-        >
-          <div className="draw-reveal-toast-icons" aria-hidden="true">
-            <div className="ic">
-              <img src={ncoinIcon(18)} alt="" width={18} height={18} />
-            </div>
-            <div className="ic is-paw">
-              <img src="/assets/menu/icon-paw-mini.svg" alt="" width={18} height={18} />
-            </div>
-          </div>
-          <div>{toastText}</div>
-        </div>
+        {holdToast && toastHost ? createPortal(toastNode, toastHost) : toastNode}
 
         {waitFailed ? (
           <div className="draw-reveal-wait" role="alert">

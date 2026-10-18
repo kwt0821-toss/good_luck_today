@@ -77,6 +77,7 @@ import {
   mainStepMark,
   ncoinIntroMark,
   ncoinNextMark,
+  revealDexButtonMark,
   rewardsIntroMark,
   roomDoneCoachMark,
   roomPickCoachMark,
@@ -359,10 +360,15 @@ export default function App() {
         if (revealTutPhase === "ncoin-intro" && isNcoinIntroThen(tutorialStep.then)) {
           return ncoinIntroMark(tutorialStep.then);
         }
-        if (revealTutPhase === "to-dex" && isNcoinIntroThen(tutorialStep.then)) {
-          return ncoinNextMark(tutorialStep.then);
+        if (revealTutPhase === "to-dex") {
+          if (isNcoinIntroThen(tutorialStep.then)) {
+            const next = ncoinNextMark(tutorialStep.then);
+            if (next) return next;
+          }
+          // Toast stays as the copy. Finger + shade point at 도감에서 보기.
+          return revealDexButtonMark();
         }
-        // Wait for toast / ncoin-intro — no coach on the card itself.
+        // Card is still turning — wait for the toast before the shade.
         return null;
       }
       // Replay without a live reveal: show ncoin-intro only (no toast / to-dex).

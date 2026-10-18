@@ -415,6 +415,15 @@
   color: rgba(243, 233, 215, 0.85);
 }
 
+/* Tutorial shade sits at z 135. Keep this copy above it, under the finger (z 140). */
+.draw-reveal-toast.is-above-tutor {
+  position: fixed;
+  z-index: 136;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: 24px;
+  right: 24px;
+}
+
 .draw-reveal-toast {
   position: absolute;
   left: 24px;
