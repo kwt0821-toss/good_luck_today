@@ -119,19 +119,45 @@ export function dexClaimCoachMark(
   };
 }
 
+function tutorialLineIcon(icon?: string): string | undefined {
+  if (!icon) return undefined;
+  if (icon === "ncoin") return "/assets/ncoin/ncoin-64.png";
+  if (icon === "paw") return "/assets/menu/icon-paw-mini.svg";
+  return icon;
+}
+
+/** Step 3 explainer after the first coin claim. JSON uses id ncoin-intro (substep 3-3). */
 export function dexAfterClaimMark(step: TutorialStep): CoachMark | null {
-  const sub = dexSubstep(step, "3-3") ?? dexSubstep(step, "3-2");
-  const after = sub?.id === "3-3" ? sub : sub?.afterClaim;
-  if (!after) return null;
+  const raw = step.substeps?.find((entry) => entry.id === "3-3" || entry.id === "ncoin-intro");
+  const legacy = dexSubstep(step, "3-2")?.afterClaim;
+  if (!raw && !legacy) return null;
+  const button =
+    raw && typeof (raw as unknown as { button?: unknown }).button === "string"
+      ? (raw as unknown as { button: string }).button
+      : undefined;
+  const title = raw?.title ?? raw?.copy ?? legacy?.title ?? legacy?.copy ?? "냥코인을 처음 받았어요!";
+  const lines = raw?.lines?.map((line) => {
+    const style =
+      typeof (line as unknown as { style?: unknown }).style === "string"
+        ? (line as unknown as { style: string }).style
+        : "";
+    return {
+      icon: tutorialLineIcon(line.icon),
+      text: line.text,
+      muted: line.muted ?? style.includes("muted"),
+      dividerAbove: line.dividerAbove ?? style.includes("divider"),
+    };
+  });
+  const labeled = step as TutorialStep & { label?: string };
   return {
-    id: "id" in after && after.id ? after.id : "ncoin-first",
+    id: raw?.id ?? legacy?.id ?? "ncoin-first",
     target: "",
-    title: after.title ?? "냥코인을 처음 받았어요!",
-    copy: "copy" in after ? after.copy : undefined,
-    cta: after.cta ?? "알겠어요",
+    title,
+    lines,
+    cta: raw?.cta ?? legacy?.cta ?? button ?? "알겠어요",
     ackOnly: true,
     showFinger: false,
-    stepLabel: step.stepLabel ?? "STEP 3/5",
+    stepLabel: step.stepLabel ?? labeled.label ?? "STEP 3/5",
   };
 }
 
@@ -318,10 +344,11 @@ export function rewardsIntroMark(
 }
 
 export function resolveTutorialTarget(
-  target: string,
+  target: string | null | undefined,
   vars: { cardId?: string | null } = {},
   fallbackTarget?: string,
 ): string {
+  if (!target) return fallbackTarget ? resolveTutorialTarget(fallbackTarget, vars) : "";
   let next = target;
   if (vars.cardId) {
     next = next.split("{cardId}").join(vars.cardId);

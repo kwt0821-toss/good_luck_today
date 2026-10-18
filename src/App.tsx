@@ -373,20 +373,24 @@ export default function App() {
     }
 
     // Step 3: scroll → slot → claim → toast → ncoin-after (still STEP 3/4).
-    if (tutorialStep.step === 3 && screen.name === "collection") {
+    // Stay quiet until the dex is on screen so a missing base target cannot throw.
+    if (tutorialStep.step === 3) {
+      if (screen.name !== "collection") return null;
       if (dexTutPhase === "scroll" || dexTutPhase === "toast" || dexTutPhase == null) return null;
       if (dexTutPhase === "slot") return dexSlotCoachMark(tutorialStep, vars);
       if (dexTutPhase === "claim") return dexClaimCoachMark(tutorialStep, vars);
       if (dexTutPhase === "ncoin-after") return dexAfterClaimMark(tutorialStep);
+      return null;
     }
 
     // Step 4: pick → preview(✓) → done (STEP 4/5). Wait until RoomScreen finishes loading.
-    if (tutorialStep.step === 4 && screen.name === "room") {
-      if (!roomScreenReady) return null;
+    if (tutorialStep.step === 4) {
+      if (screen.name !== "room" || !roomScreenReady) return null;
       if (roomTutPhase === "pick" || roomTutPhase == null) return roomPickCoachMark(tutorialStep);
       if (roomTutPhase === "preview" || roomTutPhase === "drag") return roomPreviewCoachMark(tutorialStep);
       if (roomTutPhase === "done") return roomDoneCoachMark(tutorialStep);
       if (roomTutPhase === "points") return roomPointsCoachMark(tutorialStep);
+      return null;
     }
 
     // Step 5: menu → rewards row → withdraw sheet (STEP 5/5).
@@ -1095,7 +1099,7 @@ export default function App() {
     setDexTutPhase(nextStep === 3 ? "scroll" : null);
     setRoomTutPhase(nextStep === 4 ? "pick" : null);
     setRewardsTutPhase(nextStep === 5 ? "menu" : null);
-    if (next?.screen === "room") setScreen({ name: "room" });
+    if (next?.screen.includes("room")) setScreen({ name: "room" });
     else if (next?.screen.includes("dex") || tutorialStep.screen.includes("dex")) {
       setScreen({ name: "collection" });
     } else if (next?.screen === "main" || next?.screen === "draw-reveal" || nextStep === 5) {
@@ -1225,13 +1229,17 @@ export default function App() {
         <RoomScreen
           onBack={leaveRoom}
           tutorialActive={Boolean(
-            tutorialStep?.screen === "room" &&
+            (tutorialStep?.step === 4 || tutorialReplayStep === 4) &&
               (tutorialReplayStep != null || (ops && !ops.tutorialDone)),
           )}
           tutorialPhase={
             tutorialStep?.step === 4 || tutorialReplayStep === 4 ? roomTutPhase : null
           }
-          suggestTile={tutorialStep?.screen === "room" ? (tutorialStep.suggestTile ?? null) : null}
+          suggestTile={
+            tutorialStep?.step === 4 || tutorialReplayStep === 4
+              ? (tutorialStep?.suggestTile ?? null)
+              : null
+          }
           reduceMotion={reduceMotion}
           onReady={() => setRoomScreenReady(true)}
           onTutorialPicked={() => {
@@ -1457,7 +1465,7 @@ export default function App() {
             (tutorialStep.step === 5 && (screen.name === "home" || menuOpen)) ||
             (screen.name === "reveal" && tutorialStep.screen === "draw-reveal") ||
             (screen.name === "collection" && tutorialStep.screen.includes("dex")) ||
-            (screen.name === "room" && tutorialStep.screen === "room" && roomScreenReady) ||
+            (screen.name === "room" && tutorialStep.screen.includes("room") && roomScreenReady) ||
             (tutorialReplayStep != null &&
               (screen.name === "home" ||
                 screen.name === "collection" ||
