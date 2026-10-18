@@ -11,7 +11,7 @@ import "./CardFrame.css";
 
 type CardFrameProps = {
   card: FrameSubject;
-  /** Catalog id, used to place the transparent cat (selfie is inset differently). */
+  /** Catalog id, used to place the transparent cat inside the grade window. */
   artId?: string;
   catSrc: string;
   /** Small stand-in shown blurred until `catSrc` has been decoded. */

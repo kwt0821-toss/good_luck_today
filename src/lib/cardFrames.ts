@@ -134,7 +134,7 @@ export function resolveFrame(card: FrameSubject): ResolvedFrame {
     tier,
     nameColor: FRAME_LAYOUT.nameColor[key],
     foil: !basic,
-    glit: key === "4star" || key === "5star" || key === "legend" || key === "character",
+    glit: false,
     frameSrc: frame.src,
     frameSrcSet: frame.srcSet,
     windowSrc: win.src,

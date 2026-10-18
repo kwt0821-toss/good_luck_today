@@ -182,23 +182,6 @@
   pointer-events: none;
 }
 
-.card-frame.glit::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.6px);
-  background-size: 23px 29px;
-  mix-blend-mode: screen;
-  opacity: 0.35;
-  animation: card-frame-tw 1.6s steps(2) infinite;
-}
-
-.card-frame.is-mini.glit::before {
-  background-size: 9px 11px;
-}
-
 @keyframes card-frame-foil {
   from {
     background-position: 120% 0;
@@ -208,15 +191,8 @@
   }
 }
 
-@keyframes card-frame-tw {
-  50% {
-    opacity: 0.12;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .card-frame.foil::after,
-  .card-frame.glit::before {
+  .card-frame.foil::after {
     animation: none;
   }
 }

@@ -43,7 +43,7 @@ export function cardThumbUrl(card: Pick<DexCard, "id" | "thumb">): string {
   return withAssetVersion(dexAsset(card.thumb));
 }
 
-/** Inset of the cat inside the grade window. Selfie is the only override.
+/** Inset of the cat inside the grade window. Every card uses the default box.
  *  Width and height are set explicitly: an absolutely positioned image with
  *  auto size keeps its intrinsic pixels, so object-fit never sees this box. */
 export function cardArtStyle(id: string): CSSProperties {
