@@ -1025,31 +1025,23 @@
    "thumbW": 200,
    "thumbH": 116,
    "source": "card-parts/art-meme-nyangpunch.png",
-   "notes": []
+   "notes": [
+    "HP/Lv game UI restored from old front (900px): 멍멍 Lv12 top-left, 냐옹 Lv3 15/15 bottom-right"
+   ]
   },
   "selfie": {
    "group": "special",
    "art": "cards/special/selfie_art.webp",
    "thumb": "thumbs/special/selfie_art_thumb.webp",
    "w": 720,
-   "h": 417,
+   "h": 402,
    "thumbW": 200,
-   "thumbH": 116,
+   "thumbH": 112,
    "source": "card-parts/art-meme-selfie.png (cutout)",
    "notes": [
     "bg removed (was opaque RGB)",
-    "cropped close-up: flush to window bottom so the cut edge hides under the frame"
-   ],
-   "placement": {
-    "box": {
-     "top": 5,
-     "left": 0,
-     "right": 0,
-     "bottom": 0
-    },
-    "objectFit": "contain",
-    "objectPosition": "50% 100%"
-   }
+    "bottom 30% fades out softly so the cut edge never shows; uses default placement"
+   ]
   },
   "hunt": {
    "group": "special",
@@ -1066,13 +1058,13 @@
    "group": "special",
    "art": "cards/special/hangang_art.webp",
    "thumb": "thumbs/special/hangang_art_thumb.webp",
-   "w": 692,
-   "h": 361,
+   "w": 720,
+   "h": 387,
    "thumbW": 200,
-   "thumbH": 104,
+   "thumbH": 108,
    "source": "card-parts/art-meme-hangang.png (cutout)",
    "notes": [
-    "bg removed (was opaque RGB)"
+    "ice background removed; news caption box, MBM logo and 서울 뚝섬한강공원 chyron restored from original art (chyron moved under the feet, logo moved inward)"
    ]
   },
   "fallingcat": {
