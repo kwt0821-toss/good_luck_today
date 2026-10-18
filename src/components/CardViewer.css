@@ -137,8 +137,9 @@
 
 .card-viewer-flip-zone {
   position: absolute;
-  z-index: 6;
+  z-index: 8;
   pointer-events: none;
+  transform: translateZ(40px);
 }
 
 .card-viewer-flip {

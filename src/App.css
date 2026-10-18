@@ -1304,10 +1304,10 @@
 /* Cat + card only. The tail sticks out to the right of the deck and stays outside. */
 .main-cat-hit {
   position: absolute;
-  left: 26.5%;
-  top: 4%;
-  width: 45.5%;
-  height: 94%;
+  left: 24.5%;
+  top: 3%;
+  width: 49%;
+  height: 95%;
   z-index: 4;
   border: 0;
   padding: 0;
