@@ -9,7 +9,14 @@
 import { createHash } from "node:crypto";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
+
+let sharp;
+try {
+  sharp = (await import("sharp")).default;
+} catch {
+  console.error("sharp가 설치되어 있지 않습니다. npm install 한 뒤 npm run cards:webp 를 실행하세요.");
+  process.exit(1);
+}
 
 const root = path.resolve(import.meta.dirname, "..");
 const catalogPath = path.join(root, "public/assets/dex/cards.json");
