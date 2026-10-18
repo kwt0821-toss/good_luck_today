@@ -11,6 +11,16 @@
   cursor: pointer;
 }
 
+.card-viewer-swipe {
+  position: relative;
+  width: 100%;
+  touch-action: pan-y;
+}
+
+.card-viewer-swipe.is-off {
+  touch-action: auto;
+}
+
 .card-viewer-caption {
   position: relative;
   z-index: 5;

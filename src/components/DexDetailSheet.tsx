@@ -56,6 +56,7 @@ function lightVibrate(ms = 10) {
 
 function preloadLarge(card: DexCard) {
   void decodeImage(cardLargeUrl(card)).catch(() => undefined);
+  void decodeImage(cardThumbUrl(card)).catch(() => undefined);
   void decodeImage(cardBackUrl(card)).catch(() => undefined);
 }
 
@@ -96,6 +97,7 @@ export function DexDetailSheet({
   const record = owned[card.id];
   const ownedInGroup = group.filter((item) => (owned[item.id]?.count ?? 0) > 0);
   const ownedCount = ownedInGroup.length;
+  const ownedIndex = ownedInGroup.findIndex((item) => item.id === card.id);
   const total = group.length;
   const ko = cardKoreanName(card);
   const fortune = cardFortune(card.id);
@@ -291,10 +293,14 @@ export function DexDetailSheet({
     if (dy > 80 && Math.abs(dy) > Math.abs(dx)) close();
   };
 
-  const selectOwned = (item: DexCard) => {
-    if ((owned[item.id]?.count ?? 0) <= 0) return;
-    if (item.id === card.id) return;
-    onChangeCard(item);
+  const swipeToOwned = (direction: "prev" | "next") => {
+    const step = direction === "next" ? 1 : -1;
+    const next = ownedInGroup[ownedIndex + step];
+    if (!next) return;
+    window.clearTimeout(flipTimerRef.current);
+    spinningRef.current = false;
+    resetPose(0);
+    onChangeCard(next);
   };
 
   const host = document.getElementById("root") ?? document.body;
@@ -337,6 +343,11 @@ export function DexDetailSheet({
           accentColor={resolveFrame(card).nameColor}
           showingBack={showingBack}
           onFlip={onFlipClick}
+          swipe={{
+            canPrev: ownedIndex > 0,
+            canNext: ownedIndex >= 0 && ownedIndex < ownedCount - 1,
+            onSwipe: swipeToOwned,
+          }}
           renderZoom={() => (
             <CardFlipStack
               showingBack={showingBack}
@@ -510,22 +521,13 @@ export function DexDetailSheet({
           </div>
         ) : null}
 
-        <div className="dex-dots" aria-label="보유 카드">
-          {group.map((item) => {
-            const isOwned = Boolean(owned[item.id]);
-            const isActive = item.id === card.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={`dex-dot ${isActive ? "is-active" : ""} ${isOwned ? "" : "is-locked"}`}
-                aria-label={cardDisplayName(item)}
-                disabled={!isOwned}
-                onClick={() => selectOwned(item)}
-              />
-            );
-          })}
-        </div>
+        {ownedIndex >= 0 ? (
+          <p className="dex-pager" aria-label={`보유 카드 ${ownedIndex + 1} / ${ownedCount}`}>
+            <b>{ownedIndex + 1}</b>
+            <span aria-hidden="true"> / </span>
+            <span>{ownedCount}</span>
+          </p>
+        ) : null}
       </div>
     </div>,
     host,
