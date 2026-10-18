@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
-import { cardArtStyle } from "../lib/cardArt";
+import { cardArtStyle, watchDecodedImage } from "../lib/cardArt";
 import {
   FRAME_LAYOUT,
   boxStyle,
@@ -75,18 +75,47 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
   const tier = frame.tier;
   const mini = variant === "mini";
   const artStyle = cardArtStyle(artId);
-  const [sharpReady, setSharpReady] = useState(false);
+  const artRef = useRef<HTMLImageElement>(null);
+  /** loading: blurred thumb + indicator. sharp: full art. thumb: sharp thumbnail fallback. */
+  const [artPhase, setArtPhase] = useState<"loading" | "sharp" | "thumb">("loading");
   const showName = Boolean(name);
   const { plateRef, textRef } = useFitPlateName(name, showName);
   const { starsFont, labelFont } = FRAME_LAYOUT;
 
   useEffect(() => {
-    setSharpReady(mini);
-  }, [catSrc, mini]);
+    if (mini || !thumbSrc) {
+      setArtPhase("sharp");
+      return;
+    }
+    const node = artRef.current;
+    if (node?.complete && node.naturalWidth > 0) {
+      setArtPhase("sharp");
+      return;
+    }
+    setArtPhase("loading");
+    const unwatch = watchDecodedImage(catSrc, (status) => {
+      setArtPhase(status === "ok" ? "sharp" : "thumb");
+    });
+    const timer = window.setTimeout(() => {
+      const img = artRef.current;
+      if (img?.complete && img.naturalWidth > 0) {
+        setArtPhase("sharp");
+        return;
+      }
+      setArtPhase((phase) => (phase === "loading" ? "thumb" : phase));
+    }, 3000);
+    return () => {
+      unwatch();
+      window.clearTimeout(timer);
+    };
+  }, [catSrc, mini, thumbSrc]);
 
+  const showBlur = !mini && Boolean(thumbSrc);
+  const sharpReady = !showBlur || artPhase === "sharp";
   const classes = [
     "card-frame",
-    !mini && sharpReady ? "is-sharp-ready" : "",
+    sharpReady && showBlur ? "is-sharp-ready" : "",
+    showBlur && artPhase === "thumb" ? "is-art-fallback" : "",
     mini ? "is-mini" : "",
     frame.foil ? "foil" : "",
     frame.glit ? "glit" : "",
@@ -126,14 +155,24 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
           <img className="art is-preview" src={thumbSrc} alt="" draggable={false} style={artStyle} />
         ) : null}
         <img
-          className={`art ${!mini && thumbSrc ? (sharpReady ? "is-ready" : "is-pending") : ""}`}
+          ref={artRef}
+          className={`art ${showBlur ? (sharpReady ? "is-ready" : "is-pending") : ""}`}
           src={catSrc}
           alt=""
           draggable={false}
           decoding="async"
           style={artStyle}
-          onLoad={() => setSharpReady(true)}
+          onLoad={(event) => {
+            const img = event.currentTarget;
+            if (img.complete && img.naturalWidth > 0) setArtPhase("sharp");
+          }}
+          onError={() => {
+            if (showBlur) setArtPhase("thumb");
+          }}
         />
+        {showBlur && artPhase === "loading" ? (
+          <span className="art-loading" role="status" aria-label="카드 그림을 불러오는 중" />
+        ) : null}
       </div>
       <img
         className="frame"
