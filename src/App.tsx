@@ -92,6 +92,7 @@ import { preloadFrameAssets } from "./lib/preloadFrames";
 const DRAW_LOADING_MESSAGES = ["카드를 섞는 중이냥...", "거의 다 됐다냥!", "하암~ 곧 일어날게냥"];
 import { preloadLoadingAssets } from "./lib/preloadLoading";
 import { useLoadingHold } from "./lib/loadingGate";
+import { useExitConfirmOnBack } from "./hooks/useExitConfirmOnBack";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { RatesGuideScreen } from "./screens/RatesGuideScreen";
@@ -1127,6 +1128,10 @@ export default function App() {
   useLoadingHold("boot", booting);
   useLoadingHold("draw", drawLoading, drawProgress, DRAW_LOADING_MESSAGES);
 
+  // Home only. The menu pushes its own history entry, so back there must stay the default pop.
+  const isMainScreen = !booting && !bootError && screen.name === "home" && !menuOpen;
+  const { modal: exitModal } = useExitConfirmOnBack(isMainScreen);
+
   if (bootError) {
     return (
       <div className="boot-error">
@@ -1454,6 +1459,7 @@ export default function App() {
       ) : null}
 
       <NyangNotifyHost />
+      {exitModal}
     </>
   );
 }
