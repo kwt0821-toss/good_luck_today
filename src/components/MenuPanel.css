@@ -30,6 +30,13 @@
   cursor: pointer;
 }
 
+button.menu-dim:focus,
+button.menu-dim:focus-visible {
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+}
+
 .menu-root.is-open .menu-dim {
   opacity: 1;
 }

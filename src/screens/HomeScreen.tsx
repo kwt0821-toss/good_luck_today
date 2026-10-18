@@ -329,12 +329,8 @@ export function HomeScreen({
             </button>
           </div>
 
-          <button
-            type="button"
-            id="stage-cat"
+          <div
             className={`main-cat-stage ${waking ? "is-waking" : ""} ${flipping ? "is-flipping" : ""} ${drawsDone ? "is-empty" : ""}`}
-            aria-label={drawsDone ? "오늘은 이미 뽑았어요" : "고양이 톡해서 오늘의 카드 받기"}
-            onClick={handleDrawTap}
           >
             <img className="main-moon" src={ASSETS.moon} alt="" />
             <div className="main-float">
@@ -392,7 +388,14 @@ export function HomeScreen({
                 </div>
               ) : null}
             </div>
-          </button>
+            <button
+              type="button"
+              id="stage-cat"
+              className="main-cat-hit"
+              aria-label={drawsDone ? "오늘은 이미 뽑았어요" : "고양이 톡해서 오늘의 카드 받기"}
+              onClick={handleDrawTap}
+            />
+          </div>
         </div>
       </section>
 

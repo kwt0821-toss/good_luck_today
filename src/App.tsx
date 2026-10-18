@@ -92,7 +92,7 @@ import { preloadFrameAssets } from "./lib/preloadFrames";
 const DRAW_LOADING_MESSAGES = ["카드를 섞는 중이냥...", "거의 다 됐다냥!", "하암~ 곧 일어날게냥"];
 import { preloadLoadingAssets } from "./lib/preloadLoading";
 import { useLoadingHold } from "./lib/loadingGate";
-import { useExitConfirmOnBack } from "./hooks/useExitConfirmOnBack";
+import { useExitConfirmOnBack, useGraniteBack } from "./hooks/useExitConfirmOnBack";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { RatesGuideScreen } from "./screens/RatesGuideScreen";
@@ -1120,17 +1120,49 @@ export default function App() {
   ]);
 
   const booting = !bootError && (!ops || !config);
+  // First-draw tutorial stays on the reveal scene. The loading window would cover its copy.
+  const tutorialDraw = Boolean(
+    tutorialReplayStep === 1 ||
+      tutorialReplayStep === 2 ||
+      (ops && !ops.tutorialDone && ops.tutorialStep <= 2),
+  );
   const drawLoading =
     !booting &&
     !ad &&
+    !tutorialDraw &&
     (drawBusy ||
       (screen.name === "reveal" && Boolean(reservation) && !revealReady && !waitFailed));
   useLoadingHold("boot", booting);
   useLoadingHold("draw", drawLoading, drawProgress, DRAW_LOADING_MESSAGES);
 
+  const leaveDex = useCallback(() => {
+    const tutStep3 =
+      tutorialReplayStep === 3 || Boolean(ops && !ops.tutorialDone && ops.tutorialStep === 3);
+    if (dexTutPhase && tutStep3) return;
+    setDexTutPhase(null);
+    setDexFocusCardId(null);
+    setScreen({ name: "home" });
+  }, [tutorialReplayStep, ops, dexTutPhase]);
+
+  const leaveRoom = useCallback(() => {
+    if (roomTutPhase) return;
+    setScreen({ name: "home" });
+  }, [roomTutPhase]);
+
   // Home only. The menu pushes its own history entry, so back there must stay the default pop.
   const isMainScreen = !booting && !bootError && screen.name === "home" && !menuOpen;
   const { modal: exitModal } = useExitConfirmOnBack(isMainScreen);
+  // Dex and room: the nav "<" beside the Toss home button returns to the main screen.
+  const screenBack =
+    !booting &&
+    !bootError &&
+    !menuOpen &&
+    ad == null &&
+    (screen.name === "collection" || screen.name === "room");
+  useGraniteBack(screenBack, () => {
+    if (screen.name === "collection") leaveDex();
+    else if (screen.name === "room") leaveRoom();
+  });
 
   if (bootError) {
     return (
@@ -1151,17 +1183,7 @@ export default function App() {
 
       {screen.name === "collection" ? (
         <CollectionScreen
-          onBack={() => {
-            // Only block during active tutorial step 3 — leftover dexTutPhase
-            // from "도감 보기" must not trap the back button forever.
-            const tutStep3 =
-              tutorialReplayStep === 3 ||
-              Boolean(ops && !ops.tutorialDone && ops.tutorialStep === 3);
-            if (dexTutPhase && tutStep3) return;
-            setDexTutPhase(null);
-            setDexFocusCardId(null);
-            setScreen({ name: "home" });
-          }}
+          onBack={leaveDex}
           ops={ops}
           onOpsChange={(next) => void persistOps(next)}
           floatingToast={
@@ -1194,10 +1216,7 @@ export default function App() {
 
       {screen.name === "room" ? (
         <RoomScreen
-          onBack={() => {
-            if (roomTutPhase) return;
-            setScreen({ name: "home" });
-          }}
+          onBack={leaveRoom}
           tutorialActive={Boolean(
             tutorialStep?.screen === "room" &&
               (tutorialReplayStep != null || (ops && !ops.tutorialDone)),

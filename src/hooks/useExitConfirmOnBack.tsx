@@ -57,3 +57,25 @@ export function useExitConfirmOnBack(isHomeScreen: boolean) {
 
   return { modal, openExitConfirm: () => setOpen(true) };
 }
+
+/** Toss nav back / Android system back. Unsubscribes when `active` becomes false. */
+export function useGraniteBack(active: boolean, onBack: () => void) {
+  const onBackRef = useRef(onBack);
+  onBackRef.current = onBack;
+
+  useEffect(() => {
+    if (!active) return;
+    let unsubscribe = () => {};
+    try {
+      unsubscribe = graniteEvent.addEventListener("backEvent", {
+        onEvent: () => onBackRef.current(),
+        onError: (error) => {
+          console.error("backEvent error", error);
+        },
+      });
+    } catch (error) {
+      console.error("backEvent error", error);
+    }
+    return unsubscribe;
+  }, [active]);
+}

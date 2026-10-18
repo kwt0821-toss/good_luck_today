@@ -112,7 +112,8 @@ export function dexClaimCoachMark(
     lines,
     showFinger: sub.showFinger !== false,
     ackOnly: true,
-    activateTarget: Boolean(sub.claimGate),
+    /* Tap on the coin spotlight claims. `onlyTarget` in tutorial.json is this gate. */
+    activateTarget: sub.claimGate !== false,
     stepLabel: step.stepLabel ?? "STEP 3/5",
     bubble: "above",
   };
