@@ -65,7 +65,7 @@ for (const name of (await readdir(frameDir)).filter((file) => /^(frame|window)-.
 }
 
 // Bump when frame bytes are unchanged but clients must drop immutable copies.
-const CACHE_GENERATION = "2";
+const CACHE_GENERATION = "3";
 const version = createHash("sha1")
   .update(Buffer.concat(hashes))
   .update(CACHE_GENERATION)

@@ -459,8 +459,10 @@
 }
 
 .dex-slot-legend.is-owned {
-  box-shadow: 0 0 30px rgba(245, 210, 122, 0.38), 0 10px 24px rgba(0, 0, 0, 0.4);
-  animation: dex-glow 3s ease-in-out infinite alternate;
+  padding: 0;
+  background: transparent;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+  animation: none;
 }
 
 .dex-slot-img {
@@ -508,17 +510,12 @@
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.38);
 }
 
-.dex-slot-legend .dex-slot-img {
-  /* Replaced <img> ignores inset stretch when width/height are auto — pin to the gold frame. */
-  top: 2px;
-  left: 2px;
-  right: auto;
-  bottom: auto;
-  width: calc(100% - 4px);
-  height: calc(100% - 4px);
-  object-fit: cover;
+.dex-slot.is-owned .card-frame.dex-slot-img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 1;
-  border-radius: 10px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
 }
 
 .dex-slot-glyph {
@@ -638,8 +635,8 @@
 .dex-slot-legend.is-owned .dex-slot-shine {
   display: block;
   position: absolute;
-  inset: 2px;
-  border-radius: 10px;
+  inset: 0;
+  border-radius: inherit;
   z-index: 2;
   pointer-events: none;
   background: linear-gradient(115deg, transparent 30%, rgba(255, 250, 225, 0.38) 45%, transparent 58%);

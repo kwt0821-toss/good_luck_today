@@ -3,7 +3,6 @@ import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type CSSPrope
 import {
   FRAME_LAYOUT,
   boxStyle,
-  miniRibbonLabel,
   resolveFrame,
   type FrameSubject,
 } from "../lib/cardFrames";
@@ -73,11 +72,10 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
   const frame = resolveFrame(card);
   const tier = frame.tier;
   const mini = variant === "mini";
-  const grade = miniRibbonLabel(card);
   const primed = !mini ? peekPlainCat(catSrc) : null;
   const [artSrc, setArtSrc] = useState(primed ?? catSrc);
   const [sharpReady, setSharpReady] = useState(Boolean(primed));
-  const showName = !mini && Boolean(name);
+  const showName = Boolean(name);
   const { plateRef, textRef } = useFitPlateName(name, showName);
   const { starsFont, labelFont } = FRAME_LAYOUT;
 
@@ -137,7 +135,13 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
   return (
     <div ref={ref} className={classes}>
       <div className="win" style={boxStyle(tier.win)}>
-        <img className="bg" src={frame.windowSrc} srcSet={frame.windowSrcSet} alt="" draggable={false} />
+        <img
+          className="bg"
+          src={frame.windowSrc}
+          srcSet={mini ? undefined : frame.windowSrcSet}
+          alt=""
+          draggable={false}
+        />
         {!mini && thumbSrc ? (
           <img className="cat is-preview" src={thumbSrc} alt="" draggable={false} />
         ) : null}
@@ -147,9 +151,16 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
           alt=""
           draggable={false}
           decoding="async"
+          loading={mini ? "lazy" : undefined}
         />
       </div>
-      <img className="frame" src={frame.frameSrc} srcSet={frame.frameSrcSet} alt="" draggable={false} />
+      <img
+        className="frame"
+        src={frame.frameSrc}
+        srcSet={mini ? undefined : frame.frameSrcSet}
+        alt=""
+        draggable={false}
+      />
       {showName ? (
         <div ref={plateRef} className="plate" style={{ ...boxStyle(tier.plate), color: frame.nameColor }}>
           <span ref={textRef} className="name-text">
@@ -157,12 +168,12 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
           </span>
         </div>
       ) : null}
-      {!mini && tier.showStars ? (
+      {tier.showStars ? (
         <div className="stars" style={starsStyle}>
           {"★".repeat(tier.starCount)}
         </div>
       ) : null}
-      {!mini && !tier.showStars && tier.label ? (
+      {!tier.showStars && tier.label ? (
         <div className="grade-label" style={labelStyle}>
           {tier.label}
         </div>
@@ -172,7 +183,6 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
           <span className="stamp-face">{dexNo}</span>
         </span>
       ) : null}
-      {mini ? <div className="name">{grade}</div> : null}
     </div>
   );
 });

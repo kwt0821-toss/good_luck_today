@@ -146,13 +146,6 @@ export function frameSubjectFromCard(card: Pick<DexCard, "type" | "stars">): Fra
   return { type: card.type, stars: card.stars };
 }
 
-export function miniRibbonLabel(card: FrameSubject): string {
-  if (card.type === "legend") return "LEGEND";
-  if (card.type === "character") return "CHAR";
-  if (card.type === "special") return "MEME";
-  return "★".repeat(Math.max(1, card.stars ?? 1));
-}
-
 export function boxStyle(box: FrameBox): {
   left: string;
   top: string;
