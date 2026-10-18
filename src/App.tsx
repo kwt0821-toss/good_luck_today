@@ -1265,12 +1265,7 @@ export default function App() {
           toastText={revealToast}
           adNyangToast={adNyangToast}
           remainingDraws={remainingDraws}
-          holdToast={
-            Boolean(
-              tutorialStep?.step === 2 &&
-                (revealTutPhase === "wait-toast" || revealTutPhase === "ncoin-intro"),
-            )
-          }
+          holdToast={tutorialStep?.step === 2}
           hideToast={hideRevealToast}
           onToastShown={onRevealToastShown}
           onToDex={() => {

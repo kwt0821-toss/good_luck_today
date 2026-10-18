@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 
 import { ncoinIcon } from "../lib/ncoinIcon";
 import type { CoachMark, FeatureIntro } from "../lib/opsTypes";
@@ -216,8 +216,33 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   const frameW = frame.width || window.innerWidth;
   const frameH = frame.height || window.innerHeight;
 
+  const besideSkip = Boolean(mark?.besideSkip);
+  const [skipAnchor, setSkipAnchor] = useState<{ top: number; rightGap: number } | null>(null);
+  useLayoutEffect(() => {
+    if (!besideSkip) {
+      setSkipAnchor(null);
+      return;
+    }
+    const place = () => {
+      const el = document.getElementById("tut-skip");
+      const frameNow = fixedFrameRect();
+      if (!el) {
+        setSkipAnchor({ top: 52, rightGap: 120 });
+        return;
+      }
+      const box = el.getBoundingClientRect();
+      setSkipAnchor({
+        top: Math.max(8, box.top - frameNow.top),
+        rightGap: Math.max(96, frameNow.right - box.left + 10),
+      });
+    };
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [besideSkip, mark?.id]);
+
   const skipInline = useMemo(() => {
-    if (!rect) return false;
+    if (besideSkip || !rect) return false;
     // Skip zone is in viewport / frame-local top.
     const targetTopInFrame = rect.top - frame.top;
     if (targetTopInFrame < SKIP_TOP_ZONE_PT) return true;
@@ -229,7 +254,7 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
     };
     const local = new DOMRect(rect.left - frame.left, rect.top - frame.top, rect.width, rect.height);
     return rectsOverlap(local, skipApprox);
-  }, [rect, frame]);
+  }, [besideSkip, rect, frame]);
 
   const bubbleLayout = useMemo(() => {
     if (!mark) return { top: PAD_TOP, above: false };
@@ -374,11 +399,17 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
         {hasBubbleContent ? (
           <div
             ref={setBubbleEl}
-            className={`tut-bubble ${bubbleLayout.above ? "is-above" : "is-below"} ${hasHole ? "" : "is-centered"}`}
+            className={`tut-bubble ${besideSkip ? "is-beside-skip" : bubbleLayout.above ? "is-above" : "is-below"} ${!besideSkip && !hasHole ? "is-centered" : ""}`}
             style={
-              hasHole
-                ? { top: bubbleLayout.top, left: 24, right: 24 }
-                : { top: "40%", left: 24, right: 24, transform: "translateY(-50%)" }
+              besideSkip
+                ? {
+                    top: skipAnchor?.top ?? "calc(env(safe-area-inset-top, 0px) + 52px)",
+                    left: 16,
+                    right: skipAnchor?.rightGap ?? 120,
+                  }
+                : hasHole
+                  ? { top: bubbleLayout.top, left: 24, right: 24 }
+                  : { top: "40%", left: 24, right: 24, transform: "translateY(-50%)" }
             }
           >
             {mark.stepLabel ? <p className="tut-step-label">{mark.stepLabel}</p> : null}

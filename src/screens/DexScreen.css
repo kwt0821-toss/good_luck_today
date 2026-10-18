@@ -1273,7 +1273,14 @@
   }
 }
 
-/* Carry-over toast from draw-reveal (tutorial step 2 → 3) */
+/* Carry-over toast from draw-reveal (tutorial step 2 → 3).
+   .draw-reveal-toast starts at opacity 0 for the reveal animation. */
+.draw-reveal-toast.dex-floating-toast {
+  opacity: 1;
+  transform: none;
+  white-space: pre-line;
+}
+
 .dex-floating-toast {
   position: fixed;
   left: 24px;

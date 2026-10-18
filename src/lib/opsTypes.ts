@@ -494,6 +494,8 @@ export type CoachMark = {
   dim?: boolean;
   /** Extra selectors merged into the spotlight hole (kept bright with the target). */
   alsoHighlight?: string[];
+  /** Park the bubble on the skip button's row, to its left, so it does not cover the spotlight. */
+  besideSkip?: boolean;
 };
 
 export type OpsTutorial = {

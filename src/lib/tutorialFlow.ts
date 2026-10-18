@@ -200,8 +200,8 @@ export function roomDragCoachMark(step: TutorialStep): CoachMark | null {
     ackOnly: true,
     passThrough: true,
     stepLabel: step.stepLabel ?? "STEP 4/5",
-    // Above the tight stage hole (toolbar + preview item only).
-    bubble: "above",
+    // Same row as 건너뛰기, to its left — the stage bubble covers the cushion and ✓.
+    besideSkip: true,
     // Small bright rect: edit toolbar + placeable item outline (not the drawer).
     alsoHighlight: [".lucky-placement-hud", ".lucky-placement-toolbar"],
   };
