@@ -1,6 +1,7 @@
 import {
   Fragment,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -169,6 +170,8 @@ export function MenuPanel({
   const stepHoldTimer = useRef(0);
   const stepRepeatTimer = useRef(0);
   const withdrawAmountRef = useRef(withdrawAmount);
+  const pointsTopRef = useRef<HTMLSpanElement>(null);
+  const [pointsWeekendBelow, setPointsWeekendBelow] = useState(false);
   withdrawAmountRef.current = withdrawAmount;
 
   useEffect(() => {
@@ -791,6 +794,28 @@ export function MenuPanel({
     return `${fixed}%`;
   };
 
+  useLayoutEffect(() => {
+    if (!open || !model?.pawAds.weekendDouble) {
+      setPointsWeekendBelow(false);
+      return;
+    }
+    const measure = () => {
+      const el = pointsTopRef.current;
+      if (!el) return;
+      if (!pointsWeekendBelow) {
+        if (el.scrollWidth > el.clientWidth + 1) setPointsWeekendBelow(true);
+        return;
+      }
+      const badge = el.parentElement?.querySelector(".menu-points-weekend");
+      const need = (badge?.getBoundingClientRect().width ?? 56) + 6;
+      if (el.clientWidth - el.scrollWidth >= need) setPointsWeekendBelow(false);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (pointsTopRef.current) ro.observe(pointsTopRef.current);
+    return () => ro.disconnect();
+  }, [open, model, pointsWeekendBelow]);
+
   if (!open && !closing) return null;
 
   const attState = model ? attendanceSheetState(model.attendance) : "firstWeek";
@@ -912,7 +937,7 @@ export function MenuPanel({
                       key={row.id}
                       id={`menu-row-${row.id}`}
                       type="button"
-                      className={`menu-row ${row.enabled ? "" : "is-disabled"}`}
+                      className={`menu-row ${row.id === "points" ? "is-points" : ""} ${row.enabled ? "" : "is-disabled"}`}
                       style={{ animationDelay: reduce ? "0ms" : `${index * 30}ms` }}
                       onClick={() => onRow(row.open, row.enabled, row.id)}
                     >
@@ -920,30 +945,61 @@ export function MenuPanel({
                         <img src={row.icon} alt="" />
                         {row.badge.type === "dot" ? <span className="menu-dot" /> : null}
                       </span>
-                      <span className="menu-row-label">
-                        {row.label}
-                        {row.id === "points" ? (
-                          <>
+                      {row.id === "points" ? (
+                        <span className="menu-points-copy">
+                          <span className="menu-points-top" ref={pointsTopRef}>
+                            <span className="menu-row-label">{row.label}</span>
                             <span className="menu-ad-tag" aria-label="광고">
                               광고
                             </span>
-                            <span className="menu-ncoin-tag" aria-label="냥코인 1개">
-                              <img src={ncoinIcon(12)} alt="" width={12} height={12} />
-                              +1
-                            </span>
-                          </>
-                        ) : null}
-                      </span>
-                      <span className="menu-row-meta">
-                        {row.badge.type === "pill" || row.badge.type === "pill-new" ? (
-                          <span
-                            className={`menu-pill ${row.badge.type === "pill-new" ? "is-new" : ""} ${row.badge.type === "pill" && row.badge.tone === "muted" ? "is-muted" : ""}`}
-                          >
-                            {row.badge.text}
+                            {model.pawAds.weekendDouble && !pointsWeekendBelow ? (
+                              <span className="menu-pill menu-points-weekend">주말 2배</span>
+                            ) : null}
                           </span>
-                        ) : null}
-                        {row.meta ? <span>{formatMeta(row.meta)}</span> : null}
-                      </span>
+                          <span
+                            className={`menu-points-sub${model.pawAds.remaining <= 0 ? " is-done" : ""}`}
+                          >
+                            {model.pawAds.weekendDouble && pointsWeekendBelow ? (
+                              <span className="menu-pill menu-points-weekend">주말 2배</span>
+                            ) : null}
+                            <span className="menu-points-bit">
+                              <img src={menuAsset("icon-paw-mini.svg")} alt="" />
+                              +{model.pawAds.pawGrant}P
+                            </span>
+                            <span className="menu-points-sep" aria-hidden="true">
+                              ·
+                            </span>
+                            <span className="menu-points-bit">
+                              <img src={ncoinIcon(12)} alt="" width={12} height={12} />
+                              냥코인 {model.pawAds.nyangGrant}개
+                            </span>
+                            <span className="menu-points-sep" aria-hidden="true">
+                              ·
+                            </span>
+                            {model.pawAds.remaining > 0 ? (
+                              <span className="menu-points-bit">
+                                남은 <b>{model.pawAds.remaining}/{model.pawAds.max}</b>회
+                              </span>
+                            ) : (
+                              <span className="menu-points-bit">오늘은 다 받았어요</span>
+                            )}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="menu-row-label">{row.label}</span>
+                      )}
+                      {row.id === "points" ? null : (
+                        <span className="menu-row-meta">
+                          {row.badge.type === "pill" || row.badge.type === "pill-new" ? (
+                            <span
+                              className={`menu-pill ${row.badge.type === "pill-new" ? "is-new" : ""} ${row.badge.type === "pill" && row.badge.tone === "muted" ? "is-muted" : ""}`}
+                            >
+                              {row.badge.text}
+                            </span>
+                          ) : null}
+                          {row.meta ? <span>{formatMeta(row.meta)}</span> : null}
+                        </span>
+                      )}
                       {row.chevron ? (
                         <img className="menu-chevron" src={menuAsset("icon-chevron.svg")} alt="" />
                       ) : (

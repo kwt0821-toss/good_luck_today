@@ -30,7 +30,15 @@ export type MenuViewModel = {
   sections: Array<{ id: string; label: string; rows: MenuRowView[] }>;
   menuIconDot: boolean;
   attendance: AttendanceStatusResponse;
-  pawAds: { remaining: number; max: number; weekendDouble: boolean };
+  pawAds: {
+    remaining: number;
+    max: number;
+    weekendDouble: boolean;
+    /** Paw granted per completed point-ad. Weekend events multiply this. */
+    pawGrant: number;
+    /** Nyangcoin granted per completed point-ad. The weekend event does not multiply this. */
+    nyangGrant: number;
+  };
   exchange: {
     duplicateCount: number;
     totalPaw: number;
@@ -81,6 +89,9 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
   const pawRemaining = remainingPawAds(ops, config);
   const pawMax = config.economy.pawSources.rewardedAd.maxPerDay;
   const weekendDouble = isWeekendDoublePaw(config.economy);
+  const pawMultiplier = weekendDouble ? config.economy.events.weekendDoublePaw.multiplier : 1;
+  const pawGrant = config.economy.pawSources.rewardedAd.pawPerAd * pawMultiplier;
+  const nyangGrant = config.economy.ncoinSources?.adPaw ?? 0;
   const highlightPct = Math.round(ratesHighlightSum(menu, config) * 1000) / 10;
   const ticketShop = getTicketShopStatus(ops, config);
 
@@ -199,7 +210,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     sections,
     menuIconDot,
     attendance,
-    pawAds: { remaining: pawRemaining, max: pawMax, weekendDouble },
+    pawAds: { remaining: pawRemaining, max: pawMax, weekendDouble, pawGrant, nyangGrant },
     exchange: {
       duplicateCount,
       totalPaw: exchangeTotal,

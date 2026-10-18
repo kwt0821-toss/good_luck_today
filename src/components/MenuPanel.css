@@ -481,6 +481,95 @@ button.menu-dim:focus-visible {
   opacity: 0.45;
 }
 
+/* 포인트 받기 only: title row + 12px grant line. Chevron stays vertically centered. */
+.menu-row.is-points {
+  grid-template-columns: 24px minmax(0, 1fr) 16px;
+  align-items: center;
+  max-height: 64px;
+  min-height: 48px;
+  padding: 6px 0;
+  box-sizing: border-box;
+}
+
+.menu-points-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.menu-points-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.menu-row.is-points .menu-row-label,
+.menu-points-top .menu-ad-tag,
+.menu-points-top .menu-pill,
+.menu-points-sub .menu-pill,
+.menu-points-bit,
+.menu-points-sep {
+  flex: 0 0 auto;
+}
+
+.menu-row.is-points .menu-row-label {
+  overflow: visible;
+  text-overflow: clip;
+  min-width: auto;
+  white-space: nowrap;
+}
+
+.menu-points-sub {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: visible;
+  font-size: 12px;
+  line-height: 16px;
+  color: rgba(243, 233, 215, 0.62);
+  white-space: nowrap;
+}
+
+/* "오늘은 다 받았어요" is longer than the count. Keep it on one line, clear of the chevron. */
+.menu-points-sub.is-done {
+  gap: 3px;
+  letter-spacing: -0.03em;
+  width: calc(100% + 8px);
+  margin-right: -8px;
+}
+
+.menu-points-sub b {
+  color: var(--menu-amber);
+  font-weight: 700;
+}
+
+.menu-points-bit {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.menu-points-sep {
+  line-height: 16px;
+}
+
+.menu-points-sub img {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  display: block;
+}
+
+.menu-row.is-points .menu-chevron {
+  align-self: center;
+}
+
 .menu-footer {
   flex: 0 0 auto;
   display: flex;
