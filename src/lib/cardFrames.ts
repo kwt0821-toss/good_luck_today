@@ -1,4 +1,5 @@
 import layoutJson from "../../public/assets/frames/layout.json";
+import { withAssetVersion } from "./cardArt";
 import type { DexCard, DexCardType } from "./dexTypes";
 
 /**
@@ -94,9 +95,20 @@ export type ResolvedFrame = {
 };
 
 function assetPair(file: string): { src: string; srcSet: string } {
-  const one = `/assets/frames/${file}.webp`;
-  const two = `/assets/frames/${file}@2x.webp`;
+  const one = withAssetVersion(`/assets/frames/${file}.webp`);
+  const two = withAssetVersion(`/assets/frames/${file}@2x.webp`);
   return { src: one, srcSet: `${one} 1x, ${two} 2x` };
+}
+
+/** 1x and 2x frame + window for this grade. */
+export function frameAssetUrls(card: FrameSubject): string[] {
+  const frame = resolveFrame(card);
+  return [frame.frameSrcSet, frame.windowSrcSet].flatMap((srcSet) =>
+    srcSet
+      .split(",")
+      .map((part) => part.trim().split(/\s+/)[0] ?? "")
+      .filter(Boolean),
+  );
 }
 
 export function frameKeyFor(card: FrameSubject): FrameKey {

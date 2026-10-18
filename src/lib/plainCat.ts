@@ -160,6 +160,10 @@ function renderPlain(src: string): Promise<string> {
   });
 }
 
+export function peekPlainCat(src: string): string | null {
+  return cache.get(src) ?? null;
+}
+
 export function loadPlainCat(src: string): Promise<string> {
   const hit = cache.get(src);
   if (hit) return Promise.resolve(hit);

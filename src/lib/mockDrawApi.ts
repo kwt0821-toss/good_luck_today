@@ -1,4 +1,7 @@
+import { decodeImage } from "./cardArt";
+import { frameAssetUrls } from "./cardFrames";
 import { loadDexCatalog } from "./dexCatalog";
+import { loadPlainCat } from "./plainCat";
 import { loadDexOwned } from "./dexCollection";
 import {
   cardImageUrls,
@@ -87,22 +90,19 @@ export async function cancelDrawReservation(state: OpsState): Promise<OpsState> 
 }
 
 export async function preloadDrawImages(reservation: DrawReservation): Promise<"full" | "thumb" | "none"> {
-  const tryDecode = async (url: string) => {
-    const img = new Image();
-    img.src = url;
-    if (img.decode) await img.decode();
-    else await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
-    });
-  };
+  const catalog = await loadDexCatalog();
+  const card = catalog.cards.find((item) => item.id === reservation.cardId);
+  const chrome = card ? frameAssetUrls(card) : [];
+  const extras = [reservation.backUrl, ...chrome].filter(Boolean);
+  await Promise.all(extras.map((url) => decodeImage(url).catch(() => undefined)));
+
   try {
-    await tryDecode(reservation.frontUrl);
-    await tryDecode(reservation.backUrl).catch(() => undefined);
+    await decodeImage(reservation.frontUrl);
+    await loadPlainCat(reservation.frontUrl);
     return "full";
   } catch {
     try {
-      await tryDecode(reservation.thumbUrl);
+      await decodeImage(reservation.thumbUrl);
       return "thumb";
     } catch {
       return "none";

@@ -7,12 +7,14 @@ import {
   resolveFrame,
   type FrameSubject,
 } from "../lib/cardFrames";
-import { loadPlainCat } from "../lib/plainCat";
+import { loadPlainCat, peekPlainCat } from "../lib/plainCat";
 import "./CardFrame.css";
 
 type CardFrameProps = {
   card: FrameSubject;
   catSrc: string;
+  /** Small stand-in shown blurred until `catSrc` has been decoded. */
+  thumbSrc?: string;
   name?: string;
   /** "No.023" — cards.json order, full cards only. */
   dexNo?: string;
@@ -65,14 +67,16 @@ function useFitPlateName(label: string, active: boolean) {
 }
 
 export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function CardFrame(
-  { card, catSrc, name = "", dexNo = "", variant = "full", className },
+  { card, catSrc, thumbSrc = "", name = "", dexNo = "", variant = "full", className },
   ref,
 ) {
   const frame = resolveFrame(card);
   const tier = frame.tier;
   const mini = variant === "mini";
   const grade = miniRibbonLabel(card);
-  const [artSrc, setArtSrc] = useState(catSrc);
+  const primed = !mini ? peekPlainCat(catSrc) : null;
+  const [artSrc, setArtSrc] = useState(primed ?? catSrc);
+  const [sharpReady, setSharpReady] = useState(Boolean(primed));
   const showName = !mini && Boolean(name);
   const { plateRef, textRef } = useFitPlateName(name, showName);
   const { starsFont, labelFont } = FRAME_LAYOUT;
@@ -80,12 +84,22 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
   useEffect(() => {
     if (mini) {
       setArtSrc(catSrc);
+      setSharpReady(true);
+      return;
+    }
+    const cached = peekPlainCat(catSrc);
+    if (cached) {
+      setArtSrc(cached);
+      setSharpReady(true);
       return;
     }
     let cancel = false;
     setArtSrc(catSrc);
+    setSharpReady(false);
     void loadPlainCat(catSrc).then((url) => {
-      if (!cancel) setArtSrc(url);
+      if (cancel) return;
+      setArtSrc(url);
+      setSharpReady(true);
     });
     return () => {
       cancel = true;
@@ -94,6 +108,7 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
 
   const classes = [
     "card-frame",
+    !mini && sharpReady ? "is-sharp-ready" : "",
     mini ? "is-mini" : "",
     frame.foil ? "foil" : "",
     frame.glit ? "glit" : "",
@@ -123,7 +138,16 @@ export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function Car
     <div ref={ref} className={classes}>
       <div className="win" style={boxStyle(tier.win)}>
         <img className="bg" src={frame.windowSrc} srcSet={frame.windowSrcSet} alt="" draggable={false} />
-        <img className="cat" src={artSrc} alt="" draggable={false} />
+        {!mini && thumbSrc ? (
+          <img className="cat is-preview" src={thumbSrc} alt="" draggable={false} />
+        ) : null}
+        <img
+          className={`cat ${!mini && thumbSrc ? (sharpReady ? "is-ready" : "is-pending") : ""}`}
+          src={artSrc}
+          alt=""
+          draggable={false}
+          decoding="async"
+        />
       </div>
       <img className="frame" src={frame.frameSrc} srcSet={frame.frameSrcSet} alt="" draggable={false} />
       {showName ? (

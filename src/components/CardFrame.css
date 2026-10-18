@@ -50,6 +50,25 @@
   mix-blend-mode: multiply;
 }
 
+.card-frame .win img.cat.is-preview {
+  filter: blur(12px);
+  transform: scale(1.08);
+  transition: opacity 200ms linear;
+}
+
+.card-frame.is-sharp-ready .win img.cat.is-preview {
+  opacity: 0;
+}
+
+.card-frame .win img.cat.is-pending {
+  opacity: 0;
+}
+
+.card-frame .win img.cat.is-ready {
+  opacity: 1;
+  transition: opacity 200ms linear;
+}
+
 .card-frame .frame,
 .draw-reveal-face .card-frame img.frame,
 .face.dex-face .card-frame img.frame {

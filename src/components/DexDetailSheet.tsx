@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { createPortal } from "react-dom";
 
 import { AudioManager } from "../audio/AudioManager";
+import { cardBackUrl, cardLargeUrl, cardThumbUrl, decodeImage } from "../lib/cardArt";
 import { CardFrame } from "./CardFrame";
 import { CardFlipStack, CardViewer } from "./CardViewer";
 import {
@@ -52,11 +53,9 @@ function lightVibrate(ms = 10) {
   }
 }
 
-function prefetchCardFaces(card: DexCard) {
-  const front = new Image();
-  front.src = dexAsset(card.front);
-  const back = new Image();
-  back.src = dexAsset(card.back);
+function preloadLarge(card: DexCard) {
+  void decodeImage(cardLargeUrl(card)).catch(() => undefined);
+  void decodeImage(cardBackUrl(card)).catch(() => undefined);
 }
 
 export function DexDetailSheet({
@@ -241,7 +240,6 @@ export function DexDetailSheet({
     spinningRef.current = false;
     setShining(false);
     resetPose(0);
-    prefetchCardFaces(card);
     const maxDup = Math.max(0, (owned[card.id]?.count ?? 0) - 1);
     setDupPhase("idle");
     setDupBusy(false);
@@ -249,8 +247,24 @@ export function DexDetailSheet({
     // Reset when switching cards or after ownership count changes (post-convert).
   }, [card.id, card.front, card.back, owned[card.id]?.count]);
 
+  const preloadKey = (() => {
+    const ownedCards = group.filter((item) => (owned[item.id]?.count ?? 0) > 0);
+    const index = ownedCards.findIndex((item) => item.id === card.id);
+    return [ownedCards[index - 1]?.id ?? "", card.id, ownedCards[index + 1]?.id ?? ""].join("|");
+  })();
+
   useEffect(() => {
-    prefetchCardFaces(card);
+    const ids = preloadKey.split("|").filter(Boolean);
+    const byId = new Map(group.map((item) => [item.id, item]));
+    for (const id of ids) {
+      const item = byId.get(id);
+      if (item) preloadLarge(item);
+    }
+    // group is read for the ids in preloadKey; the key changes when the open card or its neighbors change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- group identity changes every render
+  }, [preloadKey]);
+
+  useEffect(() => {
     const arm = window.setTimeout(() => setArmed(true), 280);
     const settle = window.setTimeout(() => setSettled(true), 420);
     return () => {
@@ -327,12 +341,13 @@ export function DexDetailSheet({
               front={
                 <CardFrame
                   card={card}
-                  catSrc={dexAsset(card.front)}
+                  catSrc={cardLargeUrl(card)}
+                  thumbSrc={cardThumbUrl(card)}
                   name={cardKoreanName(card) || cardDisplayName(card)}
                   dexNo={formatCardDexNo(card.id)}
                 />
               }
-              back={<img src={dexAsset(card.back)} alt="" draggable={false} />}
+              back={<img src={cardBackUrl(card)} alt="" draggable={false} />}
             />
           )}
         >
@@ -357,13 +372,14 @@ export function DexDetailSheet({
                 <div ref={frontFaceRef} className="face front dex-face">
                   <CardFrame
                     card={card}
-                    catSrc={dexAsset(card.front)}
+                    catSrc={cardLargeUrl(card)}
+                  thumbSrc={cardThumbUrl(card)}
                     name={cardKoreanName(card) || cardDisplayName(card)}
                     dexNo={formatCardDexNo(card.id)}
                   />
                 </div>
                 <div ref={backFaceRef} className="face back dex-face">
-                  <img src={dexAsset(card.back)} alt={`${cardDisplayName(card)} 뒷면`} draggable={false} />
+                  <img src={cardBackUrl(card)} alt={`${cardDisplayName(card)} 뒷면`} draggable={false} />
                 </div>
               </div>
               <div

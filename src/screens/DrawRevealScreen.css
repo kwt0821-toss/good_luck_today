@@ -489,9 +489,55 @@
   font-weight: 600;
 }
 
+.draw-reveal-spark {
+  display: none;
+  position: absolute;
+  z-index: 6;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.draw-reveal-screen.is-slow-load .draw-reveal-spark {
+  display: flex;
+}
+
+.draw-reveal-spark i {
+  width: 12px;
+  height: 12px;
+  background: #ffe08a;
+  clip-path: polygon(50% 0, 61% 35%, 100% 50%, 61% 65%, 50% 100%, 39% 65%, 0 50%, 39% 35%);
+  opacity: 0.35;
+  animation: draw-reveal-spark 900ms ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(255, 224, 138, 0.9));
+}
+
+.draw-reveal-spark i:nth-child(2) {
+  width: 18px;
+  height: 18px;
+  animation-delay: 150ms;
+}
+
+.draw-reveal-spark i:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes draw-reveal-spark {
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .draw-reveal-rays,
   .draw-reveal-fx {
     display: none !important;
+  }
+
+  .draw-reveal-spark i {
+    animation: none;
+    opacity: 0.9;
   }
 }

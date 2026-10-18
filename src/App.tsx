@@ -86,7 +86,8 @@ import {
   type RewardsTutPhase,
 } from "./lib/tutorialFlow";
 import type { DexTutorialPhase } from "./screens/DexScreen";
-import { DRAW_REVEAL_WAIT_MAX_MS, DrawRevealScreen } from "./screens/DrawRevealScreen";
+import { DrawRevealScreen } from "./screens/DrawRevealScreen";
+import { preloadFrameAssets } from "./lib/preloadFrames";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { RatesGuideScreen } from "./screens/RatesGuideScreen";
@@ -179,6 +180,10 @@ export default function App() {
   );
 
   const today = toKstDateKey();
+
+  useEffect(() => {
+    preloadFrameAssets();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -522,9 +527,14 @@ export default function App() {
       }
 
       setReservation(reserved.reservation);
-      // Prefetch while the ad plays; the 1.5s wait clock starts when the ad closes.
+      // Decode the large art and this grade's frame while the ad plays.
       void preloadDrawImages(reserved.reservation).then((quality) => {
-        if (quality !== "none") setRevealReady(true);
+        if (quality === "none") {
+          setWaitFailed(true);
+          return;
+        }
+        setWaitFailed(false);
+        setRevealReady(true);
       });
 
       if (slot === "tutorial" || (slot === "rateUp" && willUseRateUpTicket(ops, config))) {
@@ -558,8 +568,6 @@ export default function App() {
             sub: "메뉴 › 중복 카드 교환에서 바꿀 수 있어요",
           });
         }
-        setRevealReady(true);
-        setWaitFailed(false);
         setAdNyangToast(null);
         await haptic("success");
         setScreen({ name: "reveal" });
@@ -658,20 +666,9 @@ export default function App() {
         sub: "메뉴 › 중복 카드 교환에서 바꿀 수 있어요",
       });
     }
-    // Start the post-ad wait clock now (images may already be decoded).
-    if (!revealReady) {
-      window.setTimeout(() => {
-        setRevealReady((prev) => {
-          if (!prev) setWaitFailed(true);
-          return prev;
-        });
-      }, DRAW_REVEAL_WAIT_MAX_MS);
-    } else {
-      setWaitFailed(false);
-    }
     await haptic("success");
     setScreen({ name: "reveal" });
-  }, [ad, ops, persistOps, revealReady]);
+  }, [ad, ops, persistOps]);
 
   const cancelAd = useCallback(async () => {
     if (!ops) {

@@ -8,8 +8,8 @@
   "legend": 4
  },
  "imageSizes": {
-  "front/back": "660x1027 (220x342pt @3x)",
-  "thumb": "188x292 (≈62.4x97pt @3x)"
+  "front/back": "source 660x1027; app large max width 720 webp q82",
+  "thumb": "200px wide webp q75"
  },
  "cards": [
   {
@@ -23,9 +23,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/abyssinian_1_front.webp",
+   "front": "opt/abyssinian_1.webp",
    "back": "cards/breed/abyssinian_1_back.webp",
-   "thumb": "thumbs/breed/abyssinian_1_thumb.webp"
+   "thumb": "opt/abyssinian_1@thumb.webp"
   },
   {
    "id": "abyssinian_2",
@@ -38,9 +38,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/abyssinian_2_front.webp",
+   "front": "opt/abyssinian_2.webp",
    "back": "cards/breed/abyssinian_2_back.webp",
-   "thumb": "thumbs/breed/abyssinian_2_thumb.webp"
+   "thumb": "opt/abyssinian_2@thumb.webp"
   },
   {
    "id": "abyssinian_3",
@@ -53,9 +53,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/abyssinian_3_front.webp",
+   "front": "opt/abyssinian_3.webp",
    "back": "cards/breed/abyssinian_3_back.webp",
-   "thumb": "thumbs/breed/abyssinian_3_thumb.webp"
+   "thumb": "opt/abyssinian_3@thumb.webp"
   },
   {
    "id": "abyssinian_4",
@@ -68,9 +68,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/abyssinian_4_front.webp",
+   "front": "opt/abyssinian_4.webp",
    "back": "cards/breed/abyssinian_4_back.webp",
-   "thumb": "thumbs/breed/abyssinian_4_thumb.webp"
+   "thumb": "opt/abyssinian_4@thumb.webp"
   },
   {
    "id": "abyssinian_5",
@@ -83,9 +83,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/abyssinian_5_front.webp",
+   "front": "opt/abyssinian_5.webp",
    "back": "cards/breed/abyssinian_5_back.webp",
-   "thumb": "thumbs/breed/abyssinian_5_thumb.webp"
+   "thumb": "opt/abyssinian_5@thumb.webp"
   },
   {
    "id": "bengal_1",
@@ -98,9 +98,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/bengal_1_front.webp",
+   "front": "opt/bengal_1.webp",
    "back": "cards/breed/bengal_1_back.webp",
-   "thumb": "thumbs/breed/bengal_1_thumb.webp"
+   "thumb": "opt/bengal_1@thumb.webp"
   },
   {
    "id": "bengal_2",
@@ -113,9 +113,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/bengal_2_front.webp",
+   "front": "opt/bengal_2.webp",
    "back": "cards/breed/bengal_2_back.webp",
-   "thumb": "thumbs/breed/bengal_2_thumb.webp"
+   "thumb": "opt/bengal_2@thumb.webp"
   },
   {
    "id": "bengal_3",
@@ -128,9 +128,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/bengal_3_front.webp",
+   "front": "opt/bengal_3.webp",
    "back": "cards/breed/bengal_3_back.webp",
-   "thumb": "thumbs/breed/bengal_3_thumb.webp"
+   "thumb": "opt/bengal_3@thumb.webp"
   },
   {
    "id": "bengal_4",
@@ -143,9 +143,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/bengal_4_front.webp",
+   "front": "opt/bengal_4.webp",
    "back": "cards/breed/bengal_4_back.webp",
-   "thumb": "thumbs/breed/bengal_4_thumb.webp"
+   "thumb": "opt/bengal_4@thumb.webp"
   },
   {
    "id": "bengal_5",
@@ -158,9 +158,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/bengal_5_front.webp",
+   "front": "opt/bengal_5.webp",
    "back": "cards/breed/bengal_5_back.webp",
-   "thumb": "thumbs/breed/bengal_5_thumb.webp"
+   "thumb": "opt/bengal_5@thumb.webp"
   },
   {
    "id": "british_shorthair_1",
@@ -173,9 +173,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/british_shorthair_1_front.webp",
+   "front": "opt/british_shorthair_1.webp",
    "back": "cards/breed/british_shorthair_1_back.webp",
-   "thumb": "thumbs/breed/british_shorthair_1_thumb.webp"
+   "thumb": "opt/british_shorthair_1@thumb.webp"
   },
   {
    "id": "british_shorthair_2",
@@ -188,9 +188,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/british_shorthair_2_front.webp",
+   "front": "opt/british_shorthair_2.webp",
    "back": "cards/breed/british_shorthair_2_back.webp",
-   "thumb": "thumbs/breed/british_shorthair_2_thumb.webp"
+   "thumb": "opt/british_shorthair_2@thumb.webp"
   },
   {
    "id": "british_shorthair_3",
@@ -203,9 +203,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/british_shorthair_3_front.webp",
+   "front": "opt/british_shorthair_3.webp",
    "back": "cards/breed/british_shorthair_3_back.webp",
-   "thumb": "thumbs/breed/british_shorthair_3_thumb.webp"
+   "thumb": "opt/british_shorthair_3@thumb.webp"
   },
   {
    "id": "british_shorthair_4",
@@ -218,9 +218,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/british_shorthair_4_front.webp",
+   "front": "opt/british_shorthair_4.webp",
    "back": "cards/breed/british_shorthair_4_back.webp",
-   "thumb": "thumbs/breed/british_shorthair_4_thumb.webp"
+   "thumb": "opt/british_shorthair_4@thumb.webp"
   },
   {
    "id": "british_shorthair_5",
@@ -233,9 +233,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/british_shorthair_5_front.webp",
+   "front": "opt/british_shorthair_5.webp",
    "back": "cards/breed/british_shorthair_5_back.webp",
-   "thumb": "thumbs/breed/british_shorthair_5_thumb.webp"
+   "thumb": "opt/british_shorthair_5@thumb.webp"
   },
   {
    "id": "cornish_rex_1",
@@ -248,9 +248,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/cornish_rex_1_front.webp",
+   "front": "opt/cornish_rex_1.webp",
    "back": "cards/breed/cornish_rex_1_back.webp",
-   "thumb": "thumbs/breed/cornish_rex_1_thumb.webp"
+   "thumb": "opt/cornish_rex_1@thumb.webp"
   },
   {
    "id": "cornish_rex_2",
@@ -263,9 +263,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/cornish_rex_2_front.webp",
+   "front": "opt/cornish_rex_2.webp",
    "back": "cards/breed/cornish_rex_2_back.webp",
-   "thumb": "thumbs/breed/cornish_rex_2_thumb.webp"
+   "thumb": "opt/cornish_rex_2@thumb.webp"
   },
   {
    "id": "cornish_rex_3",
@@ -278,9 +278,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/cornish_rex_3_front.webp",
+   "front": "opt/cornish_rex_3.webp",
    "back": "cards/breed/cornish_rex_3_back.webp",
-   "thumb": "thumbs/breed/cornish_rex_3_thumb.webp"
+   "thumb": "opt/cornish_rex_3@thumb.webp"
   },
   {
    "id": "cornish_rex_4",
@@ -293,9 +293,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/cornish_rex_4_front.webp",
+   "front": "opt/cornish_rex_4.webp",
    "back": "cards/breed/cornish_rex_4_back.webp",
-   "thumb": "thumbs/breed/cornish_rex_4_thumb.webp"
+   "thumb": "opt/cornish_rex_4@thumb.webp"
   },
   {
    "id": "cornish_rex_5",
@@ -308,9 +308,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/cornish_rex_5_front.webp",
+   "front": "opt/cornish_rex_5.webp",
    "back": "cards/breed/cornish_rex_5_back.webp",
-   "thumb": "thumbs/breed/cornish_rex_5_thumb.webp"
+   "thumb": "opt/cornish_rex_5@thumb.webp"
   },
   {
    "id": "korean_shorthair_1",
@@ -323,9 +323,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/korean_shorthair_1_front.webp",
+   "front": "opt/korean_shorthair_1.webp",
    "back": "cards/breed/korean_shorthair_1_back.webp",
-   "thumb": "thumbs/breed/korean_shorthair_1_thumb.webp"
+   "thumb": "opt/korean_shorthair_1@thumb.webp"
   },
   {
    "id": "korean_shorthair_2",
@@ -338,9 +338,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/korean_shorthair_2_front.webp",
+   "front": "opt/korean_shorthair_2.webp",
    "back": "cards/breed/korean_shorthair_2_back.webp",
-   "thumb": "thumbs/breed/korean_shorthair_2_thumb.webp"
+   "thumb": "opt/korean_shorthair_2@thumb.webp"
   },
   {
    "id": "korean_shorthair_3",
@@ -353,9 +353,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/korean_shorthair_3_front.webp",
+   "front": "opt/korean_shorthair_3.webp",
    "back": "cards/breed/korean_shorthair_3_back.webp",
-   "thumb": "thumbs/breed/korean_shorthair_3_thumb.webp"
+   "thumb": "opt/korean_shorthair_3@thumb.webp"
   },
   {
    "id": "korean_shorthair_4",
@@ -368,9 +368,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/korean_shorthair_4_front.webp",
+   "front": "opt/korean_shorthair_4.webp",
    "back": "cards/breed/korean_shorthair_4_back.webp",
-   "thumb": "thumbs/breed/korean_shorthair_4_thumb.webp"
+   "thumb": "opt/korean_shorthair_4@thumb.webp"
   },
   {
    "id": "korean_shorthair_5",
@@ -383,9 +383,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/korean_shorthair_5_front.webp",
+   "front": "opt/korean_shorthair_5.webp",
    "back": "cards/breed/korean_shorthair_5_back.webp",
-   "thumb": "thumbs/breed/korean_shorthair_5_thumb.webp"
+   "thumb": "opt/korean_shorthair_5@thumb.webp"
   },
   {
    "id": "lykoi_1",
@@ -398,9 +398,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/lykoi_1_front.webp",
+   "front": "opt/lykoi_1.webp",
    "back": "cards/breed/lykoi_1_back.webp",
-   "thumb": "thumbs/breed/lykoi_1_thumb.webp"
+   "thumb": "opt/lykoi_1@thumb.webp"
   },
   {
    "id": "lykoi_2",
@@ -413,9 +413,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/lykoi_2_front.webp",
+   "front": "opt/lykoi_2.webp",
    "back": "cards/breed/lykoi_2_back.webp",
-   "thumb": "thumbs/breed/lykoi_2_thumb.webp"
+   "thumb": "opt/lykoi_2@thumb.webp"
   },
   {
    "id": "lykoi_3",
@@ -428,9 +428,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/lykoi_3_front.webp",
+   "front": "opt/lykoi_3.webp",
    "back": "cards/breed/lykoi_3_back.webp",
-   "thumb": "thumbs/breed/lykoi_3_thumb.webp"
+   "thumb": "opt/lykoi_3@thumb.webp"
   },
   {
    "id": "lykoi_4",
@@ -443,9 +443,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/lykoi_4_front.webp",
+   "front": "opt/lykoi_4.webp",
    "back": "cards/breed/lykoi_4_back.webp",
-   "thumb": "thumbs/breed/lykoi_4_thumb.webp"
+   "thumb": "opt/lykoi_4@thumb.webp"
   },
   {
    "id": "lykoi_5",
@@ -458,9 +458,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/lykoi_5_front.webp",
+   "front": "opt/lykoi_5.webp",
    "back": "cards/breed/lykoi_5_back.webp",
-   "thumb": "thumbs/breed/lykoi_5_thumb.webp"
+   "thumb": "opt/lykoi_5@thumb.webp"
   },
   {
    "id": "maine_coon_1",
@@ -473,9 +473,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/maine_coon_1_front.webp",
+   "front": "opt/maine_coon_1.webp",
    "back": "cards/breed/maine_coon_1_back.webp",
-   "thumb": "thumbs/breed/maine_coon_1_thumb.webp"
+   "thumb": "opt/maine_coon_1@thumb.webp"
   },
   {
    "id": "maine_coon_2",
@@ -488,9 +488,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/maine_coon_2_front.webp",
+   "front": "opt/maine_coon_2.webp",
    "back": "cards/breed/maine_coon_2_back.webp",
-   "thumb": "thumbs/breed/maine_coon_2_thumb.webp"
+   "thumb": "opt/maine_coon_2@thumb.webp"
   },
   {
    "id": "maine_coon_3",
@@ -503,9 +503,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/maine_coon_3_front.webp",
+   "front": "opt/maine_coon_3.webp",
    "back": "cards/breed/maine_coon_3_back.webp",
-   "thumb": "thumbs/breed/maine_coon_3_thumb.webp"
+   "thumb": "opt/maine_coon_3@thumb.webp"
   },
   {
    "id": "maine_coon_4",
@@ -518,9 +518,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/maine_coon_4_front.webp",
+   "front": "opt/maine_coon_4.webp",
    "back": "cards/breed/maine_coon_4_back.webp",
-   "thumb": "thumbs/breed/maine_coon_4_thumb.webp"
+   "thumb": "opt/maine_coon_4@thumb.webp"
   },
   {
    "id": "maine_coon_5",
@@ -533,9 +533,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/maine_coon_5_front.webp",
+   "front": "opt/maine_coon_5.webp",
    "back": "cards/breed/maine_coon_5_back.webp",
-   "thumb": "thumbs/breed/maine_coon_5_thumb.webp"
+   "thumb": "opt/maine_coon_5@thumb.webp"
   },
   {
    "id": "minskin_1",
@@ -548,9 +548,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/minskin_1_front.webp",
+   "front": "opt/minskin_1.webp",
    "back": "cards/breed/minskin_1_back.webp",
-   "thumb": "thumbs/breed/minskin_1_thumb.webp"
+   "thumb": "opt/minskin_1@thumb.webp"
   },
   {
    "id": "minskin_2",
@@ -563,9 +563,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/minskin_2_front.webp",
+   "front": "opt/minskin_2.webp",
    "back": "cards/breed/minskin_2_back.webp",
-   "thumb": "thumbs/breed/minskin_2_thumb.webp"
+   "thumb": "opt/minskin_2@thumb.webp"
   },
   {
    "id": "minskin_3",
@@ -578,9 +578,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/minskin_3_front.webp",
+   "front": "opt/minskin_3.webp",
    "back": "cards/breed/minskin_3_back.webp",
-   "thumb": "thumbs/breed/minskin_3_thumb.webp"
+   "thumb": "opt/minskin_3@thumb.webp"
   },
   {
    "id": "minskin_4",
@@ -593,9 +593,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/minskin_4_front.webp",
+   "front": "opt/minskin_4.webp",
    "back": "cards/breed/minskin_4_back.webp",
-   "thumb": "thumbs/breed/minskin_4_thumb.webp"
+   "thumb": "opt/minskin_4@thumb.webp"
   },
   {
    "id": "minskin_5",
@@ -608,9 +608,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/minskin_5_front.webp",
+   "front": "opt/minskin_5.webp",
    "back": "cards/breed/minskin_5_back.webp",
-   "thumb": "thumbs/breed/minskin_5_thumb.webp"
+   "thumb": "opt/minskin_5@thumb.webp"
   },
   {
    "id": "munchkin_1",
@@ -623,9 +623,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/munchkin_1_front.webp",
+   "front": "opt/munchkin_1.webp",
    "back": "cards/breed/munchkin_1_back.webp",
-   "thumb": "thumbs/breed/munchkin_1_thumb.webp"
+   "thumb": "opt/munchkin_1@thumb.webp"
   },
   {
    "id": "munchkin_2",
@@ -638,9 +638,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/munchkin_2_front.webp",
+   "front": "opt/munchkin_2.webp",
    "back": "cards/breed/munchkin_2_back.webp",
-   "thumb": "thumbs/breed/munchkin_2_thumb.webp"
+   "thumb": "opt/munchkin_2@thumb.webp"
   },
   {
    "id": "munchkin_3",
@@ -653,9 +653,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/munchkin_3_front.webp",
+   "front": "opt/munchkin_3.webp",
    "back": "cards/breed/munchkin_3_back.webp",
-   "thumb": "thumbs/breed/munchkin_3_thumb.webp"
+   "thumb": "opt/munchkin_3@thumb.webp"
   },
   {
    "id": "munchkin_4",
@@ -668,9 +668,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/munchkin_4_front.webp",
+   "front": "opt/munchkin_4.webp",
    "back": "cards/breed/munchkin_4_back.webp",
-   "thumb": "thumbs/breed/munchkin_4_thumb.webp"
+   "thumb": "opt/munchkin_4@thumb.webp"
   },
   {
    "id": "munchkin_5",
@@ -683,9 +683,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/munchkin_5_front.webp",
+   "front": "opt/munchkin_5.webp",
    "back": "cards/breed/munchkin_5_back.webp",
-   "thumb": "thumbs/breed/munchkin_5_thumb.webp"
+   "thumb": "opt/munchkin_5@thumb.webp"
   },
   {
    "id": "norwegian_forest_1",
@@ -698,9 +698,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/norwegian_forest_1_front.webp",
+   "front": "opt/norwegian_forest_1.webp",
    "back": "cards/breed/norwegian_forest_1_back.webp",
-   "thumb": "thumbs/breed/norwegian_forest_1_thumb.webp"
+   "thumb": "opt/norwegian_forest_1@thumb.webp"
   },
   {
    "id": "norwegian_forest_2",
@@ -713,9 +713,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/norwegian_forest_2_front.webp",
+   "front": "opt/norwegian_forest_2.webp",
    "back": "cards/breed/norwegian_forest_2_back.webp",
-   "thumb": "thumbs/breed/norwegian_forest_2_thumb.webp"
+   "thumb": "opt/norwegian_forest_2@thumb.webp"
   },
   {
    "id": "norwegian_forest_3",
@@ -728,9 +728,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/norwegian_forest_3_front.webp",
+   "front": "opt/norwegian_forest_3.webp",
    "back": "cards/breed/norwegian_forest_3_back.webp",
-   "thumb": "thumbs/breed/norwegian_forest_3_thumb.webp"
+   "thumb": "opt/norwegian_forest_3@thumb.webp"
   },
   {
    "id": "norwegian_forest_4",
@@ -743,9 +743,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/norwegian_forest_4_front.webp",
+   "front": "opt/norwegian_forest_4.webp",
    "back": "cards/breed/norwegian_forest_4_back.webp",
-   "thumb": "thumbs/breed/norwegian_forest_4_thumb.webp"
+   "thumb": "opt/norwegian_forest_4@thumb.webp"
   },
   {
    "id": "norwegian_forest_5",
@@ -758,9 +758,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/norwegian_forest_5_front.webp",
+   "front": "opt/norwegian_forest_5.webp",
    "back": "cards/breed/norwegian_forest_5_back.webp",
-   "thumb": "thumbs/breed/norwegian_forest_5_thumb.webp"
+   "thumb": "opt/norwegian_forest_5@thumb.webp"
   },
   {
    "id": "persian_1",
@@ -773,9 +773,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/persian_1_front.webp",
+   "front": "opt/persian_1.webp",
    "back": "cards/breed/persian_1_back.webp",
-   "thumb": "thumbs/breed/persian_1_thumb.webp"
+   "thumb": "opt/persian_1@thumb.webp"
   },
   {
    "id": "persian_2",
@@ -788,9 +788,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/persian_2_front.webp",
+   "front": "opt/persian_2.webp",
    "back": "cards/breed/persian_2_back.webp",
-   "thumb": "thumbs/breed/persian_2_thumb.webp"
+   "thumb": "opt/persian_2@thumb.webp"
   },
   {
    "id": "persian_3",
@@ -803,9 +803,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/persian_3_front.webp",
+   "front": "opt/persian_3.webp",
    "back": "cards/breed/persian_3_back.webp",
-   "thumb": "thumbs/breed/persian_3_thumb.webp"
+   "thumb": "opt/persian_3@thumb.webp"
   },
   {
    "id": "persian_4",
@@ -818,9 +818,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/persian_4_front.webp",
+   "front": "opt/persian_4.webp",
    "back": "cards/breed/persian_4_back.webp",
-   "thumb": "thumbs/breed/persian_4_thumb.webp"
+   "thumb": "opt/persian_4@thumb.webp"
   },
   {
    "id": "persian_5",
@@ -833,9 +833,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/persian_5_front.webp",
+   "front": "opt/persian_5.webp",
    "back": "cards/breed/persian_5_back.webp",
-   "thumb": "thumbs/breed/persian_5_thumb.webp"
+   "thumb": "opt/persian_5@thumb.webp"
   },
   {
    "id": "peterbald_1",
@@ -848,9 +848,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/peterbald_1_front.webp",
+   "front": "opt/peterbald_1.webp",
    "back": "cards/breed/peterbald_1_back.webp",
-   "thumb": "thumbs/breed/peterbald_1_thumb.webp"
+   "thumb": "opt/peterbald_1@thumb.webp"
   },
   {
    "id": "peterbald_2",
@@ -863,9 +863,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/peterbald_2_front.webp",
+   "front": "opt/peterbald_2.webp",
    "back": "cards/breed/peterbald_2_back.webp",
-   "thumb": "thumbs/breed/peterbald_2_thumb.webp"
+   "thumb": "opt/peterbald_2@thumb.webp"
   },
   {
    "id": "peterbald_3",
@@ -878,9 +878,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/peterbald_3_front.webp",
+   "front": "opt/peterbald_3.webp",
    "back": "cards/breed/peterbald_3_back.webp",
-   "thumb": "thumbs/breed/peterbald_3_thumb.webp"
+   "thumb": "opt/peterbald_3@thumb.webp"
   },
   {
    "id": "peterbald_4",
@@ -893,9 +893,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/peterbald_4_front.webp",
+   "front": "opt/peterbald_4.webp",
    "back": "cards/breed/peterbald_4_back.webp",
-   "thumb": "thumbs/breed/peterbald_4_thumb.webp"
+   "thumb": "opt/peterbald_4@thumb.webp"
   },
   {
    "id": "peterbald_5",
@@ -908,9 +908,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/peterbald_5_front.webp",
+   "front": "opt/peterbald_5.webp",
    "back": "cards/breed/peterbald_5_back.webp",
-   "thumb": "thumbs/breed/peterbald_5_thumb.webp"
+   "thumb": "opt/peterbald_5@thumb.webp"
   },
   {
    "id": "ragdoll_1",
@@ -923,9 +923,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/ragdoll_1_front.webp",
+   "front": "opt/ragdoll_1.webp",
    "back": "cards/breed/ragdoll_1_back.webp",
-   "thumb": "thumbs/breed/ragdoll_1_thumb.webp"
+   "thumb": "opt/ragdoll_1@thumb.webp"
   },
   {
    "id": "ragdoll_2",
@@ -938,9 +938,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/ragdoll_2_front.webp",
+   "front": "opt/ragdoll_2.webp",
    "back": "cards/breed/ragdoll_2_back.webp",
-   "thumb": "thumbs/breed/ragdoll_2_thumb.webp"
+   "thumb": "opt/ragdoll_2@thumb.webp"
   },
   {
    "id": "ragdoll_3",
@@ -953,9 +953,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/ragdoll_3_front.webp",
+   "front": "opt/ragdoll_3.webp",
    "back": "cards/breed/ragdoll_3_back.webp",
-   "thumb": "thumbs/breed/ragdoll_3_thumb.webp"
+   "thumb": "opt/ragdoll_3@thumb.webp"
   },
   {
    "id": "ragdoll_4",
@@ -968,9 +968,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/ragdoll_4_front.webp",
+   "front": "opt/ragdoll_4.webp",
    "back": "cards/breed/ragdoll_4_back.webp",
-   "thumb": "thumbs/breed/ragdoll_4_thumb.webp"
+   "thumb": "opt/ragdoll_4@thumb.webp"
   },
   {
    "id": "ragdoll_5",
@@ -983,9 +983,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/ragdoll_5_front.webp",
+   "front": "opt/ragdoll_5.webp",
    "back": "cards/breed/ragdoll_5_back.webp",
-   "thumb": "thumbs/breed/ragdoll_5_thumb.webp"
+   "thumb": "opt/ragdoll_5@thumb.webp"
   },
   {
    "id": "russian_blue_1",
@@ -998,9 +998,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/russian_blue_1_front.webp",
+   "front": "opt/russian_blue_1.webp",
    "back": "cards/breed/russian_blue_1_back.webp",
-   "thumb": "thumbs/breed/russian_blue_1_thumb.webp"
+   "thumb": "opt/russian_blue_1@thumb.webp"
   },
   {
    "id": "russian_blue_2",
@@ -1013,9 +1013,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/russian_blue_2_front.webp",
+   "front": "opt/russian_blue_2.webp",
    "back": "cards/breed/russian_blue_2_back.webp",
-   "thumb": "thumbs/breed/russian_blue_2_thumb.webp"
+   "thumb": "opt/russian_blue_2@thumb.webp"
   },
   {
    "id": "russian_blue_3",
@@ -1028,9 +1028,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/russian_blue_3_front.webp",
+   "front": "opt/russian_blue_3.webp",
    "back": "cards/breed/russian_blue_3_back.webp",
-   "thumb": "thumbs/breed/russian_blue_3_thumb.webp"
+   "thumb": "opt/russian_blue_3@thumb.webp"
   },
   {
    "id": "russian_blue_4",
@@ -1043,9 +1043,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/russian_blue_4_front.webp",
+   "front": "opt/russian_blue_4.webp",
    "back": "cards/breed/russian_blue_4_back.webp",
-   "thumb": "thumbs/breed/russian_blue_4_thumb.webp"
+   "thumb": "opt/russian_blue_4@thumb.webp"
   },
   {
    "id": "russian_blue_5",
@@ -1058,9 +1058,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/russian_blue_5_front.webp",
+   "front": "opt/russian_blue_5.webp",
    "back": "cards/breed/russian_blue_5_back.webp",
-   "thumb": "thumbs/breed/russian_blue_5_thumb.webp"
+   "thumb": "opt/russian_blue_5@thumb.webp"
   },
   {
    "id": "scottish_fold_1",
@@ -1073,9 +1073,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/scottish_fold_1_front.webp",
+   "front": "opt/scottish_fold_1.webp",
    "back": "cards/breed/scottish_fold_1_back.webp",
-   "thumb": "thumbs/breed/scottish_fold_1_thumb.webp"
+   "thumb": "opt/scottish_fold_1@thumb.webp"
   },
   {
    "id": "scottish_fold_2",
@@ -1088,9 +1088,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/scottish_fold_2_front.webp",
+   "front": "opt/scottish_fold_2.webp",
    "back": "cards/breed/scottish_fold_2_back.webp",
-   "thumb": "thumbs/breed/scottish_fold_2_thumb.webp"
+   "thumb": "opt/scottish_fold_2@thumb.webp"
   },
   {
    "id": "scottish_fold_3",
@@ -1103,9 +1103,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/scottish_fold_3_front.webp",
+   "front": "opt/scottish_fold_3.webp",
    "back": "cards/breed/scottish_fold_3_back.webp",
-   "thumb": "thumbs/breed/scottish_fold_3_thumb.webp"
+   "thumb": "opt/scottish_fold_3@thumb.webp"
   },
   {
    "id": "scottish_fold_4",
@@ -1118,9 +1118,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/scottish_fold_4_front.webp",
+   "front": "opt/scottish_fold_4.webp",
    "back": "cards/breed/scottish_fold_4_back.webp",
-   "thumb": "thumbs/breed/scottish_fold_4_thumb.webp"
+   "thumb": "opt/scottish_fold_4@thumb.webp"
   },
   {
    "id": "scottish_fold_5",
@@ -1133,9 +1133,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/scottish_fold_5_front.webp",
+   "front": "opt/scottish_fold_5.webp",
    "back": "cards/breed/scottish_fold_5_back.webp",
-   "thumb": "thumbs/breed/scottish_fold_5_thumb.webp"
+   "thumb": "opt/scottish_fold_5@thumb.webp"
   },
   {
    "id": "siamese_1",
@@ -1148,9 +1148,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/siamese_1_front.webp",
+   "front": "opt/siamese_1.webp",
    "back": "cards/breed/siamese_1_back.webp",
-   "thumb": "thumbs/breed/siamese_1_thumb.webp"
+   "thumb": "opt/siamese_1@thumb.webp"
   },
   {
    "id": "siamese_2",
@@ -1163,9 +1163,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/siamese_2_front.webp",
+   "front": "opt/siamese_2.webp",
    "back": "cards/breed/siamese_2_back.webp",
-   "thumb": "thumbs/breed/siamese_2_thumb.webp"
+   "thumb": "opt/siamese_2@thumb.webp"
   },
   {
    "id": "siamese_3",
@@ -1178,9 +1178,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/siamese_3_front.webp",
+   "front": "opt/siamese_3.webp",
    "back": "cards/breed/siamese_3_back.webp",
-   "thumb": "thumbs/breed/siamese_3_thumb.webp"
+   "thumb": "opt/siamese_3@thumb.webp"
   },
   {
    "id": "siamese_4",
@@ -1193,9 +1193,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/siamese_4_front.webp",
+   "front": "opt/siamese_4.webp",
    "back": "cards/breed/siamese_4_back.webp",
-   "thumb": "thumbs/breed/siamese_4_thumb.webp"
+   "thumb": "opt/siamese_4@thumb.webp"
   },
   {
    "id": "siamese_5",
@@ -1208,9 +1208,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/siamese_5_front.webp",
+   "front": "opt/siamese_5.webp",
    "back": "cards/breed/siamese_5_back.webp",
-   "thumb": "thumbs/breed/siamese_5_thumb.webp"
+   "thumb": "opt/siamese_5@thumb.webp"
   },
   {
    "id": "sokoke_1",
@@ -1223,9 +1223,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/sokoke_1_front.webp",
+   "front": "opt/sokoke_1.webp",
    "back": "cards/breed/sokoke_1_back.webp",
-   "thumb": "thumbs/breed/sokoke_1_thumb.webp"
+   "thumb": "opt/sokoke_1@thumb.webp"
   },
   {
    "id": "sokoke_2",
@@ -1238,9 +1238,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/sokoke_2_front.webp",
+   "front": "opt/sokoke_2.webp",
    "back": "cards/breed/sokoke_2_back.webp",
-   "thumb": "thumbs/breed/sokoke_2_thumb.webp"
+   "thumb": "opt/sokoke_2@thumb.webp"
   },
   {
    "id": "sokoke_3",
@@ -1253,9 +1253,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/sokoke_3_front.webp",
+   "front": "opt/sokoke_3.webp",
    "back": "cards/breed/sokoke_3_back.webp",
-   "thumb": "thumbs/breed/sokoke_3_thumb.webp"
+   "thumb": "opt/sokoke_3@thumb.webp"
   },
   {
    "id": "sokoke_4",
@@ -1268,9 +1268,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/sokoke_4_front.webp",
+   "front": "opt/sokoke_4.webp",
    "back": "cards/breed/sokoke_4_back.webp",
-   "thumb": "thumbs/breed/sokoke_4_thumb.webp"
+   "thumb": "opt/sokoke_4@thumb.webp"
   },
   {
    "id": "sokoke_5",
@@ -1283,9 +1283,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/sokoke_5_front.webp",
+   "front": "opt/sokoke_5.webp",
    "back": "cards/breed/sokoke_5_back.webp",
-   "thumb": "thumbs/breed/sokoke_5_thumb.webp"
+   "thumb": "opt/sokoke_5@thumb.webp"
   },
   {
    "id": "sphynx_1",
@@ -1298,9 +1298,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 1,
-   "front": "cards/breed/sphynx_1_front.webp",
+   "front": "opt/sphynx_1.webp",
    "back": "cards/breed/sphynx_1_back.webp",
-   "thumb": "thumbs/breed/sphynx_1_thumb.webp"
+   "thumb": "opt/sphynx_1@thumb.webp"
   },
   {
    "id": "sphynx_2",
@@ -1313,9 +1313,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 2,
-   "front": "cards/breed/sphynx_2_front.webp",
+   "front": "opt/sphynx_2.webp",
    "back": "cards/breed/sphynx_2_back.webp",
-   "thumb": "thumbs/breed/sphynx_2_thumb.webp"
+   "thumb": "opt/sphynx_2@thumb.webp"
   },
   {
    "id": "sphynx_3",
@@ -1328,9 +1328,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 3,
-   "front": "cards/breed/sphynx_3_front.webp",
+   "front": "opt/sphynx_3.webp",
    "back": "cards/breed/sphynx_3_back.webp",
-   "thumb": "thumbs/breed/sphynx_3_thumb.webp"
+   "thumb": "opt/sphynx_3@thumb.webp"
   },
   {
    "id": "sphynx_4",
@@ -1343,9 +1343,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 4,
-   "front": "cards/breed/sphynx_4_front.webp",
+   "front": "opt/sphynx_4.webp",
    "back": "cards/breed/sphynx_4_back.webp",
-   "thumb": "thumbs/breed/sphynx_4_thumb.webp"
+   "thumb": "opt/sphynx_4@thumb.webp"
   },
   {
    "id": "sphynx_5",
@@ -1358,9 +1358,9 @@
    "name": null,
    "nameTemp": false,
    "stars": 5,
-   "front": "cards/breed/sphynx_5_front.webp",
+   "front": "opt/sphynx_5.webp",
    "back": "cards/breed/sphynx_5_back.webp",
-   "thumb": "thumbs/breed/sphynx_5_thumb.webp"
+   "thumb": "opt/sphynx_5@thumb.webp"
   },
   {
    "id": "nyang",
@@ -1371,9 +1371,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/special/nyang_front.webp",
+   "front": "opt/nyang.webp",
    "back": "cards/special/nyang_back.webp",
-   "thumb": "thumbs/special/nyang_thumb.webp"
+   "thumb": "opt/nyang@thumb.webp"
   },
   {
    "id": "nyangpunch",
@@ -1384,9 +1384,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/special/nyangpunch_front.webp",
+   "front": "opt/nyangpunch.webp",
    "back": "cards/special/nyangpunch_back.webp",
-   "thumb": "thumbs/special/nyangpunch_thumb.webp"
+   "thumb": "opt/nyangpunch@thumb.webp"
   },
   {
    "id": "selfie",
@@ -1397,9 +1397,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/special/selfie_front.webp",
+   "front": "opt/selfie.webp",
    "back": "cards/special/selfie_back.webp",
-   "thumb": "thumbs/special/selfie_thumb.webp"
+   "thumb": "opt/selfie@thumb.webp"
   },
   {
    "id": "hunt",
@@ -1410,9 +1410,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/special/hunt_front.webp",
+   "front": "opt/hunt.webp",
    "back": "cards/special/hunt_back.webp",
-   "thumb": "thumbs/special/hunt_thumb.webp"
+   "thumb": "opt/hunt@thumb.webp"
   },
   {
    "id": "hangang",
@@ -1423,9 +1423,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/special/hangang_front.webp",
+   "front": "opt/hangang.webp",
    "back": "cards/special/hangang_back.webp",
-   "thumb": "thumbs/special/hangang_thumb.webp"
+   "thumb": "opt/hangang@thumb.webp"
   },
   {
    "id": "fallingcat",
@@ -1436,9 +1436,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/special/fallingcat_front.webp",
+   "front": "opt/fallingcat.webp",
    "back": "cards/special/fallingcat_back.webp",
-   "thumb": "thumbs/special/fallingcat_thumb.webp"
+   "thumb": "opt/fallingcat@thumb.webp"
   },
   {
    "id": "vetshot",
@@ -1449,9 +1449,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/special/vetshot_front.webp",
+   "front": "opt/vetshot.webp",
    "back": "cards/special/vetshot_back.webp",
-   "thumb": "thumbs/special/vetshot_thumb.webp"
+   "thumb": "opt/vetshot@thumb.webp"
   },
   {
    "id": "liquidcat",
@@ -1462,9 +1462,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/special/liquidcat_front.webp",
+   "front": "opt/liquidcat.webp",
    "back": "cards/special/liquidcat_back.webp",
-   "thumb": "thumbs/special/liquidcat_thumb.webp"
+   "thumb": "opt/liquidcat@thumb.webp"
   },
   {
    "id": "musclecat",
@@ -1475,9 +1475,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/special/musclecat_front.webp",
+   "front": "opt/musclecat.webp",
    "back": "cards/special/musclecat_back.webp",
-   "thumb": "thumbs/special/musclecat_thumb.webp"
+   "thumb": "opt/musclecat@thumb.webp"
   },
   {
    "id": "tomjerry",
@@ -1488,9 +1488,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/character/tomjerry_front.webp",
+   "front": "opt/tomjerry.webp",
    "back": "cards/character/tomjerry_back.webp",
-   "thumb": "thumbs/character/tomjerry_thumb.webp"
+   "thumb": "opt/tomjerry@thumb.webp"
   },
   {
    "id": "meowth",
@@ -1501,9 +1501,9 @@
    },
    "nameTemp": false,
    "stars": null,
-   "front": "cards/character/meowth_front.webp",
+   "front": "opt/meowth.webp",
    "back": "cards/character/meowth_back.webp",
-   "thumb": "thumbs/character/meowth_thumb.webp"
+   "thumb": "opt/meowth@thumb.webp"
   },
   {
    "id": "doraemon",
@@ -1514,9 +1514,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/character/doraemon_front.webp",
+   "front": "opt/doraemon.webp",
    "back": "cards/character/doraemon_back.webp",
-   "thumb": "thumbs/character/doraemon_thumb.webp"
+   "thumb": "opt/doraemon@thumb.webp"
   },
   {
    "id": "luna",
@@ -1527,9 +1527,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/character/luna_front.webp",
+   "front": "opt/luna.webp",
    "back": "cards/character/luna_back.webp",
-   "thumb": "thumbs/character/luna_thumb.webp"
+   "thumb": "opt/luna@thumb.webp"
   },
   {
    "id": "sabertooth",
@@ -1540,9 +1540,9 @@
    },
    "nameTemp": false,
    "stars": null,
-   "front": "cards/legend/sabertooth_front.webp",
+   "front": "opt/sabertooth.webp",
    "back": "cards/legend/sabertooth_back.webp",
-   "thumb": "thumbs/legend/sabertooth_thumb.webp"
+   "thumb": "opt/sabertooth@thumb.webp"
   },
   {
    "id": "lionking",
@@ -1553,9 +1553,9 @@
    },
    "nameTemp": false,
    "stars": null,
-   "front": "cards/legend/lionking_front.webp",
+   "front": "opt/lionking.webp",
    "back": "cards/legend/lionking_back.webp",
-   "thumb": "thumbs/legend/lionking_thumb.webp"
+   "thumb": "opt/lionking@thumb.webp"
   },
   {
    "id": "tiger",
@@ -1566,9 +1566,9 @@
    },
    "nameTemp": true,
    "stars": null,
-   "front": "cards/legend/tiger_front.webp",
+   "front": "opt/tiger.webp",
    "back": "cards/legend/tiger_back.webp",
-   "thumb": "thumbs/legend/tiger_thumb.webp"
+   "thumb": "opt/tiger@thumb.webp"
   },
   {
    "id": "baekho",
@@ -1579,9 +1579,9 @@
    },
    "nameTemp": false,
    "stars": null,
-   "front": "cards/legend/baekho_front.webp",
+   "front": "opt/baekho.webp",
    "back": "cards/legend/baekho_back.webp",
-   "thumb": "thumbs/legend/baekho_thumb.webp"
+   "thumb": "opt/baekho@thumb.webp"
   }
  ]
 }

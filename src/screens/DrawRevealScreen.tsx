@@ -6,7 +6,7 @@ import type { DexCard } from "../lib/dexTypes";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import type { DrawReservation } from "../lib/opsTypes";
 import { cardFortune, cardKoreanName, formatCardDexNo } from "../lib/dexCatalog";
-import type { FrameSubject } from "../lib/cardFrames";
+import { boxStyle, resolveFrame, type FrameSubject } from "../lib/cardFrames";
 import { CardFrame } from "../components/CardFrame";
 import { CardFlipStack, CardViewer } from "../components/CardViewer";
 import "./DrawRevealScreen.css";
@@ -531,13 +531,32 @@ export function DrawRevealScreen({
     const loop = (now: number) => {
       const elapsed = now - t0Ref.current;
       if (!readyRef.current) {
-        render(Math.min(elapsed % 300, 149), false);
-      } else {
-        if (readyAtRef.current == null) readyAtRef.current = elapsed;
-        let t = elapsed - readyAtRef.current;
-        if (skipToFinalRef.current) t = FINAL_MS;
-        render(Math.min(t, FINAL_MS), manualFlip);
+        const slow = elapsed > WAIT_MAX_MS;
+        screenRef.current?.classList.toggle("is-slow-load", slow);
+        const cardbox = cardboxRef.current;
+        const inner = innerRef.current;
+        const glow = glowRef.current;
+        const btns = btnsRef.current;
+        if (inner) inner.style.transform = slow ? "rotateY(0deg)" : "rotateY(180deg)";
+        if (cardbox) cardbox.style.transform = "scale(0.96)";
+        if (glow) {
+          glow.style.opacity = "0.45";
+          glow.style.transform = "scale(1)";
+        }
+        if (frontRef.current) frontRef.current.style.opacity = "1";
+        if (rearRef.current) rearRef.current.style.opacity = "1";
+        if (btns) {
+          btns.style.opacity = "0";
+          btns.style.pointerEvents = "none";
+        }
+        raf = requestAnimationFrame(loop);
+        return;
       }
+      screenRef.current?.classList.remove("is-slow-load");
+      if (readyAtRef.current == null) readyAtRef.current = elapsed;
+      let t = elapsed - readyAtRef.current;
+      if (skipToFinalRef.current) t = FINAL_MS;
+      render(Math.min(t, FINAL_MS), manualFlip);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -672,7 +691,15 @@ export function DrawRevealScreen({
             renderZoom={() => (
               <CardFlipStack
                 showingBack={manualFlip}
-                front={<CardFrame card={frameCard} catSrc={frontSrc} name={frameName} dexNo={dexNo} />}
+                front={
+                  <CardFrame
+                    card={frameCard}
+                    catSrc={frontSrc}
+                    thumbSrc={reservation.thumbUrl}
+                    name={frameName}
+                    dexNo={dexNo}
+                  />
+                }
                 back={<img src={reservation.backUrl || FACEDOWN} alt="" draggable={false} />}
               />
             )}
@@ -700,9 +727,15 @@ export function DrawRevealScreen({
                   ref={frontRef}
                   card={frameCard}
                   catSrc={frontSrc}
+                  thumbSrc={reservation.thumbUrl}
                   name={frameName}
                   dexNo={dexNo}
                 />
+                <div className="draw-reveal-spark" style={boxStyle(resolveFrame(frameCard).tier.win)} aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </div>
                 <div ref={holoRef} className="draw-reveal-holo" id="holo" />
               </div>
               <div className="draw-reveal-face is-rear">

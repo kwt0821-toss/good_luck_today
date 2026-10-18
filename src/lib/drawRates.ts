@@ -1,4 +1,5 @@
-import { cardDisplayName, cardKoreanName, dexAsset } from "./dexCatalog";
+import { cardBackUrl, cardLargeUrl, cardThumbUrl } from "./cardArt";
+import { cardDisplayName, cardKoreanName } from "./dexCatalog";
 import type { DexCard, DexCatalog } from "./dexTypes";
 import type { DrawRarityKey, OpsEconomy } from "./opsTypes";
 
@@ -154,9 +155,9 @@ export function pickCardFromCatalog(
 
 export function cardImageUrls(card: DexCard) {
   return {
-    frontUrl: dexAsset(card.front),
-    backUrl: dexAsset(card.back),
-    thumbUrl: dexAsset(card.thumb),
+    frontUrl: cardLargeUrl(card),
+    backUrl: cardBackUrl(card),
+    thumbUrl: cardThumbUrl(card),
   };
 }
 

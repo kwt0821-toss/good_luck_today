@@ -1,4 +1,7 @@
-import { CardFrame } from "./CardFrame";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+
+import { cardThumbUrl } from "../lib/cardArt";
+import { FRAME_LAYOUT, frameKeyFor } from "../lib/cardFrames";
 import { dexAsset } from "../lib/dexCatalog";
 import { formatDupBadge } from "../lib/dupExchange";
 import type { DexCard, DexOwnedRecord } from "../lib/dexTypes";
@@ -27,6 +30,41 @@ function starsLabel(count: number): string {
   return "★".repeat(count);
 }
 
+const THUMB_W = 200;
+const THUMB_H = 311;
+
+function DexThumb({ card }: { card: DexCard }) {
+  const ref = useRef<HTMLImageElement>(null);
+  const [ready, setReady] = useState(false);
+  const src = cardThumbUrl(card);
+
+  useEffect(() => {
+    setReady(false);
+    const img = ref.current;
+    if (img && img.complete && img.naturalWidth > 0) setReady(true);
+  }, [src]);
+
+  const style = {
+    "--grade": FRAME_LAYOUT.nameColor[frameKeyFor(card)],
+  } as CSSProperties;
+
+  return (
+    <span className="dex-slot-photo" style={style}>
+      <img
+        ref={ref}
+        src={src}
+        alt=""
+        width={THUMB_W}
+        height={THUMB_H}
+        loading="lazy"
+        decoding="async"
+        className={ready ? "is-in" : ""}
+        onLoad={() => setReady(true)}
+      />
+    </span>
+  );
+}
+
 export function DexCardSlot({
   kind,
   card,
@@ -53,14 +91,7 @@ export function DexCardSlot({
       disabled={comingSoon}
       aria-label={comingSoon ? "곧 만나요" : owned ? name : "잠긴 카드"}
     >
-      {owned && card ? (
-        <CardFrame
-          className="dex-slot-img"
-          card={card}
-          catSrc={dexAsset(kind === "breed" ? card.thumb : card.front)}
-          variant="mini"
-        />
-      ) : comingSoon ? (
+      {owned && card ? <DexThumb card={card} /> : comingSoon ? (
         <>
           <img className="dex-slot-glyph" src={dexAsset("locked/glyph-plus.svg")} alt="" />
           <span className="dex-slot-caption">COMING SOON</span>
