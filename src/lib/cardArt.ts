@@ -5,7 +5,14 @@ import { CARD_ASSET_VERSION } from "./cardAssetVersion";
 import { dexAsset } from "./dexCatalog";
 import type { DexCard } from "./dexTypes";
 
-type ArtBox = { top: number; left: number; right: number; bottom: number };
+type ArtBox = {
+  top: number;
+  left: number;
+  right?: number;
+  bottom?: number;
+  width?: number;
+  height?: number;
+};
 type ArtPlacement = { box: ArtBox; objectFit: "contain"; objectPosition: string };
 type ArtEntry = { art: string; thumb: string; placement?: ArtPlacement };
 type ArtManifest = { _placement_default: ArtPlacement; cards: Record<string, ArtEntry> };
@@ -43,17 +50,19 @@ export function cardThumbUrl(card: Pick<DexCard, "id" | "thumb">): string {
   return withAssetVersion(dexAsset(card.thumb));
 }
 
-/** Inset of the cat inside the grade window. Every card uses the default box.
- *  Width and height are set explicitly: an absolutely positioned image with
- *  auto size keeps its intrinsic pixels, so object-fit never sees this box. */
+/** Cat box inside the grade window. Width and height are definite so object-fit
+ *  sizes the bitmap. A card with placement.width/height (selfie) uses those;
+ *  every other card keeps the default inset. */
 export function cardArtStyle(id: string): CSSProperties {
   const placement = artEntry(id)?.placement ?? ART_MANIFEST._placement_default;
   const { box } = placement;
+  const width = box.width ?? 100 - box.left - (box.right ?? 0);
+  const height = box.height ?? 100 - box.top - (box.bottom ?? 0);
   return {
     top: `${box.top}%`,
     left: `${box.left}%`,
-    width: `${100 - box.left - box.right}%`,
-    height: `${100 - box.top - box.bottom}%`,
+    width: `${width}%`,
+    height: `${height}%`,
     objectFit: placement.objectFit,
     objectPosition: placement.objectPosition,
   };

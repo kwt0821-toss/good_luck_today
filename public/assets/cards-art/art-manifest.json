@@ -1040,8 +1040,18 @@
    "source": "card-parts/art-meme-selfie.png (cutout)",
    "notes": [
     "bg removed (was opaque RGB)",
-    "bottom 30% fades out softly so the cut edge never shows; uses default placement"
-   ]
+    "bottom 30% fades out softly so the cut edge never shows"
+   ],
+   "placement": {
+    "box": {
+     "top": 4,
+     "left": -14,
+     "width": 128,
+     "height": 96
+    },
+    "objectFit": "contain",
+    "objectPosition": "50% 45%"
+   }
   },
   "hunt": {
    "group": "special",

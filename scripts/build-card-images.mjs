@@ -80,7 +80,7 @@ for (const file of (await webpFiles(artDir)).sort()) {
 }
 
 // Bump when image bytes are unchanged but clients must drop immutable copies.
-const CACHE_GENERATION = "5";
+const CACHE_GENERATION = "6";
 const version = createHash("sha1")
   .update(Buffer.concat(hashes))
   .update(CACHE_GENERATION)

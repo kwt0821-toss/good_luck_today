@@ -32,9 +32,8 @@
   max-width: none;
 }
 
-/* Transparent cat inside the grade window: 5% / 3% / 3% / 11%.
-   Selfie overrides the box inline. Width and height are definite so
-   object-fit contain sizes the bitmap instead of the intrinsic pixels. */
+/* Default cat box inside the window: top 5% / left 3% / width 94% / height 84%.
+   Selfie overrides this inline from the art manifest. The window clips overflow. */
 .card-frame .win img.art,
 .draw-reveal-face .card-frame img.art,
 .face.dex-face .card-frame img.art,
