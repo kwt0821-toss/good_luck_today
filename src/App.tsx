@@ -393,8 +393,10 @@ export default function App() {
             const next = ncoinNextMark(tutorialStep.then);
             if (next) return next;
           }
-          // Toast stays as the copy. Finger + shade point at 도감에서 보기.
-          return revealDexButtonMark(tutorialStepLabel(tutorialStep, "STEP 2/6"));
+          return revealDexButtonMark(
+            tutorialStepLabel(tutorialStep, "STEP 2/6"),
+            tutorialStep.copy,
+          );
         }
         // Card is still turning — wait for the toast before the shade.
         return null;

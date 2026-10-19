@@ -456,10 +456,12 @@ export function ncoinIntroMark(then: NcoinIntroThen): CoachMark {
 }
 
 /** Step 2, after the reveal toast: shade the screen and point at 도감에서 보기. */
-export function revealDexButtonMark(stepLabel = "STEP 2/6"): CoachMark {
+export function revealDexButtonMark(stepLabel = "STEP 2/6", copy?: string): CoachMark {
+  const sentence = copy?.trim();
   return {
     id: "step-2-to-dex",
     target: "#btn-to-dex",
+    copy: sentence || undefined,
     showFinger: true,
     ackOnly: true,
     activateTarget: true,
