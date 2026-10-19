@@ -7,6 +7,7 @@ export default defineConfig({
   brand: {
     displayName: "럭키캣",
     primaryColor: "#6EC8D4",
+    icon: "public/icon.svg",
   },
   /**
    * Opaque title bar — webview content starts below it.

@@ -1,6 +1,6 @@
 /**
  * 냥 알림 (Nyang Notify) — imperative queue + React host subscription.
- * Spec: notify/notify-spec.md
+ * Spec: docs/archive/notify/notify-spec.md
  */
 
 export type NyKind = "success" | "reward" | "info" | "error" | "celebrate";

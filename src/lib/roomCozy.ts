@@ -13,7 +13,7 @@ export type RoomCozyResponse = {
   nextMin: number;
 };
 
-/** Sheet grid order from cozy-spec.md (legend is a note, not a tile). */
+/** Sheet grid order from docs/archive/docs/cozy/cozy-spec.md (legend is a note, not a tile). */
 export const COZY_SHEET_TIER_ORDER: PriceTier[] = [
   "small",
   "wall",

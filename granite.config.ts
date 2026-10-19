@@ -3,11 +3,11 @@ import { defineConfig } from "@apps-in-toss/web-framework/config";
 import { TOSS_NAV_BG } from "./src/lib/tossTheme";
 
 export default defineConfig({
-  appName: "good-luck-today",
+  appName: "lucky-cat",
   brand: {
     displayName: "럭키캣",
     primaryColor: "#6EC8D4",
-    icon: "",
+    icon: "public/icon.svg",
   },
   web: {
     host: "0.0.0.0",

@@ -3,6 +3,12 @@ import { useEffect, useRef, useState } from "react";
 
 import { ExitConfirmModal } from "../components/ExitConfirmModal";
 
+function isTossApp(): boolean {
+  if (typeof window === "undefined") return false;
+  const host = window as Window & { ReactNativeWebView?: unknown };
+  return host.ReactNativeWebView != null;
+}
+
 /**
  * First screen only: Toss back (nav back / Android system back) opens ExitConfirmModal.
  * Leaving the screen unsubscribes, so other screens keep the default back behaviour.
@@ -18,6 +24,7 @@ export function useExitConfirmOnBack(isHomeScreen: boolean) {
       setOpen(false);
       return;
     }
+    if (!isTossApp()) return;
 
     let unsubscribe = () => {};
     try {
@@ -30,9 +37,8 @@ export function useExitConfirmOnBack(isHomeScreen: boolean) {
           console.error("backEvent error", error);
         },
       });
-    } catch (error) {
-      // Browser preview has no Toss webview. The listener still no-ops after this.
-      console.error("backEvent error", error);
+    } catch {
+      // Outside the Toss webview there is no back bridge.
     }
 
     return unsubscribe;
@@ -64,7 +70,7 @@ export function useGraniteBack(active: boolean, onBack: () => void) {
   onBackRef.current = onBack;
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || !isTossApp()) return;
     let unsubscribe = () => {};
     try {
       unsubscribe = graniteEvent.addEventListener("backEvent", {
@@ -73,8 +79,8 @@ export function useGraniteBack(active: boolean, onBack: () => void) {
           console.error("backEvent error", error);
         },
       });
-    } catch (error) {
-      console.error("backEvent error", error);
+    } catch {
+      // Outside the Toss webview there is no back bridge.
     }
     return unsubscribe;
   }, [active]);

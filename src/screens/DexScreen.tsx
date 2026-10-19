@@ -118,6 +118,7 @@ export function DexScreen({
     return "breed";
   });
   const [openCard, setOpenCard] = useState<DexCard | null>(null);
+  const claimBusyRef = useRef(false);
   const [claimBusy, setClaimBusy] = useState(false);
   const [burstToken, setBurstToken] = useState(0);
   const [burstConfetti, setBurstConfetti] = useState(false);
@@ -274,7 +275,7 @@ export function DexScreen({
   };
 
   const runClaim = async (rewardIds: string[] | "all", celebrateAfter?: CelebrateKind) => {
-    if (claimBusy) return;
+    if (claimBusyRef.current) return;
     if (tutLocked && tutorialPhase !== "claim") return;
     if (
       tutLocked &&
@@ -285,6 +286,7 @@ export function DexScreen({
     ) {
       return;
     }
+    claimBusyRef.current = true;
     setClaimBusy(true);
     if (rewardIds === "all") setClaimAllBusy(true);
     try {
@@ -384,6 +386,7 @@ export function DexScreen({
         }
       }
     } finally {
+      claimBusyRef.current = false;
       setClaimBusy(false);
       setClaimAllBusy(false);
     }
