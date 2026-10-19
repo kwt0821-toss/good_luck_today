@@ -1,4 +1,5 @@
-import { toKstDateKey, toKstYearKey } from "./date";
+import { toKstYearKey } from "./date";
+import { refreshServerTime, trustedKstDateKey } from "./tossClock";
 import type {
   AttendanceClaimResponse,
   AttendanceDay7ClaimBody,
@@ -31,12 +32,12 @@ export function cycleInfo(n: number): { cycleNo: number; cycleDay: number } | nu
   return { cycleNo, cycleDay };
 }
 
-export function canClaimAttendanceToday(state: OpsState, today = toKstDateKey()): boolean {
+export function canClaimAttendanceToday(state: OpsState, today = trustedKstDateKey()): boolean {
   return state.lastAttendDateKST !== today;
 }
 
 /** Next claimable attendance day is weekly-cycle day 7 (day ≥ 8). */
-export function isUpcomingWeeklyDay7(state: OpsState, today = toKstDateKey()): boolean {
+export function isUpcomingWeeklyDay7(state: OpsState, today = trustedKstDateKey()): boolean {
   if (!canClaimAttendanceToday(state, today)) return false;
   const cycle = cycleInfo(state.attendanceDays + 1);
   return cycle?.cycleDay === 7;
@@ -192,8 +193,9 @@ export async function claimAttendanceOnServer(
   state: OpsState,
 ): Promise<{ state: OpsState; response: AttendanceClaimResponse }> {
   await delay(40);
+  await refreshServerTime();
   const config = await loadOpsConfig();
-  const today = toKstDateKey();
+  const today = trustedKstDateKey();
   if (!config.starter.attendance) {
     return {
       state,
@@ -318,8 +320,9 @@ export async function getAttendanceStatus(state: OpsState): Promise<{
   state: OpsState;
   status: import("./attendanceTypes").AttendanceStatusResponse;
 }> {
+  await refreshServerTime();
   const config = await loadOpsConfig();
-  const today = toKstDateKey();
+  const today = trustedKstDateKey();
   const canClaim = canClaimAttendanceToday(state, today);
   const days = state.attendanceDays;
   const previewN = canClaim ? days + 1 : days;
@@ -450,13 +453,14 @@ export async function claimAttendanceDay7OnServer(
     };
   }
 
+  await refreshServerTime();
   const config = await loadOpsConfig();
   const bonus = readDay7BonusConfig(config);
   if (!bonus || !config.starter.attendance) {
     return { state, response: { ok: false, reason: "출석 보너스 설정이 없어요" } };
   }
 
-  const today = toKstDateKey();
+  const today = trustedKstDateKey();
   if (!canClaimAttendanceToday(state, today)) {
     return { state, response: { ok: false, reason: "오늘 이미 출석했어요" } };
   }

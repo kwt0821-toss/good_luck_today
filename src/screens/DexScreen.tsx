@@ -314,7 +314,7 @@ export function DexScreen({
           key: "ncoin-10",
           kind: "reward",
           title: "{ncoin} 10개!",
-          sub: "토스포인트로 바꿀 수 있어요",
+          sub: "토스 포인트 지급을 받을 수 있어요",
           action: {
             label: "보상함",
             onClick: () => {
@@ -705,8 +705,8 @@ export function DexScreen({
             const ok = await nyConfirm({
               key: "dex-dup",
               title: `중복 카드 ${qty}장을 바꿀까요?`,
-              body: "포인트로 바꾸면 되돌릴 수 없어요",
-              badge: unit > 0 ? `+${unit * qty} 포인트` : undefined,
+              body: "젤리로 바꾸면 되돌릴 수 없어요",
+              badge: unit > 0 ? `+${unit * qty} 젤리` : undefined,
               cancelLabel: "취소",
               confirmLabel: "바꾸기",
             });

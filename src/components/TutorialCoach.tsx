@@ -12,10 +12,10 @@ const FEATURE_PAD_TOP = 12;
 const FEATURE_PAD_BOTTOM = 16;
 const PAW_ICON = "/assets/menu/icon-paw-mini.svg";
 
-/** Inline 냥코인 / 발바닥 포인트 icons wherever those words appear. */
+/** Inline 냥코인 / 발바닥 젤리 icons wherever those words appear. */
 function TutorialRichText({ text }: { text: string }) {
   const nodes: ReactNode[] = [];
-  const re = /(냥코인|발바닥 포인트)/g;
+  const re = /(냥코인|발바닥 젤리)/g;
   let last = 0;
   let match: RegExpExecArray | null;
   let key = 0;

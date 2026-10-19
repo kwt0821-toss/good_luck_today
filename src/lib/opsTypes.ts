@@ -118,7 +118,7 @@ export type OpsEconomy = {
     dexSets?: string;
     achievements?: string;
     attendanceDay7?: string;
-    /** economy 2.1 — 포인트 광고 1회당 냥코인 */
+    /** economy 2.1 — 젤리 광고 1회당 냥코인 */
     adPaw?: number;
     adPawRule?: {
       applies?: string;
@@ -160,7 +160,7 @@ export type OpsEconomy = {
       };
     };
   };
-  /** Was tossPayout — withdraw / payout rules for 냥코인 → 토스포인트 */
+  /** Was tossPayout — withdraw / payout rules for 냥코인 → 토스 포인트 */
   nyangCoin: {
     nameKo?: string;
     /** Normalized from maxEarnPerUser when present (economy-1.7). */
@@ -571,12 +571,16 @@ export type WalletHistoryItem = {
   createdAt: number;
   updatedAt: number;
   failReason?: string;
+  /** getUserKeyForGame hash. Daily limit counts rows for this person. */
+  userHash?: string;
+  /** grantPromotionRewardForGame success key. */
+  rewardKey?: string;
 };
 
 export type OpsState = {
   userId: string;
   pawBalance: number;
-  /** 냥코인 잔액 (1냥코인 = 토스포인트 1원) */
+  /** 냥코인 잔액 (1냥코인 = 토스 포인트 1원) */
   nyangCoinBalance: number;
   /** KST date of last daily counter reset */
   dateKey: string;

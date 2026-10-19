@@ -71,7 +71,7 @@ export function getTicketShopStatus(state: OpsState, config: OpsConfig): TicketS
   } else if (weekRemaining <= 0) {
     disabledReason = "이번 주 구매 한도에 도달했어요";
   } else if (synced.pawBalance < offer.pricePaw) {
-    disabledReason = `포인트가 ${offer.pricePaw}P 필요해요`;
+    disabledReason = `젤리가 ${offer.pricePaw}P 필요해요`;
   }
   return {
     pricePaw: offer.pricePaw,
@@ -155,7 +155,7 @@ export async function postShopTicketsBuy(
     return { state: next, response: { ok: false, reason: "이번 주 구매 한도에 도달했어요" } };
   }
   if (next.pawBalance < offer.pricePaw) {
-    return { state: next, response: { ok: false, reason: `포인트가 ${offer.pricePaw}P 필요해요` } };
+    return { state: next, response: { ok: false, reason: `젤리가 ${offer.pricePaw}P 필요해요` } };
   }
 
   const weekBought = next.ticketShopWeekBought + 1;

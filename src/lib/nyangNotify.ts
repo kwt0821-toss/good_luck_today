@@ -40,7 +40,7 @@ export type NyConfirmInput = {
   body: string;
   cancelLabel?: string;
   confirmLabel?: string;
-  /** Optional pill under body, e.g. "+210 포인트". */
+  /** Optional pill under body, e.g. "+210 젤리". */
   badge?: string;
 };
 
@@ -129,7 +129,7 @@ export function nySpeakText(template: string | undefined, count: number): string
   return raw
     .replace(/<\/?b>/g, "")
     .replace(/\{ncoin\}/g, "냥코인 ")
-    .replace(/\{paw\}/g, "포인트 ")
+    .replace(/\{paw\}/g, "젤리 ")
     .replace(/\s+\+\s+/g, ", ")
     .replace(/[^\S\n]+/g, " ")
     .trim();

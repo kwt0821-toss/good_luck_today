@@ -82,7 +82,7 @@ export function RoomBuySheet({
         </p>
         {enough ? (
           <>
-            <p>발바닥 포인트로 이 아이템을 살까요?</p>
+            <p>발바닥 젤리로 이 아이템을 살까요?</p>
             <div className="lucky-modal-actions">
               <button type="button" onClick={onClose}>
                 닫기
@@ -96,7 +96,7 @@ export function RoomBuySheet({
           <>
             <div className="ny-chip-anchor" style={{ position: "relative", margin: "12px 0" }}>
               <NyChip arrow="down" arrowX={48} wide>
-                {`포인트가 ${item.price - points} 모자라요 · 출석·포인트 받기로 모아요`}
+                {`젤리가 ${item.price - points} 모자라요 · 출석·보상 받기로 모아요`}
               </NyChip>
             </div>
             <div className="lucky-modal-actions">
@@ -134,7 +134,7 @@ export function RoomUnlockSheet({
     ? `${reqLabel} 이면 이 방을 열 수 있어요.`
     : room?.unlock.example
       ? `열기 조건: ${room.unlock.example}`
-      : "COZY 레벨이나 발바닥 포인트로 새 방을 열 수 있게 될 거예요.";
+      : "COZY 레벨이나 발바닥 젤리로 새 방을 열 수 있게 될 거예요.";
   return (
     <div className="lucky-modal">
       <button type="button" className="lucky-modal-back" aria-label="닫기" onClick={onClose} />
@@ -179,7 +179,7 @@ export function RoomExchangeSheet({
       <button type="button" className="lucky-modal-back" aria-label="닫기" onClick={onClose} />
       <div className="lucky-modal-card is-sheet" role="dialog" aria-label="중복 카드 바꾸기">
         <h3>중복 카드 바꾸기</h3>
-        <p>도감에 한 장은 남기고, 나머지를 발바닥 포인트로 바꿔요.</p>
+        <p>도감에 한 장은 남기고, 나머지를 발바닥 젤리로 바꿔요.</p>
         <ul className="lucky-exchange-list">
           {cards.length === 0 ? <li>바꿀 중복 카드가 아직 없어요.</li> : null}
           {cards.map((row) => (
@@ -193,7 +193,7 @@ export function RoomExchangeSheet({
             </li>
           ))}
         </ul>
-        <p className="lucky-exchange-total">받을 포인트 {total.toLocaleString("en-US")}</p>
+        <p className="lucky-exchange-total">받을 젤리 {total.toLocaleString("en-US")}</p>
         <div className="lucky-modal-actions">
           <button type="button" onClick={onClose}>
             닫기

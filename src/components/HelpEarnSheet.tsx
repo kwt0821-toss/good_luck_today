@@ -51,7 +51,7 @@ export function HelpEarnSheet({ onClose, initialTab = "ncoin" }: HelpEarnSheetPr
       <div className={`help-earn-sheet ${isNcoin ? "is-ncoin" : "is-paw"}`}>
         <div className="help-earn-grab" aria-hidden="true" />
         <header className="help-earn-hd">
-          <h1>{config?.title ?? "냥코인·포인트 얻는 법"}</h1>
+          <h1>{config?.title ?? "냥코인·젤리 얻는 법"}</h1>
           <button type="button" className="help-earn-x" aria-label="닫기" onClick={onClose}>
             ✕
           </button>

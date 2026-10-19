@@ -34,6 +34,7 @@ import {
 } from "../lib/menuSettings";
 import {
   buildWithdrawRequestId,
+  inspectTossPointGrant,
   postWalletWithdraw,
 } from "../lib/mockWallet";
 import {
@@ -157,6 +158,7 @@ export function MenuPanel({
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
   const [withdrawBusy, setWithdrawBusy] = useState(false);
+  const [grantHold, setGrantHold] = useState<string | null>(null);
   const [attendBusy, setAttendBusy] = useState(false);
   const [day7AdWaiting, setDay7AdWaiting] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -305,6 +307,17 @@ export function MenuPanel({
     }, reduce ? 150 : 280);
   };
 
+  useEffect(() => {
+    if (sheet !== "rewards") return;
+    let cancel = false;
+    void inspectTossPointGrant(ops).then((result) => {
+      if (!cancel) setGrantHold(result.ok ? null : result.reason);
+    });
+    return () => {
+      cancel = true;
+    };
+  }, [sheet, ops]);
+
   const doWithdraw = async () => {
     if (!model || withdrawBusy || withdrawAmount < model.wallet.min) return;
     if (withdrawAmount > model.wallet.maxWithdrawable) return;
@@ -321,7 +334,7 @@ export function MenuPanel({
         nyNotify({
           key: "withdraw-done",
           kind: "success",
-          title: `토스포인트 <b>${withdrawAmount}원</b>을 받았어요`,
+          title: `토스 포인트 <b>${withdrawAmount}원</b>을 받았어요`,
         });
       } else if (result.response.ok && result.response.status === "pending") {
         setLastWithdraw(row);
@@ -329,7 +342,7 @@ export function MenuPanel({
         nyNotify({
           key: "withdraw-pending",
           kind: "info",
-          title: "처리 중이에요",
+          title: "확인 중이에요",
           sub: "잠시 후 기록에서 확인해 주세요",
         });
       } else if (result.response.ok === false && result.response.code === "DAILY_LIMIT") {
@@ -504,7 +517,7 @@ export function MenuPanel({
         nyNotify({
           key: "paw-ad-closed",
           kind: "info",
-          title: "오늘 포인트 받기를 모두 했어요",
+          title: "오늘 보상 받기를 모두 했어요",
           sub: "내일 0시에 다시 열려요",
         });
         return;
@@ -716,8 +729,8 @@ export function MenuPanel({
     const ok = await nyConfirm({
       key: "dup-exchange",
       title: `중복 카드 ${n}장을 바꿀까요?`,
-      body: "바꾼 카드는 도감에 1장씩 남아요\n포인트로 바꾸면 되돌릴 수 없어요",
-      badge: `+${p} 포인트`,
+      body: "바꾼 카드는 도감에 1장씩 남아요\n젤리로 바꾸면 되돌릴 수 없어요",
+      badge: `+${p} 젤리`,
       cancelLabel: model.menu.sheets.exchange.confirmCancel ?? "취소",
       confirmLabel: model.menu.sheets.exchange.confirmOk ?? "바꾸기",
     });
@@ -899,7 +912,7 @@ export function MenuPanel({
                 <button
                   type="button"
                   className={`menu-stat is-paw-tip ${pawTipOpen ? "is-tip-open" : ""}`}
-                  aria-label="내 포인트 안내"
+                  aria-label="내 젤리 안내"
                   onPointerDown={(event) => {
                     event.preventDefault();
                     setPawTipOpen(true);
@@ -912,7 +925,7 @@ export function MenuPanel({
                     <img src={menuAsset("icon-paw-mini.svg")} alt="" />
                     {model.pawBalance.toLocaleString("ko-KR")}
                   </div>
-                  <div className="menu-stat-label">내 포인트</div>
+                  <div className="menu-stat-label">내 젤리</div>
                   {pawTipOpen ? (
                     <span className="menu-paw-tip" role="status">
                       방꾸미기와 뽑기권 구매에 사용돼요
@@ -1357,7 +1370,7 @@ export function MenuPanel({
                       <b>{model.exchange.duplicateCount}장</b>
                     </div>
                     <div className="menu-list-row">
-                      <span>받을 포인트</span>
+                      <span>받을 젤리</span>
                       <b>{model.exchange.totalPaw.toLocaleString("ko-KR")}P</b>
                     </div>
                   </>
@@ -1367,7 +1380,7 @@ export function MenuPanel({
                   <div className="exchange-confirm">
                     <h4>
                       {(model.menu.sheets.exchange.confirmTitle ??
-                        "중복 카드 {n}장을 발바닥 포인트 {p}P로 바꿀까요?")
+                        "중복 카드 {n}장을 발바닥 젤리 {p}P로 바꿀까요?")
                         .replace("{n}", String(model.exchange.duplicateCount))
                         .replace("{p}", String(model.exchange.totalPaw))}
                     </h4>
@@ -1452,7 +1465,7 @@ export function MenuPanel({
                               {item.status === "done"
                                 ? "완료"
                                 : item.status === "pending"
-                                  ? "처리 중"
+                                  ? "확인 중"
                                   : "실패"}
                             </span>
                           </b>
@@ -1466,9 +1479,9 @@ export function MenuPanel({
                       <img src={NCOIN_ICON.lg} alt="" width={64} height={64} />
                       <h4>
                         {lastWithdraw?.status === "pending"
-                          ? "처리 중이에요"
+                          ? "확인 중이에요"
                           : (model.menu.sheets.rewards.wallet?.successTitle ??
-                            "토스포인트를 받았어요")}
+                            "토스 포인트를 받았어요")}
                       </h4>
                       <p>
                         {lastWithdraw
@@ -1481,9 +1494,9 @@ export function MenuPanel({
                   ) : rewardsView === "confirm" ? (
                     <div className="wallet-success">
                       <img src={NCOIN_ICON.lg} alt="" width={64} height={64} />
-                      <h4>{model.menu.sheets.rewards.wallet?.confirmTitle ?? "토스포인트로 받을까요?"}</h4>
+                      <h4>{model.menu.sheets.rewards.wallet?.confirmTitle ?? "토스 포인트를 지급할까요?"}</h4>
                       <p>
-                        {withdrawAmount}냥코인을 토스포인트 {withdrawAmount}원으로 바꿔요.
+                        {withdrawAmount}냥코인을 토스 포인트 {withdrawAmount}원으로 지급해요.
                       </p>
                     </div>
                   ) : (
@@ -1492,7 +1505,7 @@ export function MenuPanel({
                         <button
                           type="button"
                           className="wallet-card-help"
-                          aria-label="냥코인·포인트 얻는 법"
+                          aria-label="냥코인·젤리 얻는 법"
                           onClick={() => openHelp("ncoin")}
                         >
                           ?
@@ -1532,7 +1545,7 @@ export function MenuPanel({
                                   "오늘 {remainingToday}원 더 받을 수 있어요 · 하루 최대 {dailyLimit}원")
                                   .replace("{remainingToday}", String(remainingToday))
                                   .replace("{dailyLimit}", String(dailyLimit));
-                          const cta = walletCopy?.withdrawCta ?? "토스 포인트 전환";
+                          const cta = walletCopy?.withdrawCta ?? "토스 포인트 지급";
                           return (
                             <>
                               <div
@@ -1580,12 +1593,14 @@ export function MenuPanel({
                                   +
                                 </button>
                               </div>
-                              {lowBalance || dailyDone ? (
+                              {grantHold ? (
+                                <p className="wallet-hint">{grantHold}</p>
+                              ) : lowBalance || dailyDone ? (
                                 <div className="ny-chip-anchor">
                                   <NyChip arrow="down" arrowX={40} wide>
                                     {lowBalance
                                       ? `10냥코인부터 받을 수 있어요 · ${needMore}개 더 모으면 돼요`
-                                      : "오늘 출금 한도를 다 썼어요 · 내일 0시에 다시 받을 수 있어요"}
+                                      : "오늘 토스 포인트 지급 한도를 다 썼어요 · 내일 0시에 다시 받을 수 있어요"}
                                   </NyChip>
                                 </div>
                               ) : (
@@ -1603,13 +1618,18 @@ export function MenuPanel({
                                 type="button"
                                 id="btn-withdraw"
                                 className="menu-sheet-cta is-withdraw"
-                                disabled={stepperDisabled || withdrawAmount < min}
+                                disabled={
+                                  stepperDisabled ||
+                                  withdrawAmount < min ||
+                                  withdrawBusy ||
+                                  Boolean(grantHold)
+                                }
                                 onClick={() => {
                                   void (async () => {
                                     const ok = await nyConfirm({
                                       key: "withdraw",
-                                      title: `토스포인트 ${withdrawAmount}원을 받을까요?`,
-                                      body: "받은 포인트는 냥코인으로 되돌릴 수 없어요",
+                                      title: `토스 포인트 ${withdrawAmount}원을 지급할까요?`,
+                                      body: "받은 토스 포인트는 냥코인으로 되돌릴 수 없어요",
                                       cancelLabel: "취소",
                                       confirmLabel: "받기",
                                     });
@@ -1648,7 +1668,7 @@ export function MenuPanel({
                         className="wallet-history-link"
                         onClick={() => setRewardsView("history")}
                       >
-                        {model.menu.sheets.rewards.wallet?.historyTitle ?? "받은 기록"}
+                        {model.menu.sheets.rewards.wallet?.historyTitle ?? "지급 내역"}
                       </button>
                     </>
                   )
@@ -1842,7 +1862,7 @@ export function MenuPanel({
                       </button>
                       {ticketsFull ? (
                         <p className="att-day7-ticket-full">
-                          뽑기권 보관함이 가득 찼어요 · 냥코인·포인트만 2배
+                          뽑기권 보관함이 가득 찼어요 · 냥코인·젤리만 2배
                         </p>
                       ) : null}
                     </div>
@@ -1997,7 +2017,7 @@ export function MenuPanel({
           />
           <div className="settings-reset-confirm is-modal">
             <strong>신규 유저 상태로 초기화할까요?</strong>
-            <p>도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워지고, 발바닥 포인트 2,000P가 지급돼요.</p>
+            <p>도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워지고, 발바닥 젤리 2,000P가 지급돼요.</p>
             <div className="settings-reset-confirm-actions">
               <button
                 type="button"
@@ -2080,7 +2100,7 @@ export function MenuPanel({
             <p>
               오늘은 이미 출석한 누적 {attendanceDevDays}일이 되고, 1~
               {Math.min(attendanceDevDays, 7)}일차 출석 선물을 보유 처리해요.
-              {attendanceDevDays === 8 ? " 8일차 포인트는 처음 맞출 때 한 번 들어가요." : ""}
+              {attendanceDevDays === 8 ? " 8일차 젤리는 처음 맞출 때 한 번 들어가요." : ""}
             </p>
             <div className="settings-reset-confirm-actions">
               <button

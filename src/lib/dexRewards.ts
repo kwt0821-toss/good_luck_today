@@ -214,7 +214,7 @@ export function newCardRevealCopy(card: DexCard): { title: string; sub: string }
 
 export function duplicateRevealCopy(dupPaw?: number): string {
   void dupPaw;
-  return "이미 만난 고양이예요\n발바닥 포인트로 바꿀 수 있어요";
+  return "이미 만난 고양이예요\n발바닥 젤리로 바꿀 수 있어요";
 }
 
 /**
@@ -328,7 +328,7 @@ export async function countClaimableDexRewards(state: OpsState): Promise<number>
 export function dexClaimChipLabel(count: number, nyangCoin: number, paw: number) {
   const parts = [`받을 보상 ${count}개`];
   if (nyangCoin > 0) parts.push(`냥코인 x ${nyangCoin}`);
-  if (paw > 0) parts.push(`발바닥 포인트 x ${paw}`);
+  if (paw > 0) parts.push(`발바닥 젤리 x ${paw}`);
   return parts.join(" · ");
 }
 

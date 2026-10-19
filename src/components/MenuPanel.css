@@ -387,7 +387,7 @@ button.menu-dim:focus-visible {
   letter-spacing: -0.01em;
 }
 
-/* Point-ad also grants 1 냥코인 (ncoinSources.adPaw) — keep label as 포인트 받기. */
+/* Point-ad also grants 1 냥코인 (ncoinSources.adPaw) — row label is 보상 받기. */
 .menu-ncoin-tag {
   display: inline-flex;
   align-items: center;
@@ -481,7 +481,7 @@ button.menu-dim:focus-visible {
   opacity: 0.45;
 }
 
-/* 포인트 받기 only: title row + 12px grant line. Chevron stays vertically centered. */
+/* 보상 받기 only: title row + 12px grant line. Chevron stays vertically centered. */
 .menu-row.is-points {
   grid-template-columns: 24px minmax(0, 1fr) 16px;
   align-items: center;

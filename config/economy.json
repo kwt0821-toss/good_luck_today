@@ -3,7 +3,7 @@
   "_note": "서버 설정의 단일 소스. 클라이언트는 이 값을 하드코딩하지 않고 /config/economy 로 받아요. '_proposal' 표시는 기획 확정 전 제안값이에요.",
   "currency": {
     "paw": {
-      "nameKo": "포인트(발바닥)",
+      "nameKo": "발바닥 젤리",
       "startBalance": 300
     },
     "nyangCoin": {
@@ -13,11 +13,11 @@
       "toTossPoint": {
         "rate": 1,
         "unit": "KRW",
-        "text": "1냥코인 = 토스포인트 1원"
+        "text": "1냥코인 = 토스 포인트 1원"
       },
-      "earnOnly": "광고 뽑기·포인트 광고(1회 1개), 도감 보상(새 카드·세트·전체 완성), 업적, 출석 7일차로 얻어요. 구매·무료 뽑기·뽑기권 뽑기로는 안 줘요. (ncoinSources)",
+      "earnOnly": "광고 뽑기·젤리 광고(1회 1개), 도감 보상(새 카드·세트·전체 완성), 업적, 출석 7일차로 얻어요. 구매·무료 뽑기·뽑기권 뽑기로는 안 줘요. (ncoinSources)",
       "spendInApp": false,
-      "note": "앱 안에서 쓰지 않고 토스포인트로 받기만 해요. 포인트(발바닥, paw)와 별개 화폐예요."
+      "note": "앱 안에서 쓰지 않고 토스 포인트 지급만 해요. 젤리(발바닥, paw)와 별개 화폐예요."
     }
   },
   "pawSources": {
@@ -50,7 +50,7 @@
       "character": 60,
       "legend": 150,
       "auto": false,
-      "note": "중복 카드는 '포인트로 바꾸기'로 전환 (카드 보유 수량 1 유지)"
+      "note": "중복 카드는 '젤리로 바꾸기'로 전환 (카드 보유 수량 1 유지)"
     },
     "setComplete": {
       "breed_1to5star": {
@@ -99,11 +99,11 @@
             "optional": true,
             "adType": "long",
             "adSeconds": 30,
-            "effect": "base 냥코인·포인트 2배(10 냥코인 + 200P) + 확률업 뽑기권 1장",
+            "effect": "base 냥코인·젤리 2배(10 냥코인 + 200P) + 확률업 뽑기권 1장",
             "nyangCoin": 10,
             "paw": 200,
             "rateUpTicket": 1,
-            "ticketCapNote": "뽑기권 보유 최대 3장(tickets.rateUpTicket.maxHold). 꽉 차 있으면 버튼에 '뽑기권 보관함이 가득 찼어요' 안내 후 냥코인·포인트만 2배",
+            "ticketCapNote": "뽑기권 보유 최대 3장(tickets.rateUpTicket.maxHold). 꽉 차 있으면 버튼에 '뽑기권 보관함이 가득 찼어요' 안내 후 냥코인·젤리만 2배",
             "oncePerCycle": true,
             "grantOn": "adCompleteCallback (서버 검증)",
             "adFailFallback": "광고 실패/중단 시 base만 지급 가능, 다시 시도 1회"
@@ -131,7 +131,7 @@
     "claimMode": "manual"
   },
   "nyangCoin": {
-    "maxEarnPerUser": "고정 아님: 광고 하루 최대 14(뽑기 4 + 포인트 광고 10) + 도감·업적 988 + 출석 7일차",
+    "maxEarnPerUser": "고정 아님: 광고 하루 최대 14(뽑기 4 + 젤리 광고 10) + 도감·업적 988 + 출석 7일차",
     "formula": "새 카드 597 (54×1 + 18×5 + 18×10 + 9×5 + 4×7 + 4×50) + 세트 210 (18×10 + 3×10) + 도감 완성 100 + 업적 81 = 988",
     "grant": {
       "oncePerTossAccountPerReward": true,
@@ -152,7 +152,7 @@
         "계정당 동시 요청 1건 (row lock)"
       ],
       "idempotencyKey": "tossUserKey + withdrawRequestId (클라이언트 UUID, 재시도 시 같은 값)",
-      "payout": "서버→서버로 토스 포인트 지급 API(앱인토스 프로모션/포인트 지급) 호출. 클라이언트는 직접 호출하지 않아요.",
+      "payout": "토스 앱 안에서는 grantPromotionRewardForGame으로 토스 포인트를 지급해요. 토스 밖에서는 연습용 지급이에요.",
       "flow": [
         "POST /wallet/withdraw {amount, requestId}",
         "서버: 검증 → 잔액 차감(hold) → 기록 status=pending",
@@ -165,8 +165,10 @@
         "done",
         "failed"
       ],
-      "onUnknownResult": "타임아웃 등 결과 불명 → pending 유지, 같은 requestId로 재조회/재시도 (중복 지급 금지)",
+      "onUnknownResult": "결과 불명 → pending 유지. 앱이 꺼진 pending은 자동으로 다시 지급하지 않아요.",
       "dailyLimit": 50,
+      "promotionCode": "",
+      "testPromotionCode": "TEST_",
       "history": {
         "keepDays": 365,
         "fields": [
@@ -178,8 +180,8 @@
         ]
       },
       "budgetAlertKRW": null,
-      "policyCheck": "⚠ 토스 포인트 지급 API의 최소/최대 금액, 사전 예산 충전, 호출 한도, 앱 내 재화→토스포인트 전환 허용 범위는 앱인토스 콘솔/담당자 확인 필요 (이 파일은 가정)",
-      "dailyLimitUnit": "토스포인트 원 (= 냥코인 개수), KST 00:00 초기화",
+      "policyCheck": "⚠ 토스 포인트 지급 API의 최소/최대 금액, 사전 예산 충전, 호출 한도, 앱 내 재화→토스 포인트 지급 허용 범위는 앱인토스 콘솔/담당자 확인 필요 (이 파일은 가정)",
+      "dailyLimitUnit": "토스 포인트 원 (= 냥코인 개수), KST 00:00 초기화",
       "ui": "−/+ 스테퍼 (10 단위, 최소 10, 최대 min(잔액 내림 10단위, 오늘 남은 한도))"
     },
     "maxWithdrawable": 980,
@@ -203,7 +205,7 @@
       },
       "breakevenGrossEcpmKRW": "초반 뽑기 광고 1회당 지급 ≈ 2.3원 → 손익분기 총 eCPM ≈ 3,300원 (운영비 30% 차감), 수수료 15% 부활 시 ≈ 3,900원",
       "watch": [
-        "레전드 50 한 번에 크게 지급 → 일 출금 한도 50으로 분산",
+        "레전드 50 한 번에 크게 지급 → 하루 토스 포인트 지급 한도 50으로 분산",
         "다계정 어뷰징: 토스 계정당 1회 지급 + antiAbuse",
         "실제 eCPM이 손익분기보다 낮으면 4★/5★ 지급을 먼저 낮추기"
       ],
@@ -626,7 +628,7 @@
       "appliesTo": [
         "rewardedAd"
       ],
-      "note": "광고 포인트만 2배 (광고 냥코인 1개·중복 전환은 그대로)"
+      "note": "광고 젤리만 2배 (광고 냥코인 1개·중복 전환은 그대로)"
     },
     "monthlyCardPack": {
       "enabled": false,
@@ -661,7 +663,7 @@
     "deviceChange": "계정 기준 지급 (기기 무관)",
     "attendance": "출석은 서버 시각(KST) 기준 계정당 하루 1회, attendanceDays는 서버에서만 증가. 기념 보상은 계정당 milestone별 1회(멱등키 tossUserKey+attendanceMilestone:{days}).",
     "nyangCoinGrantOncePerReward": true,
-    "withdraw": "출금은 서버에서만 검증·지급(10 단위, 잔액 이하, requestId 멱등, 계정당 동시 1건). 클라이언트 금액은 신뢰하지 않아요."
+    "withdraw": "토스 포인트 지급은 게임 SDK에서 검증해요(10 단위, 잔액 이하, requestId 멱등, 계정당 동시 1건). 앱이 꺼지면 pending은 다시 지급하지 않아요."
   },
   "files": {
     "prices": "prices.json",
@@ -735,15 +737,15 @@
     "attendanceDay7": "pawSources.attendance.weeklyCycle.day7Bonus",
     "adPaw": 1,
     "adPawRule": {
-      "applies": "포인트 광고(pawSources.rewardedAd) 완료 1회마다",
+      "applies": "젤리 광고(pawSources.rewardedAd) 완료 1회마다",
       "dailyMax": 10,
-      "weekendDouble": "포인트만 2배, 냥코인은 1개 그대로",
-      "grantOn": "광고 완료 콜백 서버 검증 후 포인트와 같은 트랜잭션",
+      "weekendDouble": "젤리만 2배, 냥코인은 1개 그대로",
+      "grantOn": "광고 완료 콜백 서버 검증 후 젤리와 같은 트랜잭션",
       "idempotency": "tossUserKey + adRequestId",
       "notice": "광고를 봐서 냥코인x1이 지급되었습니다."
     },
     "adsDailyMaxTotal": 14,
     "adsYearlyMaxTotal": 5110,
-    "adsDailyMaxNote": "광고 뽑기 4 + 포인트 광고 10"
+    "adsDailyMaxNote": "광고 뽑기 4 + 젤리 광고 10"
   }
 }

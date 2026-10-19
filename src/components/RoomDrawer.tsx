@@ -12,7 +12,7 @@ import {
 import type { RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib/roomTypes";
 import { RoomCatsTab } from "./RoomCatsTab";
 
-const DRAWER_HELP = "중복 고양이 카드를 발바닥 포인트로 바꿀 수 있어요";
+const DRAWER_HELP = "중복 고양이 카드를 발바닥 젤리로 바꿀 수 있어요";
 const DRAWER_HEIGHT_COLLAPSED = 420;
 const DRAWER_HEIGHT_EXPANDED = 560;
 const DRAWER_DISMISS_HEIGHT = 280;
@@ -345,7 +345,7 @@ export function RoomDrawer({
           <button
             type="button"
             className="lucky-points-help"
-            aria-label="발바닥 포인트 도움말"
+            aria-label="발바닥 젤리 도움말"
             title={DRAWER_HELP}
             onClick={() => onHelp?.()}
           >

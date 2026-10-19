@@ -1,6 +1,6 @@
 {
  "_version": "prices-1.1 (2026-10-11)",
- "_note": "모든 방 아이템·타일 가격/코지 포인트. id는 room-assets-v6/items.json, room-assets-themes/items-themes.json 기준. price 0 = 방 기본 타일(방 해금 시 지급).",
+ "_note": "모든 방 아이템·타일 가격/코지. id는 room-assets-v6/items.json, room-assets-themes/items-themes.json 기준. price 0 = 방 기본 타일(방 해금 시 지급).",
  "tiers": {
   "small": {
    "nameKo": "작은 소품",

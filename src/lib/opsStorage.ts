@@ -259,6 +259,8 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
                 createdAt: typeof item.createdAt === "number" ? item.createdAt : 0,
                 updatedAt: typeof item.updatedAt === "number" ? item.updatedAt : 0,
                 failReason: typeof item.failReason === "string" ? item.failReason : undefined,
+                userHash: typeof item.userHash === "string" ? item.userHash : undefined,
+                rewardKey: typeof item.rewardKey === "string" ? item.rewardKey : undefined,
               };
             })
             .filter((item) => item.requestId)

@@ -202,7 +202,7 @@ export function dexClaimToastText(
 ): string | null {
   const sub = dexSubstep(step, "3-3");
   if (amounts?.nyangCoin != null && amounts.paw != null) {
-    return `냥코인 ${amounts.nyangCoin}개 + ${amounts.paw}포인트 받았어요`;
+    return `냥코인 ${amounts.nyangCoin}개 + ${amounts.paw}젤리 받았어요`;
   }
   return sub?.toast?.text ?? null;
 }
@@ -270,7 +270,7 @@ export function roomPointsCoachMark(step: TutorialStep): CoachMark | null {
   return {
     id: "step-4-4",
     target: resolveTutorialTarget(sub.target || "#room-points-chip"),
-    copy: sub.copy ?? "발바닥 포인트를 모아 원하는 아이템을 구매할 수 있어요!",
+    copy: sub.copy ?? "발바닥 젤리를 모아 원하는 아이템을 구매할 수 있어요!",
     cta: sub.cta ?? "완료",
     ackOnly: true,
     showFinger: sub.showFinger !== false,
@@ -331,7 +331,7 @@ export function step5CoachMark(
   return {
     id: "step-5-3",
     target: resolveTutorialTarget(sub.target || "#withdraw-picker", {}, sub.fallbackTarget),
-    copy: (sub.copy ?? "냥코인 10개부터 토스포인트로 바꿀 수 있어요").split("\n")[0],
+    copy: (sub.copy ?? "냥코인 10개부터 토스 포인트 지급을 받을 수 있어요").split("\n")[0],
     sub: lowHint ? `${footnote}\n${lowHint}` : footnote,
     cta: sub.cta ?? "알겠어요",
     ackOnly: true,

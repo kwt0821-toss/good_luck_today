@@ -446,7 +446,7 @@ export function DexDetailSheet({
                 setDupPhase("stepper");
               }}
             >
-              발바닥 포인트로 바꾸기
+              발바닥 젤리로 바꾸기
             </button>
           </div>
         ) : null}

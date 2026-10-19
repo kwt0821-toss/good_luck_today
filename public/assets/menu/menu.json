@@ -1,6 +1,6 @@
 {
  "_version": "menu-1.7 (2026-10-12)",
- "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(포인트, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
+ "_note": "서버에서 내려주는 메뉴 설정. 순서·노출·라벨·배지는 이 파일만 바꿔서 조정해요. 값 자체(젤리, 확률 등)는 economy.json / starter.json / 유저 상태 API에서 읽어요.",
  "panel": {
   "side": "right",
   "widthPt": 312,
@@ -17,7 +17,7 @@
   "stats": [
    {
     "id": "paw",
-    "label": "내 포인트",
+    "label": "내 젤리",
     "value": "user.pawBalance",
     "format": "number(ko-KR)",
     "icon": "icon-paw-mini.svg"
@@ -85,7 +85,7 @@
    }
   },
   "points": {
-   "label": "포인트 받기",
+   "label": "보상 받기",
    "icon": "icon-points.svg",
    "enabled": true,
    "open": "action:rewardedAd(paw)",
@@ -104,7 +104,7 @@
    },
    "ncoinTag": {
     "text": "+1",
-    "note": "광고 완료 시 냥코인 1개 (주말 2배는 포인트만)"
+    "note": "광고 완료 시 냥코인 1개 (주말 2배는 젤리만)"
    }
   },
   "exchange": {
@@ -157,7 +157,7 @@
    "_note": "확률 공개는 필수 — enabled=false로 내리지 마세요"
   },
   "helpEarn": {
-   "label": "냥코인·포인트 얻는 법",
+   "label": "냥코인·젤리 얻는 법",
    "icon": "icon-help.svg",
    "enabled": true,
    "open": "sheet:helpEarn",
@@ -172,7 +172,7 @@
    "icon": "icon-notice.svg",
    "enabled": true,
    "open": "sheet:notice",
-   "meta": "최신 이벤트 제목 pill (예: 주말 포인트 2배)",
+   "meta": "최신 이벤트 제목 pill (예: 주말 젤리 2배)",
    "data": "/notices API + economy.json → events",
    "badge": {
     "type": "pill-new",
@@ -286,7 +286,7 @@
     "weeklyCycle": {
      "when": "attendanceDays >= 7 && phase==weeklyCycle",
      "mockup": "menu-screen-b2.png",
-     "desc": "매일 출석하면 포인트·이용권·한정 선물이 쌓여요.",
+     "desc": "매일 출석하면 젤리·이용권·한정 선물이 쌓여요.",
      "cta": "오늘 출석하기 · {todayRewardLabel}",
      "ctaDone": "오늘 출석했어요",
      "note": "누적 출석은 빠지더라도 리셋되지 않아요",
@@ -316,9 +316,9 @@
   "exchange": {
    "title": "중복 카드 교환",
    "eyebrow": "SWAP",
-   "desc": "겹친 카드를 포인트로 바꿔요. 카드는 1장씩 남아요.",
+   "desc": "겹친 카드를 젤리로 바꿔요. 카드는 1장씩 남아요.",
    "cta": "모두 교환",
-   "confirmTitle": "중복 카드 {n}장을 발바닥 포인트 {p}P로 바꿀까요?",
+   "confirmTitle": "중복 카드 {n}장을 발바닥 젤리 {p}P로 바꿀까요?",
    "confirmSub": "카드마다 1장은 도감에 남아요 · 바꾼 카드는 되돌릴 수 없어요",
    "confirmCancel": "취소",
    "confirmOk": "바꾸기",
@@ -327,7 +327,7 @@
   "ticketShop": {
    "title": "확률업 뽑기권",
    "eyebrow": "TICKET SHOP",
-   "desc": "포인트로 광고 없이 확률업 뽑기를 해요.\n출석으로 받은 뽑기권과 보유 한도를 함께 써요.",
+   "desc": "젤리로 광고 없이 확률업 뽑기를 해요.\n출석으로 받은 뽑기권과 보유 한도를 함께 써요.",
    "mockup": "ticket-shop.png",
    "cardTitle": "확률업 이용권",
    "cardDesc": "긴 광고 없이 확률업 1회",
@@ -349,12 +349,12 @@
      "format": "{held}/{maxHold}"
     }
    ],
-   "balanceLabel": "내 포인트 {paw}P",
+   "balanceLabel": "내 젤리 {paw}P",
    "ctaBuy": "{price}P로 사기",
    "ctaDraw": "지금 확률업 뽑기",
    "toastBought": "확률업 뽑기권을 샀어요",
    "disabled": {
-    "paw": "포인트가 {price}P 필요해요",
+    "paw": "젤리가 {price}P 필요해요",
     "day": "오늘 구매 한도에 도달했어요",
     "week": "이번 주 구매 한도에 도달했어요",
     "hold": "보유 한도 {maxHold}장이에요"
@@ -364,20 +364,20 @@
   "rewards": {
    "title": "보상함",
    "eyebrow": "REWARDS",
-   "desc": "도감을 채우면 냥코인과 발바닥 포인트를 도감에서 받아요.",
+   "desc": "도감을 채우면 냥코인과 발바닥 젤리를 도감에서 받아요.",
    "cta": "도감에서 보상 받기",
    "wallet": {
     "title": "내 냥코인",
-    "withdrawCta": "토스 포인트 전환",
+    "withdrawCta": "토스 포인트 지급",
     "disabledHint": "10 냥코인부터 받을 수 있어요",
-    "confirmTitle": "토스포인트로 받을까요?",
-    "confirmDesc": "{amount}냥코인을 토스포인트 {amount}원으로 바꿔요.",
-    "successTitle": "토스포인트를 받았어요",
+    "confirmTitle": "토스 포인트를 지급할까요?",
+    "confirmDesc": "{amount}냥코인을 토스 포인트 {amount}원으로 지급해요.",
+    "successTitle": "토스 포인트를 받았어요",
     "successDesc": "{amount}원이 토스 포인트로 들어갔어요.",
-    "historyTitle": "받은 기록",
+    "historyTitle": "지급 내역",
     "status": {
      "done": "완료",
-     "pending": "처리 중",
+     "pending": "확인 중",
      "failed": "실패"
     },
     "chipStep": 10,

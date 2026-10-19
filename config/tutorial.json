@@ -64,7 +64,7 @@
      "copy": "코인을 톡 누르면 보상을 받아요",
      "sub": "냥코인 1 + 20P",
      "onlyTarget": true,
-     "action": "tap → POST /dex/rewards/claim → 코인 버스트 + sfx-reward-coin + 토스트 '냥코인 1개 + 20포인트 받았어요'",
+     "action": "tap → POST /dex/rewards/claim → 코인 버스트 + sfx-reward-coin + 토스트 '냥코인 1개 + 20젤리 받았어요'",
      "mockup": "tut-dex-3-2.png"
     },
     {
@@ -76,7 +76,7 @@
      "lines": [
       {
        "icon": "ncoin",
-       "text": "토스포인트로 바꿀 수 있는 코인이에요 · 1냥코인 = 1원"
+       "text": "토스 포인트 지급으로 바꿀 수 있는 코인이에요 · 1냥코인 = 1원"
       },
       {
        "icon": "ncoin",
@@ -88,7 +88,7 @@
       },
       {
        "icon": "paw",
-       "text": "발바닥 포인트는 방꾸미기 아이템을 사는 데 써요",
+       "text": "발바닥 젤리는 방꾸미기 아이템을 사는 데 써요",
        "style": "divider above, muted"
       }
      ],
@@ -161,7 +161,7 @@
      "screen": "menu",
      "target": "#menu-row-rewards",
      "copy": "보상함을 눌러 보세요",
-     "sub": "모은 냥코인과 토스포인트 받기가 여기 있어요",
+     "sub": "모은 냥코인과 토스 포인트 지급이 여기 있어요",
      "skip": true,
      "onlyTarget": true,
      "action": "tap → 보상함 시트",
@@ -170,8 +170,8 @@
     {
      "id": "5-3",
      "screen": "rewards sheet",
-     "target": ".wallet (잔액 + 출금 영역)",
-     "copy": "냥코인 10개부터 토스포인트로 바꿀 수 있어요",
+     "target": ".wallet (잔액 + 지급 영역)",
+     "copy": "냥코인 10개부터 토스 포인트 지급을 받을 수 있어요",
      "sub": "하루 최대 50원까지 받을 수 있어요 · 지금은 {bal}개, {10-bal}개만 더 모아요",
      "button": "알겠어요",
      "state": "잔액<10: −/+ 비활성, 버튼 비활성 '조금만 더 모으면 받을 수 있어요', 진행바 bal/10",
@@ -200,13 +200,13 @@
     "day": 4,
     "id": "intro-paw-ads",
     "target": "#btn-paw-ad",
-    "copy": "광고 보고 포인트 10개 받아요 (하루 10번까지)"
+    "copy": "광고 보고 젤리 10개 받아요 (하루 10번까지)"
    },
    {
     "day": 5,
     "id": "intro-dup-convert",
     "target": "#dex-dup-convert",
-    "copy": "겹친 카드는 포인트로 바꿀 수 있어요",
+    "copy": "겹친 카드는 젤리로 바꿀 수 있어요",
     "condition": "중복 카드 1장 이상"
    },
    {
@@ -273,7 +273,7 @@
      "screen": "menu",
      "target": "#menu-row-rewards",
      "copy": "냥코인이 10개 모였어요!",
-     "sub": "보상함에서 토스포인트로 받을 수 있어요",
+     "sub": "보상함에서 토스 포인트 지급을 받을 수 있어요",
      "button": "보상함 열기",
      "action": "tap #menu-row-rewards",
      "mockup": "tutorial-rewards-1.png"
@@ -283,7 +283,7 @@
      "screen": "sheet:rewards",
      "target": "#wallet-card",
      "copy": "내 냥코인은 여기 모여요",
-     "sub": "1냥코인은 토스포인트 1원이에요. 지금 {balance}냥코인 있어요",
+     "sub": "1냥코인은 토스 포인트 1원이에요. 지금 {balance}냥코인 있어요",
      "button": "다음",
      "mockup": "tutorial-rewards-2.png"
     },
@@ -317,12 +317,12 @@
      ],
      "button": "알겠어요",
      "complete": "tut.rewardsIntro = seen",
-     "note": "실제 받기는 유저가 직접 눌러요 (튜토리얼이 대신 출금하지 않음)",
+     "note": "실제 받기는 유저가 직접 눌러요 (튜토리얼이 대신 지급하지 않음)",
      "mockup": "tutorial-rewards-3.png"
     }
    ],
    "stepLabel": "보상함 · {n} / 4 (r3부터 시작하면 '보상함 · 1 / 2')",
-   "replay": "설정 › 튜토리얼 다시 보기 (메인 튜토리얼 뒤에 이어서, 보상 지급·출금 없음)"
+   "replay": "설정 › 튜토리얼 다시 보기 (메인 튜토리얼 뒤에 이어서, 보상 지급은 대신하지 않음)"
   }
  ],
  "replay": {

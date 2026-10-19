@@ -18,6 +18,9 @@ import {
   type AchvProgress,
 } from "./lib/achievements";
 import { toKstDateKey } from "./lib/date";
+import { refreshServerTime } from "./lib/tossClock";
+import { isTossApp } from "./lib/tossEnv";
+import { ensureGameUserHash } from "./lib/user";
 import { buildMenuViewModel } from "./lib/menuModel";
 import {
   MENU_SETTINGS_EVENT,
@@ -218,7 +221,12 @@ export default function App() {
     let cancelled = false;
     void (async () => {
       try {
-        const [nextConfig, nextOps] = await Promise.all([loadOpsConfig(), loadOpsState()]);
+        const [, nextConfig, nextOps] = await Promise.all([
+          refreshServerTime(),
+          loadOpsConfig(),
+          loadOpsState(),
+        ]);
+        if (isTossApp()) void ensureGameUserHash();
         if (cancelled) return;
         setConfig(nextConfig);
         setOps(nextOps);
@@ -658,7 +666,7 @@ export default function App() {
         nyNotify({
           key: "paw-ad-fail",
           kind: "error",
-          title: "포인트를 받지 못했어요",
+          title: "젤리를 받지 못했어요",
           sub: result.error || "네트워크를 확인하고 다시 눌러 주세요",
           action: { label: "다시 시도", onClick: () => setMenuOpen(true) },
         });
@@ -679,7 +687,7 @@ export default function App() {
         key: "paw-ad",
         kind: "reward",
         title: `{paw} <b>+${result.gained}</b> 받았어요`,
-        sub: "메뉴 › 포인트 받기",
+        sub: "메뉴 › 보상 받기",
         count: result.gained,
       });
       await haptic("success");

@@ -238,7 +238,7 @@ export async function grantPawAdReward(
   }
 
   if (remainingPawAds(next, config) <= 0) {
-    return { error: "오늘 포인트 광고를 모두 봤어요" };
+    return { error: "오늘 젤리 광고를 모두 봤어요" };
   }
 
   let gained = config.economy.pawSources.rewardedAd.pawPerAd;

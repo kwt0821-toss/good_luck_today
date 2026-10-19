@@ -167,7 +167,7 @@ export function HomeScreen({
       ? "내일 다시"
       : "5성↑";
   const rateUpSub = rateUpShopEntry
-    ? "포인트로 사기"
+    ? "젤리로 사기"
     : rateUpTickets > 0
       ? "뽑기권 사용"
       : !rateUpDisabled
