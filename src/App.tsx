@@ -61,6 +61,7 @@ import {
   willUseRateUpTicket,
 } from "./lib/opsState";
 import { loadOpsState, saveOpsState } from "./lib/opsStorage";
+import { clearPromoUrl, readPromoTarget, type PromoTarget } from "./lib/promoEntry";
 import type {
   CoachMark,
   DrawReservation,
@@ -116,6 +117,7 @@ type RewardsIntroSession = {
 
 function initialScreen(): Screen {
   if (typeof window === "undefined") return { name: "home" };
+  if (readPromoTarget() === "dex") return { name: "collection" };
   const name = new URLSearchParams(window.location.search).get("screen");
   if (
     name === "collection" ||
@@ -131,7 +133,12 @@ function initialScreen(): Screen {
 
 function initialMenuOpen(): boolean {
   if (typeof window === "undefined") return false;
+  if (readPromoTarget() === "rewards") return true;
   return new URLSearchParams(window.location.search).get("screen") === "menu";
+}
+
+function initialForceSheet(): MenuSheetId {
+  return readPromoTarget() === "rewards" ? "rewards" : null;
 }
 
 type AdSession = {
@@ -184,7 +191,11 @@ export default function App() {
   const [revealTutPhase, setRevealTutPhase] = useState<RevealTutPhase | null>(null);
   const [hideRevealToast, setHideRevealToast] = useState(false);
   const [rewardsIntro, setRewardsIntro] = useState<RewardsIntroSession | null>(null);
-  const [forceMenuSheet, setForceMenuSheet] = useState<MenuSheetId>(null);
+  const [forceMenuSheet, setForceMenuSheet] = useState<MenuSheetId>(initialForceSheet);
+  const promoTargetRef = useRef<PromoTarget | null>(readPromoTarget());
+  const [promoGate, setPromoGate] = useState<PromoTarget | null>(promoTargetRef.current);
+  const [promoHoldIntros, setPromoHoldIntros] = useState(false);
+  const [promoRewardsBack, setPromoRewardsBack] = useState(false);
   const [stepThenActive, setStepThenActive] = useState(false);
   const [dexTutPhase, setDexTutPhase] = useState<DexTutorialPhase>(null);
   const [roomTutPhase, setRoomTutPhase] = useState<RoomTutorialPhase>(null);
@@ -231,6 +242,11 @@ export default function App() {
         if (cancelled) return;
         setConfig(nextConfig);
         setOps(nextOps);
+        if (promoTargetRef.current && !nextOps.tutorialDone) {
+          setScreen({ name: "home" });
+          setMenuOpen(false);
+          setForceMenuSheet(null);
+        }
         syncAudioSettingsFromStorage();
         await AudioManager.init();
         AudioManager.installTapCapture();
@@ -244,7 +260,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [setScreen]);
 
   useEffect(() => {
     if (menuOpen) {
@@ -293,7 +309,39 @@ export default function App() {
   }, [ops, achvConfig]);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!ops?.tutorialDone || !promoGate || tutorialReplayStep != null) return;
+    const target = promoGate;
+    // Tutorial completion sets home/menu in the same turn as tutorialDone.
+    // Apply the destination after that cleanup so it is not overwritten.
+    const timer = window.setTimeout(() => {
+      clearPromoUrl();
+      setPromoGate(null);
+      setPromoHoldIntros(true);
+      if (target === "dex") {
+        setPromoRewardsBack(false);
+        setMenuOpen(false);
+        setForceMenuSheet(null);
+        setScreen({ name: "collection" });
+        return;
+      }
+      setScreen({ name: "home" });
+      setForceMenuSheet("rewards");
+      setMenuOpen(true);
+      setPromoRewardsBack(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [ops, promoGate, tutorialReplayStep, setScreen]);
+
+  useEffect(() => {
+    if (!promoHoldIntros) return;
+    const atDex = screen.name === "collection";
+    const atRewards = screen.name === "home" && menuOpen;
+    if (atDex || atRewards) return;
+    setPromoHoldIntros(false);
+  }, [promoHoldIntros, screen.name, menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen || promoGate) return;
     if (!menuHistRef.current) {
       window.history.pushState({ menu: true }, "");
       menuHistRef.current = true;
@@ -304,7 +352,7 @@ export default function App() {
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
-  }, [menuOpen]);
+  }, [menuOpen, promoGate]);
 
   useEffect(() => {
     const openDex = () => setScreen({ name: "collection" });
@@ -505,6 +553,7 @@ export default function App() {
     if (rewardsIntro) return;
     if (tutorialReplayStep != null) return;
     if (!ops.tutorialDone) return;
+    if (promoGate || promoHoldIntros) return;
     if (ops.tut.rewardsIntro !== "unseen") return;
     if (ad || screen.name === "reveal" || screen.name === "draw") return;
     if (featureIntro) return;
@@ -520,6 +569,8 @@ export default function App() {
     rewardsIntroConfig,
     rewardsIntro,
     tutorialReplayStep,
+    promoGate,
+    promoHoldIntros,
     ad,
     screen.name,
     menuOpen,
@@ -529,6 +580,7 @@ export default function App() {
 
   useEffect(() => {
     if (!ops || !config || !ops.tutorialDone || featureIntro || rewardsIntro) return;
+    if (promoGate || promoHoldIntros) return;
     const day = daysSinceInstall(ops, today);
     const ownedDup = false; // day-5 condition checked lightly; full dup check in dex later
     const candidate = config.tutorial.featureIntros.schedule.find((intro) => {
@@ -538,7 +590,7 @@ export default function App() {
       return true;
     });
     if (candidate) setFeatureIntro(candidate);
-  }, [ops, config, today, featureIntro, rewardsIntro]);
+  }, [ops, config, today, featureIntro, rewardsIntro, promoGate, promoHoldIntros]);
 
   const beginDraw = useCallback(
     async (forceSlot?: "tutorial" | "normal" | "rateUp") => {
@@ -1246,6 +1298,11 @@ export default function App() {
   const isMainScreen =
     !booting && !bootError && screen.name === "home" && !menuOpen && !adFallbackOpen;
   const { modal: exitModal } = useExitConfirmOnBack(isMainScreen);
+  useBackHandler(promoRewardsBack && menuOpen, () => {
+    setPromoRewardsBack(false);
+    setForceMenuSheet(null);
+    closeMenu();
+  }, 21);
   useBackHandler(
     adFallbackOpen,
     () => {
