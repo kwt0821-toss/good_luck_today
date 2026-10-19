@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { ncoinIcon } from "../lib/ncoinIcon";
 import type { CoachMark, FeatureIntro } from "../lib/opsTypes";
@@ -8,6 +8,8 @@ const SKIP_TOP_ZONE_PT = 160;
 const BUBBLE_GAP = 16;
 const PAD_TOP = 16;
 const PAD_BOTTOM = 20;
+const FEATURE_PAD_TOP = 12;
+const FEATURE_PAD_BOTTOM = 16;
 const PAW_ICON = "/assets/menu/icon-paw-mini.svg";
 
 /** Inline 냥코인 / 발바닥 포인트 icons wherever those words appear. */
@@ -56,6 +58,12 @@ function fixedFrameRect(): DOMRect {
   const root = document.getElementById("root");
   if (root) return root.getBoundingClientRect();
   return new DOMRect(0, 0, window.innerWidth, window.innerHeight);
+}
+
+function safeAreaBottomPx(): number {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue("--sa-bottom").trim();
+  const n = Number.parseFloat(raw);
+  return Number.isFinite(n) ? n : 0;
 }
 
 export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
@@ -516,29 +524,56 @@ type FeatureIntroBubbleProps = {
 };
 
 export function FeatureIntroBubble({ intro, onDismiss }: FeatureIntroBubbleProps) {
+  const bubbleRef = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
 
-  useEffect(() => {
-    const el = document.querySelector(intro.target);
-    const next = el?.getBoundingClientRect();
-    const frame = fixedFrameRect();
-    if (!next) {
-      setPos({ left: 24, top: 120 });
-      return;
-    }
-    setPos({
-      left: Math.min(frame.width - 260, Math.max(16, next.left - frame.left)),
-      top: next.bottom - frame.top + 8,
-    });
+  useLayoutEffect(() => {
+    const place = () => {
+      const frame = fixedFrameRect();
+      const bubble = bubbleRef.current;
+      const bubbleH = bubble?.offsetHeight ?? 76;
+      const bubbleW = bubble?.offsetWidth ?? 220;
+      const bottomLimit = frame.height - safeAreaBottomPx() - FEATURE_PAD_BOTTOM;
+      const maxTop = Math.max(FEATURE_PAD_TOP, bottomLimit - bubbleH);
+      const el = document.querySelector(intro.target);
+      let left = 16;
+      let top = Math.min(120, maxTop);
+      if (el) {
+        const next = el.getBoundingClientRect();
+        left = Math.min(
+          Math.max(12, frame.width - bubbleW - 12),
+          Math.max(12, next.left - frame.left),
+        );
+        const below = next.bottom - frame.top + 8;
+        if (below <= maxTop) {
+          top = below;
+        } else {
+          const above = next.top - frame.top - 8 - bubbleH;
+          top = above >= FEATURE_PAD_TOP ? Math.min(above, maxTop) : maxTop;
+        }
+      }
+      setPos((prev) => (prev && prev.left === left && prev.top === top ? prev : { left, top }));
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    if (bubbleRef.current) ro.observe(bubbleRef.current);
+    window.addEventListener("resize", place);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", place);
+    };
   }, [intro]);
-
-  if (!pos) return null;
 
   return (
     <button
+      ref={bubbleRef}
       type="button"
       className="feature-intro"
-      style={{ left: pos.left, top: pos.top }}
+      style={{
+        left: pos?.left ?? 16,
+        top: pos?.top ?? 16,
+        visibility: pos ? "visible" : "hidden",
+      }}
       onClick={onDismiss}
     >
       <strong>새 기능</strong>
