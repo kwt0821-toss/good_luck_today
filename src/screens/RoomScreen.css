@@ -19,6 +19,73 @@
   color: rgba(243, 233, 215, 0.6);
 }
 
+.room-error-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.room-error {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  box-sizing: border-box;
+  padding: 24px;
+  text-align: center;
+  background: #24182c;
+  color: #f3e9d7;
+  font-family: "Noto Sans KR", "Toss Product Sans", sans-serif;
+}
+
+.room-error-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.room-error-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.room-error-actions button {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #ffc48a;
+  color: #221d38;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.room-error-actions button.is-ghost {
+  background: transparent;
+  color: #f3e9d7;
+  border: 1px solid rgba(243, 233, 215, 0.35);
+}
+
+.room-error-detail {
+  max-width: 300px;
+  margin: 0;
+  color: rgba(243, 233, 215, 0.55);
+  font-size: 11px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.room-error-detail span {
+  display: block;
+  margin-top: 4px;
+}
+
 .lucky-grain {
   position: absolute;
   inset: 0;

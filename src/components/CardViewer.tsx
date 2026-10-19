@@ -113,12 +113,26 @@ export function CardFlipStack({
   );
 }
 
+/** Step 17 → 15 → 14px so a long fortune stays within about four lines. */
+function fortuneLineClass(line: string): string {
+  const parts = line
+    .split("\n")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  const rowsAt = (perLine: number) =>
+    parts.reduce((count, part) => count + Math.max(1, Math.ceil(part.length / perLine)), 0);
+  if (rowsAt(12) <= 4) return "";
+  if (rowsAt(14) <= 4) return "is-15";
+  return "is-14";
+}
+
 function FortuneBubble({ line, accent }: { line: string; accent: string }) {
   const style = { "--fortune-accent": accent } as CSSProperties;
+  const size = fortuneLineClass(line);
   return (
     <div className="card-viewer-bubble" style={style}>
       <p className="card-viewer-kicker">🍀 오늘의 한 줄</p>
-      <p className="card-viewer-line">{line}</p>
+      <p className={["card-viewer-line", size].filter(Boolean).join(" ")}>{line}</p>
     </div>
   );
 }

@@ -50,6 +50,9 @@ function promoEntryPages(): Plugin {
 
 export default defineConfig({
   plugins: [react(), imageCachePlugin(), promoEntryPages()],
+  build: {
+    target: ["es2020", "safari14"],
+  },
   server: {
     host: "0.0.0.0",
     port: 5173,

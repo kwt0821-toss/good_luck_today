@@ -1100,7 +1100,7 @@
 
 .main-rateup-tip-tail {
   position: absolute;
-  left: 50%;
+  left: calc(50% - var(--tip-shift, 0px));
   bottom: -6px;
   width: 10px;
   height: 10px;
@@ -1857,10 +1857,10 @@
 @keyframes main-rateup-tip-bounce {
   0%,
   100% {
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(calc(-50% + var(--tip-shift, 0px))) translateY(0);
   }
   50% {
-    transform: translateX(-50%) translateY(-3px);
+    transform: translateX(calc(-50% + var(--tip-shift, 0px))) translateY(-3px);
   }
 }
 
@@ -1875,7 +1875,7 @@
 
 .main-screen.is-reduce .main-rateup-tip {
   animation: none;
-  transform: translateX(-50%);
+  transform: translateX(calc(-50% + var(--tip-shift, 0px)));
 }
 
 .main-screen.is-reduce .main-deck-card {

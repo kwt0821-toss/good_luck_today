@@ -110,6 +110,7 @@ import { useExitConfirmOnBack } from "./hooks/useExitConfirmOnBack";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { RatesGuideScreen } from "./screens/RatesGuideScreen";
+import { RoomErrorBoundary } from "./components/RoomErrorBoundary";
 import { RoomScreen, type RoomTutorialPhase } from "./screens/RoomScreen";
 import type { Screen } from "./types";
 import "./App.css";
@@ -1498,6 +1499,7 @@ export default function App() {
       ) : null}
 
       {screen.name === "room" ? (
+        <RoomErrorBoundary onHome={leaveRoom}>
         <RoomScreen
           onBack={leaveRoom}
           tutorialActive={Boolean(
@@ -1526,6 +1528,7 @@ export default function App() {
             if (roomTutPhase === "done" || roomTutPhase === "points") void advanceTutorial();
           }}
         />
+        </RoomErrorBoundary>
       ) : null}
 
       {screen.name === "reveal" && reservation ? (

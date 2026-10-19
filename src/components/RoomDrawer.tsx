@@ -507,7 +507,12 @@ export function RoomDrawer({
             >
               <span className="lucky-cell-tile">
                 {item.tileImage || item.id ? (
-                  <img src={roomAsset(item.tileImage ?? `tiles/${item.id}.png`)} alt="" />
+                  <img
+                    src={roomAsset(item.tileImage ?? `tiles/${item.id}.png`)}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
                 ) : (
                   <span className="lucky-cell-empty" />
                 )}

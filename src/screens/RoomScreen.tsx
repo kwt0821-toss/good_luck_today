@@ -123,6 +123,7 @@ export function RoomScreen({
   const [grid, setGrid] = useState<RoomGridFile | null>(null);
   const [roomsFile, setRoomsFile] = useState<RoomsFile | null>(null);
   const [state, setState] = useState<RoomSaveState | null>(null);
+  const [loadError, setLoadError] = useState<Error | null>(null);
   const [economyRooms, setEconomyRooms] = useState<OpsEconomy["rooms"]>([]);
   const [itemTiers, setItemTiers] = useState<Record<string, PriceTier>>({});
   const [starterDrawerIds, setStarterDrawerIds] = useState<string[]>([]);
@@ -221,7 +222,9 @@ export function RoomScreen({
           void saveRoomState(synced);
         }
       },
-    );
+    ).catch((error: unknown) => {
+      setLoadError(error instanceof Error ? error : new Error(String(error)));
+    });
     void Promise.all([loadDexCatalog(), loadDexOwned()]).then(([catalog, owned]) => {
       const thumbs = catalog.cards
         .filter((card) => (owned[card.id]?.count ?? 0) > 0)
@@ -247,6 +250,10 @@ export function RoomScreen({
       if (w > 0) setViewW(w);
     };
     apply();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", apply);
+      return () => window.removeEventListener("resize", apply);
+    }
     const ro = new ResizeObserver(apply);
     ro.observe(el);
     return () => ro.disconnect();
@@ -356,6 +363,8 @@ export function RoomScreen({
   });
   useLoadingHold("room", !state || !roomsFile);
 
+  if (loadError) throw loadError;
+
   if (!state || !roomsFile) {
     return <div className="lucky-room is-loading" />;
   }
@@ -369,6 +378,15 @@ export function RoomScreen({
   const roomDef = roomById(roomsFile.rooms, displayRoomId) ?? roomsFile.rooms[0];
   const lockedRooms = roomsFile.rooms.filter((room) => !state.unlocked.includes(room.id));
   const currentIndex = Math.max(0, unlockedIds.indexOf(displayRoomId));
+  // First paint decodes only the room on screen. Neighbors mount once a swipe starts.
+  const roomPages =
+    mode === "edit"
+      ? [{ roomId: displayRoomId, index: 0 }]
+      : unlockedIds
+          .map((roomId, index) => ({ roomId, index }))
+          .filter(({ index }) =>
+            dragX !== 0 ? Math.abs(index - currentIndex) <= 1 : index === currentIndex,
+          );
   const otherRoomIds = Object.fromEntries(items.map((item) => [item.id, placedInOtherRoom(state, item.id)]));
   const suggestItemId =
     tutorialActive && suggestTile
@@ -918,7 +936,7 @@ export function RoomScreen({
   const confirmPreview = async () => {
     if (!preview || !preview.valid || committing || !state) return;
     setCommitting(true);
-    const before = structuredClone(state);
+    const before = cloneLayout(state);
     const requestId = newRequestId();
     const result = await commitPlacement({
       state,
@@ -955,7 +973,7 @@ export function RoomScreen({
 
   const putPreviewBack = async () => {
     if (!preview || preview.kind === "paint" || preview.origin !== "placed" || !state) return;
-    const before = structuredClone(state);
+    const before = cloneLayout(state);
     const result = await putBackToDrawer({
       state,
       roomId: state.currentRoomId,
@@ -1432,7 +1450,7 @@ export function RoomScreen({
             transform: `translate3d(${mode === "view" ? -currentIndex * viewW + dragX : 0}px, 0, 0)`,
           }}
         >
-          {(mode === "edit" ? [displayRoomId] : unlockedIds).map((roomId, index) => {
+          {roomPages.map(({ roomId, index }) => {
             const roomLayout = state.rooms[roomId];
             if (!roomLayout) return null;
             const active = roomId === displayRoomId;
@@ -1869,7 +1887,7 @@ export function RoomScreen({
                 const cleared = cancelPreview(layout);
                 base = patchCurrentRoom(state, cleared);
               }
-              setEditUndo(structuredClone(base));
+              setEditUndo(cloneLayout(base));
               const result = await clearFurnitureToDrawer({
                 state: base,
                 roomId: state.currentRoomId,

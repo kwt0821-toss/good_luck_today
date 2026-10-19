@@ -24,7 +24,8 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
     currency.nyangCoin = { nameKo: "냥코인", unit: "NYANG", note: "1냥코인 = 토스 포인트 1원", ...toss };
     delete currency.toss;
   }
-  const pawSources = structuredClone(raw.pawSources) as OpsEconomy["pawSources"] & Record<string, unknown>;
+  const pawSources = JSON.parse(JSON.stringify(raw.pawSources)) as OpsEconomy["pawSources"] &
+    Record<string, unknown>;
   const first = pawSources.newCardFirstGet as OpsEconomy["pawSources"]["newCardFirstGet"] & {
     toss?: number;
   };

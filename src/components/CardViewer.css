@@ -47,15 +47,16 @@
 /* Card settles after the 60ms + 380ms entrance, then the line waits 300ms. */
 .dex-sheet .card-viewer-caption {
   animation-delay: 740ms;
-  /* Same slot with or without 오늘의 한 줄, so the pager stays put. */
-  height: 118px;
-  min-height: 118px;
+  height: auto;
+  min-height: 0;
   margin-top: 8px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .dex-sheet .card-viewer-caption.is-empty {
   visibility: hidden;
+  height: 118px;
+  min-height: 118px;
 }
 
 .dex-sheet .card-viewer-stage .dex-flip-stage {
@@ -118,19 +119,18 @@
   text-align: center;
   font-size: 17px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.45;
   color: #3a2a20;
   white-space: pre-line;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
+  overflow: visible;
 }
 
-@media (max-width: 389px) {
-  .card-viewer-line {
-    font-size: 15px;
-  }
+.card-viewer-line.is-15 {
+  font-size: 15px;
+}
+
+.card-viewer-line.is-14 {
+  font-size: 14px;
 }
 
 @keyframes card-viewer-fortune-in {
@@ -206,10 +206,13 @@
   position: fixed;
   inset: 0;
   z-index: 80;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   container-type: size;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .card-zoom-backdrop {
@@ -228,8 +231,10 @@
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
-  max-height: 100%;
-  width: min(84cqw, calc((100cqh - 220px) * 900 / 1400));
+  flex: 0 0 auto;
+  margin-top: auto;
+  margin-bottom: auto;
+  width: min(80cqw, calc((100cqh - 300px) * 900 / 1400));
   padding: 8px 0 12px;
   pointer-events: none;
 }

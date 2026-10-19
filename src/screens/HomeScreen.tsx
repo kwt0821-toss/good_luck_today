@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 
 import { TitleRibbon } from "../components/TitleRibbon";
 import { formatCountdownHms, formatLuckyCatalogDate, msUntilNextKstMidnight } from "../lib/date";
@@ -93,6 +93,8 @@ export function HomeScreen({
   const navTimer = useRef(0);
   const navLock = useRef(false);
   const [reduce, setReduce] = useState(() => shouldReduceMenuMotion());
+  const tipRef = useRef<HTMLDivElement>(null);
+  const [tipShift, setTipShift] = useState(0);
   const dateLabel = formatLuckyCatalogDate();
 
   useEffect(() => {
@@ -185,6 +187,42 @@ export function HomeScreen({
     : rateUpTickets > 0
       ? ["뽑기권으로", "광고 없이"]
       : [`${rateUpAdSeconds}초 광고 보고`];
+  const rateUpTipKey = rateUpTipLines.join("\n");
+  useLayoutEffect(() => {
+    if (!showRateUpTip) {
+      setTipShift(0);
+      return;
+    }
+    let cancelled = false;
+    const clamp = () => {
+      if (cancelled) return;
+      const tip = tipRef.current;
+      if (!tip) return;
+      const previous = tip.style.getPropertyValue("--tip-shift");
+      tip.style.setProperty("--tip-shift", "0px");
+      const rect = tip.getBoundingClientRect();
+      if (previous) tip.style.setProperty("--tip-shift", previous);
+      else tip.style.removeProperty("--tip-shift");
+      const margin = 12;
+      const vw = window.innerWidth;
+      let shift = 0;
+      if (rect.left < margin) shift += margin - rect.left;
+      const rightOverflow = rect.right + shift - (vw - margin);
+      if (rightOverflow > 0) shift -= rightOverflow;
+      if (rect.left + shift < margin) shift += margin - (rect.left + shift);
+      const next = Math.round(shift);
+      setTipShift((cur) => (cur === next ? cur : next));
+    };
+    clamp();
+    window.addEventListener("resize", clamp);
+    void document.fonts?.ready.then(() => {
+      if (!cancelled) clamp();
+    });
+    return () => {
+      cancelled = true;
+      window.removeEventListener("resize", clamp);
+    };
+  }, [showRateUpTip, rateUpTipKey, rateUpIsAd]);
   const againLabel = drawAgainLabel(nextDrawKind);
   const againUsesAd = nextDrawKind === "normal" || nextDrawKind === "rateUpAd";
   const drawHint =
@@ -278,7 +316,9 @@ export function HomeScreen({
           <div className="main-rateup-wrap">
             {showRateUpTip ? (
               <div
+                ref={tipRef}
                 className={`main-rateup-tip ${rateUpIsAd ? "is-wide" : ""}`}
+                style={{ "--tip-shift": `${tipShift}px` } as CSSProperties}
                 role="status"
                 aria-live="polite"
               >

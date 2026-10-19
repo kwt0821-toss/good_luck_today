@@ -36,8 +36,12 @@ export function isEquipped(user: UserState, item: ShopItem): boolean {
 }
 
 function newInstanceId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch {
+    // Some iOS webviews expose randomUUID and then throw (missing before 15.4).
   }
   return `place_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
