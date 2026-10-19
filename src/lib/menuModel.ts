@@ -98,7 +98,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
   const friendEnabled = Boolean(config.economy.events.friendInvite?.enabled);
   const latestNotice = weekendDouble
     ? { id: "weekend-double-paw", title: "주말 젤리 2배" }
-    : { id: "welcome", title: "럭키캣에 오신 걸 환영해요" };
+    : { id: "welcome", title: "행운냥에 오신 걸 환영해요" };
 
   const rowViews: Record<string, MenuRowView> = {};
   for (const [id, def] of Object.entries(menu.rows)) {

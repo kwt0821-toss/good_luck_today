@@ -5,7 +5,7 @@ import { TOSS_NAV_BG } from "./src/lib/tossTheme";
 export default defineConfig({
   appName: "lucky-cat",
   brand: {
-    displayName: "럭키캣",
+    displayName: "행운냥",
     primaryColor: "#6EC8D4",
     icon: "public/icon.svg",
   },

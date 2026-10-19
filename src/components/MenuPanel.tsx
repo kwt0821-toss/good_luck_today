@@ -1055,7 +1055,7 @@ export function MenuPanel({
             </div>
 
             <div className="menu-footer">
-              <span>LUCKY CAT · v1.0.0</span>
+              <span>행운냥 · v1.0.0</span>
               <button
                 type="button"
                 onClick={() =>

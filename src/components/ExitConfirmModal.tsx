@@ -84,7 +84,7 @@ export function ExitConfirmModal({ open, onStay, onExit }: ExitConfirmModalProps
 
         <div id="ex-desc">
           <div className="ex-text">조금만 더 놀다 가면 안 될까냥?</div>
-          <div className="ex-sub">럭키캣을 종료할까요?</div>
+          <div className="ex-sub">행운냥을 종료할까요?</div>
         </div>
 
         <div className="ex-btns">
