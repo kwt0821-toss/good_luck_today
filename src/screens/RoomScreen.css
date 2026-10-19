@@ -1640,6 +1640,8 @@
   max-height: none;
   overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(243, 233, 215, 0.38) transparent;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 8px;
   width: 100%;
@@ -2136,4 +2138,17 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+.lucky-drawer-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lucky-drawer-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lucky-drawer-grid::-webkit-scrollbar-thumb {
+  background: rgba(243, 233, 215, 0.38);
+  border-radius: 99px;
 }

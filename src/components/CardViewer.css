@@ -47,6 +47,15 @@
 /* Card settles after the 60ms + 380ms entrance, then the line waits 300ms. */
 .dex-sheet .card-viewer-caption {
   animation-delay: 740ms;
+  /* Same slot with or without 오늘의 한 줄, so the pager stays put. */
+  height: 118px;
+  min-height: 118px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.dex-sheet .card-viewer-caption.is-empty {
+  visibility: hidden;
 }
 
 .dex-sheet .card-viewer-stage .dex-flip-stage {

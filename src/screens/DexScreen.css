@@ -228,6 +228,8 @@
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(243, 233, 215, 0.38) transparent;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   margin: 18px -24px 0;
@@ -735,6 +737,11 @@
   width: 100%;
   height: auto;
   max-height: min(720px, 92%);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(243, 233, 215, 0.38) transparent;
   /* Scroll when dup exchange UI needs room; spin stage keeps its own overflow. */
   overflow-x: hidden;
   overflow-y: auto;
@@ -800,7 +807,7 @@
 }
 
 .dex-sheet-title {
-  margin: 18px 0 0;
+  margin: 8px 0 0;
   font-family: Poppins, sans-serif;
   font-weight: 800;
   font-size: 26px;
@@ -825,7 +832,7 @@
   position: relative;
   width: 220px;
   height: 342px;
-  margin: 22px auto 0;
+  margin: 12px auto 0;
   touch-action: pan-y;
   /* Perspective only — never animate transform here (flattens 3D / hides spin).
      900px (tighter than 1400) makes edge-on turns read more clearly. */
@@ -1003,7 +1010,7 @@
 .dex-stats {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  margin-top: 20px;
+  margin-top: 12px;
   padding-top: 14px;
   border-top: 1px solid rgba(243, 233, 215, 0.12);
 }
@@ -1043,7 +1050,8 @@
 }
 
 .dex-pager {
-  margin: 16px 0 0;
+  flex: 0 0 auto;
+  margin: 10px 0 4px;
   text-align: center;
   font-family: Poppins, "Noto Sans KR", sans-serif;
   font-weight: 700;
@@ -1682,4 +1690,21 @@
   .dex-celebrate-sheet {
     animation: none !important;
   }
+}
+
+.dex-body::-webkit-scrollbar,
+.dex-sheet::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.dex-body::-webkit-scrollbar-track,
+.dex-sheet::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dex-body::-webkit-scrollbar-thumb,
+.dex-sheet::-webkit-scrollbar-thumb {
+  background: rgba(243, 233, 215, 0.38);
+  border-radius: 99px;
 }

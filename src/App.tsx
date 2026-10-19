@@ -4,7 +4,8 @@ import { AudioManager } from "./audio/AudioManager";
 import { AchievementsSheet } from "./components/AchievementsSheet";
 import { AdModal } from "./components/AdModal";
 import { NyangNotifyHost } from "./components/NyangNotifyHost";
-import { nyNotify } from "./lib/nyangNotify";
+import { nyDismiss, nyNotify } from "./lib/nyangNotify";
+import { withJosa } from "./lib/josa";
 import { MenuPanel } from "./components/MenuPanel";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import {
@@ -85,6 +86,7 @@ import {
   roomPointsCoachMark,
   roomPreviewCoachMark,
   step5CoachMark,
+  tutorialStepLabel,
   type RewardsTutPhase,
 } from "./lib/tutorialFlow";
 import type { DexTutorialPhase } from "./screens/DexScreen";
@@ -158,7 +160,15 @@ export default function App() {
 
   const [ops, setOps] = useState<OpsState | null>(null);
   const [config, setConfig] = useState<OpsConfig | null>(null);
-  const [screen, setScreen] = useState<Screen>(initialScreen);
+  const [screen, setScreenState] = useState<Screen>(initialScreen);
+  const screenNameRef = useRef(initialScreen.name);
+  const setScreen = useCallback((next: Screen) => {
+    if (screenNameRef.current !== next.name) {
+      nyDismiss();
+      screenNameRef.current = next.name;
+    }
+    setScreenState(next);
+  }, []);
   const [menuOpen, setMenuOpen] = useState(initialMenuOpen);
   const [menuIconDot, setMenuIconDot] = useState(false);
   const [dexClaimDot, setDexClaimDot] = useState(false);
@@ -300,7 +310,7 @@ export default function App() {
       window.removeEventListener("lucky-open-dex", openDex);
       window.removeEventListener("lucky-open-rewards", openRewards);
     };
-  }, []);
+  }, [setScreen]);
 
   const closeMenu = useCallback(() => {
     setMenuOpen(false);
@@ -376,7 +386,7 @@ export default function App() {
             if (next) return next;
           }
           // Toast stays as the copy. Finger + shade point at 도감에서 보기.
-          return revealDexButtonMark();
+          return revealDexButtonMark(tutorialStepLabel(tutorialStep, "STEP 2/6"));
         }
         // Card is still turning — wait for the toast before the shade.
         return null;
@@ -463,7 +473,7 @@ export default function App() {
       setRewardsTutPhase("menu");
       if (screen.name !== "home") setScreen({ name: "home" });
     }
-  }, [tutorialStep, roomTutPhase, rewardsTutPhase, screen.name]);
+  }, [tutorialStep, roomTutPhase, rewardsTutPhase, screen.name, setScreen]);
 
   // Reset room-ready gate when leaving the room screen.
   useEffect(() => {
@@ -503,6 +513,7 @@ export default function App() {
     screen.name,
     menuOpen,
     featureIntro,
+    setScreen,
   ]);
 
   useEffect(() => {
@@ -622,7 +633,7 @@ export default function App() {
         presentation: startAdPresentation(),
       });
     },
-    [ops, config, persistOps],
+    [ops, config, persistOps, setScreen],
   );
 
   useEffect(() => {
@@ -660,7 +671,7 @@ export default function App() {
           kind: "reward",
           title:
             result.adPawNotice ??
-            `광고를 봐서 냥코인x${result.adPawNyangCoin}이 지급되었습니다.`,
+            `광고를 봐서 냥코인 ${result.adPawNyangCoin}${withJosa("개", "이가")} 지급되었습니다.`,
           count: result.adPawNyangCoin,
         });
       }
@@ -697,7 +708,7 @@ export default function App() {
     setAdNyangToast(
       confirmed.adNyangCoin > 0
         ? (confirmed.adNyangNotice ??
-            `카드를 뽑아 냥코인x${confirmed.adNyangCoin}이 지급되었습니다.`)
+            `카드를 뽑아 냥코인 ${confirmed.adNyangCoin}${withJosa("개", "이가")} 지급되었습니다.`)
         : null,
     );
     setReservation(confirmed.reservation);
@@ -713,7 +724,7 @@ export default function App() {
     }
     await haptic("success");
     setScreen({ name: "reveal" });
-  }, [ad, ops, persistOps]);
+  }, [ad, ops, persistOps, setScreen]);
 
   const cancelAd = useCallback(async () => {
     if (!ops) {
@@ -854,7 +865,7 @@ export default function App() {
         tut: { ...ops.tut, rewardsIntro: status },
       });
     },
-    [ops, persistOps, rewardsIntro],
+    [ops, persistOps, rewardsIntro, setScreen],
   );
 
   const advanceRewardsIntro = useCallback(async () => {
@@ -920,7 +931,7 @@ export default function App() {
     setMenuOpen(false);
     setForceMenuSheet(null);
     window.clearTimeout(claimToastTimerRef.current);
-  }, [ops, persistOps, tutorialReplayStep, rewardsIntro, finishRewardsIntro]);
+  }, [ops, persistOps, tutorialReplayStep, rewardsIntro, finishRewardsIntro, setScreen]);
 
   const onRevealToastShown = useCallback(() => {
     if (!tutorialStep || tutorialStep.step !== 2) return;
@@ -1172,6 +1183,7 @@ export default function App() {
     rewardsIntro,
     advanceRewardsIntro,
     screen.name,
+    setScreen,
     revealTutPhase,
     stepThenActive,
     dexTutPhase,
@@ -1211,12 +1223,12 @@ export default function App() {
     setDexTutPhase(null);
     setDexFocusCardId(null);
     setScreen({ name: "home" });
-  }, [tutorialReplayStep, ops, dexTutPhase]);
+  }, [tutorialReplayStep, ops, dexTutPhase, setScreen]);
 
   const leaveRoom = useCallback(() => {
     if (roomTutPhase) return;
     setScreen({ name: "home" });
-  }, [roomTutPhase]);
+  }, [roomTutPhase, setScreen]);
 
   // Home only. The menu pushes its own history entry, so back there must stay the default pop.
   const adFallbackOpen = Boolean(ad && ad.presentation === "mock");

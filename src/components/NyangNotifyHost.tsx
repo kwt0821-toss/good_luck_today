@@ -7,6 +7,7 @@ import {
   nyNotifyGetSnapshot,
   nyNotifySubscribe,
   nyResolveText,
+  nySpeakText,
   type NyKind,
 } from "../lib/nyangNotify";
 import { AudioManager } from "../audio/AudioManager";
@@ -173,10 +174,11 @@ export function NyangNotifyHost() {
     controls.dismiss();
   };
 
-  const livePlain = (title: string, sub?: string, count = 1) =>
-    `${nyResolveText(title, count).replace(/<\/?b>/g, "")}${
-      sub ? ` ${nyResolveText(sub, count).replace(/<\/?b>/g, "")}` : ""
-    }`;
+  const livePlain = (title: string, sub?: string, count = 1) => {
+    const head = nySpeakText(title, count);
+    const tail = sub ? nySpeakText(sub, count) : "";
+    return tail ? `${head} ${tail}` : head;
+  };
   const politeText =
     current && current.kind !== "error" && !(current.assertive ?? false)
       ? livePlain(current.title, current.sub, current.count)
@@ -198,9 +200,10 @@ export function NyangNotifyHost() {
       {current && phase !== "idle" ? (
         current.kind === "celebrate" ? (
           <div
-            className={`ny-celebrate ${phase === "in" ? "in" : "out"}`}
+            className={`ny-celebrate ${phase === "in" ? "in" : "out"} ${current.anchor === "menu" ? "is-menu" : ""}`}
             role="status"
-            style={{ top: 115 }}
+            aria-label={livePlain(current.title, current.sub, current.count)}
+            style={{ top: current.anchor === "menu" ? 196 : 115 }}
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
             onPointerCancel={() => {
@@ -232,9 +235,13 @@ export function NyangNotifyHost() {
           </div>
         ) : (
           <div
-            className={`ny-snack ny-${current.kind} ${phase === "in" ? "in" : "out"}`}
+            className={`ny-snack ny-${current.kind} ${phase === "in" ? "in" : "out"} ${current.anchor === "menu" ? "is-menu" : ""}`}
             role={current.kind === "error" || current.assertive ? "alert" : "status"}
-            style={{ top: 115, ["--ny-bar" as string]: `${durationMs || 2600}ms` }}
+            aria-label={livePlain(current.title, current.sub, current.count)}
+            style={{
+              top: current.anchor === "menu" ? 196 : 115,
+              ["--ny-bar" as string]: `${durationMs || 2600}ms`,
+            }}
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
             onPointerCancel={() => {

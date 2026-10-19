@@ -416,7 +416,9 @@ export function CardViewer({
       </div>
       <div
         ref={captionRef}
-        className={["card-viewer-caption", captionClassName ?? ""].filter(Boolean).join(" ")}
+        className={["card-viewer-caption", line ? "" : "is-empty", captionClassName ?? ""]
+          .filter(Boolean)
+          .join(" ")}
       >
         {line ? <FortuneBubble line={line} accent={accentColor} /> : null}
       </div>

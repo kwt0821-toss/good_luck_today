@@ -30,6 +30,8 @@ export type NyNotifyInput = {
   count?: number;
   /** Celebrate reward pills. */
   rewards?: NyRewardChip[];
+  /** "menu" sits below the menu stat row so it does not cover the numbers. */
+  anchor?: "top" | "menu";
 };
 
 export type NyConfirmInput = {
@@ -119,6 +121,18 @@ function defaultDuration(item: NyNotifyInput): number {
 function applyCount(template: string | undefined, count: number): string | undefined {
   if (template == null) return template;
   return template.replace(/\{n\}/g, String(count));
+}
+
+/** Screen-reader text. `{ncoin}` / `{paw}` become words, not leftover tokens. */
+export function nySpeakText(template: string | undefined, count: number): string {
+  const raw = applyCount(template, count) ?? "";
+  return raw
+    .replace(/<\/?b>/g, "")
+    .replace(/\{ncoin\}/g, "냥코인 ")
+    .replace(/\{paw\}/g, "포인트 ")
+    .replace(/\s+\+\s+/g, ", ")
+    .replace(/[^\S\n]+/g, " ")
+    .trim();
 }
 
 function emit() {
@@ -301,8 +315,11 @@ export function nyConfirmClose(ok: boolean) {
   else next();
 }
 
+/** Close the visible toast and drop anything still queued. Confirm sheets stay. */
 export function nyDismiss() {
-  dismissCurrent();
+  queue.length = 0;
+  if (current && phase !== "idle") dismissCurrent();
+  else emit();
 }
 
 export function nyNotifySubscribe(listener: Listener): () => void {

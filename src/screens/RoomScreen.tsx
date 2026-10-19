@@ -4,6 +4,7 @@ import { CozySheet } from "../components/CozySheet";
 import { useLoadingHold } from "../lib/loadingGate";
 import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
 import { NyChip } from "../components/NyChip";
+import { withJosa } from "../lib/josa";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
 import { RoomDrawer, type DrawerItemMeta } from "../components/RoomDrawer";
 import { RoomWorld } from "../components/RoomWorld";
@@ -1146,7 +1147,7 @@ export function RoomScreen({
     nyNotify({
       key: "room-buy",
       kind: "success",
-      title: `${item.nameKo}을 서랍에 넣었어요`,
+      title: `${withJosa(item.nameKo, "을를")} 서랍에 넣었어요`,
       action: { label: "놓으러 가기", onClick: () => { /* stay in room edit */ setMode("edit"); } },
     });
   };

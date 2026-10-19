@@ -471,6 +471,7 @@ export function DexScreen({
                   key: "dex-pending",
                   kind: "info",
                   title: `더 받을 보상이 <b>{n}개</b> 있어요`,
+                  anchor: "menu",
                   count: pending,
                   sub:
                     sum.nyangCoin > 0

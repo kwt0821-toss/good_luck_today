@@ -3,6 +3,7 @@
   position: fixed;
   inset: 0;
   z-index: 1100;
+  min-width: 280px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -19,9 +20,14 @@
 /* 데스크톱 브라우저: 앱 폭(390px) 안에만 */
 @media (min-width: 481px) {
   .fa-overlay {
-    max-width: 390px;
-    left: 50%;
-    transform: translateX(-50%);
+    /* The phone frame already centers this. left:50% with right:0
+       used to shrink the overlay to half the frame and wrap one word per line. */
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: none;
+    min-width: 280px;
+    transform: none;
   }
 }
 

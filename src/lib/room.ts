@@ -8,6 +8,7 @@ import {
 } from "./items";
 import { canOccupy } from "./iso";
 import type { RoomPlacement, RoomState, ShopItem, UserState } from "../types";
+import { withJosa } from "./josa";
 
 export type RoomActionResult =
   | { ok: true; next: UserState; message: string }
@@ -67,11 +68,11 @@ export function buyItem(user: UserState, itemId: string): RoomActionResult {
     return {
       ok: true,
       next: equipped.ok ? equipped.next : next,
-      message: `${item.name}을 사고 바로 적용했어요.`,
+      message: `${withJosa(item.name, "을를")} 사고 바로 적용했어요.`,
     };
   }
 
-  return { ok: true, next, message: `${item.name}을 샀어요. 타일 위에 놓아 보세요.` };
+  return { ok: true, next, message: `${withJosa(item.name, "을를")} 샀어요. 타일 위에 놓아 보세요.` };
 }
 
 export function equipSurface(user: UserState, itemId: string): RoomActionResult {
@@ -92,7 +93,7 @@ export function equipSurface(user: UserState, itemId: string): RoomActionResult 
         floorId: item.category === "floor" ? item.id : user.room.floorId,
       },
     },
-    message: `${item.name}을 적용했어요.`,
+    message: `${withJosa(item.name, "을를")} 적용했어요.`,
   };
 }
 
@@ -121,7 +122,7 @@ export function placeItem(user: UserState, itemId: string, col: number, row: num
         placements: [...user.room.placements, placement],
       },
     },
-    message: `${item.name}을 타일에 놓았어요.`,
+    message: `${withJosa(item.name, "을를")} 타일에 놓았어요.`,
   };
 }
 
@@ -168,7 +169,7 @@ export function removePlacement(user: UserState, instanceId: string): RoomAction
         placements: user.room.placements.filter((entry) => entry.instanceId !== instanceId),
       },
     },
-    message: item ? `${item.name}을 보관했어요.` : "아이템을 보관했어요.",
+    message: item ? `${withJosa(item.name, "을를")} 보관했어요.` : "아이템을 보관했어요.",
   };
 }
 
