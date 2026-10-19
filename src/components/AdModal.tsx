@@ -19,10 +19,19 @@ export function AdModal({ open, kind, title, subtitle, onComplete, onCancel }: A
 
   useEffect(() => {
     if (!open) return;
+    const totalMs = duration * 1000;
+    let elapsed = 0;
+    let last = Date.now();
     setRemaining(duration);
-    const timer = window.setInterval(() => {
-      setRemaining((value) => Math.max(0, value - 1));
-    }, 1000);
+    const tick = () => {
+      const now = Date.now();
+      const delta = now - last;
+      // Ignore a clock jump so the wait cannot be rewound or skipped.
+      if (delta > 0 && delta <= 2000) elapsed += delta;
+      last = now;
+      setRemaining(Math.max(0, Math.ceil((totalMs - elapsed) / 1000)));
+    };
+    const timer = window.setInterval(tick, 200);
     return () => window.clearInterval(timer);
   }, [open, duration]);
 
@@ -48,8 +57,8 @@ export function AdModal({ open, kind, title, subtitle, onComplete, onCancel }: A
 
         <div className="ad-mock" aria-hidden="true">
           <div className="ad-mock-badge">AD</div>
-          <p className="ad-mock-brand">럭키캣 Mock Ad</p>
-          <p className="ad-mock-copy">토스 미니앱 SDK 연동 전 미리보기 광고예요.</p>
+          <p className="ad-mock-brand">잠시만 기다려 주세요</p>
+          <p className="ad-mock-copy">광고를 불러오지 못해 잠시 기다려 주세요.</p>
           <div className="ad-progress">
             <div
               className="ad-progress-bar"
@@ -65,9 +74,11 @@ export function AdModal({ open, kind, title, subtitle, onComplete, onCancel }: A
         <Button color="dark" variant="weak" onClick={onCancel}>
           닫기
         </Button>
-        <button className="ad-skip" type="button" onClick={onComplete}>
-          미리보기에서 건너뛰기
-        </button>
+        {import.meta.env.DEV ? (
+          <button className="ad-skip" type="button" onClick={onComplete}>
+            미리보기에서 건너뛰기
+          </button>
+        ) : null}
       </div>
     </div>
   );

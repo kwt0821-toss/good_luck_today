@@ -1,6 +1,7 @@
 import { loadFullScreenAd, showFullScreenAd } from "@apps-in-toss/web-framework";
 
 import type { MockAdKind } from "./mockAds";
+import { isOffline } from "./network";
 
 /** Fallback IDs if economy.json has not loaded yet. */
 export const DEFAULT_AD_GROUP_IDS: Record<MockAdKind, string> = {
@@ -8,7 +9,13 @@ export const DEFAULT_AD_GROUP_IDS: Record<MockAdKind, string> = {
   long: "ait.v2.live.3e9536c7ec2d4ae7",
 };
 
-export type TossAdResult = "completed" | "cancelled" | "failed" | "unsupported";
+export type TossAdResult = "completed" | "cancelled" | "failed" | "unsupported" | "offline";
+
+const LOAD_RETRY_DELAY_MS = 1500;
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
 
 export function isTossFullScreenAdSupported(): boolean {
   try {
@@ -53,19 +60,28 @@ function loadOnce(adGroupId: string): Promise<"loaded" | "failed"> {
 }
 
 /**
- * Load + show a console ad group. Retries load once on failure
- * (economy.draws.adFailFallback). Long (30s) requires userEarnedReward;
- * short accepts reward or a normal dismiss after show.
+ * Load + show a console ad group.
+ * Offline is not a failure: no retry, no reward, result "offline".
+ * An online load miss waits 1.5s and loads once more. "failed" is only
+ * two online load misses in a row. Closing the ad is "cancelled".
+ * Long (30s) requires userEarnedReward; short accepts reward or a normal dismiss after show.
  */
 export async function playTossFullScreenAd(
   kind: MockAdKind,
   adGroupId: string,
 ): Promise<TossAdResult> {
+  if (await isOffline()) return "offline";
   if (!isTossFullScreenAdSupported()) return "unsupported";
 
-  let loaded = await loadOnce(adGroupId);
-  if (loaded === "failed") {
+  let loaded: "loaded" | "failed" = "failed";
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     loaded = await loadOnce(adGroupId);
+    if (loaded === "loaded") break;
+    if (await isOffline()) return "offline";
+    if (attempt === 0) {
+      await wait(LOAD_RETRY_DELAY_MS);
+      if (await isOffline()) return "offline";
+    }
   }
   if (loaded === "failed") return "failed";
 
@@ -103,14 +119,20 @@ export async function playTossFullScreenAd(
             }
             break;
           case "failedToShow":
-            finish("failed");
+            void settleShowFailure();
             break;
           default:
             break;
         }
       },
-      onError: () => finish("failed"),
+      onError: () => {
+        void settleShowFailure();
+      },
     });
+
+    async function settleShowFailure() {
+      finish((await isOffline()) ? "offline" : "failed");
+    }
   });
 }
 

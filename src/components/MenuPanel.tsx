@@ -84,7 +84,7 @@ type MenuPanelProps = {
   onOpenRoom: () => void;
   onPawAd: () => void;
   /** Play long ad for weekly day7 bonus; retries load once upstream. */
-  onAttendanceDay7Ad?: () => Promise<"completed" | "cancelled" | "failed">;
+  onAttendanceDay7Ad?: () => Promise<"completed" | "cancelled" | "failed" | "offline">;
   onReplayTutorial: () => void;
   onDevResetNewUser?: () => void;
   /** Start rate-up draw from ticket shop CTA. */
@@ -596,17 +596,16 @@ export function MenuPanel({
     setDay7Busy(true);
     setDay7AdWaiting(true);
     try {
-      let result = await onAttendanceDay7Ad();
-      // One automatic retry on load fail / mid-ad cancel.
-      if (result !== "completed") {
+      const result = await onAttendanceDay7Ad();
+      if (result === "offline") {
         nyNotify({
-          key: "attend-day7-ad-retry",
-          kind: "info",
-          title: "광고를 다시 불러올게요",
-          sub: "한 번만 더 시도해요",
+          key: "ad-offline",
+          kind: "error",
+          title: "인터넷 연결을 확인해 주세요",
         });
-        result = await onAttendanceDay7Ad();
+        return;
       }
+      if (result === "cancelled") return;
       if (result !== "completed") {
         setDay7AdExhausted(true);
         nyNotify({

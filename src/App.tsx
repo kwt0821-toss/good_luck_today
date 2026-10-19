@@ -29,6 +29,7 @@ import { newCardPaw, nyangCoinForCard } from "./lib/nyangCoinGrade";
 import { cancelDrawReservation, preloadDrawImages, reserveDraw } from "./lib/mockDrawApi";
 import { getWithdrawRules } from "./lib/mockWallet";
 import { configureNavigationBar, haptic } from "./lib/native";
+import { isOffline } from "./lib/network";
 import { useTossSafeArea } from "./lib/useTossSafeArea";
 import { loadOpsConfig } from "./lib/opsConfig";
 import {
@@ -137,10 +138,18 @@ type AdSession = {
   presentation: "sdk" | "mock";
 };
 
-type AttendanceDay7AdResult = "completed" | "cancelled" | "failed";
+type AttendanceDay7AdResult = "completed" | "cancelled" | "failed" | "offline";
 
 function startAdPresentation(): AdSession["presentation"] {
   return isTossFullScreenAdSupported() ? "sdk" : "mock";
+}
+
+function notifyAdOffline() {
+  nyNotify({
+    key: "ad-offline",
+    kind: "error",
+    title: "인터넷 연결을 확인해 주세요",
+  });
 }
 
 export default function App() {
@@ -521,6 +530,11 @@ export default function App() {
         });
         return;
       }
+      const needsAd = !(slot === "tutorial" || (slot === "rateUp" && willUseRateUpTicket(ops, config)));
+      if (needsAd && (await isOffline())) {
+        notifyAdOffline();
+        return;
+      }
 
       setRevealReady(false);
       setWaitFailed(false);
@@ -732,12 +746,18 @@ export default function App() {
 
   const runAttendanceDay7Ad = useCallback((): Promise<AttendanceDay7AdResult> => {
     return new Promise((resolve) => {
-      attendanceDay7AdResolverRef.current = resolve;
-      setAd({
-        kind: "long",
-        purpose: "attendanceDay7",
-        presentation: startAdPresentation(),
-      });
+      void (async () => {
+        if (await isOffline()) {
+          resolve("offline");
+          return;
+        }
+        attendanceDay7AdResolverRef.current = resolve;
+        setAd({
+          kind: "long",
+          purpose: "attendanceDay7",
+          presentation: startAdPresentation(),
+        });
+      })();
     });
   }, []);
 
@@ -746,7 +766,25 @@ export default function App() {
   completeAdRef.current = completeAd;
   cancelAdRef.current = cancelAd;
 
-  /** Play console ad groups in Toss; fall back to AdModal in browser / on failure. */
+  const releaseOfflineAdRef = useRef<(purpose: AdSession["purpose"]) => void>(() => undefined);
+  releaseOfflineAdRef.current = (purpose) => {
+    if (purpose === "attendanceDay7") {
+      setAd(null);
+      setMenuOpen(true);
+      attendanceDay7AdResolverRef.current?.("offline");
+      attendanceDay7AdResolverRef.current = null;
+      return;
+    }
+    if (purpose === "draw" && ops) {
+      void cancelDrawReservation(ops).then((next) => persistOps(next));
+      setReservation(null);
+    }
+    notifyAdOffline();
+    setAd(null);
+    if (purpose === "paw") setMenuOpen(true);
+  };
+
+  /** Play console ad groups in Toss. Mock AdModal only after two online load misses. */
   useEffect(() => {
     if (!ad || ad.presentation !== "sdk") return;
     const snap = { kind: ad.kind, purpose: ad.purpose, drawId: ad.drawId };
@@ -764,14 +802,25 @@ export default function App() {
         void cancelAdRef.current();
         return;
       }
-      // unsupported / failed → mock modal (browser preview or load miss)
-      // For attendance day7: load already retried once inside playTossFullScreenAd;
-      // if still failed, resolve as failed so UI can offer [그냥 받기].
+      if (result === "offline") {
+        releaseOfflineAdRef.current(snap.purpose);
+        return;
+      }
+      // Two online load misses. Day 7 offers [그냥 받기] instead of the fallback ad.
       if (result === "failed" && snap.purpose === "attendanceDay7") {
         setAd(null);
         setMenuOpen(true);
         attendanceDay7AdResolverRef.current?.("failed");
         attendanceDay7AdResolverRef.current = null;
+        return;
+      }
+      if (result !== "failed") {
+        if (snap.purpose === "attendanceDay7") {
+          setMenuOpen(true);
+          attendanceDay7AdResolverRef.current?.("cancelled");
+          attendanceDay7AdResolverRef.current = null;
+        }
+        setAd(null);
         return;
       }
       setAd((prev) => {
@@ -1378,12 +1427,18 @@ export default function App() {
         onOpenRoom={() => setScreen({ name: "room" })}
         onPawAd={() => {
           // Keep the menu open under the ad so we return to it afterward.
-          setAd({
-            kind: "short",
-            purpose: "paw",
-            requestId: buildPawAdRequestId(),
-            presentation: startAdPresentation(),
-          });
+          void (async () => {
+            if (await isOffline()) {
+              notifyAdOffline();
+              return;
+            }
+            setAd({
+              kind: "short",
+              purpose: "paw",
+              requestId: buildPawAdRequestId(),
+              presentation: startAdPresentation(),
+            });
+          })();
         }}
         onAttendanceDay7Ad={() => runAttendanceDay7Ad()}
         onRateUpDraw={() => {

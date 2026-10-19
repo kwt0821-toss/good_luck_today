@@ -821,6 +821,7 @@
 
 .ad-modal-card {
   width: 100%;
+  min-width: 280px;
   display: flex;
   flex-direction: column;
   gap: 12px;
