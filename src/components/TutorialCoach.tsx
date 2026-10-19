@@ -304,6 +304,25 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
     } catch {
       // ignore
     }
+    // Reveal step 2 sits on the footer button. The default spot covers 오늘의 한 줄.
+    try {
+      const info = document.querySelector(".draw-reveal-info");
+      if (info) {
+        const infoBox = info.getBoundingClientRect();
+        const infoTop = infoBox.top - frame.top;
+        const infoBottom = infoBox.bottom - frame.top;
+        const hitsInfo = rawTop < infoBottom && rawTop + bubbleH > infoTop;
+        if (hitsInfo) {
+          const aboveInfo = infoTop - BUBBLE_GAP - bubbleH;
+          if (aboveInfo >= PAD_TOP) {
+            rawTop = aboveInfo;
+            above = true;
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
     return {
       top: Math.min(maxTop, Math.max(PAD_TOP, rawTop)),
       above,
