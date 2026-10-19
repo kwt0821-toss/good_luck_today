@@ -261,6 +261,7 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
                 failReason: typeof item.failReason === "string" ? item.failReason : undefined,
                 userHash: typeof item.userHash === "string" ? item.userHash : undefined,
                 rewardKey: typeof item.rewardKey === "string" ? item.rewardKey : undefined,
+                testGrant: item.testGrant === true ? true : undefined,
               };
             })
             .filter((item) => item.requestId)

@@ -197,6 +197,8 @@ export type RewardsWalletSheet = {
   confirmDesc: string;
   successTitle: string;
   successDesc: string;
+  /** 지급 시점·조건·제한과 중단 고지. */
+  policy?: string;
   historyTitle: string;
   status: { done: string; pending: string; failed: string };
   /** @deprecated chips replaced by stepper */

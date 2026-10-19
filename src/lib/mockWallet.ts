@@ -27,6 +27,8 @@ export type WalletWithdrawResponse =
       nyangCoinBalance: number;
       remainingToday: number;
       alreadyProcessed?: boolean;
+      /** TEST_ 코드 성공. 실제 토스 포인트는 지급되지 않아요. */
+      testGrant?: boolean;
     }
   | {
       ok: false;
@@ -83,6 +85,7 @@ export function withdrawnTodayAmount(
   userHash = readStoredGameUserHash(),
 ): number {
   return state.walletHistory.reduce((sum, row) => {
+    if (row.testGrant) return sum;
     if (row.status !== "done" && row.status !== "pending") return sum;
     if (userHash && row.userHash && row.userHash !== userHash) return sum;
     if (toKstDateKey(new Date(row.createdAt)) !== today) return sum;
@@ -135,7 +138,7 @@ function markGrantAt(hash: string, at: number) {
 function messageForPromoError(code: string): string {
   switch (code) {
     case "4109":
-      return "오늘 준비한 토스 포인트가 모두 소진됐어요. 내일 다시 시도해 주세요";
+      return "지금은 토스 포인트를 지급할 수 없어요";
     case "4100":
       return "토스 포인트 지급 정보를 찾지 못했어요";
     case "4110":
@@ -153,11 +156,20 @@ function messageForPromoError(code: string): string {
   }
 }
 
-function promotionCodeFrom(economy: OpsEconomy): string {
+type PromotionCodeChoice = { code: string; test: boolean };
+
+/**
+ * TEST_ 코드는 콘솔에서 프로모션을 시작하기 전의 호출이에요.
+ * promotionLive 가 true 인 정식 빌드만 앞의 TEST_ 를 뗀 코드로 지급해요.
+ */
+function promotionCodeFrom(economy: OpsEconomy): PromotionCodeChoice {
   const block = economy.nyangCoin.withdraw;
-  const useTest = import.meta.env.DEV || import.meta.env.VITE_USE_TEST_PROMOTION === "true";
-  const code = useTest ? block?.testPromotionCode : block?.promotionCode;
-  return typeof code === "string" ? code.trim() : "";
+  const testCode = typeof block?.testPromotionCode === "string" ? block.testPromotionCode.trim() : "";
+  const liveCode = typeof block?.promotionCode === "string" ? block.promotionCode.trim() : "";
+  const liveOn = block?.promotionLive === true;
+  const forceTest = import.meta.env.DEV || import.meta.env.VITE_USE_TEST_PROMOTION === "true";
+  const test = forceTest || !liveOn;
+  return { code: test ? testCode : liveCode, test };
 }
 
 function pendingForHash(state: OpsState, hash: string): WalletHistoryItem | undefined {
@@ -210,7 +222,7 @@ export async function inspectTossPointGrant(state: OpsState): Promise<TossPointG
     const timed = await refreshServerTime();
     if (!timed || !hasServerTime()) return { ok: false, reason: SERVER_TIME_BLOCK_MESSAGE };
     const config = await loadOpsConfig();
-    if (!promotionCodeFrom(config.economy)) {
+    if (!promotionCodeFrom(config.economy).code) {
       return { ok: false, reason: "토스 포인트 지급 코드가 아직 없어요" };
     }
   }
@@ -391,9 +403,10 @@ export async function postWalletWithdraw(
   markGrantAt(identity.hash, Date.now());
 
   const amountKRW = amount * (config.economy.nyangCoin.toTossPointRate ?? 1);
-  const grant = isTossApp()
-    ? await liveGrant(promotionCodeFrom(config.economy), amountKRW)
-    : await mockGrant();
+  const code = promotionCodeFrom(config.economy);
+  const grant = isTossApp() ? await liveGrant(code.code, amountKRW) : await mockGrant();
+  // TEST_ 성공은 resultType SUCCESS({ key })지만 실제 포인트는 나가지 않아요.
+  const testGrant = grant.kind === "done" && code.test && isTossApp();
 
   if (grant.kind === "done") {
     const done: WalletHistoryItem = {
@@ -401,8 +414,12 @@ export async function postWalletWithdraw(
       status: "done",
       updatedAt: trustedNow().getTime(),
       rewardKey: grant.key,
+      testGrant: testGrant || undefined,
     };
     next = upsertHistory(next, done);
+    if (testGrant) {
+      next = { ...next, nyangCoinBalance: next.nyangCoinBalance + amount };
+    }
     locks.delete(identity.hash);
     await saveOpsState(next);
     return {
@@ -416,6 +433,7 @@ export async function postWalletWithdraw(
           requestId,
           nyangCoinBalance: next.nyangCoinBalance,
           remainingToday: 0,
+          testGrant: testGrant || undefined,
         },
         rules.dailyLimit,
       ),

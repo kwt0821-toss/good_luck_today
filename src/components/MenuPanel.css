@@ -1624,6 +1624,14 @@ button.menu-dim:focus-visible {
   line-height: 1.4;
 }
 
+.wallet-policy {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: rgba(243, 233, 215, 0.42);
+  text-align: center;
+  line-height: 1.45;
+}
+
 .wallet-remain-hint {
   margin: 0 0 4px;
   font-size: 11.5px;

@@ -71,6 +71,9 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
     dailyLimit?: number;
     resetTimeKST?: string;
     note?: string;
+    promotionCode?: string;
+    testPromotionCode?: string;
+    promotionLive?: boolean;
   };
   const withdraw = {
     min: Number(withdrawRaw.min ?? baseNyang.withdrawMin ?? 10),
@@ -78,6 +81,11 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
     dailyLimit: Number(withdrawRaw.dailyLimit ?? 50),
     resetTimeKST: String(withdrawRaw.resetTimeKST ?? "00:00"),
     note: typeof withdrawRaw.note === "string" ? withdrawRaw.note : undefined,
+    promotionCode:
+      typeof withdrawRaw.promotionCode === "string" ? withdrawRaw.promotionCode : "",
+    testPromotionCode:
+      typeof withdrawRaw.testPromotionCode === "string" ? withdrawRaw.testPromotionCode : "",
+    promotionLive: withdrawRaw.promotionLive === true,
   };
   const maxPerUserKRW =
     baseNyang.maxPerUserKRW ??

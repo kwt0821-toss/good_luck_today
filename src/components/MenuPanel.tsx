@@ -347,11 +347,20 @@ export function MenuPanel({
       if (result.response.ok && result.response.status === "done") {
         setRewardsView("success");
         haptic("success");
-        nyNotify({
-          key: "withdraw-done",
-          kind: "success",
-          title: `토스 포인트 <b>${withdrawAmount}원</b>을 받았어요`,
-        });
+        nyNotify(
+          result.response.testGrant
+            ? {
+                key: "withdraw-test",
+                kind: "success",
+                title: "테스트 지급을 확인했어요",
+                sub: "실제 토스 포인트는 들어가지 않아요",
+              }
+            : {
+                key: "withdraw-done",
+                kind: "success",
+                title: `토스 포인트 <b>${withdrawAmount}원</b>을 받았어요`,
+              },
+        );
       } else if (result.response.ok && result.response.status === "pending") {
         setLastWithdraw(row);
         setRewardsView("success");
@@ -1478,11 +1487,13 @@ export function MenuPanel({
                           </span>
                           <b>
                             <span className={`wallet-status is-${item.status}`}>
-                              {item.status === "done"
-                                ? "완료"
-                                : item.status === "pending"
-                                  ? "확인 중"
-                                  : "실패"}
+                              {item.testGrant
+                                ? "테스트"
+                                : item.status === "done"
+                                  ? "완료"
+                                  : item.status === "pending"
+                                    ? "확인 중"
+                                    : "실패"}
                             </span>
                           </b>
                         </div>
@@ -1494,16 +1505,20 @@ export function MenuPanel({
                     <div className="wallet-success">
                       <img src={NCOIN_ICON.lg} alt="" width={64} height={64} />
                       <h4>
-                        {lastWithdraw?.status === "pending"
-                          ? "확인 중이에요"
-                          : (model.menu.sheets.rewards.wallet?.successTitle ??
-                            "토스 포인트를 받았어요")}
+                        {lastWithdraw?.testGrant
+                          ? "테스트 지급을 확인했어요"
+                          : lastWithdraw?.status === "pending"
+                            ? "확인 중이에요"
+                            : (model.menu.sheets.rewards.wallet?.successTitle ??
+                              "토스 포인트를 받았어요")}
                       </h4>
                       <p>
                         {lastWithdraw
-                          ? lastWithdraw.status === "pending"
-                            ? `${lastWithdraw.amount}원 지급을 확인하고 있어요.`
-                            : `${lastWithdraw.amount}원이 토스 포인트로 들어갔어요.`
+                          ? lastWithdraw.testGrant
+                            ? "실제 토스 포인트는 들어가지 않아요. 냥코인은 그대로예요."
+                            : lastWithdraw.status === "pending"
+                              ? `${lastWithdraw.amount}원 지급을 확인하고 있어요.`
+                              : `${lastWithdraw.amount}원이 토스 포인트로 들어갔어요.`
                           : null}
                       </p>
                     </div>
@@ -1630,6 +1645,10 @@ export function MenuPanel({
                                   ).replace("{remain}", String(leftover))}
                                 </p>
                               ) : null}
+                              <p className="wallet-policy">
+                                {walletCopy?.policy ??
+                                  "받으면 바로 지급돼요. 10냥코인부터 10개씩이고, 1냥코인은 토스 포인트 1원이에요. 탈퇴하거나 부정하게 참여하면 받을 수 없어요. 이 프로모션은 사전 고지 없이 중단될 수 있어요."}
+                              </p>
                               <button
                                 type="button"
                                 id="btn-withdraw"
@@ -1645,7 +1664,7 @@ export function MenuPanel({
                                     const ok = await nyConfirm({
                                       key: "withdraw",
                                       title: `토스 포인트 ${withdrawAmount}원을 지급할까요?`,
-                                      body: "받은 토스 포인트는 냥코인으로 되돌릴 수 없어요",
+                                      body: "받은 토스 포인트는 냥코인으로 되돌릴 수 없어요. 이 프로모션은 사전 고지 없이 중단될 수 있어요.",
                                       cancelLabel: "취소",
                                       confirmLabel: "받기",
                                     });

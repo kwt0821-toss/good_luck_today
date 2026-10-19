@@ -167,8 +167,9 @@
       ],
       "onUnknownResult": "결과 불명 → pending 유지. 앱이 꺼진 pending은 자동으로 다시 지급하지 않아요.",
       "dailyLimit": 50,
-      "promotionCode": "",
-      "testPromotionCode": "TEST_",
+      "promotionCode": "01M59GH02QQ13C7ZY3W11SG2XH",
+      "testPromotionCode": "TEST_01M59GH02QQ13C7ZY3W11SG2XH",
+      "promotionLive": false,
       "history": {
         "keepDays": 365,
         "fields": [
@@ -180,7 +181,7 @@
         ]
       },
       "budgetAlertKRW": null,
-      "policyCheck": "⚠ 토스 포인트 지급 API의 최소/최대 금액, 사전 예산 충전, 호출 한도, 앱 내 재화→토스 포인트 지급 허용 범위는 앱인토스 콘솔/담당자 확인 필요 (이 파일은 가정)",
+      "policyCheck": "promotionLive가 false인 동안 토스 앱도 testPromotionCode로 호출해요. 콘솔에서 프로모션을 시작한 뒤 promotionLive를 true로 바꾸면 promotionCode로 지급해요.",
       "dailyLimitUnit": "토스 포인트 원 (= 냥코인 개수), KST 00:00 초기화",
       "ui": "−/+ 스테퍼 (10 단위, 최소 10, 최대 min(잔액 내림 10단위, 오늘 남은 한도))"
     },

@@ -577,8 +577,10 @@ export type WalletHistoryItem = {
   failReason?: string;
   /** getUserKeyForGame hash. Daily limit counts rows for this person. */
   userHash?: string;
-  /** grantPromotionRewardForGame success key. */
+  /** grantPromotionRewardForGame success key. resultType SUCCESS 의 key. */
   rewardKey?: string;
+  /** TEST_ 코드 호출. 실제 토스 포인트는 들어가지 않고 냥코인도 되돌린다. */
+  testGrant?: boolean;
 };
 
 export type OpsState = {
