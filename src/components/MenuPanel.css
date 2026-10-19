@@ -1259,6 +1259,10 @@ button.menu-dim:focus-visible {
   color: #f0d48a;
 }
 
+.settings-row button.link.is-att {
+  color: #d8f5e8;
+}
+
 .settings-row button.link:disabled {
   opacity: 0.55;
   cursor: wait;

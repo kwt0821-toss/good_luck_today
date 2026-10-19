@@ -18,6 +18,10 @@ export { RESET_BONUS_PAW } from "./devMode";
 /** Target cozy level for the hidden "풀 진행도" debug grant. */
 export const DEV_MAX_COZY_LEVEL = 15;
 
+/** Hidden attendance presets from the version-tap menu. */
+export const DEV_ATTENDANCE_STREAK_DAYS = [6, 7, 8] as const;
+export type DevAttendanceStreakDays = (typeof DEV_ATTENDANCE_STREAK_DAYS)[number];
+
 const LEGACY_USER_KEY = "lucky-cat.user-state";
 const ROOM_KEY = "lucky-cat.my-room.v6.rooms";
 const ROOM_LEGACY_KEYS = ["lucky-cat.my-room.v5.tiles", "lucky-cat.my-room.v5"];
@@ -154,6 +158,52 @@ export async function unlockMaxDevState(): Promise<OpsState> {
       ? room.currentRoomId
       : (unlocked[0] ?? room.currentRoomId),
   });
+
+  return next;
+}
+
+/**
+ * Hidden debug preset: cumulative attendance is exactly `days`, and today is
+ * already checked in. First-week gifts through day 7 are owned. The day-8
+ * weekly paw is added once, when the counter first reaches 8.
+ */
+export async function applyDevAttendanceStreak(days: DevAttendanceStreakDays): Promise<OpsState> {
+  const config = await loadOpsConfig();
+  const ops = await loadOpsState();
+  const today = toKstDateKey();
+  const att = config.starter.attendance;
+  const giftIds = (att?.firstWeek ?? [])
+    .filter((gift) => gift.day <= Math.min(days, 7) && gift.itemId)
+    .map((gift) => gift.itemId);
+  const ownedItemIds = [...new Set([...ops.ownedItemIds, ...giftIds])];
+
+  let pawBalance = ops.pawBalance;
+  if (days >= 8 && ops.attendanceDays < 8) {
+    const day1Paw = att?.weeklyCycle.days.find((row) => row.day === 1)?.paw ?? 0;
+    pawBalance += day1Paw;
+  }
+
+  const next: OpsState = {
+    ...ops,
+    attendanceDays: days,
+    lastAttendDateKST: today,
+    lastAttendanceDateKey: today,
+    attendanceClaimed: Math.min(days, 7),
+    ownedItemIds,
+    pawBalance,
+  };
+  await saveOpsState(next);
+
+  const [catalog, grid, roomsFile] = await Promise.all([
+    loadRoomCatalog(),
+    loadRoomGrid(),
+    loadRoomsFile(),
+  ]);
+  const items = await applyOpsPrices(catalog.items);
+  const room = await loadRoomState(items, roomsFile, grid);
+  const owned: Record<string, number> = { ...room.owned };
+  for (const id of giftIds) owned[id] = Math.max(1, owned[id] ?? 0);
+  await saveRoomState({ ...room, points: next.pawBalance, owned });
 
   return next;
 }

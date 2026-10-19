@@ -11,7 +11,13 @@ import {
 import { AudioManager } from "../audio/AudioManager";
 import { useLoadingHold } from "../lib/loadingGate";
 import { isDevBuild, progressResetUnlockedByDefault } from "../lib/devMode";
-import { DEV_MAX_COZY_LEVEL, resetToNewUserState, unlockMaxDevState } from "../lib/devReset";
+import {
+  DEV_MAX_COZY_LEVEL,
+  applyDevAttendanceStreak,
+  resetToNewUserState,
+  unlockMaxDevState,
+  type DevAttendanceStreakDays,
+} from "../lib/devReset";
 import { menuAsset } from "../lib/menuConfig";
 import { NCOIN_ICON, ncoinIcon } from "../lib/ncoinIcon";
 import {
@@ -145,6 +151,7 @@ export function MenuPanel({
   const [progressResetVisible, setProgressResetVisible] = useState(() => readProgressResetUnlocked());
   const [progressResetConfirm, setProgressResetConfirm] = useState(false);
   const [progressMaxConfirm, setProgressMaxConfirm] = useState(false);
+  const [attendanceDevDays, setAttendanceDevDays] = useState<DevAttendanceStreakDays | null>(null);
   const versionTapRef = useRef({ count: 0, timer: 0, lastMs: 0 });
   const [rewardsView, setRewardsView] = useState<RewardsView>("inbox");
   const [withdrawAmount, setWithdrawAmount] = useState(0);
@@ -350,7 +357,7 @@ export function MenuPanel({
   };
 
   const unlockProgressReset = () => {
-    if (devResetting || progressResetConfirm || progressMaxConfirm) return;
+    if (devResetting || progressResetConfirm || progressMaxConfirm || attendanceDevDays != null) return;
     const stamp = versionTapRef.current;
     const now = Date.now();
     // pointerdown-only counting; ignore rapid duplicates from the same gesture.
@@ -430,6 +437,29 @@ export function MenuPanel({
           title: "풀 진행도를 적용하지 못했어요",
           sub: "네트워크를 확인하고 다시 눌러 주세요",
           action: { label: "다시 시도", onClick: () => runProgressMaxUnlock() },
+        });
+      });
+  };
+
+  const runAttendanceStreak = (days: DevAttendanceStreakDays) => {
+    if (devResetting) return;
+    setDevResetting(true);
+    void applyDevAttendanceStreak(days)
+      .then((next) => {
+        onOpsChange(next);
+        onDevResetNewUser?.();
+        reloadAfterDevProgress();
+      })
+      .catch((err) => {
+        console.error("attendance streak preset failed", err);
+        setDevResetting(false);
+        setAttendanceDevDays(null);
+        nyNotify({
+          key: "attendance-dev-fail",
+          kind: "error",
+          title: "출석 상태를 맞추지 못했어요",
+          sub: "네트워크를 확인하고 다시 눌러 주세요",
+          action: { label: "다시 시도", onClick: () => runAttendanceStreak(days) },
         });
       });
   };
@@ -1758,6 +1788,23 @@ export function MenuPanel({
                             {devResetting ? "적용 중…" : "풀 진행도 적용"}
                           </button>
                         </div>
+                        {([6, 7, 8] as const).map((days) => (
+                          <div key={days} className="settings-row settings-row-dev">
+                            <button
+                              type="button"
+                              className="link is-att"
+                              disabled={devResetting}
+                              onClick={() => {
+                                if (devResetting) return;
+                                setProgressResetConfirm(false);
+                                setProgressMaxConfirm(false);
+                                setAttendanceDevDays(days);
+                              }}
+                            >
+                              {devResetting ? "적용 중…" : `${days}일 연속 출석`}
+                            </button>
+                          </div>
+                        ))}
                       </>
                     ) : null}
                     {creditsText ? (
@@ -2005,6 +2052,53 @@ export function MenuPanel({
                 className="menu-sheet-cta"
                 disabled={devResetting}
                 onClick={runProgressMaxUnlock}
+              >
+                {devResetting ? "적용 중…" : "적용"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {attendanceDevDays != null ? (
+        <div
+          className="settings-reset-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${attendanceDevDays}일 연속 출석 확인`}
+        >
+          <button
+            type="button"
+            className="settings-reset-overlay-dim"
+            aria-label="닫기"
+            disabled={devResetting}
+            onClick={() => {
+              if (!devResetting) setAttendanceDevDays(null);
+            }}
+          />
+          <div className="settings-reset-confirm is-modal">
+            <strong>{attendanceDevDays}일 연속 출석으로 맞출까요?</strong>
+            <p>
+              오늘은 이미 출석한 누적 {attendanceDevDays}일이 되고, 1~
+              {Math.min(attendanceDevDays, 7)}일차 출석 선물을 보유 처리해요.
+              {attendanceDevDays === 8 ? " 8일차 포인트는 처음 맞출 때 한 번 들어가요." : ""}
+            </p>
+            <div className="settings-reset-confirm-actions">
+              <button
+                type="button"
+                className="menu-sheet-cta is-secondary"
+                disabled={devResetting}
+                onClick={() => setAttendanceDevDays(null)}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="menu-sheet-cta"
+                disabled={devResetting}
+                onClick={() => {
+                  if (attendanceDevDays != null) runAttendanceStreak(attendanceDevDays);
+                }}
               >
                 {devResetting ? "적용 중…" : "적용"}
               </button>
