@@ -1,3 +1,13 @@
+#root.has-dev-back .dex-title-row,
+#root.has-dev-back .lucky-title-row,
+#root.has-dev-back .draw-reveal-head {
+  padding-left: 40px;
+}
+
+#root.has-dev-back .rates-title {
+  padding-left: 32px;
+}
+
 .dev-back {
   position: fixed;
   top: 10px;
