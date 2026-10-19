@@ -545,12 +545,9 @@ export function FeatureIntroBubble({ intro, onDismiss }: FeatureIntroBubbleProps
           Math.max(12, next.left - frame.left),
         );
         const below = next.bottom - frame.top + 8;
-        if (below <= maxTop) {
-          top = below;
-        } else {
-          const above = next.top - frame.top - 8 - bubbleH;
-          top = above >= FEATURE_PAD_TOP ? Math.min(above, maxTop) : maxTop;
-        }
+        // Stay under the anchor. If that runs off the screen, shift up only
+        // enough for the whole bubble, including its bottom border, to fit.
+        top = Math.min(Math.max(FEATURE_PAD_TOP, below), maxTop);
       }
       setPos((prev) => (prev && prev.left === left && prev.top === top ? prev : { left, top }));
     };
