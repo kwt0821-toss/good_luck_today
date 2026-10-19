@@ -1,0 +1,292 @@
+/* LuckyCat 광고 대체 화면 — 꿈나라 (로딩 창 C와 같은 팔레트). CSS 애니메이션만, 이미지는 냥이+달 2개. */
+.fa-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #fff3d6;
+  background:
+    radial-gradient(120% 55% at 50% 0%, #4a3c7c 0%, rgba(74, 60, 124, 0) 70%),
+    linear-gradient(180deg, #3d3166 0%, #2a2140 55%, #1b1530 100%);
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  animation: fa-fade-in 180ms ease-out both;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* 데스크톱 브라우저: 앱 폭(390px) 안에만 */
+@media (min-width: 481px) {
+  .fa-overlay {
+    max-width: 390px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* ── 배경 하늘 ── */
+.fa-sky { position: absolute; inset: 0; pointer-events: none; }
+.fa-tw {
+  position: absolute;
+  line-height: 1;
+  color: #ffe9a8;
+  text-shadow: 0 0 8px rgba(255, 213, 74, 0.8);
+  animation: fa-twinkle 1.9s ease-in-out infinite;
+}
+.fa-cloud { position: absolute; width: 150px; height: 40px; opacity: 0.2; }
+.fa-cloud i { position: absolute; bottom: 0; border-radius: 50%; background: #ede3ff; }
+.fa-cloud i:nth-child(1) { left: 0; width: 64px; height: 28px; }
+.fa-cloud i:nth-child(2) { left: 40px; width: 72px; height: 40px; }
+.fa-cloud i:nth-child(3) { right: 0; width: 60px; height: 26px; }
+.fa-cloud.c1 { left: -30px; top: 20%; animation: fa-drift 14s ease-in-out infinite alternate; }
+.fa-cloud.c2 { right: -40px; top: 56%; transform: scale(0.8); animation: fa-drift 18s ease-in-out -6s infinite alternate-reverse; }
+
+/* ── 상단: 광고 표시 · 카운트 · 닫기 ── */
+.fa-top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 16px 0;
+}
+.fa-badge {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #191f28;
+  font-family: "Toss Product Sans", Pretendard, "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 16px;
+}
+.fa-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 14px 0 5px;
+  border-radius: 22px;
+  background: rgba(20, 15, 40, 0.55);
+  border: 1.5px solid rgba(255, 213, 74, 0.55);
+  box-shadow: 0 0 14px rgba(255, 201, 61, 0.22);
+  position: relative;
+}
+.fa-ring { width: 36px; height: 36px; transform: rotate(-90deg); flex: none; }
+.fa-ring circle { fill: none; stroke-width: 3.5; }
+.fa-ring-bg { stroke: rgba(255, 255, 255, 0.14); }
+.fa-ring-fg {
+  stroke: #ffd54a;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 120ms linear;
+  filter: drop-shadow(0 0 3px rgba(255, 213, 74, 0.8));
+}
+.fa-count-num {
+  position: absolute;
+  left: 5px;
+  top: 4px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  font-family: Jua, sans-serif;
+  font-size: 18px;
+  color: #ffd54a;
+}
+.fa-count-text { font-family: Jua, sans-serif; font-size: 16px; color: #fff3d6; white-space: nowrap; }
+
+.fa-close {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  cursor: pointer;
+}
+.fa-close svg { width: 20px; height: 20px; }
+.fa-close path { stroke: #ffffff; stroke-width: 2.4; stroke-linecap: round; fill: none; }
+.fa-close:active { background: rgba(255, 255, 255, 0.26); }
+
+/* ── 가운데: 자는 냥이 ── */
+.fa-body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  text-align: center;
+}
+.fa-stage {
+  position: relative;
+  width: 300px;
+  max-width: 100%;
+  height: 236px;
+  margin-bottom: 18px;
+  animation: fa-float 4s ease-in-out infinite;
+}
+.fa-img { opacity: 0; transition: opacity 240ms ease-out; }
+.fa-img.is-loaded { opacity: 1; }
+.fa-moon { position: absolute; left: -4px; top: -8px; width: 68px; height: 68px; }
+.fa-bed { position: absolute; left: 50%; bottom: 8px; width: 270px; height: 62px; transform: translateX(-50%); }
+.fa-bed i { position: absolute; bottom: 0; border-radius: 50%; background: #ede3ff; box-shadow: inset 0 -8px 0 #cfc1f2; }
+.fa-bed i:nth-child(1) { left: 0; width: 112px; height: 50px; }
+.fa-bed i:nth-child(2) { left: 72px; width: 130px; height: 62px; }
+.fa-bed i:nth-child(3) { right: 0; width: 110px; height: 46px; }
+.fa-cat {
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  width: 200px;
+  height: 170px;
+  margin-left: -100px;
+  transform-origin: 50% 100%;
+  animation: fa-breathe 2.6s ease-in-out infinite;
+}
+.fa-z {
+  position: absolute;
+  font-family: Gaegu, sans-serif;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff3d6;
+  text-shadow: 0 0 6px rgba(255, 243, 214, 0.6);
+  opacity: 0;
+  animation: fa-zfloat 2.4s ease-out infinite;
+}
+.fa-z.z1 { left: 238px; top: 44px; font-size: 22px; }
+.fa-z.z2 { left: 258px; top: 18px; font-size: 28px; animation-delay: 0.8s; }
+.fa-z.z3 { left: 278px; top: -12px; font-size: 36px; animation-delay: 1.6s; }
+
+.fa-title {
+  margin: 0;
+  font-family: Jua, sans-serif;
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.25;
+  color: #ffd54a;
+  text-shadow: 0 2px 0 #4a2a05, 0 0 14px rgba(255, 210, 90, 0.45);
+  word-break: keep-all;
+}
+.fa-desc {
+  margin: 10px 0 0;
+  font-family: Gaegu, sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.3;
+  color: #fff3d6;
+  word-break: keep-all;
+}
+
+/* ── 하단: 진행 바 · 버튼 ── */
+.fa-bottom { position: relative; z-index: 1; padding: 0 20px 24px; }
+.fa-track {
+  position: relative;
+  height: 14px;
+  margin: 0 6px 18px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.fa-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #ffb547, #ffd54a 60%, #fff0a8);
+  box-shadow: 0 0 10px rgba(255, 201, 61, 0.7);
+  transition: width 120ms linear;
+}
+.fa-tip {
+  position: absolute;
+  top: 50%;
+  right: -9px;
+  margin-top: -11px;
+  font-size: 20px;
+  line-height: 22px;
+  font-style: normal;
+  color: #fff;
+  text-shadow: 0 0 8px #ffd54a, 0 0 14px #ffc93d;
+  animation: fa-twinkle 1.2s ease-in-out infinite;
+}
+.fa-star {
+  position: absolute;
+  top: 50%;
+  margin-top: -7px;
+  font-size: 12px;
+  line-height: 14px;
+  color: #fff3d6;
+  transform: translateX(-50%);
+  text-shadow: 0 0 5px #ffd54a;
+  opacity: 0.35;
+  transition: opacity 200ms;
+}
+.fa-star.is-on { opacity: 1; }
+
+.fa-cta {
+  display: block;
+  width: 100%;
+  height: 56px;
+  border: 0;
+  border-radius: 18px;
+  font-family: Jua, sans-serif;
+  font-size: 20px;
+  cursor: pointer;
+  color: #3a2205;
+  background: linear-gradient(180deg, #ffe27a 0%, #ffc93d 100%);
+  box-shadow: 0 4px 0 #c98a12, 0 0 22px rgba(255, 201, 61, 0.45);
+  transition: transform 80ms, box-shadow 80ms, background 200ms, color 200ms;
+}
+.fa-cta:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #c98a12, 0 0 16px rgba(255, 201, 61, 0.4); }
+.fa-cta:disabled {
+  cursor: default;
+  color: rgba(255, 243, 214, 0.62);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.12);
+}
+.fa-overlay.is-done .fa-cta { animation: fa-pop 260ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+
+.fa-note {
+  min-height: 18px;
+  margin: 12px 0 0;
+  text-align: center;
+  font-family: "Toss Product Sans", Pretendard, "Noto Sans KR", sans-serif;
+  font-size: 13px;
+  color: rgba(217, 204, 245, 0.75);
+}
+.fa-note.is-hidden { visibility: hidden; }
+
+/* 낮은 화면(SE 등) */
+@media (max-height: 640px) {
+  .fa-stage { height: 200px; transform: scale(0.82); margin-bottom: 0; }
+  .fa-title { font-size: 23px; }
+  .fa-desc { font-size: 19px; }
+}
+
+@keyframes fa-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fa-pop { from { transform: scale(0.94); } to { transform: scale(1); } }
+@keyframes fa-twinkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.75); } }
+@keyframes fa-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+@keyframes fa-drift { from { translate: 0 0; } to { translate: 40px 0; } }
+@keyframes fa-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, 1.045); } }
+@keyframes fa-zfloat {
+  0% { opacity: 0; transform: translate(-6px, 10px) scale(0.7); }
+  25% { opacity: 1; }
+  80% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(6px, -14px) scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fa-overlay, .fa-tw, .fa-cloud, .fa-stage, .fa-cat, .fa-tip, .fa-cta { animation: none !important; }
+  .fa-z { animation: none !important; opacity: 0.9; }
+  .fa-img { transition: none; }
+}
