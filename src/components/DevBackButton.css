@@ -1,0 +1,16 @@
+.dev-back {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 140;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(243, 233, 215, 0.4);
+  border-radius: 10px;
+  background: rgba(20, 19, 42, 0.78);
+  color: #f3e9d7;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}

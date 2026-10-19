@@ -1,48 +1,23 @@
-import { graniteEvent, Screen } from "@apps-in-toss/web-framework";
-import { useEffect, useRef, useState } from "react";
+import { Screen } from "@apps-in-toss/web-framework";
+import { useEffect, useState } from "react";
 
 import { ExitConfirmModal } from "../components/ExitConfirmModal";
-
-function isTossApp(): boolean {
-  if (typeof window === "undefined") return false;
-  const host = window as Window & { ReactNativeWebView?: unknown };
-  return host.ReactNativeWebView != null;
-}
+import { useBackHandler } from "./useBackHandler";
 
 /**
- * First screen only: Toss back (nav back / Android system back) opens ExitConfirmModal.
- * Leaving the screen unsubscribes, so other screens keep the default back behaviour.
+ * First screen only: Toss back opens ExitConfirmModal.
+ * Back while the modal is open closes it ("더 놀래").
  * The nav-bar X is not intercepted.
  */
 export function useExitConfirmOnBack(isHomeScreen: boolean) {
   const [open, setOpen] = useState(false);
-  const openRef = useRef(open);
-  openRef.current = open;
 
   useEffect(() => {
-    if (!isHomeScreen) {
-      setOpen(false);
-      return;
-    }
-    if (!isTossApp()) return;
-
-    let unsubscribe = () => {};
-    try {
-      unsubscribe = graniteEvent.addEventListener("backEvent", {
-        onEvent: () => {
-          // Back while the modal is open closes it ("더 놀래").
-          setOpen(!openRef.current);
-        },
-        onError: (error) => {
-          console.error("backEvent error", error);
-        },
-      });
-    } catch {
-      // Outside the Toss webview there is no back bridge.
-    }
-
-    return unsubscribe;
+    if (!isHomeScreen) setOpen(false);
   }, [isHomeScreen]);
+
+  useBackHandler(isHomeScreen && !open, () => setOpen(true), 0);
+  useBackHandler(isHomeScreen && open, () => setOpen(false), 80);
 
   const modal = (
     <ExitConfirmModal
@@ -62,26 +37,4 @@ export function useExitConfirmOnBack(isHomeScreen: boolean) {
   );
 
   return { modal, openExitConfirm: () => setOpen(true) };
-}
-
-/** Toss nav back / Android system back. Unsubscribes when `active` becomes false. */
-export function useGraniteBack(active: boolean, onBack: () => void) {
-  const onBackRef = useRef(onBack);
-  onBackRef.current = onBack;
-
-  useEffect(() => {
-    if (!active || !isTossApp()) return;
-    let unsubscribe = () => {};
-    try {
-      unsubscribe = graniteEvent.addEventListener("backEvent", {
-        onEvent: () => onBackRef.current(),
-        onError: (error) => {
-          console.error("backEvent error", error);
-        },
-      });
-    } catch {
-      // Outside the Toss webview there is no back bridge.
-    }
-    return unsubscribe;
-  }, [active]);
 }

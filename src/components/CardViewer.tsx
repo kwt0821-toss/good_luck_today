@@ -11,6 +11,7 @@ import {
 import { flushSync } from "react-dom";
 import { createPortal } from "react-dom";
 
+import { useBackHandler } from "../hooks/useBackHandler";
 import { FLIP_BUTTON_ZONE, boxStyle, flipGuideStyle } from "../lib/cardFrames";
 import { shouldReduceMenuMotion } from "../lib/menuSettings";
 import "./CardViewer.css";
@@ -211,6 +212,7 @@ export function CardViewer({
   );
 
   const closeZoom = () => setZoom(false);
+  useBackHandler(zoom, closeZoom, 40);
 
   useEffect(() => {
     if (!zoom) return;

@@ -31,7 +31,7 @@ import { countClaimableDexRewards } from "./lib/dexRewards";
 import { newCardPaw, nyangCoinForCard } from "./lib/nyangCoinGrade";
 import { cancelDrawReservation, preloadDrawImages, reserveDraw } from "./lib/mockDrawApi";
 import { getWithdrawRules } from "./lib/mockWallet";
-import { configureNavigationBar, haptic } from "./lib/native";
+import { configureNavigationBar, haptic, isInTossApp } from "./lib/native";
 import { isOffline } from "./lib/network";
 import { useTossSafeArea } from "./lib/useTossSafeArea";
 import { loadOpsConfig } from "./lib/opsConfig";
@@ -98,7 +98,9 @@ import { preloadFrameAssets } from "./lib/preloadFrames";
 const DRAW_LOADING_MESSAGES = ["카드를 섞는 중이냥...", "거의 다 됐다냥!", "하암~ 곧 일어날게냥"];
 import { preloadAdFallbackCat, preloadLoadingAssets } from "./lib/preloadLoading";
 import { setLoadingBlocked, useLoadingHold } from "./lib/loadingGate";
-import { useExitConfirmOnBack, useGraniteBack } from "./hooks/useExitConfirmOnBack";
+import { DevBackButton } from "./components/DevBackButton";
+import { useBackHandler } from "./hooks/useBackHandler";
+import { useExitConfirmOnBack } from "./hooks/useExitConfirmOnBack";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { RatesGuideScreen } from "./screens/RatesGuideScreen";
@@ -1239,25 +1241,34 @@ export default function App() {
     setScreen({ name: "home" });
   }, [roomTutPhase, setScreen]);
 
-  // Home only. The menu pushes its own history entry, so back there must stay the default pop.
+  // Home only. Menu, sheets, and sub-screens register their own back handlers.
   const adFallbackOpen = Boolean(ad && ad.presentation === "mock");
   const isMainScreen =
     !booting && !bootError && screen.name === "home" && !menuOpen && !adFallbackOpen;
   const { modal: exitModal } = useExitConfirmOnBack(isMainScreen);
-  // Dex and room: the nav "<" beside the Toss home button returns to the main screen.
-  const screenBack =
-    !booting &&
-    !bootError &&
-    !menuOpen &&
-    ad == null &&
-    (screen.name === "collection" || screen.name === "room");
-  useGraniteBack(screenBack, () => {
-    if (screen.name === "collection") leaveDex();
-    else if (screen.name === "room") leaveRoom();
-  });
-  useGraniteBack(adFallbackOpen, () => {
-    void cancelAd();
-  });
+  useBackHandler(
+    adFallbackOpen,
+    () => {
+      void cancelAd();
+    },
+    25,
+  );
+  useBackHandler(
+    Boolean(featureIntro),
+    () => {
+      if (!featureIntro || !ops) return;
+      void persistOps({
+        ...ops,
+        featureIntrosSeen: [...ops.featureIntrosSeen, featureIntro.id],
+      });
+      setFeatureIntro(null);
+    },
+    30,
+  );
+  const showDevBack =
+    import.meta.env.DEV &&
+    !isInTossApp() &&
+    (screen.name !== "home" || menuOpen || achvOpen || Boolean(featureIntro) || adFallbackOpen);
 
   if (bootError) {
     return (
@@ -1576,6 +1587,7 @@ export default function App() {
       ) : null}
 
       <NyangNotifyHost dock={menuOpen ? "bottom" : "top"} />
+      {showDevBack ? <DevBackButton /> : null}
       {exitModal}
     </>
   );

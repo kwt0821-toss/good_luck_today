@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
 import { CozySheet } from "../components/CozySheet";
+import { useBackHandler } from "../hooks/useBackHandler";
 import { useLoadingHold } from "../lib/loadingGate";
 import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
 import { NyChip } from "../components/NyChip";
@@ -328,6 +329,31 @@ export function RoomScreen({
     });
   };
 
+  useBackHandler(Boolean(state && roomsFile), () => {
+    if (tutorialActive) return;
+    if (confirm) {
+      setConfirm(null);
+      return;
+    }
+    if (buyItem) {
+      setBuyItem(null);
+      setBuyMore(false);
+      return;
+    }
+    if (unlockRoom) {
+      setUnlockRoom(null);
+      return;
+    }
+    if (cozySheetOpen) {
+      setCozySheetOpen(false);
+      return;
+    }
+    if (mode === "edit") {
+      setConfirm("close-edit");
+      return;
+    }
+    onBack();
+  });
   useLoadingHold("room", !state || !roomsFile);
 
   if (!state || !roomsFile) {
@@ -1237,18 +1263,6 @@ export function RoomScreen({
       {mode === "view" ? (
         <header className="lucky-header">
           <div className="lucky-title-row">
-            <button type="button" className="lucky-back" onClick={onBack} aria-label="뒤로 가기">
-              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M15 5l-7 7 7 7"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
             <p className="lucky-eyebrow">방꾸미기</p>
           </div>
           <div className="lucky-brand">

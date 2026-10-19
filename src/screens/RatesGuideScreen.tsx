@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { useBackHandler } from "../hooks/useBackHandler";
 import { rateRows } from "../lib/drawRates";
 import { loadOpsConfig } from "../lib/opsConfig";
 import type { OpsEconomy } from "../lib/opsTypes";
@@ -16,18 +17,14 @@ export function RatesGuideScreen({ onBack }: RatesGuideScreenProps) {
   useEffect(() => {
     void loadOpsConfig().then((config) => setEconomy(config.economy));
   }, []);
+  useBackHandler(true, onBack);
 
   const rows = economy ? rateRows(economy, tab === "rateUp") : [];
   const proposal = Boolean(economy?.draws.rates_proposal);
 
   return (
     <div className="rates-screen">
-      <header className="rates-header">
-        <button type="button" className="rates-back" onClick={onBack} aria-label="뒤로">
-          ←
-        </button>
-        <h1>확률 안내</h1>
-      </header>
+      <h1 className="rates-title">확률 안내</h1>
 
       <p className="rates-lead">
         뽑기 확률은 앱 설정에서 읽어 공개해요.

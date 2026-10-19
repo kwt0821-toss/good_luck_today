@@ -76,31 +76,6 @@
   pointer-events: auto;
 }
 
-.lucky-back {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-left: -4px;
-  border: 1px solid rgba(243, 233, 215, 0.35);
-  border-radius: 9px;
-  background: rgba(243, 233, 215, 0.14);
-  color: #fff8ea;
-  cursor: pointer;
-  padding: 0;
-}
-
-.lucky-back svg {
-  width: 16px;
-  height: 16px;
-}
-
-.lucky-back:active {
-  background: rgba(243, 233, 215, 0.24);
-}
-
 .lucky-eyebrow {
   margin: 0;
   font-size: 12.5px;

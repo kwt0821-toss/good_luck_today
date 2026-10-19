@@ -4,6 +4,7 @@ import { BottomSheet, Button, FixedBottomCTA, Text, Top } from "@toss/tds-mobile
 import { CatPortrait } from "../components/CatPortrait";
 import { GradeBadge } from "../components/GradeBadge";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { useBackHandler } from "../hooks/useBackHandler";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import { MAX_DAILY_REROLLS } from "../lib/user";
 import type { Cat, DrawResult } from "../types";
@@ -34,10 +35,14 @@ export function ResultScreen({
   onBoostedReroll,
 }: ResultScreenProps) {
   const remainingLabel = `다시 뽑기 (남은 횟수: ${remainingRerolls}/${MAX_DAILY_REROLLS})`;
+  useBackHandler(true, () => {
+    if (rerollOpen) onCloseReroll();
+    else onConfirm();
+  });
 
   return (
     <div className="screen result-screen">
-      <ScreenHeader title="소환 결과" showBack onBack={onConfirm} pinkJellyBalance={pinkJellyBalance} />
+      <ScreenHeader pinkJellyBalance={pinkJellyBalance} />
       <Top
         title={<Top.TitleParagraph size={22}>{cat.name}</Top.TitleParagraph>}
         subtitleBottom={

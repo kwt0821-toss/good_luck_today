@@ -50,29 +50,6 @@
   z-index: 3;
 }
 
-.draw-reveal-head-spacer {
-  flex: 0 0 36px;
-  width: 36px;
-  height: 36px;
-}
-
-.draw-reveal-back,
-.draw-reveal-close {
-  flex: 0 0 auto;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 12px;
-  background: rgba(243, 233, 215, 0.1);
-  color: #f3e9d7;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-}
-
 .draw-reveal-head .t {
   flex: 1 1 auto;
   min-width: 0;
@@ -404,6 +381,18 @@
 .draw-reveal-btn.is-secondary:disabled {
   opacity: 0.55;
   cursor: default;
+}
+
+.draw-reveal-confirm {
+  margin-top: 4px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: rgba(243, 233, 215, 0.82);
+  font: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
 }
 
 .draw-reveal-btn em {

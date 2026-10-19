@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
+import { useBackHandler } from "../hooks/useBackHandler";
 import { jellyLabel } from "../lib/jellyLabel";
 import { useLoadingHold } from "../lib/loadingGate";
 import {
@@ -53,6 +54,14 @@ export function AchievementsSheet({
   const [list, setList] = useState<AchvProgress[]>([]);
   const [tab, setTab] = useState<AchvTabId>("all");
   const [view, setView] = useState<View>("grid");
+  useBackHandler(
+    true,
+    () => {
+      if (view !== "grid") setView("grid");
+      else onClose();
+    },
+    30,
+  );
   const [selected, setSelected] = useState<AchvProgress | null>(null);
   const [busy, setBusy] = useState(false);
   useLoadingHold("achievement", busy);

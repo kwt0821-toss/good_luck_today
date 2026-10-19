@@ -4,6 +4,7 @@ import { AudioManager } from "../audio/AudioManager";
 import { CoinBurst } from "../components/CoinBurst";
 import { cardThumbUrl, decodeImage } from "../lib/cardArt";
 import { resolveFrame } from "../lib/cardFrames";
+import { useBackHandler } from "../hooks/useBackHandler";
 import { useLoadingHold, useOverlayVisible } from "../lib/loadingGate";
 import { jellyLabel } from "../lib/jellyLabel";
 import { ncoinIcon } from "../lib/ncoinIcon";
@@ -449,6 +450,39 @@ export function DexScreen({
   }, [imagesReady, overlayVisible]);
   // The preparing class hides the grid, so the coach has nothing to point at.
   const preparing = tutorialPhase == null && (!imagesReady || artOverlay);
+  useBackHandler(true, () => {
+    if (tutLocked) return;
+    if (openCard) {
+      setOpenCard(null);
+      return;
+    }
+    if (celebrate) {
+      setCelebrate(null);
+      return;
+    }
+    const pending = claimable.length;
+    const sum = summarizeClaimable(claimable);
+    onBack();
+    if (pending > 0) {
+      nyNotify({
+        key: "dex-pending",
+        kind: "info",
+        title: `더 받을 보상이 <b>{n}개</b> 있어요`,
+        anchor: "menu",
+        count: pending,
+        sub:
+          sum.nyangCoin > 0
+            ? `도감에서 {ncoin}${sum.nyangCoin} + {paw}${sum.paw} 받기`
+            : `도감에서 {paw}+${sum.paw} 받기`,
+        action: {
+          label: "보러 가기",
+          onClick: () => {
+            window.dispatchEvent(new CustomEvent("lucky-open-dex"));
+          },
+        },
+      });
+    }
+  });
   useLoadingHold("dex-art", !imagesReady, imagesReady ? undefined : artProgress);
   useLoadingHold("dex-claim", claimBusy && !claimAllBusy);
   useLoadingHold("dex-claim-all", claimAllBusy, undefined, undefined, true);
@@ -460,47 +494,6 @@ export function DexScreen({
 
       <header className="dex-header">
         <div className="dex-title-row">
-          <button
-            type="button"
-            className="dex-back"
-            onClick={() => {
-              const pending = claimable.length;
-              const sum = summarizeClaimable(claimable);
-              onBack();
-              if (!tutLocked && pending > 0) {
-                nyNotify({
-                  key: "dex-pending",
-                  kind: "info",
-                  title: `더 받을 보상이 <b>{n}개</b> 있어요`,
-                  anchor: "menu",
-                  count: pending,
-                  sub:
-                    sum.nyangCoin > 0
-                      ? `도감에서 {ncoin}${sum.nyangCoin} + {paw}${sum.paw} 받기`
-                      : `도감에서 {paw}+${sum.paw} 받기`,
-                  action: {
-                    label: "보러 가기",
-                    onClick: () => {
-                      window.dispatchEvent(new CustomEvent("lucky-open-dex"));
-                    },
-                  },
-                });
-              }
-            }}
-            aria-label="뒤로 가기"
-            disabled={tutLocked}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M15 5l-7 7 7 7"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
           <p className="dex-eyebrow">고양이 도감</p>
         </div>
         <img className="dex-logo" src={dexAsset("logo-collection.svg")} alt="COLLECTION." />

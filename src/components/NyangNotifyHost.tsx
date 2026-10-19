@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
+import { useBackHandler } from "../hooks/useBackHandler";
 import { haptic } from "../lib/native";
 import {
   nyConfirmClose,
@@ -122,6 +123,7 @@ export function NyangNotifyHost({ dock = "top" }: { dock?: "top" | "bottom" }) {
 
   const snap = nyNotifyGetSnapshot();
   const { current, phase, sheet, durationMs } = snap;
+  useBackHandler(Boolean(sheet), () => nyConfirmClose(false), 50);
   const controls = nyHostControls();
 
   useEffect(() => {

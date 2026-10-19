@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
+import { useBackHandler } from "../hooks/useBackHandler";
 import { useLoadingHold } from "../lib/loadingGate";
 import { isDevBuild, progressResetUnlockedByDefault } from "../lib/devMode";
 import {
@@ -218,6 +219,18 @@ export function MenuPanel({
 
   const requestClose = () => {
     if (lockDismiss) return;
+    if (progressResetConfirm) {
+      setProgressResetConfirm(false);
+      return;
+    }
+    if (progressMaxConfirm) {
+      setProgressMaxConfirm(false);
+      return;
+    }
+    if (attendanceDevDays != null) {
+      setAttendanceDevDays(null);
+      return;
+    }
     if (sheet) {
       closeSheet();
       return;
@@ -307,6 +320,8 @@ export function MenuPanel({
       setProgressResetConfirm(false);
     }, reduce ? 150 : 280);
   };
+
+  useBackHandler(open, requestClose, 20);
 
   useEffect(() => {
     if (sheet !== "rewards") return;

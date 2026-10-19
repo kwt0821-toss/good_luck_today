@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 
 import { AudioManager } from "../audio/AudioManager";
+import { useBackHandler } from "../hooks/useBackHandler";
 import { loadDexOwned } from "../lib/dexCollection";
 import type { DexCard } from "../lib/dexTypes";
 import { josa } from "../lib/josa";
@@ -183,6 +184,7 @@ export function DrawRevealScreen({
   onRetry,
   onBack,
 }: DrawRevealScreenProps) {
+  useBackHandler(true, () => onBack?.());
   const screenRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
   const raysRef = useRef<HTMLDivElement>(null);
@@ -589,8 +591,7 @@ export function DrawRevealScreen({
     if (
       target.closest(".draw-reveal-btn") ||
       target.closest(".draw-reveal-wait") ||
-      target.closest(".draw-reveal-close") ||
-      target.closest(".draw-reveal-back")
+      target.closest(".draw-reveal-confirm")
     ) {
       return;
     }
@@ -662,35 +663,11 @@ export function DrawRevealScreen({
 
       <div className="draw-reveal-content">
         <div className="draw-reveal-head">
-          {onBack ? (
-            <button type="button" className="draw-reveal-back" aria-label="뒤로 가기" onClick={onBack}>
-              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M15 5l-7 7 7 7"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          ) : (
-            <span className="draw-reveal-head-spacer" />
-          )}
           <div className="t">
             TODAY&apos;S CARD
             <br />
             <small>고양이가 골라 준 오늘의 행운</small>
           </div>
-          <button
-            type="button"
-            className="draw-reveal-close"
-            aria-label="닫기"
-            onClick={() => onBack?.()}
-          >
-            ✕
-          </button>
         </div>
 
         {adNyangToast ? (
@@ -817,6 +794,9 @@ export function DrawRevealScreen({
               )}
             </button>
           </div>
+          <button type="button" className="draw-reveal-confirm" onClick={() => onBack?.()}>
+            확인
+          </button>
         </div>
       </div>
     </div>

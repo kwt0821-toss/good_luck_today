@@ -1,33 +1,14 @@
-import { TopNavigation, TopNavigationBackButton } from "@toss/tds-mobile";
-
-import { isInTossApp } from "../lib/native";
 import { JellyChip } from "./JellyChip";
 
 type ScreenHeaderProps = {
-  title: string;
-  showBack?: boolean;
-  onBack?: () => void;
   pinkJellyBalance: number;
 };
 
-export function ScreenHeader({
-  title,
-  showBack = false,
-  onBack,
-  pinkJellyBalance,
-}: ScreenHeaderProps) {
-  const chip = <JellyChip count={pinkJellyBalance} />;
-
-  if (isInTossApp()) {
-    return <div className="jelly-chip-bar">{chip}</div>;
-  }
-
+/** Balance chip only. The Toss nav bar already shows the screen chrome and back button. */
+export function ScreenHeader({ pinkJellyBalance }: ScreenHeaderProps) {
   return (
-    <TopNavigation
-      withSafeAreaTop={false}
-      leading={showBack ? <TopNavigationBackButton aria-label="뒤로 가기" onClick={onBack} /> : null}
-      content={title}
-      trailing={chip}
-    />
+    <div className="jelly-chip-bar">
+      <JellyChip count={pinkJellyBalance} />
+    </div>
   );
 }

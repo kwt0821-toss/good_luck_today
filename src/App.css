@@ -818,6 +818,13 @@
   z-index: 30;
 }
 
+.stub-title {
+  margin: 24px 24px 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
 .stub-copy {
   margin: 24px;
   color: #4e5968;
