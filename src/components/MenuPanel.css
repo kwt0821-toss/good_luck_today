@@ -1728,6 +1728,9 @@ button.menu-dim:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  font-size: 14px;
+  line-height: 1.25;
+  white-space: nowrap;
 }
 
 .ticket-shop-ad-icon {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AudioManager } from "./audio/AudioManager";
 import { AchievementsSheet } from "./components/AchievementsSheet";
+import { AdIntro } from "./components/AdIntro";
 import { AdModal } from "./components/AdModal";
 import { NyangNotifyHost } from "./components/NyangNotifyHost";
 import { nyDismiss, nyNotify } from "./lib/nyangNotify";
@@ -34,7 +35,9 @@ import { getWithdrawRules } from "./lib/mockWallet";
 import { configureNavigationBar, haptic, isInTossApp } from "./lib/native";
 import { isOffline } from "./lib/network";
 import { useTossSafeArea } from "./lib/useTossSafeArea";
-import { loadOpsConfig } from "./lib/opsConfig";
+import { isWeekendDoublePaw, loadOpsConfig } from "./lib/opsConfig";
+import { josa } from "./lib/josa";
+import { readDay7BonusConfig } from "./lib/attendanceServer";
 import {
   buildPawAdRequestId,
   confirmDrawAfterAd,
@@ -54,6 +57,8 @@ import {
 } from "./lib/mockTicketShop";
 import {
   daysSinceInstall,
+  drawAgainLabel,
+  nextDrawKind,
   nextDrawSlot,
   remainingNormalDraws,
   remainingRateUpDraws,
@@ -165,6 +170,29 @@ function notifyAdOffline() {
   });
 }
 
+const AD_INTRO_MS = 1500;
+
+function pawAdDetail(config: OpsConfig): string {
+  const base = config.economy.pawSources.rewardedAd.pawPerAd;
+  const multiplier = isWeekendDoublePaw(config.economy)
+    ? config.economy.events.weekendDoublePaw.multiplier
+    : 1;
+  const paw = base * multiplier;
+  const ncoin = config.economy.ncoinSources?.adPaw ?? 1;
+  return `광고를 끝까지 보면 냥코인 ${ncoin}개와 젤리\u00A0${paw}${josa(String(paw), "을를")} 받아요`;
+}
+
+function day7AdDetail(config: OpsConfig, ticketsFull: boolean): string {
+  const bonus = readDay7BonusConfig(config);
+  if (!bonus) return "광고를 끝까지 보면 2배 보상과 뽑기권을 받아요";
+  const ncoin = bonus.adBonus.nyangCoin;
+  const paw = bonus.adBonus.paw;
+  if (ticketsFull) {
+    return `광고를 끝까지 보면 냥코인 ${ncoin}개와 젤리\u00A0${paw}${josa(String(paw), "을를")} 받아요`;
+  }
+  return `광고를 끝까지 보면 냥코인 ${ncoin}개, 젤리\u00A0${paw}, 뽑기권 1장을 받아요`;
+}
+
 export default function App() {
   // Opaque Toss title bar → webview is already below it; sync bottom/side insets.
   useTossSafeArea();
@@ -207,6 +235,16 @@ export default function App() {
   const claimToastTimerRef = useRef(0);
   const rewardsArmedRef = useRef(false);
   const [ad, setAd] = useState<AdSession | null>(null);
+  const [adIntro, setAdIntro] = useState<{
+    token: number;
+    session: AdSession;
+    headline: string;
+    detail: string;
+  } | null>(null);
+  const adIntroTokenRef = useRef(0);
+  /** True from the moment an intro is queued until the ad session is cleared. */
+  const adFlowRef = useRef(false);
+  const drawLockRef = useRef(false);
   const [reservation, setReservation] = useState<DrawReservation | null>(null);
   const [revealReady, setRevealReady] = useState(false);
   const [waitFailed, setWaitFailed] = useState(false);
@@ -387,6 +425,65 @@ export default function App() {
     setOps(next);
     await saveOpsState(next);
   }, []);
+
+  const queueAd = useCallback((session: AdSession, detail: string) => {
+    const token = adIntroTokenRef.current + 1;
+    adIntroTokenRef.current = token;
+    adFlowRef.current = true;
+    setAdIntro({
+      token,
+      session,
+      headline:
+        session.kind === "long" ? "잠시 후 30초 광고가 나와요" : "잠시 후 짧은 광고가 나와요",
+      detail,
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!adIntro) return;
+    const token = adIntro.token;
+    const session = adIntro.session;
+    const timer = window.setTimeout(() => {
+      if (adIntroTokenRef.current !== token) return;
+      adIntroTokenRef.current = token + 1;
+      setAdIntro(null);
+      setAd(session);
+    }, AD_INTRO_MS);
+    return () => window.clearTimeout(timer);
+  }, [adIntro]);
+
+  useEffect(() => {
+    if (!ad && !adIntro) adFlowRef.current = false;
+  }, [ad, adIntro]);
+
+  const cancelAdIntro = useCallback(async () => {
+    const current = adIntro;
+    if (!current || adIntroTokenRef.current !== current.token) return;
+    adIntroTokenRef.current = current.token + 1;
+    adFlowRef.current = false;
+    setAdIntro(null);
+    if (current.session.purpose === "attendanceDay7") {
+      setMenuOpen(true);
+      attendanceDay7AdResolverRef.current?.("cancelled");
+      attendanceDay7AdResolverRef.current = null;
+      return;
+    }
+    if (current.session.purpose === "draw") {
+      if (ops) {
+        const next = await cancelDrawReservation(ops);
+        await persistOps(next);
+      }
+      setReservation(null);
+      nyNotify({
+        key: "ad-intro-cancel-draw",
+        kind: "info",
+        title: "광고를 취소했어요",
+        sub: "뽑기권은 그대로예요",
+      });
+      return;
+    }
+    if (current.session.purpose === "paw") setMenuOpen(true);
+  }, [adIntro, ops, persistOps]);
 
   const remainingDraws = ops && config ? remainingTotalDraws(ops, config) : 0;
   const remainingNormal = ops && config ? remainingNormalDraws(ops, config) : 0;
@@ -595,8 +692,11 @@ export default function App() {
   const beginDraw = useCallback(
     async (forceSlot?: "tutorial" | "normal" | "rateUp") => {
       if (!ops || !config) return;
+      if (drawLockRef.current || adFlowRef.current) return;
+      drawLockRef.current = true;
       const slot = forceSlot ?? nextDrawSlot(ops, config);
       if (!slot) {
+        drawLockRef.current = false;
         nyNotify({
           key: "draw-empty",
           kind: "info",
@@ -607,6 +707,7 @@ export default function App() {
       }
       const needsAd = !(slot === "tutorial" || (slot === "rateUp" && willUseRateUpTicket(ops, config)));
       if (needsAd && (await isOffline())) {
+        drawLockRef.current = false;
         notifyAdOffline();
         return;
       }
@@ -621,13 +722,14 @@ export default function App() {
       await persistOps(reserved.state);
       if (!reserved.reservation) {
         setDrawBusy(false);
+        drawLockRef.current = false;
         nyNotify({
           key: "draw-reserve-fail",
           kind: "error",
           title: "뽑기를 시작하지 못했어요",
           sub: reserved.error ?? "잠시 후 다시 눌러 주세요",
           action: {
-            label: "다시 시도",
+            label: needsAd ? "광고 보고 다시 시도" : "다시 시도",
             onClick: () => {
               void beginDraw(forceSlot);
             },
@@ -657,6 +759,7 @@ export default function App() {
         });
         if ("error" in confirmed) {
           setDrawBusy(false);
+          drawLockRef.current = false;
           nyNotify({
             key: "draw-confirm-fail",
             kind: "error",
@@ -685,18 +788,25 @@ export default function App() {
         setAdNyangToast(null);
         await haptic("success");
         setScreen({ name: "reveal" });
+        drawLockRef.current = false;
         return;
       }
 
       setDrawBusy(false);
-      setAd({
-        kind: slot === "rateUp" ? "long" : "short",
-        purpose: "draw",
-        drawId: reserved.reservation.drawId,
-        presentation: startAdPresentation(),
-      });
+      queueAd(
+        {
+          kind: slot === "rateUp" ? "long" : "short",
+          purpose: "draw",
+          drawId: reserved.reservation.drawId,
+          presentation: startAdPresentation(),
+        },
+        slot === "rateUp"
+          ? "광고를 끝까지 보면 확률업으로 카드를 뽑아요"
+          : "광고를 끝까지 보면 카드를 뽑아요",
+      );
+      drawLockRef.current = false;
     },
-    [ops, config, persistOps, setScreen],
+    [ops, config, persistOps, setScreen, queueAd],
   );
 
   useEffect(() => {
@@ -762,7 +872,7 @@ export default function App() {
         kind: "error",
         title: "연결이 잠시 끊겼어요",
         sub: confirmed.error || "다시 시도해 주세요",
-        action: { label: "다시 시도", onClick: () => void beginDraw() },
+        action: { label: "광고 보고 다시 시도", onClick: () => void beginDraw() },
       });
       return;
     }
@@ -827,14 +937,21 @@ export default function App() {
           return;
         }
         attendanceDay7AdResolverRef.current = resolve;
-        setAd({
-          kind: "long",
-          purpose: "attendanceDay7",
-          presentation: startAdPresentation(),
-        });
+        const maxHold = config?.economy.tickets?.rateUpTicket?.maxHold ?? 3;
+        const ticketsFull = (ops?.rateUpTickets ?? 0) >= maxHold;
+        queueAd(
+          {
+            kind: "long",
+            purpose: "attendanceDay7",
+            presentation: startAdPresentation(),
+          },
+          config
+            ? day7AdDetail(config, ticketsFull)
+            : "광고를 끝까지 보면 2배 보상과 뽑기권을 받아요",
+        );
       })();
     });
-  }, []);
+  }, [config, ops, queueAd]);
 
   const completeAdRef = useRef(completeAd);
   const cancelAdRef = useRef(cancelAd);
@@ -1296,7 +1413,7 @@ export default function App() {
   // Home only. Menu, sheets, and sub-screens register their own back handlers.
   const adFallbackOpen = Boolean(ad && ad.presentation === "mock");
   const isMainScreen =
-    !booting && !bootError && screen.name === "home" && !menuOpen && !adFallbackOpen;
+    !booting && !bootError && screen.name === "home" && !menuOpen && !adFallbackOpen && !adIntro;
   const { modal: exitModal } = useExitConfirmOnBack(isMainScreen);
   useBackHandler(promoRewardsBack && menuOpen, () => {
     setPromoRewardsBack(false);
@@ -1325,7 +1442,12 @@ export default function App() {
   const showDevBack =
     import.meta.env.DEV &&
     !isInTossApp() &&
-    (screen.name !== "home" || menuOpen || achvOpen || Boolean(featureIntro) || adFallbackOpen);
+    (screen.name !== "home" ||
+      menuOpen ||
+      achvOpen ||
+      Boolean(featureIntro) ||
+      adFallbackOpen ||
+      Boolean(adIntro));
 
   if (bootError) {
     return (
@@ -1415,6 +1537,7 @@ export default function App() {
           toastText={revealToast}
           adNyangToast={adNyangToast}
           remainingDraws={remainingDraws}
+          againLabel={drawAgainLabel(nextDrawKind(ops, config))}
           holdToast={tutorialStep?.step === 2}
           hideToast={hideRevealToast || revealTutPhase === "to-dex"}
           onToastShown={onRevealToastShown}
@@ -1500,6 +1623,7 @@ export default function App() {
             emptyCopy: EMPTY_RIBBON_COPY,
             hasClaimable: claimableAchvCount(achvList) > 0,
           }}
+          nextDrawKind={nextDrawKind(ops, config)}
           onDraw={() => void beginDraw()}
           onRateUpDraw={() => void beginDraw("rateUp")}
           onOpenTicketShop={() => {
@@ -1527,12 +1651,15 @@ export default function App() {
               notifyAdOffline();
               return;
             }
-            setAd({
-              kind: "short",
-              purpose: "paw",
-              requestId: buildPawAdRequestId(),
-              presentation: startAdPresentation(),
-            });
+            queueAd(
+              {
+                kind: "short",
+                purpose: "paw",
+                requestId: buildPawAdRequestId(),
+                presentation: startAdPresentation(),
+              },
+              pawAdDetail(config),
+            );
           })();
         }}
         onAttendanceDay7Ad={() => runAttendanceDay7Ad()}
@@ -1589,6 +1716,13 @@ export default function App() {
           onClose={() => setAchvOpen(false)}
         />
       ) : null}
+
+      <AdIntro
+        open={adIntro !== null}
+        headline={adIntro?.headline ?? ""}
+        detail={adIntro?.detail ?? ""}
+        onCancel={() => void cancelAdIntro()}
+      />
 
       <AdModal
         open={ad !== null && ad.presentation === "mock"}

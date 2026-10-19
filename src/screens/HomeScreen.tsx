@@ -6,6 +6,7 @@ import { MENU_SETTINGS_EVENT, shouldReduceMenuMotion } from "../lib/menuSettings
 import { josa } from "../lib/josa";
 import { jellyLabel } from "../lib/jellyLabel";
 import { nyNotify } from "../lib/nyangNotify";
+import { drawAgainLabel, type NextDrawKind } from "../lib/opsState";
 
 const ASSETS = {
   bg: "/assets/main/bg-night-base.webp",
@@ -51,6 +52,8 @@ type HomeScreenProps = {
     emptyCopy: string;
     hasClaimable: boolean;
   };
+  /** What the next cat tap spends, so the pill matches the real ad. */
+  nextDrawKind: NextDrawKind;
   onDraw: () => void;
   onRateUpDraw: () => void;
   onOpenTicketShop?: () => void;
@@ -73,6 +76,7 @@ export function HomeScreen({
   menuBadge = false,
   dexBadge = false,
   titleRibbon,
+  nextDrawKind,
   onDraw,
   onRateUpDraw,
   onOpenTicketShop,
@@ -163,6 +167,7 @@ export function HomeScreen({
 
   const rateUpShopEntry = offerTicketShop && remainingRateUp <= 0 && rateUpTickets <= 0;
   const rateUpDisabled = remainingRateUp <= 0 && !rateUpShopEntry;
+  const rateUpIsAd = !rateUpShopEntry && !rateUpDisabled && !useRateUpTicket;
   const rateUpDetail = rateUpShopEntry
     ? jellyLabel(ticketShopPricePaw)
     : rateUpDisabled
@@ -172,16 +177,24 @@ export function HomeScreen({
     ? "젤리로 사기"
     : rateUpTickets > 0
       ? "뽑기권 사용"
-      : !rateUpDisabled
-        ? "광고"
-        : null;
+      : null;
   /** Tip when draw available, or shop entry after ad used with 0 tickets. */
   const showRateUpTip = remainingRateUp > 0 || rateUpShopEntry;
   const rateUpTipLines = rateUpShopEntry
     ? [`${jellyLabel(ticketShopPricePaw)}${josa(String(ticketShopPricePaw), "으로로")}`, "광고 없이"]
     : rateUpTickets > 0
       ? ["뽑기권으로", "광고 없이"]
-      : [`${rateUpAdSeconds}초 광고`, "보고"];
+      : [`${rateUpAdSeconds}초 광고 보고`];
+  const againLabel = drawAgainLabel(nextDrawKind);
+  const againUsesAd = nextDrawKind === "normal" || nextDrawKind === "rateUpAd";
+  const drawHint =
+    nextDrawKind === "normal"
+      ? "(짧은 광고가 나온 뒤 카드를 뽑아요)"
+      : nextDrawKind === "rateUpAd"
+        ? `(${rateUpAdSeconds}초 광고가 나온 뒤 확률업으로 뽑아요)`
+        : nextDrawKind === "rateUpTicket"
+          ? "(이용권으로 확률업 뽑기를 해요)"
+          : null;
 
   const countCopy = drawsDone
     ? `내일 00:00에 다시 채워져요 · ${countdown}`
@@ -264,7 +277,11 @@ export function HomeScreen({
         <div className="main-hero-stage">
           <div className="main-rateup-wrap">
             {showRateUpTip ? (
-              <div className="main-rateup-tip" role="status" aria-live="polite">
+              <div
+                className={`main-rateup-tip ${rateUpIsAd ? "is-wide" : ""}`}
+                role="status"
+                aria-live="polite"
+              >
                 <p className="main-rateup-tip-text">
                   {rateUpTipLines.map((line, index) => (
                     <span key={line} className="main-rateup-tip-line">
@@ -287,7 +304,15 @@ export function HomeScreen({
               id="btn-rateup"
               className={`main-rateup ${rateUpDisabled ? "is-dim" : ""} ${useRateUpTicket ? "is-ticket" : ""} ${rateUpShopEntry ? "is-shop" : ""}`}
               disabled={rateUpDisabled}
-              aria-label="확률업 뽑기"
+              aria-label={
+                rateUpShopEntry
+                  ? "확률업 이용권 상점"
+                  : rateUpIsAd
+                    ? `${rateUpAdSeconds}초 광고 보고 확률업 뽑기`
+                    : useRateUpTicket
+                      ? "이용권으로 확률업 뽑기"
+                      : "확률업 뽑기"
+              }
               onClick={() => {
                 if (rateUpShopEntry) {
                   onOpenTicketShop?.();
@@ -324,6 +349,12 @@ export function HomeScreen({
                 ) : null}
               </span>
               <span className="main-rateup-title">확률업</span>
+              {rateUpIsAd ? (
+                <span className="main-rateup-adcopy">
+                  <span className="main-draw-pill-ad">광고</span>
+                  <span>{rateUpAdSeconds}초 광고 보고</span>
+                </span>
+              ) : null}
               <span className="main-rateup-label">{rateUpDetail}</span>
               {rateUpSub ? <span className="main-rateup-hint">{rateUpSub}</span> : null}
             </button>
@@ -408,14 +439,15 @@ export function HomeScreen({
             className={`main-draw-pill ${nudge ? "is-nudge" : ""}`}
             onClick={handleDrawTap}
           >
-            한 장 더 뽑기 <span className="main-draw-pill-ad">광고</span>
+            {againLabel}
+            {againUsesAd ? <span className="main-draw-pill-ad">광고</span> : null}
             <span className="main-draw-pill-arrow" aria-hidden="true">
               →
             </span>
           </button>
         ) : (
           <div className="main-cta-block">
-            <p className="main-cta-ad">(짧은 광고가 나온 뒤 카드를 뽑아요)</p>
+            {drawHint ? <p className="main-cta-ad">{drawHint}</p> : null}
             <p className="main-cta">
               <span className="main-cta-accent">톡,</span> 깨워서 오늘의 카드 받기
             </p>

@@ -351,7 +351,7 @@
    ],
    "balanceLabel": "내 젤리 {paw}",
    "ctaBuy": "젤리 {price}으로 사기",
-   "ctaDraw": "지금 확률업 뽑기",
+   "ctaDraw": "30초 광고 보고 확률업 뽑기",
    "toastBought": "확률업 뽑기권을 샀어요",
    "disabled": {
     "paw": "젤리 {price}이 필요해요",

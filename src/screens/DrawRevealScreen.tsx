@@ -129,6 +129,8 @@ type DrawRevealScreenProps = {
   /** Ad-draw only: "카드를 뽑아 냥코인 N개를 받았어요." */
   adNyangToast?: string | null;
   remainingDraws: number;
+  /** Copy for the next draw, matched to the ad or ticket it will use. */
+  againLabel: string;
   holdToast?: boolean;
   hideToast?: boolean;
   onToastShown?: () => void;
@@ -176,6 +178,7 @@ export function DrawRevealScreen({
   toastText = null,
   adNyangToast = null,
   remainingDraws,
+  againLabel,
   holdToast = false,
   hideToast = false,
   onToastShown,
@@ -787,7 +790,7 @@ export function DrawRevealScreen({
             >
               {remainingDraws > 0 ? (
                 <>
-                  한 장 더 뽑기 · 광고 · 남은 <em id="remain">{remainingDraws}회</em>
+                  {againLabel} · 남은 <em id="remain">{remainingDraws}회</em>
                 </>
               ) : (
                 "내일 또 만나요"

@@ -1730,17 +1730,11 @@ export function MenuPanel({
                       }}
                     >
                       {model.ticketShop.ticketsHeld > 0 ? (
-                        "확률업 이용권으로 뽑기"
+                        "이용권으로 확률업 뽑기"
                       ) : (
                         <span className="ticket-shop-draw-cta">
-                          <img
-                            className="ticket-shop-ad-icon"
-                            src="/assets/menu/icon-ad.svg"
-                            alt=""
-                            width={18}
-                            height={18}
-                          />
-                          {model.menu.sheets.ticketShop.ctaDraw}
+                          <span className="ticket-shop-ad-badge">광고</span>
+                          30초 광고 보고 확률업 뽑기
                         </span>
                       )}
                     </button>

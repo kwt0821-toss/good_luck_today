@@ -147,3 +147,22 @@ export function nextDrawSlot(
   if (remainingRateUpDraws(state, config) > 0) return "rateUp";
   return null;
 }
+
+/** What the next cat-tap / "한 장 더" actually spends. */
+export type NextDrawKind = "tutorial" | "normal" | "rateUpAd" | "rateUpTicket" | "none";
+
+export function nextDrawKind(state: OpsState, config: OpsConfig): NextDrawKind {
+  const slot = nextDrawSlot(state, config);
+  if (slot === "tutorial") return "tutorial";
+  if (slot === "normal") return "normal";
+  if (slot === "rateUp") return willUseRateUpTicket(state, config) ? "rateUpTicket" : "rateUpAd";
+  return "none";
+}
+
+/** Button copy that matches the ad (or ticket) the next draw will use. */
+export function drawAgainLabel(kind: NextDrawKind): string {
+  if (kind === "rateUpAd") return "30초 광고 보고 확률업 뽑기";
+  if (kind === "rateUpTicket") return "이용권으로 한 장 더";
+  if (kind === "normal") return "광고 보고 한 장 더";
+  return "한 장 더 뽑기";
+}
