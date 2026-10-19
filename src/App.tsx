@@ -1553,18 +1553,6 @@ export default function App() {
           setForceMenuSheet(null);
           setTutorialReplayStep(1);
         }}
-        onDevResetNewUser={() => {
-          setTutorialReplayStep(null);
-          setFeatureIntro(null);
-          setRewardsIntro(null);
-          setRewardsTutPhase(null);
-          setRoomTutPhase(null);
-          setDexTutPhase(null);
-          setForceMenuSheet(null);
-          setRevealTutPhase(null);
-          setMenuOpen(false);
-          setScreen({ name: "home" });
-        }}
         forceSheet={forceMenuSheet}
         lockDismiss={coachLockDismiss}
         onSheetOpen={(id) => {

@@ -11,14 +11,6 @@ import {
 import { AudioManager } from "../audio/AudioManager";
 import { useBackHandler } from "../hooks/useBackHandler";
 import { useLoadingHold } from "../lib/loadingGate";
-import { isDevBuild, progressResetUnlockedByDefault } from "../lib/devMode";
-import {
-  DEV_MAX_COZY_LEVEL,
-  applyDevAttendanceStreak,
-  resetToNewUserState,
-  unlockMaxDevState,
-  type DevAttendanceStreakDays,
-} from "../lib/devReset";
 import { jellyLabel } from "../lib/jellyLabel";
 import { menuAsset } from "../lib/menuConfig";
 import { NCOIN_ICON, ncoinIcon } from "../lib/ncoinIcon";
@@ -59,25 +51,6 @@ import "./MenuPanel.css";
 type RewardsView = "inbox" | "confirm" | "success" | "history";
 type ExchangeView = "summary" | "confirm";
 
-const PROGRESS_RESET_UNLOCK_KEY = "lucky-cat.progress-reset-unlocked";
-
-function readProgressResetUnlocked(): boolean {
-  if (progressResetUnlockedByDefault()) return true;
-  try {
-    return window.sessionStorage.getItem(PROGRESS_RESET_UNLOCK_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function writeProgressResetUnlocked(): void {
-  try {
-    window.sessionStorage.setItem(PROGRESS_RESET_UNLOCK_KEY, "1");
-  } catch {
-    // ignore quota / private mode
-  }
-}
-
 type MenuPanelProps = {
   open: boolean;
   ops: OpsState;
@@ -89,7 +62,6 @@ type MenuPanelProps = {
   /** Play long ad for weekly day7 bonus; retries load once upstream. */
   onAttendanceDay7Ad?: () => Promise<"completed" | "cancelled" | "failed" | "offline">;
   onReplayTutorial: () => void;
-  onDevResetNewUser?: () => void;
   /** Start rate-up draw from ticket shop CTA. */
   onRateUpDraw?: () => void;
   /** Force-open a sheet (rewards-intro coach). */
@@ -135,7 +107,6 @@ export function MenuPanel({
   onPawAd,
   onAttendanceDay7Ad,
   onReplayTutorial,
-  onDevResetNewUser,
   onRateUpDraw,
   forceSheet = null,
   lockDismiss = false,
@@ -150,12 +121,6 @@ export function MenuPanel({
   const [stampDay, setStampDay] = useState<number | null>(null);
   const [popDay, setPopDay] = useState<number | null>(null);
   const [creditsText, setCreditsText] = useState<string | null>(null);
-  const [devResetting, setDevResetting] = useState(false);
-  const [progressResetVisible, setProgressResetVisible] = useState(() => readProgressResetUnlocked());
-  const [progressResetConfirm, setProgressResetConfirm] = useState(false);
-  const [progressMaxConfirm, setProgressMaxConfirm] = useState(false);
-  const [attendanceDevDays, setAttendanceDevDays] = useState<DevAttendanceStreakDays | null>(null);
-  const versionTapRef = useRef({ count: 0, timer: 0, lastMs: 0 });
   const [rewardsView, setRewardsView] = useState<RewardsView>("inbox");
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
@@ -219,18 +184,6 @@ export function MenuPanel({
 
   const requestClose = () => {
     if (lockDismiss) return;
-    if (progressResetConfirm) {
-      setProgressResetConfirm(false);
-      return;
-    }
-    if (progressMaxConfirm) {
-      setProgressMaxConfirm(false);
-      return;
-    }
-    if (attendanceDevDays != null) {
-      setAttendanceDevDays(null);
-      return;
-    }
     if (sheet) {
       closeSheet();
       return;
@@ -317,7 +270,6 @@ export function MenuPanel({
       setRewardsView("inbox");
       setExchangeView("summary");
       setExchangeBusy(false);
-      setProgressResetConfirm(false);
     }, reduce ? 150 : 280);
   };
 
@@ -392,114 +344,6 @@ export function MenuPanel({
     } finally {
       setWithdrawBusy(false);
     }
-  };
-
-  const unlockProgressReset = () => {
-    if (devResetting || progressResetConfirm || progressMaxConfirm || attendanceDevDays != null) return;
-    const stamp = versionTapRef.current;
-    const now = Date.now();
-    // pointerdown-only counting; ignore rapid duplicates from the same gesture.
-    if (now - stamp.lastMs < 90) return;
-    stamp.lastMs = now;
-    window.clearTimeout(stamp.timer);
-    stamp.count += 1;
-    if (stamp.count >= 7) {
-      stamp.count = 0;
-      writeProgressResetUnlocked();
-      setProgressResetVisible(true);
-      setProgressResetConfirm(true);
-      nyNotify({ key: "progress-reset-unlock", kind: "info", title: "진행도 초기화" });
-      void haptic("success");
-      return;
-    }
-    if (stamp.count === 3 || stamp.count === 5) {
-      nyNotify({
-        key: "version-tap",
-        kind: "info",
-        title: `버전 ${stamp.count}/7`,
-      });
-    }
-    stamp.timer = window.setTimeout(() => {
-      stamp.count = 0;
-    }, 2800);
-  };
-
-  const reloadAfterDevProgress = () => {
-    // Hard reload — Toss WebViews sometimes keep the old SPA shell on assign("/").
-    const url = `${window.location.pathname}?reset=${Date.now()}`;
-    window.location.replace(url);
-    window.setTimeout(() => {
-      window.location.href = url;
-    }, 200);
-  };
-
-  const runProgressReset = () => {
-    if (devResetting) return;
-    setDevResetting(true);
-    void resetToNewUserState()
-      .then((next) => {
-        onOpsChange(next);
-        onDevResetNewUser?.();
-        reloadAfterDevProgress();
-      })
-      .catch((err) => {
-        console.error("progress reset failed", err);
-        setDevResetting(false);
-        setProgressResetConfirm(false);
-        nyNotify({
-          key: "progress-reset-fail",
-          kind: "error",
-          title: "초기화하지 못했어요",
-          sub: "네트워크를 확인하고 다시 눌러 주세요",
-          action: { label: "다시 시도", onClick: () => runProgressReset() },
-        });
-      });
-  };
-
-  const runProgressMaxUnlock = () => {
-    if (devResetting) return;
-    setDevResetting(true);
-    void unlockMaxDevState()
-      .then((next) => {
-        onOpsChange(next);
-        onDevResetNewUser?.();
-        reloadAfterDevProgress();
-      })
-      .catch((err) => {
-        console.error("progress max unlock failed", err);
-        setDevResetting(false);
-        setProgressMaxConfirm(false);
-        nyNotify({
-          key: "progress-max-fail",
-          kind: "error",
-          title: "풀 진행도를 적용하지 못했어요",
-          sub: "네트워크를 확인하고 다시 눌러 주세요",
-          action: { label: "다시 시도", onClick: () => runProgressMaxUnlock() },
-        });
-      });
-  };
-
-  const runAttendanceStreak = (days: DevAttendanceStreakDays) => {
-    if (devResetting) return;
-    setDevResetting(true);
-    void applyDevAttendanceStreak(days)
-      .then((next) => {
-        onOpsChange(next);
-        onDevResetNewUser?.();
-        reloadAfterDevProgress();
-      })
-      .catch((err) => {
-        console.error("attendance streak preset failed", err);
-        setDevResetting(false);
-        setAttendanceDevDays(null);
-        nyNotify({
-          key: "attendance-dev-fail",
-          kind: "error",
-          title: "출석 상태를 맞추지 못했어요",
-          sub: "네트워크를 확인하고 다시 눌러 주세요",
-          action: { label: "다시 시도", onClick: () => runAttendanceStreak(days) },
-        });
-      });
   };
 
   const onPanelPointerDown = (event: ReactPointerEvent) => {
@@ -1757,18 +1601,7 @@ export function MenuPanel({
                         return (
                           <div key={item.id} className="settings-row">
                             <span>{item.label}</span>
-                            <button
-                              type="button"
-                              className="link settings-version-tap"
-                              aria-label="앱 버전"
-                              onPointerDown={(event) => {
-                                if (event.button != null && event.button !== 0) return;
-                                event.preventDefault();
-                                unlockProgressReset();
-                              }}
-                            >
-                              v1.0.0{isDevBuild ? " · DEV" : ""}
-                            </button>
+                            <span className="settings-version">v1.0.0</span>
                           </div>
                         );
                       }
@@ -1792,75 +1625,6 @@ export function MenuPanel({
                         </div>
                       );
                     })}
-                    {isDevBuild ? (
-                      <div className="settings-row settings-row-dev">
-                        <button
-                          type="button"
-                          className="link"
-                          onClick={() => {
-                            const next = {
-                              ...ops,
-                              nyangCoinBalance: ops.nyangCoinBalance + 10,
-                            };
-                            onOpsChange(next);
-                            void buildMenuViewModel(next).then(setModel);
-                            nyNotify({ key: "ncoin", kind: "reward", title: "{ncoin} <b>{n}개</b> 받았어요", count: 10, sub: "DEV" });
-                            AudioManager.playSfx("reward-coin");
-                          }}
-                        >
-                          냥코인 10개 획득 (DEV)
-                        </button>
-                      </div>
-                    ) : null}
-                    {progressResetVisible ? (
-                      <>
-                        <div className="settings-row settings-row-dev">
-                          <button
-                            type="button"
-                            className="link is-danger"
-                            disabled={devResetting}
-                            onClick={() => {
-                              if (devResetting) return;
-                              setProgressMaxConfirm(false);
-                              setProgressResetConfirm(true);
-                            }}
-                          >
-                            {devResetting ? "적용 중…" : "진행도 초기화"}
-                          </button>
-                        </div>
-                        <div className="settings-row settings-row-dev">
-                          <button
-                            type="button"
-                            className="link is-max"
-                            disabled={devResetting}
-                            onClick={() => {
-                              if (devResetting) return;
-                              setProgressResetConfirm(false);
-                              setProgressMaxConfirm(true);
-                            }}
-                          >
-                            {devResetting ? "적용 중…" : "풀 진행도 적용"}
-                          </button>
-                        </div>
-                        {([6, 7, 8] as const).map((days) => (
-                          <div key={days} className="settings-row settings-row-dev">
-                            <button
-                              type="button"
-                              className="link is-att"
-                              disabled={devResetting}
-                              onClick={() => {
-                                if (devResetting) return;
-                                setProgressResetConfirm(false);
-                                setProgressMaxConfirm(false);
-                                setAttendanceDevDays(days);
-                              }}
-                            >
-                              {devResetting ? "적용 중…" : `${days}일 연속 출석`}
-                            </button>
-                          </div>
-                        ))}
-                      </>
-                    ) : null}
                     {creditsText ? (
                       <pre className="menu-credits">{creditsText}</pre>
                     ) : null}
@@ -2038,128 +1802,6 @@ export function MenuPanel({
         ) : null}
 
       </aside>
-
-      {progressResetConfirm ? (
-        <div className="settings-reset-overlay" role="dialog" aria-modal="true" aria-label="진행도 초기화 확인">
-          <button
-            type="button"
-            className="settings-reset-overlay-dim"
-            aria-label="닫기"
-            disabled={devResetting}
-            onClick={() => {
-              if (!devResetting) setProgressResetConfirm(false);
-            }}
-          />
-          <div className="settings-reset-confirm is-modal">
-            <strong>신규 유저 상태로 초기화할까요?</strong>
-            <p>도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워지고, 발바닥 젤리 2,000이 지급돼요.</p>
-            <div className="settings-reset-confirm-actions">
-              <button
-                type="button"
-                className="menu-sheet-cta is-secondary"
-                disabled={devResetting}
-                onClick={() => setProgressResetConfirm(false)}
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                className="menu-sheet-cta is-danger"
-                disabled={devResetting}
-                onClick={runProgressReset}
-              >
-                {devResetting ? "초기화 중…" : "초기화"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {progressMaxConfirm ? (
-        <div className="settings-reset-overlay" role="dialog" aria-modal="true" aria-label="풀 진행도 적용 확인">
-          <button
-            type="button"
-            className="settings-reset-overlay-dim"
-            aria-label="닫기"
-            disabled={devResetting}
-            onClick={() => {
-              if (!devResetting) setProgressMaxConfirm(false);
-            }}
-          />
-          <div className="settings-reset-confirm is-modal">
-            <strong>풀 진행도를 적용할까요?</strong>
-            <p>
-              도감 카드를 모두 보유하고, 방꾸미기 아이템을 전부 소유하며, 코지 Lv.{DEV_MAX_COZY_LEVEL}·모든 방
-              해금 상태로 맞춰요.
-            </p>
-            <div className="settings-reset-confirm-actions">
-              <button
-                type="button"
-                className="menu-sheet-cta is-secondary"
-                disabled={devResetting}
-                onClick={() => setProgressMaxConfirm(false)}
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                className="menu-sheet-cta"
-                disabled={devResetting}
-                onClick={runProgressMaxUnlock}
-              >
-                {devResetting ? "적용 중…" : "적용"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {attendanceDevDays != null ? (
-        <div
-          className="settings-reset-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${attendanceDevDays}일 연속 출석 확인`}
-        >
-          <button
-            type="button"
-            className="settings-reset-overlay-dim"
-            aria-label="닫기"
-            disabled={devResetting}
-            onClick={() => {
-              if (!devResetting) setAttendanceDevDays(null);
-            }}
-          />
-          <div className="settings-reset-confirm is-modal">
-            <strong>{attendanceDevDays}일 연속 출석으로 맞출까요?</strong>
-            <p>
-              오늘은 이미 출석한 누적 {attendanceDevDays}일이 되고, 1~
-              {Math.min(attendanceDevDays, 7)}일차 출석 선물을 보유 처리해요.
-              {attendanceDevDays === 8 ? " 8일차 젤리는 처음 맞출 때 한 번 들어가요." : ""}
-            </p>
-            <div className="settings-reset-confirm-actions">
-              <button
-                type="button"
-                className="menu-sheet-cta is-secondary"
-                disabled={devResetting}
-                onClick={() => setAttendanceDevDays(null)}
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                className="menu-sheet-cta"
-                disabled={devResetting}
-                onClick={() => {
-                  if (attendanceDevDays != null) runAttendanceStreak(attendanceDevDays);
-                }}
-              >
-                {devResetting ? "적용 중…" : "적용"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {helpOpen ? (
         <HelpEarnSheet initialTab={helpTab} onClose={() => setHelpOpen(false)} />

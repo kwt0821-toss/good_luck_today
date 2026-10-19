@@ -316,10 +316,7 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         typeof parsed.attendanceNyangCoinYear === "number"
           ? parsed.attendanceNyangCoinYear
           : fallback.attendanceNyangCoinYear,
-      devForceCozyLevel:
-        typeof parsed.devForceCozyLevel === "number" && parsed.devForceCozyLevel > 0
-          ? parsed.devForceCozyLevel
-          : fallback.devForceCozyLevel ?? null,
+      devForceCozyLevel: null,
     };
   } catch {
     return fallback;

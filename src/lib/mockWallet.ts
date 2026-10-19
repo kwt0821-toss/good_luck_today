@@ -159,15 +159,14 @@ function messageForPromoError(code: string): string {
 type PromotionCodeChoice = { code: string; test: boolean };
 
 /**
- * TEST_ 코드는 콘솔에서 프로모션을 시작하기 전의 호출이에요.
- * promotionLive 가 true 인 정식 빌드만 앞의 TEST_ 를 뗀 코드로 지급해요.
+ * 정식 코드로 지급해요. VITE_USE_TEST_PROMOTION=true 이거나 promotionLive 가 아니면 TEST_ 코드를 써요.
  */
 function promotionCodeFrom(economy: OpsEconomy): PromotionCodeChoice {
   const block = economy.nyangCoin.withdraw;
   const testCode = typeof block?.testPromotionCode === "string" ? block.testPromotionCode.trim() : "";
   const liveCode = typeof block?.promotionCode === "string" ? block.promotionCode.trim() : "";
   const liveOn = block?.promotionLive === true;
-  const forceTest = import.meta.env.DEV || import.meta.env.VITE_USE_TEST_PROMOTION === "true";
+  const forceTest = import.meta.env.VITE_USE_TEST_PROMOTION === "true";
   const test = forceTest || !liveOn;
   return { code: test ? testCode : liveCode, test };
 }

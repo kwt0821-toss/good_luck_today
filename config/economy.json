@@ -169,7 +169,7 @@
       "dailyLimit": 50,
       "promotionCode": "01M59GH02QQ13C7ZY3W11SG2XH",
       "testPromotionCode": "TEST_01M59GH02QQ13C7ZY3W11SG2XH",
-      "promotionLive": false,
+      "promotionLive": true,
       "history": {
         "keepDays": 365,
         "fields": [
@@ -181,7 +181,7 @@
         ]
       },
       "budgetAlertKRW": null,
-      "policyCheck": "promotionLive가 false인 동안 토스 앱도 testPromotionCode로 호출해요. 콘솔에서 프로모션을 시작한 뒤 promotionLive를 true로 바꾸면 promotionCode로 지급해요.",
+      "policyCheck": "promotionLive가 true면 promotionCode로 토스 포인트를 지급해요.",
       "dailyLimitUnit": "토스 포인트 원 (= 냥코인 개수), KST 00:00 초기화",
       "ui": "−/+ 스테퍼 (10 단위, 최소 10, 최대 min(잔액 내림 10단위, 오늘 남은 한도))"
     },
