@@ -92,7 +92,7 @@ import { DrawRevealScreen } from "./screens/DrawRevealScreen";
 import { preloadFrameAssets } from "./lib/preloadFrames";
 
 const DRAW_LOADING_MESSAGES = ["카드를 섞는 중이냥...", "거의 다 됐다냥!", "하암~ 곧 일어날게냥"];
-import { preloadLoadingAssets } from "./lib/preloadLoading";
+import { preloadAdFallbackCat, preloadLoadingAssets } from "./lib/preloadLoading";
 import { setLoadingBlocked, useLoadingHold } from "./lib/loadingGate";
 import { useExitConfirmOnBack, useGraniteBack } from "./hooks/useExitConfirmOnBack";
 import { CollectionScreen } from "./screens/CollectionScreen";
@@ -201,6 +201,7 @@ export default function App() {
   useEffect(() => {
     preloadLoadingAssets();
     preloadFrameAssets();
+    preloadAdFallbackCat();
   }, []);
 
   useEffect(() => {
@@ -1218,7 +1219,9 @@ export default function App() {
   }, [roomTutPhase]);
 
   // Home only. The menu pushes its own history entry, so back there must stay the default pop.
-  const isMainScreen = !booting && !bootError && screen.name === "home" && !menuOpen;
+  const adFallbackOpen = Boolean(ad && ad.presentation === "mock");
+  const isMainScreen =
+    !booting && !bootError && screen.name === "home" && !menuOpen && !adFallbackOpen;
   const { modal: exitModal } = useExitConfirmOnBack(isMainScreen);
   // Dex and room: the nav "<" beside the Toss home button returns to the main screen.
   const screenBack =
@@ -1230,6 +1233,9 @@ export default function App() {
   useGraniteBack(screenBack, () => {
     if (screen.name === "collection") leaveDex();
     else if (screen.name === "room") leaveRoom();
+  });
+  useGraniteBack(adFallbackOpen, () => {
+    void cancelAd();
   });
 
   if (bootError) {

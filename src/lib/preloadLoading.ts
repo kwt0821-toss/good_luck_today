@@ -13,3 +13,10 @@ export function preloadLoadingAssets(): void {
     img.src = url;
   }
 }
+
+/** Dream-screen cat, warmed at startup so the ad fallback paints immediately. */
+export function preloadAdFallbackCat(): void {
+  const img = new Image();
+  img.decoding = "async";
+  img.src = withAssetVersion("/assets/ad-fallback/fallback-cat@2x.webp");
+}

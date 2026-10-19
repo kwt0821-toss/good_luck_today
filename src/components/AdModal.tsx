@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { withAssetVersion } from "../lib/cardArt";
 import { mockAdDurationSec, type MockAdKind } from "../lib/mockAds";
 import "./AdModal.css";
 
@@ -48,8 +49,8 @@ function FadeImg({ name, className }: { name: string; className: string }) {
   return (
     <img
       className={`fa-img ${className} ${loaded ? "is-loaded" : ""}`}
-      src={`${ASSET_BASE}/${name}.webp`}
-      srcSet={`${ASSET_BASE}/${name}.webp 1x, ${ASSET_BASE}/${name}@2x.webp 2x`}
+      src={withAssetVersion(`${ASSET_BASE}/${name}.webp`)}
+      srcSet={`${withAssetVersion(`${ASSET_BASE}/${name}.webp`)} 1x, ${withAssetVersion(`${ASSET_BASE}/${name}@2x.webp`)} 2x`}
       alt=""
       draggable={false}
       decoding="async"
