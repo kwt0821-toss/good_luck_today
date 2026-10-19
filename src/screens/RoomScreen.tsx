@@ -1440,7 +1440,7 @@ export function RoomScreen({
                     <RoomWorld
                       mode={active ? mode : "view"}
                       roomId={roomId}
-                      roamingCatId={roomLayout.roamingCatId}
+                      roamingCatId={roomLayout.roamingCatId ?? "cheese"}
                       roamingActive={active}
                       itemsById={itemsById}
                       layout={roomLayout}
@@ -1744,6 +1744,18 @@ export function RoomScreen({
           onRequestClose={() => {
             if (tutLock) return;
             setConfirm("close-edit");
+          }}
+          roamingCatId={layout.roamingCatId ?? "cheese"}
+          onSelectCat={(id) => {
+            const room = state.rooms[displayRoomId];
+            if (!room) return;
+            persist({
+              ...state,
+              rooms: {
+                ...state.rooms,
+                [displayRoomId]: { ...room, roamingCatId: id },
+              },
+            });
           }}
         />
       )}

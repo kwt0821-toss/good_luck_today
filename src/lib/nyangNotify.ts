@@ -77,11 +77,11 @@ const CELEBRATE_DUR = 3200;
 const OUT_MS = 220;
 const OUT_MS_REDUCED = 150;
 
-let queue: QueuedNotify[] = [];
+const queue: QueuedNotify[] = [];
 let current: QueuedNotify | null = null;
 let phase: HostSnapshot["phase"] = "idle";
 let sheet: SheetState | null = null;
-let listeners = new Set<Listener>();
+const listeners = new Set<Listener>();
 let dismissTimer = 0;
 let outTimer = 0;
 let startedAt = 0;

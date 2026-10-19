@@ -151,7 +151,7 @@ export async function postDupExchange(
 
   const config = await loadOpsConfig();
   const catalog = await loadDexCatalog();
-  let owned = await loadDexOwned();
+  const owned = await loadDexOwned();
   const nextOwned: DexOwnedMap = { ...owned };
   let gained = 0;
   let converted = 0;

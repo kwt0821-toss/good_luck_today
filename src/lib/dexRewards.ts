@@ -212,7 +212,8 @@ export function newCardRevealCopy(card: DexCard): { title: string; sub: string }
   return { title: "새 고양이를 만났어요", sub: "도감에서 보상을 받아 보세요" };
 }
 
-export function duplicateRevealCopy(_dupPaw?: number): string {
+export function duplicateRevealCopy(dupPaw?: number): string {
+  void dupPaw;
   return "이미 만난 고양이예요\n발바닥 포인트로 바꿀 수 있어요";
 }
 
@@ -332,6 +333,7 @@ export function dexClaimChipLabel(count: number, nyangCoin: number, paw: number)
 }
 
 /** @deprecated legacy inbox path — prefer postDexRewardsClaim */
-export function legacyInboxStillUsed(_config: OpsConfig) {
+export function legacyInboxStillUsed(config: OpsConfig) {
+  void config;
   return false;
 }

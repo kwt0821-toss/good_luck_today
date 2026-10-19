@@ -559,6 +559,7 @@ export const ROOM_TABS: { id: RoomTab; label: string }[] = [
   { id: "벽지", label: "벽지" },
   { id: "바닥", label: "바닥" },
   { id: "카드액자", label: "카드액자" },
+  { id: "고양이 친구", label: "고양이 친구" },
 ];
 
 export const CARD_FRAME_IDS = new Set(["squareframe", "cardframe"]);
@@ -580,6 +581,7 @@ export function isPlaceableDecor(item: RoomItem): boolean {
 }
 
 export function itemMatchesTab(item: RoomItem, tab: RoomTab) {
+  if (tab === "고양이 친구") return false;
   if (tab === "보유") return true;
   if (tab === "벽 꾸미기") return isWallDecor(item);
   if (tab === "벽지") return item.category === "벽지" || item.placement === "wallpaper";

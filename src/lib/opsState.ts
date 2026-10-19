@@ -117,7 +117,8 @@ export function remainingRateUpDraws(state: OpsState, config: OpsConfig): number
   return remainingRateUpAdSlots(state, config) + Math.max(0, state.rateUpTickets);
 }
 
-export function willUseRateUpTicket(state: OpsState, _config?: OpsConfig): boolean {
+export function willUseRateUpTicket(state: OpsState, config?: OpsConfig): boolean {
+  void config;
   // Prefer tickets whenever held — ads only when tickets are 0.
   return state.rateUpTickets > 0;
 }

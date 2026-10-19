@@ -2,7 +2,7 @@ export type RoomCategory = "가구" | "소품" | "벽 꾸미기" | "벽지" | "�
 export type RoomPlacementKind = "floor" | "floor-decal" | "wall" | "wallTop" | "wallpaper" | "floor-skin";
 export type RoomMode = "view" | "edit";
 /** Drawer tabs — `보유` lists owned items (NEW/unplaced first). */
-export type RoomTab = RoomCategory | "보유";
+export type RoomTab = RoomCategory | "보유" | "고양이 친구";
 export type RoomOrientation = "default" | "mirrored";
 export type RoomThemeId = "moon_bedroom" | "cat_cafe" | "sakura_greenhouse";
 export type RoomThemeFilter = "all" | RoomThemeId;

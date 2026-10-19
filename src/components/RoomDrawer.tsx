@@ -10,6 +10,7 @@ import {
   ROOM_THEME_FILTERS,
 } from "../lib/roomCatalog";
 import type { RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib/roomTypes";
+import { RoomCatsTab } from "./RoomCatsTab";
 
 const DRAWER_HELP = "중복 고양이 카드를 발바닥 포인트로 바꿀 수 있어요";
 const DRAWER_HEIGHT_COLLAPSED = 420;
@@ -48,6 +49,8 @@ type RoomDrawerProps = {
   onHelp?: () => void;
   /** Collapsed sheet dragged down past dismiss threshold. */
   onRequestClose?: () => void;
+  roamingCatId: string | null;
+  onSelectCat: (id: string) => void;
 };
 
 function tileState(
@@ -119,6 +122,8 @@ export function RoomDrawer({
   onUndo,
   onHelp,
   onRequestClose,
+  roamingCatId,
+  onSelectCat,
 }: RoomDrawerProps) {
   const gridRef = useRef<HTMLDivElement | null>(null);
   const scrollLocked = useRef(false);
@@ -257,6 +262,7 @@ export function RoomDrawer({
   }
 
   const paintTab = tab === "벽지" || tab === "바닥";
+  const catsTab = tab === "고양이 친구";
   const infoMeta = infoItem ? itemMeta[infoItem.id] : null;
   const infoState = infoItem
     ? tileState(
@@ -307,7 +313,7 @@ export function RoomDrawer({
 
   return (
     <section
-      className={`lucky-drawer ${paintTab ? "is-paint" : ""} ${tutorialLockId ? "is-tutorial" : ""} ${expanded ? "is-expanded" : ""} ${sheetDragging ? "is-dragging" : ""}`}
+      className={`lucky-drawer ${paintTab ? "is-paint" : ""} ${catsTab ? "is-cats" : ""} ${tutorialLockId ? "is-tutorial" : ""} ${expanded ? "is-expanded" : ""} ${sheetDragging ? "is-dragging" : ""}`}
       aria-label="꾸미기 서랍"
       style={{ height: sheetHeight }}
     >
@@ -355,12 +361,21 @@ export function RoomDrawer({
             role="tab"
             aria-selected={tab === item.id}
             className={tab === item.id ? "is-active" : ""}
-            onClick={() => onTab(item.id)}
+            onClick={(event) => {
+              onTab(item.id);
+              if (item.id === "고양이 친구") {
+                event.currentTarget.scrollIntoView({ inline: "nearest" });
+              }
+            }}
           >
             {item.label}
           </button>
         ))}
       </div>
+      {catsTab ? (
+        <RoomCatsTab selectedId={roamingCatId} onSelect={onSelectCat} />
+      ) : (
+        <>
       <div className="lucky-theme-filters" role="tablist" aria-label="테마 필터">
         {ROOM_THEME_FILTERS.map((filter) => (
           <button
@@ -537,7 +552,9 @@ export function RoomDrawer({
           );
         })}
       </div>
-      <div className="lucky-drawer-fade" aria-hidden="true" />
+        </>
+      )}
+      {catsTab ? null : <div className="lucky-drawer-fade" aria-hidden="true" />}
     </section>
   );
 }

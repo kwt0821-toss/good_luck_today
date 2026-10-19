@@ -301,7 +301,6 @@ export function RoomWorld({
   shakeId,
   shadowsEnabled,
   painting,
-  paintHover: _paintHover,
   paintPreview = null,
   suggestTile = null,
   suggestItemId = null,

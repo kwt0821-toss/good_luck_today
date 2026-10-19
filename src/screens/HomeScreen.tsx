@@ -66,8 +66,6 @@ export function HomeScreen({
   useRateUpTicket,
   rateUpAdSeconds = 30,
   firstDrawPending,
-  rateNormalPct: _rateNormalPct,
-  rateUpPct: _rateUpPct,
   offerTicketShop = false,
   ticketShopPricePaw = 200,
   menuBadge = false,

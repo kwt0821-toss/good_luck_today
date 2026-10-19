@@ -488,7 +488,7 @@ export async function claimAttendanceDay7OnServer(
 
   const pack = withAd ? bonus.adBonus : bonus.base;
   let wantNyang = pack.nyangCoin;
-  let wantPaw = pack.paw;
+  const wantPaw = pack.paw;
   let wantTickets = withAd ? (bonus.adBonus.rateUpTicket ?? 0) : 0;
 
   let next: OpsState = {
@@ -503,7 +503,7 @@ export async function claimAttendanceDay7OnServer(
 
   // Yearly 냥코인 cap → overflow to P (10P each)
   const yearKey = toKstYearKey();
-  let yearGranted =
+  const yearGranted =
     next.attendanceNyangYearKey === yearKey ? next.attendanceNyangCoinYear : 0;
   let overflowPaw = 0;
   const cap = bonus.yearlyCoinCap;
