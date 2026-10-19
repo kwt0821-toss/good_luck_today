@@ -67,7 +67,7 @@ export async function confirmDrawAfterAd(
   const adCompleted = Boolean(opts.adCompleted);
   const notice =
     config.economy.ncoinSources?.adDrawRule?.notice ??
-    "카드를 뽑아 냥코인x1이 지급되었습니다.";
+    "카드를 뽑아 냥코인 1개를 받았어요";
 
   if (reservation.confirmed) {
     // Idempotent replay: same drawId → same response (including ad 냥코인).
@@ -227,7 +227,7 @@ export async function grantPawAdReward(
   const prior = (next.pawAdLedger ?? []).find((row) => row.requestId === requestId);
   const notice =
     config.economy.ncoinSources?.adPawRule?.notice ??
-    "광고를 봐서 냥코인x1이 지급되었습니다.";
+    "광고를 봐서 냥코인 1개를 받았어요";
   if (prior) {
     return {
       state: next,

@@ -113,7 +113,7 @@ function rewardIcon(icon?: "ncoin" | "paw" | "ticket" | "cat") {
   return NCOIN;
 }
 
-export function NyangNotifyHost() {
+export function NyangNotifyHost({ dock = "top" }: { dock?: "top" | "bottom" }) {
   const [, bump] = useState(0);
   const dragY = useRef<number | null>(null);
   const playedKey = useRef<string | null>(null);
@@ -200,10 +200,14 @@ export function NyangNotifyHost() {
       {current && phase !== "idle" ? (
         current.kind === "celebrate" ? (
           <div
-            className={`ny-celebrate ${phase === "in" ? "in" : "out"} ${current.anchor === "menu" ? "is-menu" : ""}`}
+            className={`ny-celebrate ${phase === "in" ? "in" : "out"} ${dock === "bottom" ? "is-bottom" : ""} ${current.anchor === "menu" ? "is-menu" : ""}`}
             role="status"
             aria-label={livePlain(current.title, current.sub, current.count)}
-            style={{ top: current.anchor === "menu" ? 196 : 115 }}
+            style={
+              dock === "bottom"
+                ? { top: "auto", bottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }
+                : { top: current.anchor === "menu" ? 196 : 115 }
+            }
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
             onPointerCancel={() => {
@@ -235,11 +239,13 @@ export function NyangNotifyHost() {
           </div>
         ) : (
           <div
-            className={`ny-snack ny-${current.kind} ${phase === "in" ? "in" : "out"} ${current.anchor === "menu" ? "is-menu" : ""}`}
+            className={`ny-snack ny-${current.kind} ${phase === "in" ? "in" : "out"} ${dock === "bottom" ? "is-bottom" : ""} ${current.anchor === "menu" ? "is-menu" : ""}`}
             role={current.kind === "error" || current.assertive ? "alert" : "status"}
             aria-label={livePlain(current.title, current.sub, current.count)}
             style={{
-              top: current.anchor === "menu" ? 196 : 115,
+              ...(dock === "bottom"
+                ? { top: "auto", bottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }
+                : { top: current.anchor === "menu" ? 196 : 115 }),
               ["--ny-bar" as string]: `${durationMs || 2600}ms`,
             }}
             onPointerDown={onPointerDown}

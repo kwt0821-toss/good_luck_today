@@ -5,6 +5,7 @@ import { AudioManager } from "../audio/AudioManager";
 import { cardBackUrl, cardLargeUrl, cardThumbUrl, decodeImage } from "../lib/cardArt";
 import { resolveFrame } from "../lib/cardFrames";
 import { CardFrame } from "./CardFrame";
+import { jellyLabel } from "../lib/jellyLabel";
 import { useLoadingHold } from "../lib/loadingGate";
 import { CardFlipStack, CardViewer } from "./CardViewer";
 import {
@@ -435,7 +436,7 @@ export function DexDetailSheet({
         {dupCount > 0 && onConvertDuplicate && dupPhase === "idle" ? (
           <div className="dex-dup-block">
             <p className="dex-dup-meta">
-              중복 {dupCount}장 · 1장당 {dupUnitPaw.toLocaleString("ko-KR")}P
+              중복 {dupCount}장 · 1장당 {jellyLabel(dupUnitPaw)}
             </p>
             <button
               type="button"
@@ -479,7 +480,7 @@ export function DexDetailSheet({
               </button>
             </div>
             <p className="dex-dup-step-total">
-              {dupQty}장 → {dupPawTotal.toLocaleString("ko-KR")}P
+              {dupQty}장 → {jellyLabel(dupPawTotal)}
             </p>
             <div className="dex-dup-actions">
               <button type="button" className="dex-convert-btn is-secondary" onClick={() => setDupPhase("idle")}>

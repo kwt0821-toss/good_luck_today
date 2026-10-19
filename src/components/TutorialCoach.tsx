@@ -265,7 +265,10 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   }, [besideSkip, rect, frame]);
 
   const bubbleLayout = useMemo(() => {
-    if (!mark) return { top: PAD_TOP, above: false };
+    if (!mark) return { top: PAD_TOP, above: false, dockTop: false };
+    if (mark.dock === "top") {
+      return { top: 12, above: false, dockTop: true };
+    }
     const bubbleH = measuredBubbleH || estimateBubbleHeight(mark);
     const viewH = frame.height || window.innerHeight;
     const maxTop = Math.max(PAD_TOP, viewH - PAD_BOTTOM - bubbleH);
@@ -304,28 +307,10 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
     } catch {
       // ignore
     }
-    // Reveal step 2 sits on the footer button. The default spot covers 오늘의 한 줄.
-    try {
-      const info = document.querySelector(".draw-reveal-info");
-      if (info) {
-        const infoBox = info.getBoundingClientRect();
-        const infoTop = infoBox.top - frame.top;
-        const infoBottom = infoBox.bottom - frame.top;
-        const hitsInfo = rawTop < infoBottom && rawTop + bubbleH > infoTop;
-        if (hitsInfo) {
-          const aboveInfo = infoTop - BUBBLE_GAP - bubbleH;
-          if (aboveInfo >= PAD_TOP) {
-            rawTop = aboveInfo;
-            above = true;
-          }
-        }
-      }
-    } catch {
-      // ignore
-    }
     return {
       top: Math.min(maxTop, Math.max(PAD_TOP, rawTop)),
       above,
+      dockTop: false,
     };
   }, [mark, hole, measuredBubbleH, frame]);
 
@@ -426,9 +411,11 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
         {hasBubbleContent ? (
           <div
             ref={setBubbleEl}
-            className={`tut-bubble ${besideSkip ? "is-beside-skip" : bubbleLayout.above ? "is-above" : "is-below"} ${!besideSkip && !hasHole ? "is-centered" : ""}`}
+            className={`tut-bubble ${bubbleLayout.dockTop ? "is-dock-top" : ""} ${besideSkip ? "is-beside-skip" : bubbleLayout.above ? "is-above" : "is-below"} ${!besideSkip && !hasHole && !bubbleLayout.dockTop ? "is-centered" : ""}`}
             style={
-              besideSkip
+              bubbleLayout.dockTop
+                ? { top: bubbleLayout.top, left: 16, right: 112 }
+                : besideSkip
                 ? {
                     top: skipAnchor?.top ?? "calc(env(safe-area-inset-top, 0px) + 52px)",
                     left: 16,

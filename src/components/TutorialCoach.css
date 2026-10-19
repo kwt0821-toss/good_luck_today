@@ -52,6 +52,14 @@
   font-size: 13px;
 }
 
+.tut-bubble.is-dock-top {
+  padding: 10px 14px;
+}
+
+.tut-bubble.is-dock-top .tut-step-label {
+  margin-bottom: 4px;
+}
+
 .tut-bubble {
   position: fixed;
   pointer-events: auto;

@@ -170,8 +170,8 @@
       "note": "광고 젤리(하루 최대 100)보다 작게 — 출석은 습관용 보너스",
       "day7Bonus": {
         "ref": "economy.json → pawSources.attendance.weeklyCycle.day7Bonus",
-        "base": "5냥코인 + 100P",
-        "withAd": "10냥코인 + 200P + 뽑기권 1장"
+        "base": "5냥코인 + 젤리 100",
+        "withAd": "10냥코인 + 젤리 200 + 뽑기권 1장"
       }
     },
     "milestones": [

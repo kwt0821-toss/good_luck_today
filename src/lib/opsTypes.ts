@@ -370,6 +370,8 @@ export type TutorialSubstep = {
   target: string;
   fallbackTarget?: string;
   copy?: string;
+  /** Badge for this screen, e.g. "STEP 3-1". */
+  label?: string;
   /** Smaller supporting line under copy (e.g. ※ 하루 최대 50원). */
   sub?: string;
   title?: string;
@@ -420,7 +422,7 @@ export type DexTutorialSubstep = TutorialSubstep;
 export type TutorialStep = {
   step: number;
   screen: string;
-  /** UI badge e.g. "STEP 3/4" — substeps keep the same label. */
+  /** UI badge. Screens inside one stage use their own label, e.g. STEP 3-1. */
   stepLabel?: string;
   target: string;
   copy: string;
@@ -479,6 +481,8 @@ export type CoachMark = {
   lines?: TutorialLine[];
   cta?: string;
   bubble?: "above" | "below";
+  /** Park the bubble in the top band so it stays off the card and fortune line. */
+  dock?: "top";
   showFinger?: boolean;
   /** When true, dim/hole taps do not advance — only CTA. */
   ackOnly?: boolean;

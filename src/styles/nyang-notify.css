@@ -34,6 +34,10 @@
 @keyframes nyFadeOut{from{opacity:1}to{opacity:0}}
 .ny-snack.in{animation:nyDrop var(--ny-in) cubic-bezier(.2,.9,.3,1.2)}
 .ny-snack.out{animation:nyOut var(--ny-out) ease forwards}
+.ny-snack.is-bottom.in,.ny-celebrate.is-bottom.in{animation:nyRise var(--ny-in) cubic-bezier(.2,.9,.3,1.2)}
+.ny-snack.is-bottom.out,.ny-celebrate.is-bottom.out{animation:nyOutDown var(--ny-out) ease forwards}
+@keyframes nyRise{0%{transform:translateY(120%);opacity:0}60%{transform:translateY(-6px);opacity:1}80%{transform:translateY(2px)}100%{transform:none}}
+@keyframes nyOutDown{0%{transform:none;opacity:1}100%{transform:translateY(18px);opacity:0}}
 /* inline warning chip */
 .ny-chip{position:absolute;display:inline-flex;align-items:center;gap:8px;max-width:330px;padding:9px 12px 9px 9px;border-radius:var(--ny-r-chip);
  background:var(--ny-coral-bg);color:#5A1E19;font-size:13.5px;font-weight:700;line-height:1.35;box-shadow:0 8px 18px rgba(6,5,16,.35);border:1.5px solid var(--ny-coral);z-index:6;pointer-events:auto}

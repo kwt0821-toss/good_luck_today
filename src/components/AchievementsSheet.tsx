@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
+import { jellyLabel } from "../lib/jellyLabel";
 import { useLoadingHold } from "../lib/loadingGate";
 import {
   EMPTY_RIBBON_COPY,
@@ -127,8 +128,8 @@ export function AchievementsSheet({
         title: `<b>${item.def.title}</b> 칭호 보상`,
         sub:
           item.def.reward.nyangCoin > 0
-            ? `{ncoin}+${item.def.reward.nyangCoin} · {paw}+${item.def.reward.paw}P`
-            : `{paw}+${item.def.reward.paw}P`,
+            ? `{ncoin}+${item.def.reward.nyangCoin} · ${jellyLabel(item.def.reward.paw, true)}`
+            : jellyLabel(item.def.reward.paw, true),
         duration: 3200,
       });
     } finally {
@@ -293,7 +294,7 @@ export function AchievementsSheet({
                 ) : null}
                 <div className="achv-celebrate-reward">
                   <img src="/assets/menu/icon-paw-coin.svg" alt="" width={28} height={28} />
-                  <span>+{celebrate.def.reward.paw}P</span>
+                  <span>{jellyLabel(celebrate.def.reward.paw, true)}</span>
                 </div>
               </div>
             </div>
@@ -468,7 +469,7 @@ function AchvDetail({
           ) : null}
           <span>
             <img src="/assets/menu/icon-paw-mini-dark.svg" alt="" width={14} height={14} />+
-            {item.def.reward.paw} P
+            {jellyLabel(item.def.reward.paw)}
           </span>
         </div>
       </div>

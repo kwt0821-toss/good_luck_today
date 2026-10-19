@@ -9,6 +9,7 @@ import {
   ROOM_TABS,
   ROOM_THEME_FILTERS,
 } from "../lib/roomCatalog";
+import { jellyLabel } from "../lib/jellyLabel";
 import type { RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib/roomTypes";
 import { RoomCatsTab } from "./RoomCatsTab";
 
@@ -443,7 +444,7 @@ export function RoomDrawer({
                   onBuyMore(infoItem);
                 }}
               >
-                하나 더 사기 · {infoItem.price.toLocaleString("ko-KR")}P
+                하나 더 사기 · {jellyLabel(infoItem.price)}
               </button>
             ) : null}
             <button

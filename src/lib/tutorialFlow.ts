@@ -48,9 +48,19 @@ export function dexCardGradeLabel(card: DexCard | null | undefined): string {
 
 function formatStepLabel(raw: string | undefined, fallback: string): string {
   const source = (raw && raw.trim()) || fallback;
-  const matched = /^STEP\s*(\d+)\s*\/\s*(\d+)$/i.exec(source.replace(/\s+/g, " ").trim());
+  const compact = source.replace(/\s+/g, "");
+  const ranged = /^STEP(\d+)-(\d+)$/i.exec(compact);
+  if (ranged) return `STEP ${ranged[1]}-${ranged[2]}`;
+  const matched = /^STEP(\d+)\/(\d+)$/i.exec(compact);
   if (matched) return `STEP ${matched[1]}/${matched[2]}`;
+  const plain = /^STEP(\d+)$/i.exec(compact);
+  if (plain) return `STEP ${plain[1]}`;
   return source.replace(/\s+/g, " ").trim();
+}
+
+function substepLabel(sub: TutorialSubstep | null | undefined, fallback: string): string {
+  const raw = (sub as unknown as { label?: unknown } | null | undefined)?.label;
+  return formatStepLabel(typeof raw === "string" ? raw : undefined, fallback);
 }
 
 /** Badge such as STEP 3/6. Reads `stepLabel` or the JSON `label` field. */
@@ -118,7 +128,7 @@ export function dexSlotCoachMark(
     cta: sub.cta ?? "다음",
     ackOnly: sub.ackOnly !== false,
     showFinger: false,
-    stepLabel: tutorialStepLabel(step, "STEP 3/6"),
+    stepLabel: substepLabel(sub, "STEP 3-1"),
     bubble: "above",
   };
 }
@@ -147,7 +157,7 @@ export function dexClaimCoachMark(
     ackOnly: true,
     /* Tap on the coin spotlight claims. `onlyTarget` in tutorial.json is this gate. */
     activateTarget: sub.claimGate !== false,
-    stepLabel: tutorialStepLabel(step, "STEP 3/6"),
+    stepLabel: substepLabel(sub, "STEP 3-2"),
     bubble: "above",
   };
 }
@@ -191,8 +201,7 @@ export function dexAfterClaimMark(step: TutorialStep): CoachMark | null {
     cta: raw?.cta ?? legacy?.cta ?? button ?? "알겠어요",
     ackOnly: true,
     showFinger: false,
-    // Own number — the dex slot/claim marks keep the parent step.
-    stepLabel: formatStepLabel(subLabel, "STEP 4/6"),
+    stepLabel: formatStepLabel(subLabel, "STEP 3-3"),
   };
 }
 
@@ -217,7 +226,7 @@ export function roomPickCoachMark(step: TutorialStep): CoachMark | null {
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     passThrough: true,
-    stepLabel: tutorialStepLabel(step, "STEP 5/6"),
+    stepLabel: substepLabel(sub, "STEP 4-1"),
     bubble: "above",
   };
 }
@@ -234,7 +243,7 @@ export function roomDragCoachMark(step: TutorialStep): CoachMark | null {
     showFinger: sub.showFinger !== false,
     ackOnly: true,
     passThrough: true,
-    stepLabel: tutorialStepLabel(step, "STEP 5/6"),
+    stepLabel: substepLabel(sub, "STEP 4-2"),
     // Same row as 건너뛰기, to its left — the stage bubble covers the cushion and ✓.
     besideSkip: true,
     // Small bright rect: edit toolbar + placeable item outline (not the drawer).
@@ -259,7 +268,7 @@ export function roomDoneCoachMark(step: TutorialStep): CoachMark | null {
     showFinger: false,
     hideSkip: true,
     dim: false,
-    stepLabel: tutorialStepLabel(step, "STEP 5/6"),
+    stepLabel: substepLabel(sub, "STEP 4-3"),
   };
 }
 
@@ -276,7 +285,7 @@ export function roomPointsCoachMark(step: TutorialStep): CoachMark | null {
     showFinger: sub.showFinger !== false,
     hideSkip: true,
     // Dim + block outside the chip; CTA advances (chip itself is not the action).
-    stepLabel: tutorialStepLabel(step, "STEP 5/6"),
+    stepLabel: substepLabel(sub, "STEP 4-4"),
     bubble: "above",
   };
 }
@@ -293,7 +302,6 @@ export function step5CoachMark(
   const id = phase === "menu" ? "5-1" : phase === "row" ? "5-2" : "5-3";
   const sub = roomSubstep(step, id);
   if (!sub) return null;
-  const label = tutorialStepLabel(step, "STEP 6/6");
   if (phase === "menu") {
     return {
       id: "step-5-1",
@@ -304,7 +312,7 @@ export function step5CoachMark(
       passThrough: true,
       activateTarget: true,
       ackOnly: true,
-      stepLabel: label,
+      stepLabel: substepLabel(sub, "STEP 5-1"),
       // Menu sits at the top — keep copy below so it doesn't cover the button.
       bubble: sub.bubble ?? "below",
     };
@@ -317,7 +325,7 @@ export function step5CoachMark(
       showFinger: true,
       ackOnly: true,
       passThrough: true,
-      stepLabel: label,
+      stepLabel: substepLabel(sub, "STEP 5-2"),
       bubble: sub.bubble ?? "below",
     };
   }
@@ -336,7 +344,7 @@ export function step5CoachMark(
     cta: sub.cta ?? "알겠어요",
     ackOnly: true,
     showFinger: false,
-    stepLabel: label,
+    stepLabel: substepLabel(sub, "STEP 5-3"),
     bubble: "above",
     // Dim outside the withdraw/wallet card; advance via CTA only.
     passThrough: false,
@@ -425,7 +433,7 @@ export function mainStepMark(
       copy: step.then.copy,
       showFinger: true,
       bubble: "above",
-      stepLabel: tutorialStepLabel(step, `STEP ${step.step}/6`),
+      stepLabel: tutorialStepLabel(step, `STEP ${step.step}`),
     };
   }
   return {
@@ -434,7 +442,7 @@ export function mainStepMark(
     copy: step.copy,
     sub: step.sub,
     showFinger: true,
-    stepLabel: tutorialStepLabel(step, `STEP ${step.step}/6`),
+    stepLabel: tutorialStepLabel(step, `STEP ${step.step}`),
   };
 }
 
@@ -456,7 +464,7 @@ export function ncoinIntroMark(then: NcoinIntroThen): CoachMark {
 }
 
 /** Step 2, after the reveal toast: shade the screen and point at 도감에서 보기. */
-export function revealDexButtonMark(stepLabel = "STEP 2/6", copy?: string): CoachMark {
+export function revealDexButtonMark(stepLabel = "STEP 2", copy?: string): CoachMark {
   const sentence = copy?.trim();
   return {
     id: "step-2-to-dex",
@@ -466,7 +474,8 @@ export function revealDexButtonMark(stepLabel = "STEP 2/6", copy?: string): Coac
     ackOnly: true,
     activateTarget: true,
     passThrough: true,
-    bubble: "above",
+    // Top band, clear of the card and 오늘의 한 줄. The reveal toast hides while this shows.
+    dock: "top",
     stepLabel,
   };
 }

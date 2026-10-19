@@ -1,3 +1,5 @@
+import { josa, withJosa } from "../lib/josa";
+import { jellyLabel } from "../lib/jellyLabel";
 import { roomAsset } from "../lib/roomCatalog";
 import type { RoomDefinition } from "../lib/roomCatalog";
 import type { DexCard } from "../lib/dexTypes";
@@ -82,7 +84,9 @@ export function RoomBuySheet({
         </p>
         {enough ? (
           <>
-            <p>발바닥 젤리로 이 아이템을 살까요?</p>
+            <p>
+              {`${withJosa(item.nameKo, "을를")} 젤리 ${item.price.toLocaleString("ko-KR")}${josa(String(item.price), "으로로")} 살까요?`}
+            </p>
             <div className="lucky-modal-actions">
               <button type="button" onClick={onClose}>
                 닫기
@@ -125,7 +129,7 @@ export function RoomUnlockSheet({
   const cozy = unlock?.cozyLevel;
   const hasReq = paw != null || cozy != null;
   const reqLabel = [
-    paw != null ? `${paw.toLocaleString("ko-KR")}P` : null,
+    paw != null ? jellyLabel(paw) : null,
     cozy != null ? `아늑함 Lv.${cozy}` : null,
   ]
     .filter(Boolean)

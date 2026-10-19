@@ -209,6 +209,7 @@
   display: grid;
   place-items: center;
   container-type: size;
+  overflow: hidden;
 }
 
 .card-zoom-backdrop {
@@ -226,7 +227,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: min(92cqw, calc((100cqh - 168px) * 900 / 1400));
+  box-sizing: border-box;
+  max-height: 100%;
+  width: min(84cqw, calc((100cqh - 220px) * 900 / 1400));
+  padding: 8px 0 12px;
   pointer-events: none;
 }
 
@@ -243,6 +247,9 @@
 
 .card-zoom-layout .card-viewer-caption {
   pointer-events: none;
+  flex: 0 0 auto;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .card-zoom-close {

@@ -4,6 +4,8 @@ import { createPortal } from "react-dom";
 import { AudioManager } from "../audio/AudioManager";
 import { loadDexOwned } from "../lib/dexCollection";
 import type { DexCard } from "../lib/dexTypes";
+import { josa } from "../lib/josa";
+import { jellyLabel } from "../lib/jellyLabel";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import type { DrawReservation } from "../lib/opsTypes";
 import { cardFortune, cardKoreanName, formatCardDexNo } from "../lib/dexCatalog";
@@ -123,7 +125,7 @@ type DrawRevealScreenProps = {
   waitFailed: boolean;
   /** Legacy / tutorial dex toast (new-card copy). Not used for ad 냥코인. */
   toastText?: string | null;
-  /** Ad-draw only: "카드를 뽑아 냥코인xN이 지급되었습니다." */
+  /** Ad-draw only: "카드를 뽑아 냥코인 N개를 받았어요." */
   adNyangToast?: string | null;
   remainingDraws: number;
   holdToast?: boolean;
@@ -162,7 +164,7 @@ function prefersReducedMotion() {
 
 function dupChipCopy(ownedCount: number, dupPaw: number) {
   const n = Math.max(2, ownedCount);
-  return `x${n} 중복 · +${dupPaw}P로 바꿀 수 있어요`;
+  return `x${n} 중복 · ${jellyLabel(dupPaw)}${josa(String(dupPaw), "으로로")} 바꿀 수 있어요`;
 }
 
 export function DrawRevealScreen({

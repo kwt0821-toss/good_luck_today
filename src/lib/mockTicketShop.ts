@@ -1,4 +1,6 @@
 import { toKstDateKey } from "./date";
+import { josa } from "./josa";
+import { jellyLabel } from "./jellyLabel";
 import { loadOpsConfig } from "./opsConfig";
 import { syncTicketShopWindows } from "./opsState";
 import { saveOpsState } from "./opsStorage";
@@ -71,7 +73,7 @@ export function getTicketShopStatus(state: OpsState, config: OpsConfig): TicketS
   } else if (weekRemaining <= 0) {
     disabledReason = "이번 주 구매 한도에 도달했어요";
   } else if (synced.pawBalance < offer.pricePaw) {
-    disabledReason = `젤리가 ${offer.pricePaw}P 필요해요`;
+    disabledReason = `${jellyLabel(offer.pricePaw)}${josa(String(offer.pricePaw), "이가")} 필요해요`;
   }
   return {
     pricePaw: offer.pricePaw,
@@ -155,7 +157,7 @@ export async function postShopTicketsBuy(
     return { state: next, response: { ok: false, reason: "이번 주 구매 한도에 도달했어요" } };
   }
   if (next.pawBalance < offer.pricePaw) {
-    return { state: next, response: { ok: false, reason: `젤리가 ${offer.pricePaw}P 필요해요` } };
+    return { state: next, response: { ok: false, reason: `${jellyLabel(offer.pricePaw)}${josa(String(offer.pricePaw), "이가")} 필요해요` } };
   }
 
   const weekBought = next.ticketShopWeekBought + 1;

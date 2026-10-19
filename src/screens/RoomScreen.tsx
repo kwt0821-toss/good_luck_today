@@ -4,6 +4,7 @@ import { CozySheet } from "../components/CozySheet";
 import { useLoadingHold } from "../lib/loadingGate";
 import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
 import { NyChip } from "../components/NyChip";
+import { jellyLabel } from "../lib/jellyLabel";
 import { withJosa } from "../lib/josa";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
 import { RoomDrawer, type DrawerItemMeta } from "../components/RoomDrawer";
@@ -1392,7 +1393,7 @@ export function RoomScreen({
                 >
                   <img src={roomAsset("ui/icon-lock.svg")} alt="" />
                   <span>
-                    {paw != null ? `${paw.toLocaleString("ko-KR")}P` : ""}
+                    {paw != null ? jellyLabel(paw) : ""}
                     {paw != null && cozy != null ? " · " : ""}
                     {cozy != null ? `아늑함 Lv.${cozy}` : ""}
                   </span>
@@ -1674,7 +1675,7 @@ export function RoomScreen({
               <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />
               <div>
                 <strong>{formatPoints(state.points)}</strong>
-                <small>PAW POINTS</small>
+                <small>발바닥 젤리</small>
               </div>
             </div>
             <button type="button" className="lucky-cta" onClick={enterEdit}>

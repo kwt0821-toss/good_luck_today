@@ -18,6 +18,7 @@ import {
   unlockMaxDevState,
   type DevAttendanceStreakDays,
 } from "../lib/devReset";
+import { jellyLabel } from "../lib/jellyLabel";
 import { menuAsset } from "../lib/menuConfig";
 import { NCOIN_ICON, ncoinIcon } from "../lib/ncoinIcon";
 import {
@@ -542,7 +543,7 @@ export function MenuPanel({
     paw: number,
     tickets: number,
   ) => {
-    const parts = [`+${nyangCoin} 냥코인`, `+${paw}P`];
+    const parts = [`+${nyangCoin} 냥코인`, jellyLabel(paw, true)];
     if (withAd && tickets > 0) parts.push("뽑기권 1장");
     nyNotify({
       key: withAd ? "attend-day7-ad" : "attend-day7-base",
@@ -682,7 +683,7 @@ export function MenuPanel({
       if (pawReward || ticketReward) AudioManager.playSfx("reward-coin");
       if (day === 7) {
         const rewards = [];
-        if (pawReward) rewards.push({ label: `+${pawReward.paw}P`, icon: "paw" as const });
+        if (pawReward) rewards.push({ label: jellyLabel(pawReward.paw, true), icon: "paw" as const });
         if (ticketReward) rewards.push({ label: "뽑기권 +1", icon: "ticket" as const });
         if (itemReward) rewards.push({ label: "가구", icon: "cat" as const });
         nyNotify({
@@ -1006,7 +1007,7 @@ export function MenuPanel({
                             ) : null}
                             <span className="menu-points-bit">
                               <img src={menuAsset("icon-paw-mini.svg")} alt="" />
-                              +{model.pawAds.pawGrant}P
+                              젤리 +{model.pawAds.pawGrant}
                             </span>
                             <span className="menu-points-sep" aria-hidden="true">
                               ·
@@ -1295,9 +1296,9 @@ export function MenuPanel({
                       <div className="att-day7-bonus">
                         <p className="att-day7-bonus-title">7일차 보너스</p>
                         <p className="att-day7-bonus-desc">
-                          기본 {day7Bonus.base.nyangCoin}냥코인 + {day7Bonus.base.paw}P
+                          기본 {day7Bonus.base.nyangCoin}냥코인 + 젤리 {day7Bonus.base.paw}
                           {day7Bonus.adBonus
-                            ? ` · 광고 시 ${day7Bonus.adBonus.nyangCoin}냥코인 + ${day7Bonus.adBonus.paw}P + 뽑기권`
+                            ? ` · 광고 시 ${day7Bonus.adBonus.nyangCoin}냥코인 + 젤리 ${day7Bonus.adBonus.paw} + 뽑기권`
                             : ""}
                         </p>
                       </div>
@@ -1371,7 +1372,7 @@ export function MenuPanel({
                     </div>
                     <div className="menu-list-row">
                       <span>받을 젤리</span>
-                      <b>{model.exchange.totalPaw.toLocaleString("ko-KR")}P</b>
+                      <b>{jellyLabel(model.exchange.totalPaw)}</b>
                     </div>
                   </>
                 ) : null}
@@ -1380,7 +1381,7 @@ export function MenuPanel({
                   <div className="exchange-confirm">
                     <h4>
                       {(model.menu.sheets.exchange.confirmTitle ??
-                        "중복 카드 {n}장을 발바닥 젤리 {p}P로 바꿀까요?")
+                        "중복 카드 {n}장을 발바닥 젤리 {p}으로 바꿀까요?")
                         .replace("{n}", String(model.exchange.duplicateCount))
                         .replace("{p}", String(model.exchange.totalPaw))}
                     </h4>
@@ -1392,7 +1393,7 @@ export function MenuPanel({
                       {model.exchange.lines.map((line) => (
                         <li key={line.key}>
                           <span>
-                            {line.label} {line.count}장 · {line.paw.toLocaleString("ko-KR")}P
+                            {line.label} {line.count}장 · {jellyLabel(line.paw)}
                           </span>
                         </li>
                       ))}
@@ -2017,7 +2018,7 @@ export function MenuPanel({
           />
           <div className="settings-reset-confirm is-modal">
             <strong>신규 유저 상태로 초기화할까요?</strong>
-            <p>도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워지고, 발바닥 젤리 2,000P가 지급돼요.</p>
+            <p>도감·카드·출석·튜토리얼·방꾸미기 진행도가 모두 지워지고, 발바닥 젤리 2,000이 지급돼요.</p>
             <div className="settings-reset-confirm-actions">
               <button
                 type="button"

@@ -20,7 +20,7 @@
    "sub": "첫 뽑기는 광고 없이 무료예요",
    "action": "tap",
    "reward": "free first draw (no ad)",
-   "label": "STEP 1 / 6"
+   "label": "STEP 1"
   },
   {
    "step": 2,
@@ -30,11 +30,11 @@
    "toast": {
     "id": "dex-toast",
     "text": "새로운 고양이를 만났어요!",
-    "sub": "도감에서 보상을 받아 보세요 · 🎁 냥코인 1 + 20P",
+    "sub": "도감에서 보상을 받아 보세요 · 🎁 냥코인 1 + 젤리 20",
     "persistDuringTutorial": true
    },
    "action": "tap #btn-to-dex (도감에서 보상 받기)",
-   "label": "STEP 2 / 6"
+   "label": "STEP 2"
   },
   {
    "step": 3,
@@ -46,6 +46,7 @@
    "substeps": [
     {
      "id": "3-1",
+     "label": "STEP 3-1",
      "screen": "dex",
      "entry": "#btn-to-dex(도감에서 보상 받기) → 뽑은 카드의 탭으로 도감 열기",
      "scroll": "#dex-slot-{cardId}가 화면 가운데 오도록 자동 스크롤 (smooth, 400ms) 후 표시",
@@ -58,11 +59,12 @@
     },
     {
      "id": "3-2",
+     "label": "STEP 3-2",
      "screen": "dex",
      "target": "#dex-claim-{cardId}",
      "effect": "원형 spotlight + 손가락 탭 루프",
      "copy": "코인을 톡 누르면 보상을 받아요",
-     "sub": "냥코인 1 + 20P",
+     "sub": "냥코인 1 + 젤리 20",
      "onlyTarget": true,
      "action": "tap → POST /dex/rewards/claim → 코인 버스트 + sfx-reward-coin + 토스트 '냥코인 1개 + 20젤리 받았어요'",
      "mockup": "tut-dex-3-2.png"
@@ -97,14 +99,14 @@
      "action": "tap 알겠어요 → 다음 단계(4)로",
      "mockup": "tut-dex-3-3.png",
      "substep": "3-3",
-     "label": "STEP 4 / 6"
+     "label": "STEP 3-3"
     }
    ],
-   "label": "STEP 3 / 6"
+   "label": "STEP 3"
   },
   {
    "step": 4,
-   "label": "STEP 5 / 6",
+   "label": "STEP 4",
    "screen": "room (edit)",
    "item": "서랍의 첫 번째 배치 가능 NEW 아이템 (newuser: cushions 방석 더미)",
    "suggestTile": {
@@ -115,6 +117,7 @@
    "substeps": [
     {
      "id": "4-1",
+     "label": "STEP 4-1",
      "target": "#drawer-item-0",
      "effect": "spotlight + 탭 손가락",
      "copy": "서랍에서 마음에 드는 아이템을 톡 눌러 보세요",
@@ -123,6 +126,7 @@
     },
     {
      "id": "4-2",
+     "label": "STEP 4-2",
      "target": "#placement-confirm (미리보기 위 ✓)",
      "state": "suggestTile(c5,r2)에 미리보기(초록 칸)",
      "copy": "여기 놓을게요! ✓를 눌러 확정해요",
@@ -131,6 +135,7 @@
     },
     {
      "id": "4-3",
+     "label": "STEP 4-3",
      "effect": "sfx item-place + 바운스 + 반짝이",
      "copy": "잘했어요! 다른 아이템도 자유롭게 꾸며 보세요",
      "button": "완료",
@@ -142,11 +147,12 @@
   },
   {
    "step": 5,
-   "label": "STEP 6 / 6",
+   "label": "STEP 5",
    "screen": "main → menu → rewards",
    "substeps": [
     {
      "id": "5-1",
+     "label": "STEP 5-1",
      "screen": "main",
      "target": "#btn-menu",
      "effect": "원형 spotlight + 손가락 탭",
@@ -158,6 +164,7 @@
     },
     {
      "id": "5-2",
+     "label": "STEP 5-2",
      "screen": "menu",
      "target": "#menu-row-rewards",
      "copy": "보상함을 눌러 보세요",
@@ -169,6 +176,7 @@
     },
     {
      "id": "5-3",
+     "label": "STEP 5-3",
      "screen": "rewards sheet",
      "target": ".wallet (잔액 + 지급 영역)",
      "copy": "냥코인 10개부터 토스 포인트 지급을 받을 수 있어요",

@@ -699,6 +699,22 @@ button.menu-dim:focus-visible {
   overflow-y: auto;
   margin-top: 16px;
   padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(243, 233, 215, 0.38) transparent;
+}
+
+.menu-sheet-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.menu-sheet-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.menu-sheet-body::-webkit-scrollbar-thumb {
+  background: rgba(243, 233, 215, 0.38);
+  border-radius: 99px;
 }
 
 .menu-sheet-cta {

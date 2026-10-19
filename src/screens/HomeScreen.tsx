@@ -3,6 +3,8 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { TitleRibbon } from "../components/TitleRibbon";
 import { formatCountdownHms, formatLuckyCatalogDate, msUntilNextKstMidnight } from "../lib/date";
 import { MENU_SETTINGS_EVENT, shouldReduceMenuMotion } from "../lib/menuSettings";
+import { josa } from "../lib/josa";
+import { jellyLabel } from "../lib/jellyLabel";
 import { nyNotify } from "../lib/nyangNotify";
 
 const ASSETS = {
@@ -162,7 +164,7 @@ export function HomeScreen({
   const rateUpShopEntry = offerTicketShop && remainingRateUp <= 0 && rateUpTickets <= 0;
   const rateUpDisabled = remainingRateUp <= 0 && !rateUpShopEntry;
   const rateUpDetail = rateUpShopEntry
-    ? `${ticketShopPricePaw}P`
+    ? jellyLabel(ticketShopPricePaw)
     : rateUpDisabled
       ? "내일 다시"
       : "5성↑";
@@ -176,7 +178,7 @@ export function HomeScreen({
   /** Tip when draw available, or shop entry after ad used with 0 tickets. */
   const showRateUpTip = remainingRateUp > 0 || rateUpShopEntry;
   const rateUpTipLines = rateUpShopEntry
-    ? [`${ticketShopPricePaw}P로`, "광고 없이"]
+    ? [`${jellyLabel(ticketShopPricePaw)}${josa(String(ticketShopPricePaw), "으로로")}`, "광고 없이"]
     : rateUpTickets > 0
       ? ["뽑기권으로", "광고 없이"]
       : [`${rateUpAdSeconds}초 광고`, "보고"];

@@ -1,4 +1,5 @@
 import { toKstYearKey } from "./date";
+import { jellyLabel } from "./jellyLabel";
 import { refreshServerTime, trustedKstDateKey } from "./tossClock";
 import type {
   AttendanceClaimResponse,
@@ -151,7 +152,7 @@ export function todayRewardLabel(
     const price = config.prices.items.find((item) => item.id === first.itemId);
     return price?.nameKo ?? first.itemId;
   }
-  if (first.kind === "paw") return `${first.paw}P`;
+  if (first.kind === "paw") return jellyLabel(first.paw);
   if (first.kind === "rateUpTicket") return config.economy.tickets?.rateUpTicket?.nameKo ?? "확률업 이용권";
   if (first.kind === "nyangCoin") return `${first.nyangCoin}냥코인`;
   if (first.kind === "badge") return first.labelKo ?? first.badgeId;
@@ -354,7 +355,7 @@ export async function getAttendanceStatus(state: OpsState): Promise<{
     let rewardLabel = "";
     if (day <= 6) {
       const paw = att?.weeklyCycle.days.find((row) => row.day === day)?.paw;
-      rewardLabel = paw != null ? `${paw}P` : "";
+      rewardLabel = paw != null ? jellyLabel(paw) : "";
     } else {
       rewardLabel = "특별 선물";
     }

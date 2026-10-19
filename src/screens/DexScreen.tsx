@@ -5,6 +5,7 @@ import { CoinBurst } from "../components/CoinBurst";
 import { cardThumbUrl, decodeImage } from "../lib/cardArt";
 import { resolveFrame } from "../lib/cardFrames";
 import { useLoadingHold, useOverlayVisible } from "../lib/loadingGate";
+import { jellyLabel } from "../lib/jellyLabel";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import { DexCardSlot } from "../components/DexCardSlot";
 import { DexDetailSheet } from "../components/DexDetailSheet";
@@ -368,7 +369,7 @@ export function DexScreen({
             title: `보상 ${claimed.length}개를 받았어요`,
             rewards: [
               ...(sum.nyangCoin > 0 ? [{ label: `+${sum.nyangCoin} 냥코인`, icon: "ncoin" as const }] : []),
-              ...(sum.paw > 0 ? [{ label: `+${sum.paw}P`, icon: "paw" as const }] : []),
+              ...(sum.paw > 0 ? [{ label: jellyLabel(sum.paw, true), icon: "paw" as const }] : []),
             ],
             sub: sum.nyangCoin > 0 ? `{ncoin}+${sum.nyangCoin} + {paw}+${sum.paw}` : `{paw}+${sum.paw}`,
           });
@@ -589,7 +590,7 @@ export function DexScreen({
                 <div>
                   <p className="dex-set-claim-title">도감 전체 완성</p>
                   <p className="dex-set-claim-meta">
-                    냥코인 {fullDexReward.nyangCoin} + {fullDexReward.paw}P
+                    냥코인 {fullDexReward.nyangCoin} + 젤리 {fullDexReward.paw}
                   </p>
                 </div>
                 <button
@@ -625,7 +626,7 @@ export function DexScreen({
                   {setReward ? (
                     <div className="dex-set-claim-row">
                       <p>
-                        완성 보상 · 냥코인 {setReward.nyangCoin} + {setReward.paw}P
+                        완성 보상 · 냥코인 {setReward.nyangCoin} + 젤리 {setReward.paw}
                       </p>
                       <button
                         type="button"
@@ -770,7 +771,7 @@ export function DexScreen({
                   냥코인 +{celebrate.nyangCoin}
                 </span>
               ) : null}
-              <span>+{celebrate.paw}P</span>
+              <span>{jellyLabel(celebrate.paw, true)}</span>
             </div>
             <button
               type="button"
@@ -787,7 +788,7 @@ export function DexScreen({
                     ...(c.nyangCoin > 0
                       ? [{ label: `+${c.nyangCoin} 냥코인`, icon: "ncoin" as const }]
                       : []),
-                    ...(c.paw > 0 ? [{ label: `+${c.paw}P`, icon: "paw" as const }] : []),
+                    ...(c.paw > 0 ? [{ label: jellyLabel(c.paw, true), icon: "paw" as const }] : []),
                   ],
                 });
               }}
@@ -870,7 +871,7 @@ function GridTab({
           <div>
             <p className="dex-set-claim-title">{typeReward.label}</p>
             <p className="dex-set-claim-meta">
-              냥코인 {typeReward.nyangCoin} + {typeReward.paw}P
+              냥코인 {typeReward.nyangCoin} + 젤리 {typeReward.paw}
             </p>
           </div>
           <button

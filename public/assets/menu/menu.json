@@ -318,11 +318,11 @@
    "eyebrow": "SWAP",
    "desc": "겹친 카드를 젤리로 바꿔요. 카드는 1장씩 남아요.",
    "cta": "모두 교환",
-   "confirmTitle": "중복 카드 {n}장을 발바닥 젤리 {p}P로 바꿀까요?",
+   "confirmTitle": "중복 카드 {n}장을 발바닥 젤리 {p}으로 바꿀까요?",
    "confirmSub": "카드마다 1장은 도감에 남아요 · 바꾼 카드는 되돌릴 수 없어요",
    "confirmCancel": "취소",
    "confirmOk": "바꾸기",
-   "doneToast": "{p}P를 받았어요"
+   "doneToast": "젤리 {p}를 받았어요"
   },
   "ticketShop": {
    "title": "확률업 뽑기권",
@@ -331,7 +331,7 @@
    "mockup": "ticket-shop.png",
    "cardTitle": "확률업 이용권",
    "cardDesc": "긴 광고 없이 확률업 1회",
-   "priceLabel": "{price}P",
+   "priceLabel": "젤리 {price}",
    "limits": [
     {
      "id": "day",
@@ -349,12 +349,12 @@
      "format": "{held}/{maxHold}"
     }
    ],
-   "balanceLabel": "내 젤리 {paw}P",
-   "ctaBuy": "{price}P로 사기",
+   "balanceLabel": "내 젤리 {paw}",
+   "ctaBuy": "젤리 {price}으로 사기",
    "ctaDraw": "지금 확률업 뽑기",
    "toastBought": "확률업 뽑기권을 샀어요",
    "disabled": {
-    "paw": "젤리가 {price}P 필요해요",
+    "paw": "젤리 {price}이 필요해요",
     "day": "오늘 구매 한도에 도달했어요",
     "week": "이번 주 구매 한도에 도달했어요",
     "hold": "보유 한도 {maxHold}장이에요"

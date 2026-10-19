@@ -5,7 +5,6 @@ import { AchievementsSheet } from "./components/AchievementsSheet";
 import { AdModal } from "./components/AdModal";
 import { NyangNotifyHost } from "./components/NyangNotifyHost";
 import { nyDismiss, nyNotify } from "./lib/nyangNotify";
-import { withJosa } from "./lib/josa";
 import { MenuPanel } from "./components/MenuPanel";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import {
@@ -394,7 +393,7 @@ export default function App() {
             if (next) return next;
           }
           return revealDexButtonMark(
-            tutorialStepLabel(tutorialStep, "STEP 2/6"),
+            tutorialStepLabel(tutorialStep, "STEP 2"),
             tutorialStep.copy,
           );
         }
@@ -408,7 +407,7 @@ export default function App() {
       return null;
     }
 
-    // Step 3: scroll → slot → claim → toast → ncoin-after (still STEP 3/4).
+    // Step 3: scroll → slot (3-1) → claim (3-2) → ncoin (3-3).
     // Stay quiet until the dex is on screen so a missing base target cannot throw.
     if (tutorialStep.step === 3) {
       if (screen.name !== "collection") return null;
@@ -419,7 +418,7 @@ export default function App() {
       return null;
     }
 
-    // Step 4: pick → preview(✓) → done (STEP 4/5). Wait until RoomScreen finishes loading.
+    // Step 4: pick (4-1) → preview (4-2) → done (4-3). Wait until RoomScreen finishes loading.
     if (tutorialStep.step === 4) {
       if (screen.name !== "room" || !roomScreenReady) return null;
       if (roomTutPhase === "pick" || roomTutPhase == null) return roomPickCoachMark(tutorialStep);
@@ -429,7 +428,7 @@ export default function App() {
       return null;
     }
 
-    // Step 5: menu → rewards row → withdraw sheet (STEP 5/5).
+    // Step 5: menu (5-1) → rewards row (5-2) → withdraw sheet (5-3).
     if (tutorialStep.step === 5) {
       return step5CoachMark(tutorialStep, rewardsTutPhase ?? "menu", ops, dailyLimit);
     }
@@ -681,7 +680,7 @@ export default function App() {
           kind: "reward",
           title:
             result.adPawNotice ??
-            `광고를 봐서 냥코인 ${result.adPawNyangCoin}${withJosa("개", "이가")} 지급되었습니다.`,
+            `광고를 봐서 냥코인 ${result.adPawNyangCoin}개를 받았어요`,
           count: result.adPawNyangCoin,
         });
       }
@@ -718,7 +717,7 @@ export default function App() {
     setAdNyangToast(
       confirmed.adNyangCoin > 0
         ? (confirmed.adNyangNotice ??
-            `카드를 뽑아 냥코인 ${confirmed.adNyangCoin}${withJosa("개", "이가")} 지급되었습니다.`)
+            `카드를 뽑아 냥코인 ${confirmed.adNyangCoin}개를 받았어요`)
         : null,
     );
     setReservation(confirmed.reservation);
@@ -1349,7 +1348,7 @@ export default function App() {
           adNyangToast={adNyangToast}
           remainingDraws={remainingDraws}
           holdToast={tutorialStep?.step === 2}
-          hideToast={hideRevealToast}
+          hideToast={hideRevealToast || revealTutPhase === "to-dex"}
           onToastShown={onRevealToastShown}
           onToDex={() => {
             void (async () => {
@@ -1576,7 +1575,7 @@ export default function App() {
         />
       ) : null}
 
-      <NyangNotifyHost />
+      <NyangNotifyHost dock={menuOpen ? "bottom" : "top"} />
       {exitModal}
     </>
   );
