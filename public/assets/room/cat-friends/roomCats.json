@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "_comment": "고양이 친구 탭 설정. 새 고양이 추가 = status를 'available'로 바꾸고 sprite(/assets/room/cat/ 기준)와 icon(/assets/room/ 기준)을 채우면 끝.",
+  "cats": [
+    {
+      "id": "cheese",
+      "nameKo": "치즈냥",
+      "type": "breed",
+      "default": true,
+      "unlockRule": null,
+      "status": "available",
+      "sprite": "cat-sprite.png",
+      "icon": "cat-friends/cheese.webp"
+    },
+    {
+      "id": "abyssinian",
+      "nameKo": "아비시니안",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "abyssinian"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "bengal",
+      "nameKo": "벵갈",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "bengal"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "british_shorthair",
+      "nameKo": "브리티시 숏헤어",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "british_shorthair"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "cornish_rex",
+      "nameKo": "코니시 렉스",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "cornish_rex"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "korean_shorthair",
+      "nameKo": "코리안 숏헤어",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "korean_shorthair"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "lykoi",
+      "nameKo": "라이코이",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "lykoi"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "maine_coon",
+      "nameKo": "메인쿤",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "maine_coon"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "minskin",
+      "nameKo": "민스킨",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "minskin"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "munchkin",
+      "nameKo": "먼치킨",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "munchkin"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "norwegian_forest",
+      "nameKo": "노르웨이 숲",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "norwegian_forest"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "persian",
+      "nameKo": "페르시안",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "persian"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "peterbald",
+      "nameKo": "피터볼드",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "peterbald"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "ragdoll",
+      "nameKo": "랙돌",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "ragdoll"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "russian_blue",
+      "nameKo": "러시안 블루",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "russian_blue"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "scottish_fold",
+      "nameKo": "스코티시 폴드",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "scottish_fold"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "siamese",
+      "nameKo": "샴",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "siamese"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "sokoke",
+      "nameKo": "소코케",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "sokoke"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "sphynx",
+      "nameKo": "스핑크스",
+      "type": "breed",
+      "unlockRule": {
+        "breedId": "sphynx"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "sabertooth",
+      "nameKo": "검치호",
+      "type": "legend",
+      "unlockRule": {
+        "legendCardId": "sabertooth"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "lionking",
+      "nameKo": "진짜 킹냥이",
+      "type": "legend",
+      "unlockRule": {
+        "legendCardId": "lionking"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "tiger",
+      "nameKo": "호랑이와 하룻강아지",
+      "type": "legend",
+      "unlockRule": {
+        "legendCardId": "tiger"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    },
+    {
+      "id": "baekho",
+      "nameKo": "수호신 백호",
+      "type": "legend",
+      "unlockRule": {
+        "legendCardId": "baekho"
+      },
+      "status": "comingSoon",
+      "sprite": null,
+      "icon": null
+    }
+  ]
+}

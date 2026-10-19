@@ -1,0 +1,29 @@
+방꾸미기 서랍에 '고양이 친구' 탭을 추가해 줘. 고양이는 출시 후에 하루에 한 품종씩 추가할 거라서, 지금은 치즈냥만 쓸 수 있고 나머지는 '곧 추가돼요'로 보여 주면 돼.
+
+[넣을 파일] 첨부한 roomcat-ui.zip 안의 파일을 같은 경로에 넣어 줘.
+- public/assets/room/cat-friends/roomCats.json  (치즈냥 available + 품종 18마리·레전드 4마리 comingSoon)
+- public/assets/room/cat-friends/cheese.webp, silhouette.webp
+- src/lib/roomCats.ts  (타입, loadRoomCats, roomCatRuleText, isRoomCatSelectable)
+- src/components/RoomCatsTab.tsx, RoomCatsTab.css
+
+[연결]
+1. src/lib/roomTypes.ts: RoomTab 타입에 "고양이 친구"를 추가해 줘.
+2. src/lib/roomCatalog.ts: ROOM_TABS 맨 끝에 { id: "고양이 친구", label: "고양이 친구" }를 넣고, itemMatchesTab에서 이 탭이면 false를 돌려줘 (가구가 섞이지 않게).
+3. src/components/RoomDrawer.tsx: tab === "고양이 친구"일 때는 테마 필터, 칠하기 툴바, 아이템 그리드, lucky-drawer-info를 숨기고 그 자리에 <RoomCatsTab selectedId={roamingCatId} onSelect={onSelectCat} />를 보여 줘.
+   - 새 props: roamingCatId: string | null, onSelectCat: (id: string) => void
+   - 탭 바가 가로로 스크롤되니까, 이 탭을 고르면 scrollIntoView({ inline: "nearest" })로 탭이 화면에 보이게 해 줘.
+4. src/screens/RoomScreen.tsx: <RoomDrawer>에 지금 방의 roamingCatId(기본 "cheese")를 넘겨 줘. onSelectCat은 그 방의 roamingCatId를 바꾸고, 지금 쓰는 방 저장 흐름으로 저장해 줘. RoomWorld의 roamingCatId도 같은 값을 쓰게 해 줘.
+
+[지켜 줄 것]
+- 출시 화면: 치즈냥 칸만 선택된 상태(금색 테두리 + '방에 있어요')이고, 나머지 22칸은 실루엣 + 자물쇠 + '곧 추가돼요' 배지.
+- 맨 위 배너 문구는 그대로 써 줘. "고양이 친구" / "곧 새로운 고양이 친구들이 찾아와요! 품종 1~5성을 모두 모으면 그 고양이가 방에 놀러 와요."
+- 진행 바, 몇 장 모았는지 같은 숫자, 날짜 약속은 넣지 말아 줘. 해금 규칙만 미리 보여 줘.
+- 잠긴 칸을 탭하면 안내 줄만 보여 줘 (예: "샴 1~5성을 모두 모으면 놀러 와요 · 곧 추가돼요"). 구매 시트나 다른 화면은 열지 말아 줘.
+- 폰트는 이미 불러와 둔 Jua/Gaegu(src/styles/fonts.css)를, 색은 RoomScreen.css의 --cream/--amber와 금색 #FFD54A를 써 줘.
+- 고양이 애니메이션, cat-sprite.json, useRoomCat 로직은 바꾸지 말아 줘.
+- 나중에 고양이를 추가할 때는 roomCats.json에서 status를 "available"로 바꾸고 sprite/icon만 채우면 되게, 고양이 목록을 코드에 하드코딩하지 말아 줘.
+
+[확인]
+- npm run typecheck, npm run lint 통과
+- 390×844에서 '고양이 친구' 탭: 배너가 보이고, 3열 그리드가 스크롤되고, 치즈냥이 선택돼 있고, 샴이나 백호를 탭하면 안내 줄이 떠야 해.
+- 다른 탭(보유/가구/벽지 등)은 지금과 똑같이 동작해야 해.

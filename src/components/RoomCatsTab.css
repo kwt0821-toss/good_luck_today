@@ -1,0 +1,154 @@
+/* 고양이 친구 tab: lives inside .lucky-drawer (RoomScreen.css), uses --cream / --amber from there. */
+.rc-tab {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.rc-banner {
+  flex: 0 0 auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 10px 6px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 213, 74, 0.14), rgba(255, 213, 74, 0.04));
+  border: 1.5px solid rgba(255, 213, 74, 0.7);
+  box-shadow: 0 0 14px rgba(255, 201, 61, 0.18);
+}
+.rc-banner-cat { width: 56px; height: 56px; flex: none; }
+.rc-banner-title {
+  display: block;
+  font-family: Jua, sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: #ffd54a;
+  text-shadow: 0 1px 0 #4a2a05;
+}
+.rc-banner-title span { font-size: 11px; color: #ffe9a8; }
+.rc-banner-msg {
+  margin: 2px 0 0;
+  font-family: Gaegu, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.25;
+  color: #f3ecff;
+  word-break: keep-all;
+}
+
+.rc-info {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(28, 24, 48, 0.96);
+  border: 1px solid rgba(243, 233, 215, 0.14);
+  font-family: Gaegu, sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: rgba(243, 233, 215, 0.85);
+  animation: rc-in 160ms ease-out both;
+}
+.rc-info strong { font-family: Jua, sans-serif; font-weight: 400; font-size: 14px; color: var(--cream, #f3e9d7); white-space: nowrap; }
+.rc-info span { flex: 1; min-width: 0; word-break: keep-all; }
+.rc-info em { font-style: normal; font-family: Jua, sans-serif; font-size: 11px; color: #4a2a05; background: #ffd54a; border-radius: 8px; padding: 1px 6px; white-space: nowrap; }
+.rc-info button { border: 0; background: transparent; color: rgba(243, 233, 215, 0.6); font-size: 13px; padding: 2px 4px; cursor: pointer; }
+
+.rc-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+}
+
+.rc-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  height: 124px;
+  padding: 16px 6px 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(243, 233, 215, 0.1);
+  background: rgba(243, 233, 215, 0.06);
+  color: var(--cream, #f3e9d7);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rc-cell:active { transform: translateY(1px); }
+.rc-cell.is-selected {
+  border: 1.5px solid #ffd54a;
+  background: rgba(255, 213, 74, 0.1);
+  box-shadow: 0 0 14px rgba(255, 201, 61, 0.3);
+}
+.rc-icon { width: 58px; height: 58px; object-fit: contain; pointer-events: none; }
+.rc-cell.is-soon .rc-icon,
+.rc-cell.is-locked .rc-icon { opacity: 0.5; }
+.rc-cell.is-legend.is-soon .rc-icon { opacity: 0.7; }
+.rc-lock { position: absolute; top: 40px; left: 50%; width: 18px; height: 18px; margin-left: -9px; opacity: 0.9; }
+.rc-name {
+  margin-top: 2px;
+  font-family: Jua, sans-serif;
+  font-size: 13px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.rc-cell.is-soon .rc-name { color: rgba(243, 233, 215, 0.62); }
+.rc-rule {
+  margin-top: 2px;
+  font-family: Gaegu, sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1.1;
+  color: rgba(203, 188, 240, 0.85);
+  word-break: keep-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rc-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 1px 6px;
+  border-radius: 7px;
+  font-family: Jua, sans-serif;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #4a2a05;
+  background: #ffd54a;
+}
+.rc-badge.is-soon { color: #f3ecff; background: rgba(123, 104, 180, 0.7); }
+.rc-legend-mark {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-family: Jua, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: #ffd54a;
+}
+.rc-cell.is-legend {
+  border-color: rgba(255, 213, 74, 0.45);
+  background: linear-gradient(180deg, rgba(255, 213, 74, 0.12), rgba(243, 233, 215, 0.04));
+}
+.rc-cell.is-legend .rc-icon { filter: drop-shadow(0 0 6px rgba(255, 213, 74, 0.45)); }
+
+@keyframes rc-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rc-info { animation: none; } .rc-cell:active { transform: none; } }
