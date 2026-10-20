@@ -224,6 +224,12 @@
      "storage": "local"
     },
     {
+     "id": "attendanceNotify",
+     "label": "출석 알림 받기",
+     "type": "action",
+     "action": "notification.attendance"
+    },
+    {
      "id": "replayTutorial",
      "label": "튜토리얼 다시 보기",
      "type": "action",

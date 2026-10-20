@@ -41,6 +41,7 @@ import { ratesDisclosureNote, ratesDisclosureRows } from "../lib/drawRates";
 import { claimAttendanceDay7, claimAttendanceGift } from "../lib/opsRewards";
 import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
 import type { MenuSheetId } from "../lib/menuTypes";
+import { requestAttendanceNotification } from "../lib/attendanceNotify";
 import { haptic } from "../lib/native";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
 import type { HelpTabId } from "../lib/helpConfig";
@@ -1587,6 +1588,10 @@ export function MenuPanel({
                               type="button"
                               className="link"
                               onClick={() => {
+                                if (item.action === "notification.attendance") {
+                                  requestAttendanceNotification();
+                                  return;
+                                }
                                 closeSheet();
                                 requestClose();
                                 onReplayTutorial();
