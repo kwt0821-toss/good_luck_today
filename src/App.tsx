@@ -29,7 +29,6 @@ import {
   syncAudioSettingsFromStorage,
 } from "./lib/menuSettings";
 import type { MockAdKind } from "./lib/mockAds";
-import { countClaimableDexRewards } from "./lib/dexRewards";
 import { newCardPaw, nyangCoinForCard } from "./lib/nyangCoinGrade";
 import { cancelDrawReservation, preloadDrawImages, reserveDraw } from "./lib/mockDrawApi";
 import { getWithdrawRules } from "./lib/mockWallet";
@@ -380,10 +379,9 @@ export default function App() {
     if (!ops) return;
     let cancelled = false;
     void buildMenuViewModel(ops).then((model) => {
-      if (!cancelled) setMenuIconDot(model.menuIconDot);
-    });
-    void countClaimableDexRewards(ops).then((count) => {
-      if (!cancelled) setDexClaimDot(count > 0);
+      if (cancelled) return;
+      setMenuIconDot(model.menuIconDot);
+      setDexClaimDot(model.rewards.unseenCount > 0);
     });
     void (async () => {
       try {

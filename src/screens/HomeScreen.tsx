@@ -44,7 +44,7 @@ type HomeScreenProps = {
   offerTicketShop?: boolean;
   ticketShopPricePaw?: number;
   menuBadge?: boolean;
-  /** Red dot on #icon-dex when dex rewards are claimable. */
+  /** Red dot on #icon-dex when a dex reward is claimable and not yet seen. */
   dexBadge?: boolean;
   titleRibbon?: {
     equippedId?: string | null;

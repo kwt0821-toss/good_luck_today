@@ -113,22 +113,40 @@ export function CardFlipStack({
   );
 }
 
-/** Step 17 → 15 → 14px so a long fortune stays within about four lines. */
-function fortuneLineClass(line: string): string {
+/** Screen bubble is min(86vw, 360px); dex detail stays on the 220px card. */
+function fortuneBubbleWidth(box: "screen" | "card"): number {
+  if (box === "card") return 220;
+  const viewport = typeof window === "undefined" ? 390 : window.innerWidth;
+  return Math.min(viewport * 0.86, 360);
+}
+
+/** 15 → 14 → 13px so the line fits in 3 rows. 13px still shows a 4th row in full. */
+function fortuneLineClass(line: string, box: "screen" | "card"): string {
   const parts = line
     .split("\n")
     .map((part) => part.trim())
     .filter((part) => part.length > 0);
-  const rowsAt = (perLine: number) =>
-    parts.reduce((count, part) => count + Math.max(1, Math.ceil(part.length / perLine)), 0);
-  if (rowsAt(12) <= 4) return "";
-  if (rowsAt(14) <= 4) return "is-15";
-  return "is-14";
+  const inner = Math.max(1, fortuneBubbleWidth(box) - 28);
+  const rowsAt = (fontPx: number) => {
+    const perLine = Math.max(1, Math.floor(inner / fontPx));
+    return parts.reduce((count, part) => count + Math.max(1, Math.ceil(part.length / perLine)), 0);
+  };
+  if (rowsAt(15) <= 3) return "";
+  if (rowsAt(14) <= 3) return "is-14";
+  return "is-13";
 }
 
-function FortuneBubble({ line, accent }: { line: string; accent: string }) {
+function FortuneBubble({
+  line,
+  accent,
+  box,
+}: {
+  line: string;
+  accent: string;
+  box: "screen" | "card";
+}) {
   const style = { "--fortune-accent": accent } as CSSProperties;
-  const size = fortuneLineClass(line);
+  const size = fortuneLineClass(line, box);
   return (
     <div className="card-viewer-bubble" style={style}>
       <p className="card-viewer-kicker">🍀 오늘의 한 줄</p>
@@ -436,7 +454,13 @@ export function CardViewer({
           .filter(Boolean)
           .join(" ")}
       >
-        {line ? <FortuneBubble line={line} accent={accentColor} /> : null}
+        {line ? (
+          <FortuneBubble
+            line={line}
+            accent={accentColor}
+            box={className?.includes("draw-reveal-viewer") ? "screen" : "card"}
+          />
+        ) : null}
       </div>
       {zoom && renderZoom
         ? createPortal(
@@ -453,7 +477,7 @@ export function CardViewer({
                 </div>
                 {line ? (
                   <div className="card-viewer-caption">
-                    <FortuneBubble line={line} accent={accentColor} />
+                    <FortuneBubble line={line} accent={accentColor} box="screen" />
                   </div>
                 ) : null}
               </div>

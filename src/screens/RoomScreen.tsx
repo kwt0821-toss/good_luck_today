@@ -1660,6 +1660,7 @@ export function RoomScreen({
           <div className="lucky-placement-toolbar" role="toolbar" aria-label="배치 미리보기">
             <button
               type="button"
+              className="is-icon"
               aria-label="취소"
               disabled={tutLock}
               onClick={() => {
@@ -1668,11 +1669,38 @@ export function RoomScreen({
                 patchLayoutLocal(cleared);
               }}
             >
-              ✕
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                <path
+                  d="M6.2 6.2l9.6 9.6M15.8 6.2l-9.6 9.6"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
             {preview.kind === "floor" ? (
-              <button type="button" aria-label="회전" disabled={tutLock} onClick={rotatePreview}>
-                ⟳
+              <button
+                type="button"
+                className="is-icon"
+                aria-label="회전"
+                disabled={tutLock}
+                onClick={rotatePreview}
+              >
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                  <path
+                    d="M16.6 7.6A6.2 6.2 0 1 0 17.3 12"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M16.5 3.5v4.3H12.2"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
             ) : null}
             {preview.origin === "placed" ? (
@@ -1683,12 +1711,20 @@ export function RoomScreen({
             <button
               type="button"
               id="placement-confirm"
-              className="is-confirm"
+              className="is-confirm is-icon"
               aria-label="확정"
               disabled={!preview.valid || committing}
               onClick={() => void confirmPreview()}
             >
-              ✓
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                <path
+                  d="M4.8 11.4l4.1 4.1 8.3-9"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </button>
           </div>
           {!preview.valid && preview.reason ? (

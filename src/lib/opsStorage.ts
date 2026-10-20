@@ -205,6 +205,7 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         );
         return [...new Set([...fromCards, ...fromSets])];
       })(),
+      seenDexClaimableIds: parseStringArray(parsed.seenDexClaimableIds),
       dexClaimLedger: Array.isArray(parsed.dexClaimLedger)
         ? parsed.dexClaimLedger
             .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)

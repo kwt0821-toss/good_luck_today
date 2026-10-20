@@ -14,6 +14,8 @@ import { useLoadingHold } from "../lib/loadingGate";
 import { jellyLabel } from "../lib/jellyLabel";
 import { menuAsset } from "../lib/menuConfig";
 import { NCOIN_ICON, ncoinIcon } from "../lib/ncoinIcon";
+import { listClaimableDexRewards } from "../lib/dexRewards";
+import { markDexClaimableSeen, sameStringList } from "../lib/dexSeen";
 import {
   attendanceSheetState,
   buildMenuViewModel,
@@ -226,6 +228,20 @@ export function MenuPanel({
   };
 
   useEffect(() => () => clearStepHold(), []);
+
+  useEffect(() => {
+    if (sheet !== "rewards" || rewardsView !== "inbox") return;
+    let cancelled = false;
+    void listClaimableDexRewards(ops).then((list) => {
+      if (cancelled) return;
+      const nextSeen = markDexClaimableSeen(list.map((item) => item.id));
+      if (sameStringList(ops.seenDexClaimableIds, nextSeen)) return;
+      onOpsChange({ ...ops, seenDexClaimableIds: nextSeen });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [sheet, rewardsView, ops, onOpsChange]);
 
   useEffect(() => {
     if (!model || sheet !== "rewards" || rewardsView !== "inbox") return;

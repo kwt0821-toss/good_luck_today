@@ -703,7 +703,7 @@
     "claimApi": "POST /dex/rewards/claim {rewardIds:[...]|'all', requestId} → {claimed:[{id,nyangCoin,paw}], pawBalance, nyangCoinBalance, unclaimedCount}",
     "idempotency": "보상 id별 계정당 1회(유니크 키 tossUserKey+rewardId) + requestId 재시도 시 같은 응답",
     "atomic": "지급 + claimed 표시 한 트랜잭션",
-    "badges": "unclaimedCount>0 → 메인 도감 아이콘 빨간 점, 도감 탭 점(해당 그룹), 메뉴 보상함 행 meta"
+    "badges": "unseen claimable id → 메인 도감 아이콘 빨간 점, 도감 탭 점(해당 그룹), 메뉴 보상함 행 점. 보상 N meta는 claimable count. 보상함 시트를 열면 seen"
   },
   "achievements": {
     "ref": "achievements.json",

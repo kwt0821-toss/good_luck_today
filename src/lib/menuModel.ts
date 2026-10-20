@@ -2,6 +2,7 @@ import { getAttendanceStatus } from "./attendanceServer";
 import type { AttendanceStatusResponse } from "./attendanceTypes";
 import { loadDexCatalog } from "./dexCatalog";
 import { loadDexOwned } from "./dexCollection";
+import { unseenDexRewardIds } from "./dexSeen";
 import { listClaimableDexRewards } from "./dexRewards";
 import { summarizeDupExchange, type DupExchangeGradeLine } from "./dupExchange";
 import {
@@ -45,7 +46,13 @@ export type MenuViewModel = {
     lines: DupExchangeGradeLine[];
   };
   /** Dex manual-claim pending count (inbox auto-grant removed). */
-  rewards: { unclaimedCount: number; dexClaimableCount: number; items: [] };
+  rewards: {
+    unclaimedCount: number;
+    dexClaimableCount: number;
+    /** Claimable ids the rewards sheet has not shown yet. */
+    unseenCount: number;
+    items: [];
+  };
   wallet: {
     min: number;
     unit: number;
@@ -86,6 +93,10 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
   const exchangeTotal = exchangeSummary.totalPaw;
 
   const dexClaimableCount = dexClaimable.length;
+  const unseenCount = unseenDexRewardIds(
+    dexClaimable.map((item) => item.id),
+    ops.seenDexClaimableIds,
+  ).length;
   const pawRemaining = remainingPawAds(ops, config);
   const pawMax = config.economy.pawSources.rewardedAd.maxPerDay;
   const weekendDouble = isWeekendDoublePaw(config.economy);
@@ -136,7 +147,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
         dexClaimableCount > 0
           ? `{ncoin}${ops.nyangCoinBalance} · 보상 ${dexClaimableCount}`
           : `{ncoin}${ops.nyangCoinBalance}`;
-      if (dexClaimableCount > 0) badge = { type: "dot" };
+      if (unseenCount > 0) badge = { type: "dot" };
     } else if (id === "rates") {
       meta = `5성↑ ${highlightPct}%`;
     } else if (id === "notice") {
@@ -216,7 +227,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
       totalPaw: exchangeTotal,
       lines: exchangeSummary.lines,
     },
-    rewards: { unclaimedCount: dexClaimableCount, dexClaimableCount, items: [] },
+    rewards: { unclaimedCount: dexClaimableCount, dexClaimableCount, unseenCount, items: [] },
     wallet: {
       min: withdrawRules.min,
       unit: withdrawRules.unit,

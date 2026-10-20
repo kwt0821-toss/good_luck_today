@@ -35,6 +35,7 @@ import {
   tabsWithClaimable,
   type DexReward,
 } from "../lib/dexRewards";
+import { unseenDexRewardIds } from "../lib/dexSeen";
 import { track } from "../lib/analytics";
 import { haptic } from "../lib/native";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
@@ -437,7 +438,11 @@ export function DexScreen({
     tabCounts.breed.owned + tabCounts.special.owned + tabCounts.character.owned + tabCounts.legend.owned;
   const percent = totalCards ? Math.round((ownedTotal / totalCards) * 100) : 0;
   const claimSummary = summarizeClaimable(claimable);
-  const claimTabs = tabsWithClaimable(claimable);
+  const claimTabs = tabsWithClaimable(
+    claimable.filter(
+      (item) => unseenDexRewardIds([item.id], ops.seenDexClaimableIds).length > 0,
+    ),
+  );
   const fullDexReward = claimable.find((item) => item.kind === "fullDex") ?? null;
 
   const openOwned = (card: DexCard) => {

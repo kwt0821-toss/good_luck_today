@@ -51,6 +51,7 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     grantedNyangCoinRewardIds: [],
     grantedSetRewardIds: [],
     claimedDexRewardIds: [],
+    seenDexClaimableIds: [],
     dexClaimLedger: [],
     ownedItemIds: [...new Set(starterItems)],
     unlockedRoomIds: ["moon_bedroom"],

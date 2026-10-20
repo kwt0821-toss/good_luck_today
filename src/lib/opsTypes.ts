@@ -651,6 +651,11 @@ export type OpsState = {
   grantedSetRewardIds: string[];
   /** Dex reward ids claimed once per account (newCard:*, set:breed:*, set:*, fullDex) */
   claimedDexRewardIds: string[];
+  /**
+   * Claimable dex reward ids already shown in the rewards sheet.
+   * A red dot means a claimable id is missing from this list.
+   */
+  seenDexClaimableIds: string[];
   /** Idempotent ledger for POST /dex/rewards/claim (tossUserKey + requestId) */
   dexClaimLedger: Array<{
     requestId: string;

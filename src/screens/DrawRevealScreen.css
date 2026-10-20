@@ -116,8 +116,7 @@
   align-items: center;
   justify-content: flex-start;
   container-type: size;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .draw-reveal-glow {
@@ -160,16 +159,44 @@
 .draw-reveal-stage .draw-reveal-viewer {
   position: relative;
   z-index: 2;
-  width: min(78cqw, calc((100cqh - 220px) * 900 / 1400));
-  max-width: 86%;
-  flex: 0 0 auto;
-  margin-top: auto;
-  margin-bottom: auto;
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  justify-content: center;
+}
+
+.draw-reveal-viewer .card-viewer-stage {
+  width: min(72cqw, 300px);
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.draw-reveal-viewer .card-viewer-swipe {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .draw-reveal-stage .draw-reveal-viewer .draw-reveal-cardbox {
-  width: 100%;
+  width: min(100cqw, calc(100cqh * 900 / 1400));
   max-width: 100%;
+  height: auto;
+  max-height: 100%;
+}
+
+.draw-reveal-viewer .card-viewer-caption {
+  flex: 0 0 auto;
+  animation: none;
 }
 
 .draw-reveal-cardbox {

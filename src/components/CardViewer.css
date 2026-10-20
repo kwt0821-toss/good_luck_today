@@ -26,8 +26,7 @@
   z-index: 5;
   width: 100%;
   max-width: 100%;
-  /* 0.06 × card height. Percentage margin uses the card-width containing block. */
-  margin-top: calc(100% * 1400 / 900 * 0.06);
+  margin-top: 8px;
   opacity: 0;
   transform: translateY(8px);
   animation: card-viewer-fortune-in 300ms ease forwards;
@@ -67,8 +66,8 @@
   position: relative;
   box-sizing: border-box;
   width: 100%;
-  padding: 14px 18px;
-  border-radius: 16px;
+  padding: 8px 14px;
+  border-radius: 12px;
   background: rgba(255, 248, 235, 0.96);
   border-style: solid;
   border-width: 1.5px;
@@ -108,7 +107,7 @@
 .card-viewer-kicker {
   margin: 0 0 4px;
   text-align: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1.25;
   color: var(--fortune-accent, #5a4030);
@@ -117,20 +116,28 @@
 .card-viewer-line {
   margin: 0;
   text-align: center;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
-  line-height: 1.45;
+  line-height: 1.35;
   color: #3a2a20;
   white-space: pre-line;
   overflow: visible;
 }
 
-.card-viewer-line.is-15 {
-  font-size: 15px;
-}
-
 .card-viewer-line.is-14 {
   font-size: 14px;
+}
+
+.card-viewer-line.is-13 {
+  font-size: 13px;
+}
+
+.draw-reveal-viewer .card-viewer-caption,
+.card-zoom-layout .card-viewer-caption,
+.draw-reveal-viewer .card-viewer-bubble,
+.card-zoom-layout .card-viewer-bubble {
+  width: min(86vw, 360px);
+  max-width: min(86vw, 360px);
 }
 
 @keyframes card-viewer-fortune-in {
@@ -253,8 +260,7 @@
 .card-zoom-layout .card-viewer-caption {
   pointer-events: none;
   flex: 0 0 auto;
-  width: 100%;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .card-zoom-close {

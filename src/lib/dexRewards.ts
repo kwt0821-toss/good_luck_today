@@ -1,6 +1,7 @@
 import { loadDexCatalog, groupBreedRows, cardsOfType } from "./dexCatalog";
 import { loadDexOwned } from "./dexCollection";
 import type { DexCard, DexOwnedMap, DexTab } from "./dexTypes";
+import { pruneSeenDexClaimable } from "./dexSeen";
 import { loadOpsConfig } from "./opsConfig";
 import { newCardPaw, nyangCoinForCard } from "./nyangCoinGrade";
 import { saveOpsState } from "./opsStorage";
@@ -301,8 +302,12 @@ export async function postDexRewardsClaim(
     pawBalance: next.pawBalance,
     nyangCoinBalance: next.nyangCoinBalance,
   };
+  const remainingIds = pending
+    .map((item) => item.id)
+    .filter((id) => !claimedIds.includes(id));
   next = {
     ...next,
+    seenDexClaimableIds: pruneSeenDexClaimable(next.seenDexClaimableIds, remainingIds),
     dexClaimLedger: [entry, ...next.dexClaimLedger].slice(0, 60),
   };
   await saveOpsState(next);
