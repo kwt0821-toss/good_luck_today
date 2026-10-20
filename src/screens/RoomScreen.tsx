@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import { getPlatformOS } from "@apps-in-toss/web-framework";
 
 import { CozySheet } from "../components/CozySheet";
 import { useBackHandler } from "../hooks/useBackHandler";
 import { useLoadingHold } from "../lib/loadingGate";
 import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
 import { NyChip } from "../components/NyChip";
+import { track } from "../lib/analytics";
 import { jellyLabel } from "../lib/jellyLabel";
 import { withJosa } from "../lib/josa";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
@@ -178,6 +180,25 @@ export function RoomScreen({
   useEffect(() => {
     previewRef.current = preview;
   }, [preview]);
+
+  useEffect(() => {
+    let alive = true;
+    const timer = window.setTimeout(() => {
+      if (!alive) return;
+      let platform: "ios" | "android" | undefined;
+      try {
+        const os = getPlatformOS();
+        if (os === "ios" || os === "android") platform = os;
+      } catch {
+        platform = undefined;
+      }
+      track("room_open", { platform });
+    }, 0);
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
     previewHudModeRef.current = previewHudMode;
@@ -1174,6 +1195,7 @@ export function RoomScreen({
       return;
     }
     if (state.points < item.price) return;
+    track("room_item_buy", { item_id: item.id, price: item.price });
     const nextPoints = state.points - item.price;
     const nextOwned = { ...state.owned, [item.id]: (state.owned[item.id] ?? 0) + 1 };
     const draft = {

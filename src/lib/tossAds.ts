@@ -69,6 +69,7 @@ function loadOnce(adGroupId: string): Promise<"loaded" | "failed"> {
 export async function playTossFullScreenAd(
   kind: MockAdKind,
   adGroupId: string,
+  onLoadFail?: (attempt: number, online: boolean) => void,
 ): Promise<TossAdResult> {
   if (await isOffline()) return "offline";
   if (!isTossFullScreenAdSupported()) return "unsupported";
@@ -76,6 +77,14 @@ export async function playTossFullScreenAd(
   let loaded: "loaded" | "failed" = "failed";
   for (let attempt = 0; attempt < 2; attempt += 1) {
     loaded = await loadOnce(adGroupId);
+    if (loaded === "failed") {
+      const online = typeof navigator !== "undefined" && navigator.onLine;
+      try {
+        onLoadFail?.(attempt + 1, online);
+      } catch {
+        // Analytics must not change the ad result.
+      }
+    }
     if (loaded === "loaded") break;
     if (await isOffline()) return "offline";
     if (attempt === 0) {

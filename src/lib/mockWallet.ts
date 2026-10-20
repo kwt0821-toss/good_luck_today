@@ -5,6 +5,7 @@ import { loadOpsConfig } from "./opsConfig";
 import { saveOpsState } from "./opsStorage";
 import type { OpsEconomy, OpsState, WalletHistoryItem, WalletWithdrawStatus } from "./opsTypes";
 import { refreshServerTime, trustedKstDateKey, trustedNow, hasServerTime } from "./tossClock";
+import { track } from "./analytics";
 import { isTossApp } from "./tossEnv";
 import { ensureGameUserHash, readStoredGameUserHash, TOSS_APP_UPDATE_MESSAGE } from "./user";
 
@@ -179,8 +180,13 @@ function pendingForHash(state: OpsState, hash: string): WalletHistoryItem | unde
 
 type GrantOutcome =
   | { kind: "done"; key: string }
-  | { kind: "failed"; reason: string }
-  | { kind: "unconfirmed"; reason: string };
+  | { kind: "failed"; reason: string; code: string }
+  | { kind: "unconfirmed"; reason: string; code: string };
+
+function shortGrantCode(code: string, fallback: string): string {
+  const trimmed = code.trim();
+  return /^[A-Za-z0-9_-]{1,32}$/.test(trimmed) ? trimmed : fallback;
+}
 
 /** Practice grant outside Toss. Does not call the promotion SDK. */
 async function mockGrant(): Promise<GrantOutcome> {
@@ -193,20 +199,31 @@ async function liveGrant(promotionCode: string, amountKRW: number): Promise<Gran
     const result = await grantPromotionRewardForGame({
       params: { promotionCode, amount: amountKRW },
     });
-    if (result == null) return { kind: "failed", reason: TOSS_APP_UPDATE_MESSAGE };
+    if (result == null) {
+      return { kind: "failed", reason: TOSS_APP_UPDATE_MESSAGE, code: "UNSUPPORTED" };
+    }
     if (result === "ERROR") {
-      return { kind: "failed", reason: "토스 포인트를 지급하지 못했어요. 잠시 후 다시 시도해 주세요" };
+      return {
+        kind: "failed",
+        reason: "토스 포인트를 지급하지 못했어요. 잠시 후 다시 시도해 주세요",
+        code: "ERROR",
+      };
     }
     if ("key" in result && typeof result.key === "string" && result.key) {
       return { kind: "done", key: result.key };
     }
     if ("errorCode" in result && result.errorCode) {
-      return { kind: "failed", reason: messageForPromoError(String(result.errorCode)) };
+      const raw = String(result.errorCode);
+      return {
+        kind: "failed",
+        reason: messageForPromoError(raw),
+        code: shortGrantCode(raw, "ERROR"),
+      };
     }
-    return { kind: "unconfirmed", reason: "지급 결과를 확인하지 못했어요" };
+    return { kind: "unconfirmed", reason: "지급 결과를 확인하지 못했어요", code: "UNCONFIRMED" };
   } catch {
     // The call may have reached Toss. Leave the row pending instead of paying twice.
-    return { kind: "unconfirmed", reason: "지급 결과를 확인하지 못했어요" };
+    return { kind: "unconfirmed", reason: "지급 결과를 확인하지 못했어요", code: "UNCONFIRMED" };
   }
 }
 
@@ -403,7 +420,13 @@ export async function postWalletWithdraw(
 
   const amountKRW = amount * (config.economy.nyangCoin.toTossPointRate ?? 1);
   const code = promotionCodeFrom(config.economy);
+  track("toss_reward_request", { amount });
   const grant = isTossApp() ? await liveGrant(code.code, amountKRW) : await mockGrant();
+  track("toss_reward_result", {
+    amount,
+    success: grant.kind === "done",
+    error_code: grant.kind === "done" ? undefined : grant.code,
+  });
   // TEST_ 성공은 resultType SUCCESS({ key })지만 실제 포인트는 나가지 않아요.
   const testGrant = grant.kind === "done" && code.test && isTossApp();
 

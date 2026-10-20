@@ -41,6 +41,7 @@ import { ratesDisclosureNote, ratesDisclosureRows } from "../lib/drawRates";
 import { claimAttendanceDay7, claimAttendanceGift } from "../lib/opsRewards";
 import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
 import type { MenuSheetId } from "../lib/menuTypes";
+import { track } from "../lib/analytics";
 import { requestAttendanceNotification } from "../lib/attendanceNotify";
 import { haptic } from "../lib/native";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
@@ -455,6 +456,10 @@ export function MenuPanel({
       day7RequestIdRef.current = null;
       setDay7AdExhausted(false);
       onOpsChange(result.state);
+      if (withAd) {
+        track("ad_complete", { placement: "attendance_day7", ad_length: "long" });
+      }
+      track("attendance_claim", { day: 7, doubled: withAd });
       setPopDay(7);
       setStampDay(7);
       void haptic("success");
@@ -542,6 +547,7 @@ export function MenuPanel({
     setPopDay(day);
     setStampDay(day);
     onOpsChange(result.state);
+    track("attendance_claim", { day, doubled: false });
     void haptic("success");
     window.setTimeout(() => AudioManager.playSfx("stamp"), 180);
     const itemReward = result.response?.rewards.find((reward) => reward.kind === "item");

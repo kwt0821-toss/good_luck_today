@@ -35,6 +35,7 @@ import {
   tabsWithClaimable,
   type DexReward,
 } from "../lib/dexRewards";
+import { track } from "../lib/analytics";
 import { haptic } from "../lib/native";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
 import { NyChip } from "../components/NyChip";
@@ -309,6 +310,21 @@ export function DexScreen({
       const prevNyang = ops.nyangCoinBalance;
       onOpsChange(result.state);
       const claimed = result.claimed;
+      if (claimed.length) {
+        const kinds = [...new Set(claimed.map((item) => item.kind))];
+        for (const rewardType of kinds) {
+          track("dex_reward_claim", {
+            reward_type: rewardType,
+            count: claimed.filter((item) => item.kind === rewardType).length,
+          });
+        }
+        const breeds = new Set<string>();
+        for (const item of claimed) {
+          if (item.kind !== "breedSet" || !item.breedId || breeds.has(item.breedId)) continue;
+          breeds.add(item.breedId);
+          track("set_complete", { breed: item.breedId });
+        }
+      }
       await refreshClaimable(result.state, owned);
       playClaimFx(claimed);
       if (prevNyang < 10 && result.state.nyangCoinBalance >= 10) {

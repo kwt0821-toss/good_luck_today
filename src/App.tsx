@@ -17,6 +17,7 @@ import {
   type AchvConfig,
   type AchvProgress,
 } from "./lib/achievements";
+import { adPlacementOf, track } from "./lib/analytics";
 import { toKstDateKey } from "./lib/date";
 import { refreshServerTime } from "./lib/tossClock";
 import { isTossApp } from "./lib/tossEnv";
@@ -176,6 +177,32 @@ function adRetryLabel(kind: AdSession["kind"]): string {
   return kind === "long" ? "30초 광고 보고 다시 시도" : "짧은 광고 보고 다시 시도";
 }
 
+function takeOnce(seen: Set<string>, key: string): boolean {
+  if (seen.has(key)) return false;
+  seen.add(key);
+  return true;
+}
+
+function trackConfirmedDraw(reservation: DrawReservation) {
+  const kind =
+    reservation.slot === "tutorial"
+      ? "tutorial"
+      : reservation.slot === "rateUp"
+        ? reservation.usedAd
+          ? "rateUpAd"
+          : "ticket"
+        : "normal";
+  track("draw", {
+    kind,
+    grade: reservation.rarity,
+    is_new: reservation.isNew,
+  });
+}
+
+function adSessionKey(session: AdSession): string {
+  return session.drawId || session.requestId || `${session.purpose}:${session.kind}`;
+}
+
 function pawAdDetail(config: OpsConfig): string {
   const base = config.economy.pawSources.rewardedAd.pawPerAd;
   const multiplier = isWeekendDoublePaw(config.economy)
@@ -251,7 +278,29 @@ export default function App() {
   /** Dream-fallback sheet is open; keep the draw/paw reservation until the user chooses. */
   const adFallbackPendingRef = useRef(false);
   const adFallbackTokenRef = useRef(0);
+  const liveAdRef = useRef<AdSession | null>(null);
+  const trackedDrawIdsRef = useRef(new Set<string>());
+  const trackedAdRewardRef = useRef(new Set<string>());
+  const earlyCloseKeyRef = useRef<string | null>(null);
+  const tutorialStepTrackedRef = useRef<number | null>(null);
+  const tutorialCompleteTrackedRef = useRef(false);
+  const tutorialSkipTrackedRef = useRef(false);
   const drawLockRef = useRef(false);
+  const noteTutorialStep = useCallback((step: number) => {
+    if (tutorialStepTrackedRef.current === step) return;
+    tutorialStepTrackedRef.current = step;
+    track("tutorial_step", { step });
+  }, []);
+  const noteTutorialComplete = useCallback(() => {
+    if (tutorialCompleteTrackedRef.current) return;
+    tutorialCompleteTrackedRef.current = true;
+    track("tutorial_complete");
+  }, []);
+  const noteTutorialSkip = useCallback((step: number) => {
+    if (tutorialSkipTrackedRef.current) return;
+    tutorialSkipTrackedRef.current = true;
+    track("tutorial_skip", { step });
+  }, []);
   const [reservation, setReservation] = useState<DrawReservation | null>(null);
   const [revealReady, setRevealReady] = useState(false);
   const [waitFailed, setWaitFailed] = useState(false);
@@ -437,11 +486,16 @@ export default function App() {
     const token = adIntroTokenRef.current + 1;
     adIntroTokenRef.current = token;
     adFlowRef.current = true;
+    liveAdRef.current = session;
     setAdIntro({
       token,
       session,
       headline: session.kind === "long" ? "30초 광고를 볼까요?" : "짧은 광고를 볼까요?",
       detail,
+    });
+    track("ad_intro_show", {
+      placement: adPlacementOf(session),
+      ad_length: session.kind,
     });
   }, []);
 
@@ -451,6 +505,10 @@ export default function App() {
     adIntroTokenRef.current = current.token + 1;
     setAdIntro(null);
     setAd(current.session);
+    track("ad_intro_confirm", {
+      placement: adPlacementOf(current.session),
+      ad_length: current.session.kind,
+    });
   }, [adIntro]);
 
   useEffect(() => {
@@ -463,6 +521,11 @@ export default function App() {
     adIntroTokenRef.current = current.token + 1;
     adFlowRef.current = false;
     setAdIntro(null);
+    liveAdRef.current = null;
+    track("ad_intro_cancel", {
+      placement: adPlacementOf(current.session),
+      ad_length: current.session.kind,
+    });
     if (current.session.purpose === "attendanceDay7") {
       setMenuOpen(true);
       attendanceDay7AdResolverRef.current?.("cancelled");
@@ -772,11 +835,17 @@ export default function App() {
           });
           return;
         }
-        await persistOps(
+        const persisted =
           slot === "tutorial"
             ? { ...confirmed.state, tutorialStep: Math.max(confirmed.state.tutorialStep, 2) }
-            : confirmed.state,
-        );
+            : confirmed.state;
+        await persistOps(persisted);
+        if (slot === "tutorial" && persisted.tutorialStep !== reserved.state.tutorialStep) {
+          noteTutorialStep(persisted.tutorialStep);
+        }
+        if (takeOnce(trackedDrawIdsRef.current, confirmed.reservation.drawId)) {
+          trackConfirmedDraw(confirmed.reservation);
+        }
         setReservation(confirmed.reservation);
         setRevealCard(confirmed.card);
         setRevealToast(confirmed.toast);
@@ -809,7 +878,7 @@ export default function App() {
       );
       drawLockRef.current = false;
     },
-    [ops, config, persistOps, setScreen, queueAd],
+    [ops, config, persistOps, setScreen, queueAd, noteTutorialStep],
   );
 
   useEffect(() => {
@@ -818,6 +887,10 @@ export default function App() {
 
   const completeAd = useCallback(async () => {
     if (!ad || !ops) return;
+    const session = ad;
+    const rewardKey = adSessionKey(session);
+    earlyCloseKeyRef.current = rewardKey;
+    liveAdRef.current = null;
     if (ad.purpose === "attendanceDay7") {
       setAd(null);
       setMenuOpen(true);
@@ -841,6 +914,13 @@ export default function App() {
         return;
       }
       await persistOps(result.state);
+      if (takeOnce(trackedAdRewardRef.current, rewardKey)) {
+        track("ad_complete", {
+          placement: adPlacementOf(session),
+          ad_length: session.kind,
+        });
+        track("jelly_ad_reward", { amount: result.gained });
+      }
       if (result.adPawNyangCoin > 0) {
         nyNotify({
           key: `ad-paw-ncoin:${requestId}`,
@@ -881,6 +961,15 @@ export default function App() {
       return;
     }
     await persistOps(confirmed.state);
+    if (takeOnce(trackedAdRewardRef.current, rewardKey)) {
+      track("ad_complete", {
+        placement: adPlacementOf(session),
+        ad_length: session.kind,
+      });
+    }
+    if (takeOnce(trackedDrawIdsRef.current, confirmed.reservation.drawId)) {
+      trackConfirmedDraw(confirmed.reservation);
+    }
     // Ad-draw 냥코인 toast lives on #card-reveal only (overlay does not grant again).
     setAdNyangToast(
       confirmed.adNyangCoin > 0
@@ -905,6 +994,18 @@ export default function App() {
 
   const abandonAd = useCallback(
     async (purpose: AdSession["purpose"]) => {
+      const session = liveAdRef.current;
+      if (session && session.purpose === purpose) {
+        const key = adSessionKey(session);
+        if (earlyCloseKeyRef.current !== key) {
+          earlyCloseKeyRef.current = key;
+          track("ad_close_early", {
+            placement: adPlacementOf(session),
+            ad_length: session.kind,
+          });
+        }
+      }
+      liveAdRef.current = null;
       if (!ops) {
         setAd(null);
         if (purpose === "attendanceDay7") {
@@ -1006,7 +1107,14 @@ export default function App() {
     const groupId = adGroupIdForKind(snap.kind, config?.economy.ads);
     let active = true;
     AudioManager.onAdOpen();
-    void playTossFullScreenAd(snap.kind, groupId).then((result) => {
+    void playTossFullScreenAd(snap.kind, groupId, (attempt, online) => {
+      if (!active) return;
+      track("ad_load_fail", {
+        placement: adPlacementOf(snap),
+        attempt,
+        online,
+      });
+    }).then((result) => {
       AudioManager.onAdClose();
       if (!active) return;
       if (result === "completed") {
@@ -1060,13 +1168,17 @@ export default function App() {
           return;
         }
         adFlowRef.current = true;
-        setAd({
+        const fallbackSession: AdSession = {
           kind: snap.kind,
           purpose: snap.purpose,
           drawId: snap.drawId,
           requestId: snap.requestId,
           presentation: "mock",
-        });
+        };
+        liveAdRef.current = fallbackSession;
+        earlyCloseKeyRef.current = null;
+        track("ad_fallback_show", { placement: adPlacementOf(snap) });
+        setAd(fallbackSession);
       })();
     });
     return () => {
@@ -1141,6 +1253,7 @@ export default function App() {
       return;
     }
     if (!ops) return;
+    const skippedStep = ops.tutorialStep;
     await persistOps({
       ...ops,
       tutorialDone: true,
@@ -1148,6 +1261,7 @@ export default function App() {
       tutorialInterruptions: ops.tutorialInterruptions + 1,
       tut: { ...ops.tut, rewardsIntro: "skipped" },
     });
+    noteTutorialSkip(skippedStep);
     setRevealTutPhase(null);
     setHideRevealToast(false);
     setStepThenActive(false);
@@ -1157,7 +1271,7 @@ export default function App() {
     setMenuOpen(false);
     setForceMenuSheet(null);
     window.clearTimeout(claimToastTimerRef.current);
-  }, [ops, persistOps, tutorialReplayStep, rewardsIntro, finishRewardsIntro, setScreen]);
+  }, [ops, persistOps, tutorialReplayStep, rewardsIntro, finishRewardsIntro, setScreen, noteTutorialSkip]);
 
   const onRevealToastShown = useCallback(() => {
     if (!tutorialStep || tutorialStep.step !== 2) return;
@@ -1186,6 +1300,7 @@ export default function App() {
       const replaying = tutorialReplayStep != null;
       if (replaying && !onReveal) {
         setTutorialReplayStep(3);
+        noteTutorialStep(3);
         setRevealTutPhase(null);
         setScreen({ name: "collection" });
         return;
@@ -1199,6 +1314,7 @@ export default function App() {
       }
       if (onReveal && revealTutPhase === "to-dex") {
         await persistOps({ ...ops, tutorialStep: 3 });
+        noteTutorialStep(3);
         setRevealTutPhase(null);
         setHideRevealToast(false);
         setStepThenActive(false);
@@ -1224,12 +1340,14 @@ export default function App() {
         const nextStep = 4;
         if (tutorialReplayStep != null) {
           setTutorialReplayStep(nextStep);
+          noteTutorialStep(nextStep);
           setDexTutPhase(null);
           setRoomTutPhase("pick");
           setScreen({ name: "room" });
           return;
         }
         await persistOps({ ...ops, tutorialStep: nextStep });
+        noteTutorialStep(nextStep);
         setDexTutPhase(null);
         setRoomTutPhase("pick");
         setScreen({ name: "room" });
@@ -1244,6 +1362,7 @@ export default function App() {
       if (roomTutPhase === "done" || roomTutPhase === "points") {
         if (tutorialReplayStep != null) {
           setTutorialReplayStep(5);
+          noteTutorialStep(5);
           setRoomTutPhase(null);
           setRewardsTutPhase("menu");
           setStepThenActive(false);
@@ -1253,6 +1372,7 @@ export default function App() {
           return;
         }
         await persistOps({ ...ops, tutorialStep: 5 });
+        noteTutorialStep(5);
         setRoomTutPhase(null);
         setRewardsTutPhase("menu");
         setStepThenActive(false);
@@ -1283,6 +1403,7 @@ export default function App() {
           tutorialStep: 5,
           tut: { ...ops.tut, rewardsIntro: "seen" },
         });
+        noteTutorialComplete();
         setRewardsTutPhase(null);
         setStepThenActive(false);
         setMenuOpen(false);
@@ -1337,6 +1458,7 @@ export default function App() {
       }
       const nextStep = tutorialStep.step + 1;
       setTutorialReplayStep(nextStep);
+      noteTutorialStep(nextStep);
       setStepThenActive(false);
       setDexTutPhase(nextStep === 3 ? "scroll" : null);
       setRoomTutPhase(nextStep === 4 ? "pick" : null);
@@ -1378,6 +1500,7 @@ export default function App() {
             ? { ...ops.tut, rewardsIntro: "seen" }
             : ops.tut,
       });
+      noteTutorialComplete();
       setStepThenActive(false);
       setDexTutPhase(null);
       setRoomTutPhase(null);
@@ -1388,6 +1511,7 @@ export default function App() {
     const nextStep = tutorialStep.step + 1;
     const next = config.tutorial.steps.find((step) => step.step === nextStep);
     await persistOps({ ...ops, tutorialStep: nextStep });
+    noteTutorialStep(nextStep);
     setStepThenActive(false);
     setDexTutPhase(nextStep === 3 ? "scroll" : null);
     setRoomTutPhase(nextStep === 4 ? "pick" : null);
@@ -1406,6 +1530,8 @@ export default function App() {
     tutorialCardId,
     beginDraw,
     persistOps,
+    noteTutorialStep,
+    noteTutorialComplete,
     rewardsIntro,
     advanceRewardsIntro,
     screen.name,
@@ -1593,6 +1719,7 @@ export default function App() {
             void (async () => {
               if (tutorialReplayStep != null && tutorialReplayStep === 2) {
                 setTutorialReplayStep(3);
+                noteTutorialStep(3);
                 setRevealTutPhase(null);
                 setHideRevealToast(false);
                 setAdNyangToast(null);
@@ -1606,6 +1733,7 @@ export default function App() {
                 ops.tutorialStep === 2 && !ops.tutorialDone && tutorialReplayStep == null;
               if (enterDexTutorial) {
                 await persistOps({ ...ops, tutorialStep: 3 });
+                noteTutorialStep(3);
               }
               setRevealTutPhase(null);
               setHideRevealToast(false);
