@@ -12,6 +12,7 @@ import type { DrawReservation } from "../lib/opsTypes";
 import { cardFortune, cardKoreanName, formatCardDexNo } from "../lib/dexCatalog";
 import { boxStyle, resolveFrame, type FrameSubject } from "../lib/cardFrames";
 import { CardFrame } from "../components/CardFrame";
+import { CardSpotlight } from "../components/CardSpotlight";
 import { CardFlipStack, CardViewer } from "../components/CardViewer";
 import "./DrawRevealScreen.css";
 
@@ -138,6 +139,8 @@ type DrawRevealScreenProps = {
   onDrawAgain: () => void;
   onRetry: () => void;
   onBack?: () => void;
+  /** Full-screen card is covering the settled result. */
+  onSpotlightChange?: (open: boolean) => void;
 };
 
 const clamp = (x: number, a = 0, b = 1) => Math.max(a, Math.min(b, x));
@@ -186,6 +189,7 @@ export function DrawRevealScreen({
   onDrawAgain,
   onRetry,
   onBack,
+  onSpotlightChange,
 }: DrawRevealScreenProps) {
   useBackHandler(true, () => onBack?.());
   const screenRef = useRef<HTMLDivElement>(null);
@@ -217,6 +221,9 @@ export function DrawRevealScreen({
 
   const [manualFlip, setManualFlip] = useState(false);
   const [revealDone, setRevealDone] = useState(false);
+  const [spotlight, setSpotlight] = useState(false);
+  const onSpotlightChangeRef = useRef(onSpotlightChange);
+  onSpotlightChangeRef.current = onSpotlightChange;
   const partsRef = useRef<Particle[]>([]);
   const reduceRef = useRef(prefersReducedMotion());
   const readyRef = useRef(ready);
@@ -235,6 +242,7 @@ export function DrawRevealScreen({
     setAdToastVisible(Boolean(adNyangToast));
     setManualFlip(false);
     setRevealDone(false);
+    setSpotlight(false);
   }, [reservation.drawId, adNyangToast]);
 
   useEffect(() => {
@@ -264,9 +272,22 @@ export function DrawRevealScreen({
 
   useEffect(() => {
     if (!ready) return;
-    const timer = window.setTimeout(() => setRevealDone(true), FINAL_MS);
+    const delay = reduceRef.current ? 280 : FLIP_MS;
+    const timer = window.setTimeout(() => {
+      skipToFinalRef.current = true;
+      setRevealDone(true);
+      setSpotlight(true);
+    }, delay);
     return () => window.clearTimeout(timer);
   }, [ready, reservation.drawId]);
+
+  useEffect(() => {
+    onSpotlightChangeRef.current?.(spotlight);
+  }, [spotlight]);
+
+  useEffect(() => {
+    return () => onSpotlightChangeRef.current?.(false);
+  }, []);
 
   useEffect(() => {
     if (!ready || revealSoundRef.current) return;
@@ -287,12 +308,13 @@ export function DrawRevealScreen({
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
+        if (spotlight) return;
         onBack?.();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onBack]);
+  }, [onBack, spotlight]);
 
   const theme = RAR[reservation.rarity] ?? RAR.b1;
   const frontSrc = reservation.frontUrl || reservation.thumbUrl;
@@ -606,6 +628,7 @@ export function DrawRevealScreen({
     if (t < FINAL_MS && !skipToFinalRef.current) {
       skipToFinalRef.current = true;
       setRevealDone(true);
+      setSpotlight(true);
     }
   };
 
@@ -648,9 +671,10 @@ export function DrawRevealScreen({
   const toastHost = typeof document !== "undefined" ? document.getElementById("root") : null;
 
   return (
+    <>
     <div
       ref={screenRef}
-      className="draw-reveal-screen"
+      className={`draw-reveal-screen ${spotlight ? "is-spotlight" : ""}`}
       id="card-reveal"
       onClick={onScreenClick}
       role="dialog"
@@ -803,6 +827,21 @@ export function DrawRevealScreen({
         </div>
       </div>
     </div>
+    {spotlight ? (
+      <CardSpotlight
+        card={{
+          src: frontSrc,
+          thumbSrc: reservation.thumbUrl,
+          artId: reservation.cardId,
+          name: frameName,
+          dexNo,
+          subject: frameCard,
+        }}
+        line={fortune}
+        onDone={() => setSpotlight(false)}
+      />
+    ) : null}
+    </>
   );
 }
 

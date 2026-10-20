@@ -1,5 +1,9 @@
 /* #card-reveal — fills Toss webview below nav (no device px hardcoding) */
 
+.draw-reveal-screen.is-spotlight {
+  pointer-events: none;
+}
+
 .draw-reveal-screen {
   position: relative;
   flex: 1 1 auto;

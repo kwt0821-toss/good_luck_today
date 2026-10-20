@@ -247,6 +247,7 @@ export default function App() {
   const [revealCard, setRevealCard] = useState<DexCard | null>(null);
   const [tutorialReplayStep, setTutorialReplayStep] = useState<number | null>(null);
   const [revealTutPhase, setRevealTutPhase] = useState<RevealTutPhase | null>(null);
+  const [revealSpotlight, setRevealSpotlight] = useState(false);
   const [hideRevealToast, setHideRevealToast] = useState(false);
   const [rewardsIntro, setRewardsIntro] = useState<RewardsIntroSession | null>(null);
   const [forceMenuSheet, setForceMenuSheet] = useState<MenuSheetId>(initialForceSheet);
@@ -1713,6 +1714,7 @@ export default function App() {
           holdToast={tutorialStep?.step === 2}
           hideToast={hideRevealToast || revealTutPhase === "to-dex"}
           onToastShown={onRevealToastShown}
+          onSpotlightChange={setRevealSpotlight}
           onToDex={() => {
             void (async () => {
               if (tutorialReplayStep != null && tutorialReplayStep === 2) {
@@ -1907,6 +1909,7 @@ export default function App() {
       />
 
       {coachMark &&
+      !revealSpotlight &&
       (rewardsIntro ||
         (tutorialStep &&
           ((screen.name === "home" && tutorialStep.screen === "main") ||
