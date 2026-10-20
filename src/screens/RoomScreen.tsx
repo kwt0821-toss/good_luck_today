@@ -1470,7 +1470,7 @@ export function RoomScreen({
                     pointerEvents: active ? "auto" : "none",
                   }}
                 >
-                  <div className="lucky-island-scale" style={{ transform: `scale(${screen.scale})` }}>
+                  <div className="lucky-island-scale">
                     <RoomWorld
                       mode={active ? mode : "view"}
                       roomId={roomId}

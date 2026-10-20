@@ -1,4 +1,4 @@
-import { useEffect, useRef, type PointerEvent } from "react";
+import { useEffect, useRef, type CSSProperties, type PointerEvent } from "react";
 
 import { roomAsset } from "../lib/roomCatalog";
 import { AudioManager } from "../audio/AudioManager";
@@ -25,6 +25,7 @@ import {
   wallOccupancy,
   wallPlaceFromSlot,
   wallSpriteRect,
+  screenOf,
 } from "../lib/roomLayout";
 import {
   floorTileRect,
@@ -82,6 +83,24 @@ type RoomWorldProps = {
   onFloorPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
 };
 
+/** World pixels as a percentage of the on-screen island (not a 3840px layer). */
+function pctX(worldPx: number) {
+  return `${(worldPx / WORLD_W) * 100}%`;
+}
+
+function pctY(worldPx: number) {
+  return `${(worldPx / WORLD_H) * 100}%`;
+}
+
+function worldBox(rect: { x: number; y: number; w: number; h: number }): CSSProperties {
+  return {
+    left: pctX(rect.x),
+    top: pctY(rect.y),
+    width: pctX(rect.w),
+    height: pctY(rect.h),
+  };
+}
+
 function Layer({ src, className }: { src: string; className?: string }) {
   return <img className={`lucky-world-layer ${className ?? ""}`} src={roomAsset(src)} alt="" draggable={false} />;
 }
@@ -129,6 +148,7 @@ function FloorSprite({
   placeFx = false,
   previewGhost = false,
   previewInvalid = false,
+  fit,
   onSelect,
   onItemPointerDown,
 }: {
@@ -143,11 +163,14 @@ function FloorSprite({
   placeFx?: boolean;
   previewGhost?: boolean;
   previewInvalid?: boolean;
+  /** Island scale. Lift offsets are world pixels and must shrink with the room. */
+  fit: number;
   onSelect: (id: string) => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, id: string) => void;
 }) {
   const frames = item.id === "cardframe" || item.id === "squareframe";
-  const liftY = previewGhost ? "translateY(-24px)" : lifted ? "translateY(-12px)" : "";
+  const liftWorld = previewGhost ? -24 : lifted ? -12 : 0;
+  const liftY = liftWorld ? `translateY(${liftWorld * fit}px)` : "";
   return (
     <button
       type="button"
@@ -165,11 +188,8 @@ function FloorSprite({
         .filter(Boolean)
         .join(" ")}
       style={{
-        left: rect.x,
-        top: rect.y,
-        width: rect.w,
-        height: rect.h,
-        transform: `${flipped ? "scaleX(-1) " : ""}${liftY}`.trim(),
+        ...worldBox(rect),
+        transform: `${flipped ? "scaleX(-1) " : ""}${liftY}`.trim() || undefined,
       }}
       aria-label={item.nameKo}
       onPointerDown={(event) => onItemPointerDown(event, place.instanceId)}
@@ -209,10 +229,12 @@ function RoamingCatShadow({
       const scale = loafish ? 0.8 : 1;
       const x = motion.worldX - shadow.anchor[0] * scale;
       const y = motion.worldY - shadow.anchor[1] * scale;
-      el.style.width = `${shadow.size[0] * scale}px`;
-      el.style.height = `${shadow.size[1] * scale}px`;
+      el.style.left = pctX(x);
+      el.style.top = pctY(y);
+      el.style.width = pctX(shadow.size[0] * scale);
+      el.style.height = pctY(shadow.size[1] * scale);
       el.style.opacity = String(motion.opacity);
-      el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      el.style.transform = "";
     };
     apply();
     return motionRef.subscribe(apply);
@@ -245,13 +267,17 @@ function RoamingCatBody({
       if (!frame) return;
       const x = motion.worldX - sheet.anchor.x;
       const y = motion.worldY - sheet.anchor.y;
-      btn.style.width = `${fw}px`;
-      btn.style.height = `${fh}px`;
+      btn.style.left = pctX(x);
+      btn.style.top = pctY(y);
+      btn.style.width = pctX(fw);
+      btn.style.height = pctY(fh);
       btn.style.opacity = String(motion.opacity);
-      btn.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      btn.style.transform = "";
       btn.classList.toggle("is-sleeping", motion.anim === "sleep");
       btn.dataset.catAnim = motion.anim;
-      frameEl.style.backgroundPosition = `-${frame.x}px -${frame.y}px`;
+      const [sw, sh] = sheet.sheetSize;
+      frameEl.style.backgroundSize = `${(sw / fw) * 100}% ${(sh / fh) * 100}%`;
+      frameEl.style.backgroundPosition = `${sw === fw ? 0 : (frame.x / (sw - fw)) * 100}% ${sh === fh ? 0 : (frame.y / (sh - fh)) * 100}%`;
     };
     apply();
     return motionRef.subscribe(apply);
@@ -265,7 +291,7 @@ function RoamingCatBody({
       type="button"
       className={`lucky-sprite lucky-roam-cat ${view.sleeping ? "is-sleeping" : ""}`}
       aria-label="돌아다니는 고양이"
-      style={{ width: fw, height: fh, opacity: view.opacity, left: 0, top: 0 }}
+      style={{ width: pctX(fw), height: pctY(fh), opacity: view.opacity, left: 0, top: 0 }}
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => {
         event.stopPropagation();
@@ -276,10 +302,10 @@ function RoamingCatBody({
         ref={frameRef}
         className="lucky-roam-frame"
         style={{
-          width: fw,
-          height: fh,
+          width: "100%",
+          height: "100%",
           backgroundImage: `url(${catAsset(view.sheet.image)})`,
-          backgroundSize: `${sw}px ${sh}px`,
+          backgroundSize: `${(sw / fw) * 100}% ${(sh / fh) * 100}%`,
           backgroundRepeat: "no-repeat",
         }}
       />
@@ -312,6 +338,7 @@ export function RoomWorld({
   onItemPointerDown,
   onFloorPointerDown,
 }: RoomWorldProps) {
+  const fit = screenOf(mode).scale;
   const paintSkin = paintPreview ? paintSkinType(paintPreview.itemId) : null;
   const isPaintFloorCell = (col: number, row: number) => {
     if (!paintPreview || paintPreview.paintKind !== "floor" || !paintSkin) return false;
@@ -462,6 +489,7 @@ export function RoomWorld({
   return (
     <div
       className={`lucky-world ${painting ? "is-painting" : ""} ${mode === "view" ? "is-view" : ""}`}
+      style={{ ["--room-fit" as string]: fit }}
       onPointerDown={onFloorPointerDown}
     >
       <Layer src="world/base-bg.webp" />
@@ -480,7 +508,7 @@ export function RoomWorld({
                 src={roomAsset(floorTileSrc(skin, c, r))}
                 alt=""
                 draggable={false}
-                style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
+                style={worldBox(rect)}
               />
             );
           }),
@@ -501,7 +529,7 @@ export function RoomWorld({
                 src={roomAsset(wallStripSrc(skin, wall, index))}
                 alt=""
                 draggable={false}
-                style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
+                style={worldBox(rect)}
               />
             );
           }),
@@ -551,8 +579,8 @@ export function RoomWorld({
             id="room-suggest-target"
             className="lucky-suggest-anchor"
             style={{
-              left: suggestCentre.x,
-              top: suggestCentre.y,
+              left: pctX(suggestCentre.x),
+              top: pctY(suggestCentre.y),
             }}
           />
           <img
@@ -560,8 +588,8 @@ export function RoomWorld({
             src={roomAsset(suggestItem.tileImage ?? suggestItem.image ?? `tiles/${suggestItem.id}.png`)}
             alt=""
             style={{
-              left: suggestCentre.x,
-              top: suggestCentre.y,
+              left: pctX(suggestCentre.x),
+              top: pctY(suggestCentre.y),
             }}
             draggable={false}
           />
@@ -607,6 +635,7 @@ export function RoomWorld({
             placeFx={place.instanceId === placeFxId}
             previewGhost={isPreview}
             previewInvalid={isPreview && previewInvalid}
+            fit={fit}
             onSelect={(id) => onSelect(id, "floor")}
             onItemPointerDown={onItemPointerDown}
           />
@@ -626,12 +655,7 @@ export function RoomWorld({
                 src={roomAsset(shadow.src)}
                 alt=""
                 draggable={false}
-                style={{
-                  left: shadow.x,
-                  top: shadow.y,
-                  width: shadow.w,
-                  height: shadow.h,
-                }}
+                style={worldBox(shadow)}
               />
             );
           })
@@ -652,6 +676,7 @@ export function RoomWorld({
             thumbs={frameThumbs}
             previewGhost={isPreview}
             previewInvalid={isPreview && previewInvalid}
+            fit={fit}
             onSelect={(id) => onSelect(id, "wall")}
             onItemPointerDown={onItemPointerDown}
           />
@@ -685,6 +710,7 @@ export function RoomWorld({
             placeFx={place.instanceId === placeFxId}
             previewGhost={isPreview}
             previewInvalid={isPreview && previewInvalid}
+            fit={fit}
             onSelect={(id) => onSelect(id, "floor")}
             onItemPointerDown={onItemPointerDown}
           />
@@ -696,7 +722,7 @@ export function RoomWorld({
           className="lucky-world-layer lucky-lamp-glow"
           src={roomAsset("world/lamp-glow-additive.webp")}
           alt=""
-          style={{ transform: `translate(${glowShift.x}px, ${glowShift.y}px)` }}
+          style={{ transform: `translate(${(glowShift.x / WORLD_W) * 100}%, ${(glowShift.y / WORLD_H) * 100}%)` }}
           draggable={false}
         />
       ) : null}
@@ -726,6 +752,7 @@ function WallSprite({
   thumbs,
   previewGhost = false,
   previewInvalid = false,
+  fit,
   onSelect,
   onItemPointerDown,
 }: {
@@ -737,22 +764,21 @@ function WallSprite({
   thumbs: string[];
   previewGhost?: boolean;
   previewInvalid?: boolean;
+  fit: number;
   onSelect: (id: string) => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, id: string) => void;
 }) {
   if (!item) return null;
   const rect = wallSpriteRect(item, place);
   const frames = item.id === "cardframe" || item.id === "squareframe";
-  const liftY = previewGhost ? "translateY(-24px)" : lifted ? "translateY(-12px)" : undefined;
+  const liftWorld = previewGhost ? -24 : lifted ? -12 : 0;
+  const liftY = liftWorld ? `translateY(${liftWorld * fit}px)` : undefined;
   return (
     <button
       type="button"
       className={`lucky-sprite is-wall is-wall-${place.wall} ${selected ? "is-selected" : ""} ${lifted || previewGhost ? "is-lifted" : ""} ${previewGhost ? "is-preview-ghost" : ""} ${previewInvalid ? "is-preview-invalid" : ""} ${shaking ? "is-shake" : ""}`}
       style={{
-        left: rect.x,
-        top: rect.y,
-        width: rect.w,
-        height: rect.h,
+        ...worldBox(rect),
         transform: liftY,
       }}
       aria-label={item.nameKo}
