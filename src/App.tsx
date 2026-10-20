@@ -5,7 +5,7 @@ import { AchievementsSheet } from "./components/AchievementsSheet";
 import { AdIntro } from "./components/AdIntro";
 import { AdModal } from "./components/AdModal";
 import { NyangNotifyHost } from "./components/NyangNotifyHost";
-import { nyDismiss, nyNotify } from "./lib/nyangNotify";
+import { nyConfirm, nyDismiss, nyNotify } from "./lib/nyangNotify";
 import { MenuPanel } from "./components/MenuPanel";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import {
@@ -171,7 +171,9 @@ function notifyAdOffline() {
   });
 }
 
-const AD_INTRO_MS = 1500;
+function adRetryLabel(kind: AdSession["kind"]): string {
+  return kind === "long" ? "30초 광고 보고 다시 시도" : "짧은 광고 보고 다시 시도";
+}
 
 function pawAdDetail(config: OpsConfig): string {
   const base = config.economy.pawSources.rewardedAd.pawPerAd;
@@ -245,6 +247,9 @@ export default function App() {
   const adIntroTokenRef = useRef(0);
   /** True from the moment an intro is queued until the ad session is cleared. */
   const adFlowRef = useRef(false);
+  /** Dream-fallback sheet is open; keep the draw/paw reservation until the user chooses. */
+  const adFallbackPendingRef = useRef(false);
+  const adFallbackTokenRef = useRef(0);
   const drawLockRef = useRef(false);
   const [reservation, setReservation] = useState<DrawReservation | null>(null);
   const [revealReady, setRevealReady] = useState(false);
@@ -434,27 +439,21 @@ export default function App() {
     setAdIntro({
       token,
       session,
-      headline:
-        session.kind === "long" ? "잠시 후 30초 광고가 나와요" : "잠시 후 짧은 광고가 나와요",
+      headline: session.kind === "long" ? "30초 광고를 볼까요?" : "짧은 광고를 볼까요?",
       detail,
     });
   }, []);
 
-  useEffect(() => {
-    if (!adIntro) return;
-    const token = adIntro.token;
-    const session = adIntro.session;
-    const timer = window.setTimeout(() => {
-      if (adIntroTokenRef.current !== token) return;
-      adIntroTokenRef.current = token + 1;
-      setAdIntro(null);
-      setAd(session);
-    }, AD_INTRO_MS);
-    return () => window.clearTimeout(timer);
+  const confirmAdIntro = useCallback(() => {
+    const current = adIntro;
+    if (!current || adIntroTokenRef.current !== current.token) return;
+    adIntroTokenRef.current = current.token + 1;
+    setAdIntro(null);
+    setAd(current.session);
   }, [adIntro]);
 
   useEffect(() => {
-    if (!ad && !adIntro) adFlowRef.current = false;
+    if (!ad && !adIntro && !adFallbackPendingRef.current) adFlowRef.current = false;
   }, [ad, adIntro]);
 
   const cancelAdIntro = useCallback(async () => {
@@ -730,7 +729,7 @@ export default function App() {
           title: "뽑기를 시작하지 못했어요",
           sub: reserved.error ?? "잠시 후 다시 눌러 주세요",
           action: {
-            label: needsAd ? "광고 보고 다시 시도" : "다시 시도",
+            label: needsAd ? adRetryLabel(slot === "rateUp" ? "long" : "short") : "다시 시도",
             onClick: () => {
               void beginDraw(forceSlot);
             },
@@ -865,6 +864,7 @@ export default function App() {
       return;
     }
     // Ad completed → confirm draw + ad-draw 냥코인 in one server transaction.
+    const retryLabel = adRetryLabel(ad.kind);
     const confirmed = await confirmDrawAfterAd(ops, ad.drawId, { adCompleted: true });
     setAd(null);
     if ("error" in confirmed) {
@@ -873,7 +873,7 @@ export default function App() {
         kind: "error",
         title: "연결이 잠시 끊겼어요",
         sub: confirmed.error || "다시 시도해 주세요",
-        action: { label: "광고 보고 다시 시도", onClick: () => void beginDraw() },
+        action: { label: retryLabel, onClick: () => void beginDraw() },
       });
       return;
     }
@@ -900,35 +900,47 @@ export default function App() {
     setScreen({ name: "reveal" });
   }, [ad, ops, persistOps, setScreen]);
 
+  const abandonAd = useCallback(
+    async (purpose: AdSession["purpose"]) => {
+      if (!ops) {
+        setAd(null);
+        if (purpose === "attendanceDay7") {
+          attendanceDay7AdResolverRef.current?.("cancelled");
+          attendanceDay7AdResolverRef.current = null;
+        }
+        return;
+      }
+      if (purpose === "attendanceDay7") {
+        setAd(null);
+        setMenuOpen(true);
+        attendanceDay7AdResolverRef.current?.("cancelled");
+        attendanceDay7AdResolverRef.current = null;
+        return;
+      }
+      if (purpose === "draw") {
+        const next = await cancelDrawReservation(ops);
+        await persistOps(next);
+        setReservation(null);
+        nyNotify({
+          key: "ad-cancel-draw",
+          kind: "error",
+          title: "광고를 끝까지 보지 못했어요",
+          sub: "뽑기권은 그대로예요",
+        });
+      }
+      setAd(null);
+      if (purpose === "paw") setMenuOpen(true);
+    },
+    [ops, persistOps],
+  );
+
   const cancelAd = useCallback(async () => {
-    if (!ops) {
+    if (!ad) {
       setAd(null);
-      attendanceDay7AdResolverRef.current?.("cancelled");
-      attendanceDay7AdResolverRef.current = null;
       return;
     }
-    if (ad?.purpose === "attendanceDay7") {
-      setAd(null);
-      setMenuOpen(true);
-      attendanceDay7AdResolverRef.current?.("cancelled");
-      attendanceDay7AdResolverRef.current = null;
-      return;
-    }
-    if (ad?.purpose === "draw") {
-      const next = await cancelDrawReservation(ops);
-      await persistOps(next);
-      setReservation(null);
-      nyNotify({
-        key: "ad-cancel-draw",
-        kind: "error",
-        title: "광고를 끝까지 보지 못했어요",
-        sub: "뽑기권은 그대로예요",
-      });
-    }
-    setAd(null);
-    // Paw ads start with the menu left open; restore it if anything closed it.
-    if (ad?.purpose === "paw") setMenuOpen(true);
-  }, [ad, ops, persistOps]);
+    await abandonAd(ad.purpose);
+  }, [ad, abandonAd]);
 
   const runAttendanceDay7Ad = useCallback((): Promise<AttendanceDay7AdResult> => {
     return new Promise((resolve) => {
@@ -956,8 +968,10 @@ export default function App() {
 
   const completeAdRef = useRef(completeAd);
   const cancelAdRef = useRef(cancelAd);
+  const abandonAdRef = useRef(abandonAd);
   completeAdRef.current = completeAd;
   cancelAdRef.current = cancelAd;
+  abandonAdRef.current = abandonAd;
 
   const releaseOfflineAdRef = useRef<(purpose: AdSession["purpose"]) => void>(() => undefined);
   releaseOfflineAdRef.current = (purpose) => {
@@ -980,7 +994,12 @@ export default function App() {
   /** Play console ad groups in Toss. Mock AdModal only after two online load misses. */
   useEffect(() => {
     if (!ad || ad.presentation !== "sdk") return;
-    const snap = { kind: ad.kind, purpose: ad.purpose, drawId: ad.drawId };
+    const snap = {
+      kind: ad.kind,
+      purpose: ad.purpose,
+      drawId: ad.drawId,
+      requestId: ad.requestId,
+    };
     const groupId = adGroupIdForKind(snap.kind, config?.economy.ads);
     let active = true;
     AudioManager.onAdOpen();
@@ -1016,13 +1035,36 @@ export default function App() {
         setAd(null);
         return;
       }
-      setAd((prev) => {
-        if (!prev || prev.presentation !== "sdk") return prev;
-        if (prev.kind !== snap.kind || prev.purpose !== snap.purpose || prev.drawId !== snap.drawId) {
-          return prev;
+      // Two online load misses. Ask before opening the dream fallback screen.
+      setAd(null);
+      adFallbackPendingRef.current = true;
+      adFlowRef.current = true;
+      const token = adFallbackTokenRef.current + 1;
+      adFallbackTokenRef.current = token;
+      void (async () => {
+        const ok = await nyConfirm({
+          key: "ad-fallback",
+          title: "광고를 불러오지 못했어요",
+          body: "대신 짧은 안내 화면을 보고 보상을 받을 수 있어요",
+          confirmLabel: "안내 화면 보기",
+          cancelLabel: "취소",
+        });
+        if (adFallbackTokenRef.current !== token) return;
+        adFallbackPendingRef.current = false;
+        if (!ok) {
+          adFlowRef.current = false;
+          await abandonAdRef.current(snap.purpose);
+          return;
         }
-        return { ...prev, presentation: "mock" };
-      });
+        adFlowRef.current = true;
+        setAd({
+          kind: snap.kind,
+          purpose: snap.purpose,
+          drawId: snap.drawId,
+          requestId: snap.requestId,
+          presentation: "mock",
+        });
+      })();
     });
     return () => {
       active = false;
@@ -1724,6 +1766,7 @@ export default function App() {
         open={adIntro !== null}
         headline={adIntro?.headline ?? ""}
         detail={adIntro?.detail ?? ""}
+        onConfirm={confirmAdIntro}
         onCancel={() => void cancelAdIntro()}
       />
 

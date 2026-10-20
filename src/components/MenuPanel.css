@@ -485,7 +485,7 @@ button.menu-dim:focus-visible {
 .menu-row.is-points {
   grid-template-columns: 24px minmax(0, 1fr) 16px;
   align-items: center;
-  max-height: 64px;
+  max-height: none;
   min-height: 48px;
   padding: 6px 0;
   box-sizing: border-box;
@@ -526,13 +526,14 @@ button.menu-dim:focus-visible {
 .menu-points-sub {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 4px;
   min-width: 0;
   overflow: visible;
   font-size: 12px;
   line-height: 16px;
   color: rgba(243, 233, 215, 0.62);
-  white-space: nowrap;
+  white-space: normal;
 }
 
 /* "오늘은 다 받았어요" is longer than the count. Keep it on one line, clear of the chevron. */

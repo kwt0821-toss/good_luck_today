@@ -150,7 +150,7 @@ export function HomeScreen({
   };
 
   const handleDrawTap = () => {
-    if (drawsDone) {
+    if (drawsDone && nextDrawKind !== "normal" && nextDrawKind !== "rateUpAd") {
       showNotice("내일 다시 만나요");
       return;
     }
@@ -225,14 +225,12 @@ export function HomeScreen({
   }, [showRateUpTip, rateUpTipKey, rateUpIsAd]);
   const againLabel = drawAgainLabel(nextDrawKind);
   const againUsesAd = nextDrawKind === "normal" || nextDrawKind === "rateUpAd";
-  const drawHint =
+  const adCta =
     nextDrawKind === "normal"
-      ? "(짧은 광고가 나온 뒤 카드를 뽑아요)"
+      ? "짧은 광고 보고 카드 뽑기"
       : nextDrawKind === "rateUpAd"
-        ? `(${rateUpAdSeconds}초 광고가 나온 뒤 확률업으로 뽑아요)`
-        : nextDrawKind === "rateUpTicket"
-          ? "(이용권으로 확률업 뽑기를 해요)"
-          : null;
+        ? `${rateUpAdSeconds}초 광고 보고 확률업 뽑기`
+        : null;
 
   const countCopy = drawsDone
     ? `내일 00:00에 다시 채워져요 · ${countdown}`
@@ -463,7 +461,9 @@ export function HomeScreen({
               type="button"
               id="stage-cat"
               className="main-cat-hit"
-              aria-label={drawsDone ? "오늘은 이미 뽑았어요" : "고양이 톡해서 오늘의 카드 받기"}
+              aria-label={
+                adCta ? "광고 보고 카드 뽑기" : drawsDone ? "오늘은 이미 뽑았어요" : "고양이 톡해서 오늘의 카드 받기"
+              }
               onClick={handleDrawTap}
             />
           </div>
@@ -471,7 +471,16 @@ export function HomeScreen({
       </section>
 
       <div className="main-actions">
-        {drawsDone ? (
+        {adCta ? (
+          <button
+            type="button"
+            className={`main-draw-pill main-cta-adbtn ${lowRemaining && nudge ? "is-nudge" : ""}`}
+            onClick={handleDrawTap}
+          >
+            <span className="main-draw-pill-ad">광고</span>
+            {adCta}
+          </button>
+        ) : drawsDone ? (
           <p className="main-cta main-cta-done">오늘 카드는 다 뽑았어요, 잘 자요</p>
         ) : lowRemaining ? (
           <button
@@ -487,7 +496,6 @@ export function HomeScreen({
           </button>
         ) : (
           <div className="main-cta-block">
-            {drawHint ? <p className="main-cta-ad">{drawHint}</p> : null}
             <p className="main-cta">
               <span className="main-cta-accent">톡,</span> 깨워서 오늘의 카드 받기
             </p>

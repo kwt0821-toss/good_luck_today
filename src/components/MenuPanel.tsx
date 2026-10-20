@@ -875,7 +875,7 @@ export function MenuPanel({
                             ) : null}
                             <span className="menu-points-bit">
                               <img src={menuAsset("icon-paw-mini.svg")} alt="" />
-                              젤리 +{model.pawAds.pawGrant}
+                              짧은 광고 보고 젤리 +{model.pawAds.pawGrant}
                             </span>
                             <span className="menu-points-sep" aria-hidden="true">
                               ·
@@ -1655,9 +1655,14 @@ export function MenuPanel({
                         }
                         onClick={() => void claimDay7WithAd()}
                       >
-                        {day7AdExhausted
-                          ? "광고 불가 · 그냥 받기 이용"
-                          : `30초 광고 보고 2배 + 뽑기권`}
+                        {day7AdExhausted ? (
+                          "광고 불가 · 그냥 받기 이용"
+                        ) : (
+                          <span className="ticket-shop-draw-cta">
+                            <span className="ticket-shop-ad-badge">광고</span>
+                            30초 광고 보고 2배 + 뽑기권
+                          </span>
+                        )}
                       </button>
                       {ticketsFull ? (
                         <p className="att-day7-ticket-full">

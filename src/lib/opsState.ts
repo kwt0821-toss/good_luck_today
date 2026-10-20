@@ -163,6 +163,6 @@ export function nextDrawKind(state: OpsState, config: OpsConfig): NextDrawKind {
 export function drawAgainLabel(kind: NextDrawKind): string {
   if (kind === "rateUpAd") return "30초 광고 보고 확률업 뽑기";
   if (kind === "rateUpTicket") return "이용권으로 한 장 더";
-  if (kind === "normal") return "광고 보고 한 장 더";
+  if (kind === "normal") return "짧은 광고 보고 카드 뽑기";
   return "한 장 더 뽑기";
 }
