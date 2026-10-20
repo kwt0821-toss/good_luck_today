@@ -36,20 +36,28 @@
   background: transparent;
 }
 
+.tut-bubble-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 22px;
+  margin-bottom: 6px;
+}
+
 .tut-skip {
-  /* top-right below app bar — clears room edit “완료” and native nav */
-  position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 52px);
-  right: 14px;
   pointer-events: auto;
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(243, 233, 215, 0.35);
-  background: rgba(28, 24, 48, 0.9);
-  color: #f3e9d7;
+  flex: 0 0 auto;
+  height: 28px;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: rgba(243, 233, 215, 0.62);
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .tut-bubble.is-dock-top {
@@ -72,11 +80,18 @@
 }
 
 .tut-step-label {
-  margin: 0 0 8px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: rgba(255, 196, 138, 0.9);
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: rgba(255, 196, 138, 0.95);
+}
+
+.tut-tap-hint {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffd54a;
 }
 
 .tut-hole.is-activate {
@@ -214,38 +229,92 @@
 }
 
 .tut-actions {
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.tut-actions.has-skip {
-  justify-content: space-between;
-}
-
-.tut-skip-inline {
-  height: 36px;
-  padding: 0 4px;
-  border: 0;
-  background: transparent;
-  color: rgba(243, 233, 215, 0.62);
-  font: inherit;
-  font-size: 13px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  margin-top: 14px;
 }
 
 .tut-next {
-  height: 36px;
-  padding: 0 14px;
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
   border: 0;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #ffd3a0, #ffb36b);
-  color: #2a1e10;
+  border-radius: 14px;
+  background: #ffd54a;
+  color: #2a1a08;
   font: inherit;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.tut-skip-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  pointer-events: none;
+}
+
+.tut-skip-dim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(10, 8, 20, 0.55);
+  pointer-events: auto;
+}
+
+.tut-skip-card {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  pointer-events: auto;
+  padding: 22px 18px 16px;
+  border-radius: 18px;
+  background: #1c1830;
+  border: 1px solid rgba(243, 233, 215, 0.22);
+  color: #f3e9d7;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+}
+
+.tut-skip-card h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.tut-skip-card p {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(243, 233, 215, 0.72);
+}
+
+.tut-skip-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.tut-skip-go,
+.tut-skip-stay {
+  height: 48px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tut-skip-go {
+  flex: 0 0 108px;
+  border: 1px solid rgba(243, 233, 215, 0.28);
+  background: transparent;
+  color: rgba(243, 233, 215, 0.8);
+}
+
+.tut-skip-stay {
+  flex: 1;
+  border: 0;
+  background: #ffd54a;
+  color: #2a1a08;
 }
 
 .tut-finger {

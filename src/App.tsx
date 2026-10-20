@@ -95,6 +95,7 @@ import {
   roomPreviewCoachMark,
   step5CoachMark,
   tutorialStepLabel,
+  withTutorialProgress,
   type RewardsTutPhase,
 } from "./lib/tutorialFlow";
 import type { DexTutorialPhase } from "./screens/DexScreen";
@@ -532,16 +533,18 @@ export default function App() {
     if (tutorialStep.step === 2) {
       if (screen.name === "reveal") {
         if (revealTutPhase === "ncoin-intro" && isNcoinIntroThen(tutorialStep.then)) {
-          return ncoinIntroMark(tutorialStep.then);
+          return withTutorialProgress(ncoinIntroMark(tutorialStep.then));
         }
         if (revealTutPhase === "to-dex") {
           if (isNcoinIntroThen(tutorialStep.then)) {
             const next = ncoinNextMark(tutorialStep.then);
-            if (next) return next;
+            if (next) return withTutorialProgress(next);
           }
-          return revealDexButtonMark(
-            tutorialStepLabel(tutorialStep, "STEP 2"),
-            tutorialStep.copy,
+          return withTutorialProgress(
+            revealDexButtonMark(
+              tutorialStepLabel(tutorialStep, "STEP 2"),
+              tutorialStep.copy,
+            ),
           );
         }
         // Card is still turning — wait for the toast before the shade.
@@ -559,32 +562,32 @@ export default function App() {
     if (tutorialStep.step === 3) {
       if (screen.name !== "collection") return null;
       if (dexTutPhase === "scroll" || dexTutPhase === "toast" || dexTutPhase == null) return null;
-      if (dexTutPhase === "slot") return dexSlotCoachMark(tutorialStep, vars);
-      if (dexTutPhase === "claim") return dexClaimCoachMark(tutorialStep, vars);
-      if (dexTutPhase === "ncoin-after") return dexAfterClaimMark(tutorialStep);
+      if (dexTutPhase === "slot") return withTutorialProgress(dexSlotCoachMark(tutorialStep, vars));
+      if (dexTutPhase === "claim") return withTutorialProgress(dexClaimCoachMark(tutorialStep, vars));
+      if (dexTutPhase === "ncoin-after") return withTutorialProgress(dexAfterClaimMark(tutorialStep));
       return null;
     }
 
     // Step 4: pick (4-1) → preview (4-2) → done (4-3). Wait until RoomScreen finishes loading.
     if (tutorialStep.step === 4) {
       if (screen.name !== "room" || !roomScreenReady) return null;
-      if (roomTutPhase === "pick" || roomTutPhase == null) return roomPickCoachMark(tutorialStep);
-      if (roomTutPhase === "preview" || roomTutPhase === "drag") return roomPreviewCoachMark(tutorialStep);
-      if (roomTutPhase === "done") return roomDoneCoachMark(tutorialStep);
-      if (roomTutPhase === "points") return roomPointsCoachMark(tutorialStep);
+      if (roomTutPhase === "pick" || roomTutPhase == null) return withTutorialProgress(roomPickCoachMark(tutorialStep));
+      if (roomTutPhase === "preview" || roomTutPhase === "drag") return withTutorialProgress(roomPreviewCoachMark(tutorialStep));
+      if (roomTutPhase === "done") return withTutorialProgress(roomDoneCoachMark(tutorialStep));
+      if (roomTutPhase === "points") return withTutorialProgress(roomPointsCoachMark(tutorialStep));
       return null;
     }
 
     // Step 5: menu (5-1) → rewards row (5-2) → withdraw sheet (5-3).
     if (tutorialStep.step === 5) {
-      return step5CoachMark(tutorialStep, rewardsTutPhase ?? "menu", ops, dailyLimit);
+      return withTutorialProgress(step5CoachMark(tutorialStep, rewardsTutPhase ?? "menu", ops, dailyLimit));
     }
 
     if (stepThenActive && tutorialStep.then && !isNcoinIntroThen(tutorialStep.then)) {
       return mainStepMark(tutorialStep, "then", vars);
     }
 
-    return mainStepMark(tutorialStep, "base", vars);
+    return withTutorialProgress(mainStepMark(tutorialStep, "base", vars));
   }, [
     ops,
     config,

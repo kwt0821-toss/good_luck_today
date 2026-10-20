@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
+import { useBackHandler } from "../hooks/useBackHandler";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import type { CoachMark, FeatureIntro } from "../lib/opsTypes";
 import "./TutorialCoach.css";
 
-const SKIP_TOP_ZONE_PT = 160;
 const BUBBLE_GAP = 16;
 const PAD_TOP = 16;
 const PAD_BOTTOM = 20;
@@ -43,15 +43,6 @@ type TutorialCoachProps = {
   onSkip: () => void;
   onAdvance: () => void;
 };
-
-function rectsOverlap(a: DOMRect, b: { left: number; top: number; width: number; height: number }) {
-  return !(
-    a.right < b.left ||
-    a.left > b.left + b.width ||
-    a.bottom < b.top ||
-    a.top > b.top + b.height
-  );
-}
 
 /** Fixed containing block for tutor layer (#root when it has transform). */
 function fixedFrameRect(): DOMRect {
@@ -224,45 +215,13 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
   const frameW = frame.width || window.innerWidth;
   const frameH = frame.height || window.innerHeight;
 
-  const besideSkip = Boolean(mark?.besideSkip);
-  const [skipAnchor, setSkipAnchor] = useState<{ top: number; rightGap: number } | null>(null);
-  useLayoutEffect(() => {
-    if (!besideSkip) {
-      setSkipAnchor(null);
-      return;
-    }
-    const place = () => {
-      const el = document.getElementById("tut-skip");
-      const frameNow = fixedFrameRect();
-      if (!el) {
-        setSkipAnchor({ top: 52, rightGap: 120 });
-        return;
-      }
-      const box = el.getBoundingClientRect();
-      setSkipAnchor({
-        top: Math.max(8, box.top - frameNow.top),
-        rightGap: Math.max(96, frameNow.right - box.left + 10),
-      });
-    };
-    place();
-    window.addEventListener("resize", place);
-    return () => window.removeEventListener("resize", place);
-  }, [besideSkip, mark?.id]);
-
-  const skipInline = useMemo(() => {
-    if (besideSkip || !rect) return false;
-    // Skip zone is in viewport / frame-local top.
-    const targetTopInFrame = rect.top - frame.top;
-    if (targetTopInFrame < SKIP_TOP_ZONE_PT) return true;
-    const skipApprox = {
-      left: frame.width - 110,
-      top: 52,
-      width: 96,
-      height: 40,
-    };
-    const local = new DOMRect(rect.left - frame.left, rect.top - frame.top, rect.width, rect.height);
-    return rectsOverlap(local, skipApprox);
-  }, [besideSkip, rect, frame]);
+  const [skipAsk, setSkipAsk] = useState(false);
+  useEffect(() => {
+    setSkipAsk(false);
+  }, [mark?.id]);
+  // Toss back opens the skip confirm. A second press, while the sheet is open, stays in the tutorial.
+  useBackHandler(Boolean(mark) && !skipAsk, () => setSkipAsk(true), 40);
+  useBackHandler(Boolean(mark) && skipAsk, () => setSkipAsk(false), 60);
 
   const bubbleLayout = useMemo(() => {
     if (!mark) return { top: PAD_TOP, above: false, dockTop: false };
@@ -316,9 +275,12 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
 
   if (!mark) return null;
 
-  // CTA only when provided, or for tap-to-advance marks (not ack/activate gates).
-  const showCta = mark.cta != null || (!mark.ackOnly && !mark.activateTarget);
+  // A highlighted control (cat, dex, coin, check) advances by itself. Other bubbles get [다음].
+  const tapGate = Boolean((mark.passThrough || mark.activateTarget) && mark.cta == null);
+  const showCta = !tapGate && (mark.cta != null || (!mark.ackOnly && !mark.activateTarget));
   const ctaLabel = mark.cta ?? "다음";
+  const spoken = `${mark.title ?? ""} ${mark.copy ?? ""} ${mark.sub ?? ""} ${(mark.lines ?? []).map((line) => line.text).join(" ")}`;
+  const tapHint = tapGate && !/누르/.test(spoken) ? "여기를 눌러 보세요" : null;
   const showFinger =
     mark.showFinger === true ||
     (mark.showFinger !== false && !mark.ackOnly && !mark.lines?.length);
@@ -329,7 +291,8 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
       mark.sub ||
       mark.lines?.length ||
       showCta ||
-      (skipInline && !mark.hideSkip),
+      tapHint ||
+      !mark.hideSkip,
   );
 
   const activateOrAdvance = () => {
@@ -403,30 +366,26 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
       </div>
       {/* Chrome above elevated panels so room-drawer (z=130) cannot cover copy/skip. */}
       <div className="tut-chrome" role="dialog" aria-modal="true" aria-label="튜토리얼">
-        {!skipInline && !mark.hideSkip ? (
-          <button type="button" className="tut-skip" id="tut-skip" onClick={onSkip}>
-            건너뛰기
-          </button>
-        ) : null}
         {hasBubbleContent ? (
           <div
             ref={setBubbleEl}
-            className={`tut-bubble ${bubbleLayout.dockTop ? "is-dock-top" : ""} ${besideSkip ? "is-beside-skip" : bubbleLayout.above ? "is-above" : "is-below"} ${!besideSkip && !hasHole && !bubbleLayout.dockTop ? "is-centered" : ""}`}
+            className={`tut-bubble ${bubbleLayout.dockTop ? "is-dock-top" : ""} ${bubbleLayout.above ? "is-above" : "is-below"} ${!hasHole && !bubbleLayout.dockTop ? "is-centered" : ""}`}
             style={
               bubbleLayout.dockTop
-                ? { top: bubbleLayout.top, left: 16, right: 112 }
-                : besideSkip
-                ? {
-                    top: skipAnchor?.top ?? "calc(env(safe-area-inset-top, 0px) + 52px)",
-                    left: 16,
-                    right: skipAnchor?.rightGap ?? 120,
-                  }
+                ? { top: bubbleLayout.top, left: 16, right: 16 }
                 : hasHole
                   ? { top: bubbleLayout.top, left: 24, right: 24 }
                   : { top: "40%", left: 24, right: 24, transform: "translateY(-50%)" }
             }
           >
-            {mark.stepLabel ? <p className="tut-step-label">{mark.stepLabel}</p> : null}
+            <div className="tut-bubble-head">
+              {mark.stepLabel ? <p className="tut-step-label">{mark.stepLabel}</p> : <span />}
+              {mark.hideSkip ? null : (
+                <button type="button" className="tut-skip" id="tut-skip" onClick={() => setSkipAsk(true)}>
+                  건너뛰기
+                </button>
+              )}
+            </div>
             {mark.title ? (
               <p className="tut-title">
                 <TutorialRichText text={mark.title} />
@@ -476,20 +435,12 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
                 })}
               </ul>
             ) : null}
-            {showCta || skipInline ? (
-              <div className={`tut-actions ${skipInline ? "has-skip" : ""}`}>
-                {skipInline ? (
-                  <button type="button" className="tut-skip-inline" id="tut-skip" onClick={onSkip}>
-                    건너뛰기
-                  </button>
-                ) : (
-                  <span />
-                )}
-                {showCta ? (
-                  <button type="button" className="tut-next" onClick={onAdvance}>
-                    {ctaLabel}
-                  </button>
-                ) : null}
+            {tapHint ? <p className="tut-tap-hint">{tapHint}</p> : null}
+            {showCta ? (
+              <div className="tut-actions">
+                <button type="button" className="tut-next" onClick={onAdvance}>
+                  {ctaLabel}
+                </button>
               </div>
             ) : null}
           </div>
@@ -510,6 +461,23 @@ export function TutorialCoach({ mark, onSkip, onAdvance }: TutorialCoachProps) {
             👆
           </div>
         ) : null}
+        {skipAsk ? (
+          <div className="tut-skip-sheet" role="dialog" aria-modal="true" aria-labelledby="tut-skip-title">
+            <button type="button" className="tut-skip-dim" aria-label="계속 보기" onClick={() => setSkipAsk(false)} />
+            <div className="tut-skip-card">
+              <h2 id="tut-skip-title">튜토리얼을 건너뛸까요?</h2>
+              <p>건너뛰어도 첫 카드 뽑기는 무료로 남아요.</p>
+              <div className="tut-skip-actions">
+                <button type="button" className="tut-skip-go" onClick={onSkip}>
+                  건너뛰기
+                </button>
+                <button type="button" className="tut-skip-stay" onClick={() => setSkipAsk(false)}>
+                  계속 보기
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </>
   );
@@ -521,6 +489,7 @@ function estimateBubbleHeight(mark: CoachMark) {
   if (mark.copy) h += 28 * Math.max(1, mark.copy.split("\n").length);
   if (mark.sub) h += 22;
   if (mark.lines?.length) h += mark.lines.length * 28 + 12;
+  if (mark.cta || mark.passThrough || mark.activateTarget) h += 64;
   return h;
 }
 

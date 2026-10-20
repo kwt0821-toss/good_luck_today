@@ -11,6 +11,28 @@ import type {
   TutorialSubstep,
 } from "./opsTypes";
 
+/** Visible coach beats, in play order. Labels stay contiguous (1/11 … 11/11). */
+export const TUTORIAL_PROGRESS: Record<string, string> = {
+  "step-1": "1/11",
+  "step-2-to-dex": "2/11",
+  "step-3-1": "3/11",
+  "step-3-2": "4/11",
+  "ncoin-intro": "5/11",
+  "ncoin-first": "5/11",
+  "step-4-1": "6/11",
+  "step-4-2": "7/11",
+  "step-4-3": "8/11",
+  "step-5-1": "9/11",
+  "step-5-2": "10/11",
+  "step-5-3": "11/11",
+};
+
+export function withTutorialProgress(mark: CoachMark | null): CoachMark | null {
+  if (!mark) return null;
+  const stepLabel = TUTORIAL_PROGRESS[mark.id];
+  return stepLabel ? { ...mark, stepLabel } : mark;
+}
+
 export function isNcoinIntroThen(then: TutorialStepThen | undefined): then is NcoinIntroThen {
   return Boolean(then && "id" in then && then.id === "ncoin-intro" && "lines" in then);
 }
@@ -174,10 +196,6 @@ export function dexAfterClaimMark(step: TutorialStep): CoachMark | null {
   const raw = step.substeps?.find((entry) => entry.id === "3-3" || entry.id === "ncoin-intro");
   const legacy = dexSubstep(step, "3-2")?.afterClaim;
   if (!raw && !legacy) return null;
-  const button =
-    raw && typeof (raw as unknown as { button?: unknown }).button === "string"
-      ? (raw as unknown as { button: string }).button
-      : undefined;
   const title = raw?.title ?? raw?.copy ?? legacy?.title ?? legacy?.copy ?? "냥코인을 처음 받았어요!";
   const lines = raw?.lines?.map((line) => {
     const style =
@@ -198,7 +216,7 @@ export function dexAfterClaimMark(step: TutorialStep): CoachMark | null {
     target: "",
     title,
     lines,
-    cta: raw?.cta ?? legacy?.cta ?? button ?? "알겠어요",
+    cta: "다음",
     ackOnly: true,
     showFinger: false,
     stepLabel: formatStepLabel(subLabel, "STEP 3-3"),
@@ -244,8 +262,8 @@ export function roomDragCoachMark(step: TutorialStep): CoachMark | null {
     ackOnly: true,
     passThrough: true,
     stepLabel: substepLabel(sub, "STEP 4-2"),
-    // Same row as 건너뛰기, to its left — the stage bubble covers the cushion and ✓.
-    besideSkip: true,
+    // Keep the bubble in the top band so it does not cover the preview or ✓.
+    dock: "top",
     // Small bright rect: edit toolbar + placeable item outline (not the drawer).
     alsoHighlight: [".lucky-placement-hud", ".lucky-placement-toolbar"],
   };
@@ -263,10 +281,9 @@ export function roomDoneCoachMark(step: TutorialStep): CoachMark | null {
     id: "step-4-3",
     target: "",
     copy: sub.copy ?? "잘했어요! 다른 아이템도 자유롭게 꾸며 보세요",
-    cta: sub.cta ?? "완료",
+    cta: "다음",
     ackOnly: true,
     showFinger: false,
-    hideSkip: true,
     dim: false,
     stepLabel: substepLabel(sub, "STEP 4-3"),
   };
@@ -341,7 +358,7 @@ export function step5CoachMark(
     target: resolveTutorialTarget(sub.target || "#withdraw-picker", {}, sub.fallbackTarget),
     copy: (sub.copy ?? "냥코인 10개부터 토스 포인트 지급을 받을 수 있어요").split("\n")[0],
     sub: lowHint ? `${footnote}\n${lowHint}` : footnote,
-    cta: sub.cta ?? "알겠어요",
+    cta: "시작하기",
     ackOnly: true,
     showFinger: false,
     stepLabel: substepLabel(sub, "STEP 5-3"),
@@ -436,6 +453,7 @@ export function mainStepMark(
       stepLabel: tutorialStepLabel(step, `STEP ${step.step}`),
     };
   }
+  const tapCat = step.step === 1 && step.action === "tap";
   return {
     id: `step-${step.step}`,
     target: resolveTutorialTarget(step.target, vars),
@@ -443,6 +461,8 @@ export function mainStepMark(
     sub: step.sub,
     showFinger: true,
     stepLabel: tutorialStepLabel(step, `STEP ${step.step}`),
+    // Step 1 advances only when the cat itself is tapped (free draw, no ad).
+    ...(tapCat ? { ackOnly: true, passThrough: true } : {}),
   };
 }
 
