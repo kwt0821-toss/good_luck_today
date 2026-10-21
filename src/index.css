@@ -52,6 +52,15 @@ a:focus-visible,
     outline: 2px solid rgba(255, 196, 138, 0.65);
     outline-offset: 2px;
   }
+
+  button.lucky-roam-cat:focus,
+  button.lucky-roam-cat:focus-visible,
+  button.lucky-roam-cat:active {
+    outline: none;
+    outline-offset: 0;
+    box-shadow: none;
+    border: 0;
+  }
 }
 
 button {

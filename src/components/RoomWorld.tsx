@@ -1,8 +1,8 @@
-import { useEffect, useRef, type CSSProperties, type PointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 
 import { roomAsset } from "../lib/roomCatalog";
 import { AudioManager } from "../audio/AudioManager";
-import { catAsset, catDepthKey, furnitureDepthKey } from "../lib/roomCat";
+import { DEFAULT_CAT_BREED_ID, catAsset, catDepthKey, furnitureDepthKey } from "../lib/roomCat";
 import {
   WALL_BANDS,
   WALL_SLOTS,
@@ -44,12 +44,12 @@ import type {
   SpriteRect,
   WallPlacement,
 } from "../lib/roomTypes";
-import { useRoomCat, type CatMotionRef, type RoomCatView } from "../lib/useRoomCat";
+import { useRoomCat, type CatMotionRef, type CatSpot, type CatSpotsRef, type RoomCatView } from "../lib/useRoomCat";
 
 type RoomWorldProps = {
   mode: RoomMode;
   roomId: string;
-  roamingCatId: string | null;
+  roamingCatIds: string[];
   roamingActive: boolean;
   itemsById: Map<string, RoomItem>;
   layout: RoomLayoutState;
@@ -305,6 +305,7 @@ function RoamingCatBody({
   const [fw, fh] = view.sheet.frameSize;
   const [sw, sh] = view.sheet.sheetSize;
   const onPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
     event.stopPropagation();
     if (event.button !== 0) return;
     downRef.current = { x: event.clientX, y: event.clientY, t: performance.now() };
@@ -324,7 +325,9 @@ function RoamingCatBody({
       ref={btnRef}
       type="button"
       className={`lucky-sprite lucky-roam-cat ${view.sleeping ? "is-sleeping" : ""}`}
+      tabIndex={-1}
       aria-label="돌아다니는 고양이"
+      data-cat-id={view.breedId}
       data-happy-frames={view.happyFrames >= 2 ? "multi" : "1"}
       style={{ width: pctX(fw), height: pctY(fh), opacity: view.opacity, left: 0, top: 0 }}
       onPointerDown={onPointerDown}
@@ -353,10 +356,66 @@ function RoamingCatBody({
   );
 }
 
+type PublishedCat = {
+  catId: string;
+  view: RoomCatView;
+  motionRef: CatMotionRef;
+  tap: () => void;
+};
+
+function RoomCatAgent({
+  catId,
+  slot,
+  spotsRef,
+  roomId,
+  floor,
+  itemsById,
+  mode,
+  active,
+  reducedTapMotion,
+  onPublish,
+}: {
+  catId: string;
+  slot: number;
+  spotsRef: CatSpotsRef;
+  roomId: string;
+  floor: RoomLayoutState["floor"];
+  itemsById: Map<string, RoomItem>;
+  mode: RoomMode;
+  active: boolean;
+  reducedTapMotion: boolean;
+  onPublish: (catId: string, next: PublishedCat | null) => void;
+}) {
+  const { view, motionRef, tap } = useRoomCat({
+    roomId,
+    breedId: catId,
+    floor,
+    itemsById,
+    mode,
+    active,
+    reducedMotion: false,
+    reducedTapMotion,
+    spotsRef,
+    slot,
+  });
+  const tapRef = useRef(tap);
+  tapRef.current = tap;
+  const stableTap = useCallback(() => {
+    tapRef.current();
+  }, []);
+  useEffect(() => {
+    onPublish(catId, { catId, view, motionRef, tap: stableTap });
+  }, [catId, view, motionRef, stableTap, onPublish]);
+  useEffect(() => {
+    return () => onPublish(catId, null);
+  }, [catId, onPublish]);
+  return null;
+}
+
 export function RoomWorld({
   mode,
   roomId,
-  roamingCatId,
+  roamingCatIds,
   roamingActive,
   itemsById,
   layout,
@@ -396,21 +455,25 @@ export function RoomWorld({
   };
   // Roaming is the room's main delight — keep walking even when the OS asks to
   // reduce motion (CSS breathing/float still respect prefers-reduced-motion).
-  const { view: catView, motionRef: catMotionRef, tap: tapCat } = useRoomCat({
-    roomId,
-    breedId: roamingCatId,
-    floor: layout.floor,
-    itemsById,
-    mode,
-    active: roamingActive,
-    reducedMotion: false,
-    reducedTapMotion: reduceMotion,
-  });
-  const onCatTap = () => {
-    // Manual tap only — never auto-play meows.
-    if (roamingCatId) AudioManager.playSfx("meow", { catId: roamingCatId });
-    tapCat();
-  };
+  const catIds = [...new Set(roamingCatIds.filter(Boolean))].slice(0, 3);
+  const roomCatIds = catIds.length ? catIds : [DEFAULT_CAT_BREED_ID];
+  const spotsRef = useRef<Map<string, CatSpot>>(new Map());
+  const [publishedCats, setPublishedCats] = useState<Record<string, PublishedCat>>({});
+  const onPublishCat = useCallback((catId: string, next: PublishedCat | null) => {
+    setPublishedCats((prev) => {
+      if (!next) {
+        if (!(catId in prev)) return prev;
+        const copy = { ...prev };
+        delete copy[catId];
+        return copy;
+      }
+      const current = prev[catId];
+      if (current && current.view === next.view && current.motionRef === next.motionRef && current.tap === next.tap) {
+        return prev;
+      }
+      return { ...prev, [catId]: next };
+    });
+  }, []);
   const selected = [...layout.floor, ...layout.walls].find((item) => item.instanceId === selectedId);
   const selectedItem = selected ? itemsById.get(selected.id) : undefined;
   const used = occupancy(layout.floor, itemsById, dragging?.instanceId ?? selectedId ?? undefined);
@@ -515,15 +578,17 @@ export function RoomWorld({
 
   type DrawEntry =
     | { kind: "furniture"; place: FloorPlacement; front: number; bias: number }
-    | { kind: "cat"; front: number; bias: number };
+    | { kind: "cat"; catId: string; front: number; bias: number };
   const drawList: DrawEntry[] = furnitureDrawn.map((place) => {
     const item = itemsById.get(place.id);
     const depth = item ? furnitureDepthKey(place, item) : { front: 0, bias: 0 };
     return { kind: "furniture" as const, place, front: depth.front, bias: depth.bias };
   });
-  if (catView.ready) {
-    const depth = catDepthKey(catView.depthCol, catView.depthRow);
-    drawList.push({ kind: "cat", front: depth.front, bias: depth.bias });
+  for (const catId of roomCatIds) {
+    const published = publishedCats[catId];
+    if (!published?.view.ready) continue;
+    const depth = catDepthKey(published.view.depthCol, published.view.depthRow);
+    drawList.push({ kind: "cat", catId, front: depth.front, bias: depth.bias });
   }
   drawList.sort((a, b) => (a.front !== b.front ? a.front - b.front : a.bias - b.bias));
 
@@ -702,7 +767,11 @@ export function RoomWorld({
           })
         : null}
 
-      {catView.ready ? <RoamingCatShadow view={catView} motionRef={catMotionRef} /> : null}
+      {roomCatIds.map((catId) => {
+        const published = publishedCats[catId];
+        if (!published?.view.ready) return null;
+        return <RoamingCatShadow key={`shadow-${catId}`} view={published.view} motionRef={published.motionRef} />;
+      })}
 
       {shownWalls.map((place) => {
         const isPreview = Boolean(previewGhost && dragging?.instanceId === place.instanceId);
@@ -726,14 +795,35 @@ export function RoomWorld({
 
       {/* string lights are baked into world/room-frame-* */}
 
+      {roomCatIds.map((catId, slot) => (
+        <RoomCatAgent
+          key={catId}
+          catId={catId}
+          slot={slot}
+          spotsRef={spotsRef}
+          roomId={roomId}
+          floor={layout.floor}
+          itemsById={itemsById}
+          mode={mode}
+          active={roamingActive}
+          reducedTapMotion={reduceMotion}
+          onPublish={onPublishCat}
+        />
+      ))}
+
       {drawList.map((entry) => {
         if (entry.kind === "cat") {
+          const published = publishedCats[entry.catId];
+          if (!published) return null;
           return (
             <RoamingCatBody
-              key="roaming-cat"
-              view={catView}
-              motionRef={catMotionRef}
-              onTap={onCatTap}
+              key={`roaming-cat-${entry.catId}`}
+              view={published.view}
+              motionRef={published.motionRef}
+              onTap={() => {
+                AudioManager.playSfx("meow", { catId: entry.catId });
+                published.tap();
+              }}
               tapEnabled={mode !== "edit" && !dragging && !previewGhost}
             />
           );

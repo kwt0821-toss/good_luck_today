@@ -966,6 +966,21 @@
   container-type: size;
 }
 
+button.lucky-roam-cat,
+button.lucky-roam-cat:focus,
+button.lucky-roam-cat:focus-visible,
+button.lucky-roam-cat:active,
+.lucky-roam-cat .lucky-roam-frame,
+.lucky-roam-cat .lucky-roam-frame:focus,
+.lucky-roam-cat .lucky-roam-frame:focus-visible,
+.lucky-roam-cat .lucky-roam-frame:active {
+  outline: none;
+  outline-offset: 0;
+  box-shadow: none;
+  border: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .lucky-roam-frame {
   display: block;
   pointer-events: none;

@@ -102,7 +102,8 @@ export type RoomLayoutState = {
 };
 
 export type RoomRecord = RoomLayoutState & {
-  roamingCatId: string | null;
+  /** Up to three cat ids in this room. Saved as an array. */
+  roamingCatIds: string[];
 };
 
 export type RoomUnlock = {

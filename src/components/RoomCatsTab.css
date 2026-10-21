@@ -7,6 +7,15 @@
   margin-top: 10px;
 }
 
+.rc-count {
+  flex: 0 0 auto;
+  margin: 0 2px 8px;
+  font-family: Jua, sans-serif;
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--cream, #f3e9d7);
+}
+
 .rc-banner {
   flex: 0 0 auto;
   position: relative;

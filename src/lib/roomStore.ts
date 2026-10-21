@@ -29,13 +29,26 @@ const ROOM_KEY = "lucky-cat.my-room.v6.rooms";
 const LEGACY_KEYS = ["lucky-cat.my-room.v5.tiles", "lucky-cat.my-room.v5"];
 export const MOCK_POINTS = 1240;
 export const MOCK_COZY = 3;
+export const ROOM_CAT_MAX = 3;
+
+/** One id, a legacy single id, or an array → unique ids, capped, never empty. */
+export function normalizeRoomCatIds(value: unknown, fallback = DEFAULT_CAT_BREED_ID): string[] {
+  const raw = Array.isArray(value) ? value : typeof value === "string" && value ? [value] : [];
+  const ids: string[] = [];
+  for (const item of raw) {
+    if (typeof item !== "string" || !item || ids.includes(item)) continue;
+    ids.push(item);
+    if (ids.length >= ROOM_CAT_MAX) break;
+  }
+  return ids.length ? ids : [fallback];
+}
 
 function orientationOf(value: unknown): RoomOrientation {
   return value === "mirrored" ? "mirrored" : "default";
 }
 
-function asRecord(layout: RoomLayoutState, roamingCatId: string | null = null): RoomRecord {
-  return { ...layout, roamingCatId };
+function asRecord(layout: RoomLayoutState, roamingCatIds: unknown = null): RoomRecord {
+  return { ...layout, roamingCatIds: normalizeRoomCatIds(roamingCatIds) };
 }
 
 export function layoutFromEntries(
@@ -347,12 +360,11 @@ function parseRoomRecord(raw: unknown, def: RoomDefinition, grid?: RoomGridFile)
   if (!isRecord(raw)) return fallback;
   const layout = parseLayout(raw, def.defaultFloor, def.defaultWall.L, def.defaultWall.R);
   if (!layout) return fallback;
+  const catFallback = def.roamingCatId ?? DEFAULT_CAT_BREED_ID;
+  const stored = Array.isArray(raw.roamingCatIds) ? raw.roamingCatIds : raw.roamingCatId;
   return {
     ...layout,
-    roamingCatId:
-      typeof raw.roamingCatId === "string"
-        ? raw.roamingCatId
-        : (def.roamingCatId ?? DEFAULT_CAT_BREED_ID),
+    roamingCatIds: normalizeRoomCatIds(stored, catFallback),
   };
 }
 
@@ -476,7 +488,7 @@ export function patchCurrentRoom(state: RoomSaveState, layout: RoomLayoutState):
       [state.currentRoomId]: {
         ...prev,
         ...layout,
-        roamingCatId: prev?.roamingCatId ?? DEFAULT_CAT_BREED_ID,
+        roamingCatIds: normalizeRoomCatIds(prev?.roamingCatIds),
       },
     },
   };

@@ -51,6 +51,7 @@ import {
   currentRoom,
   defaultRecord,
   loadRoomState,
+  normalizeRoomCatIds,
   patchCurrentRoom,
   placedInOtherRoom,
   saveRoomState,
@@ -1496,7 +1497,7 @@ export function RoomScreen({
                     <RoomWorld
                       mode={active ? mode : "view"}
                       roomId={roomId}
-                      roamingCatId={roomLayout.roamingCatId ?? "cheese"}
+                      roamingCatIds={normalizeRoomCatIds(roomLayout.roamingCatIds)}
                       roamingActive={active}
                       itemsById={itemsById}
                       layout={roomLayout}
@@ -1837,15 +1838,15 @@ export function RoomScreen({
             if (tutLock) return;
             setConfirm("close-edit");
           }}
-          roamingCatId={layout.roamingCatId ?? "cheese"}
-          onSelectCat={(id) => {
+          roamingCatIds={normalizeRoomCatIds(layout.roamingCatIds)}
+          onChangeCats={(ids) => {
             const room = state.rooms[displayRoomId];
             if (!room) return;
             persist({
               ...state,
               rooms: {
                 ...state.rooms,
-                [displayRoomId]: { ...room, roamingCatId: id },
+                [displayRoomId]: { ...room, roamingCatIds: normalizeRoomCatIds(ids) },
               },
             });
           }}

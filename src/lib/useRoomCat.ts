@@ -4,6 +4,7 @@ import { track } from "./analytics";
 import {
   CAT_STEP_MS,
   CAT_WALK_FPS,
+  DEFAULT_CAT_BREED_ID,
   animDurationMs,
   type CatAnimName,
   type CatSpriteSheet,
@@ -18,6 +19,7 @@ import {
   randomWalkable,
   reachableTiles,
   tileCentreWorld,
+  tileKey,
   walkDirOf,
   walkableTiles,
 } from "./roomCat";
@@ -72,6 +74,10 @@ type Phase =
       walkElapsed: number;
     };
 
+export type CatSpot = { tile: CatTile; goal: CatTile | null };
+
+export type CatSpotsRef = MutableRefObject<Map<string, CatSpot>>;
+
 type UseRoomCatArgs = {
   roomId: string;
   breedId: string | null;
@@ -82,7 +88,46 @@ type UseRoomCatArgs = {
   reducedMotion: boolean;
   /** prefers-reduced-motion: tap actions show the bubble and skip frame changes. */
   reducedTapMotion?: boolean;
+  /** Shared tiles so cats in the same room do not start or aim at the same cell. */
+  spotsRef?: CatSpotsRef;
+  /** 0-based order in the room. Picks a different start tile. */
+  slot?: number;
 };
+
+const SEED_PREFS: CatTile[] = [
+  { col: 4, row: 5 },
+  { col: 3, row: 4 },
+  { col: 5, row: 6 },
+  { col: 2, row: 3 },
+  { col: 6, row: 5 },
+  { col: 1, row: 2 },
+];
+
+function spriteFileForBreed(catId: string): string | undefined {
+  if (!catId || catId === DEFAULT_CAT_BREED_ID) return undefined;
+  return `cat-sprite-${catId}.png`;
+}
+
+function occupiedTiles(spots: Map<string, CatSpot> | undefined, selfId: string): Set<string> {
+  const occupied = new Set<string>();
+  if (!spots) return occupied;
+  for (const [id, spot] of spots) {
+    if (id === selfId) continue;
+    occupied.add(tileKey(spot.tile));
+  }
+  return occupied;
+}
+
+function blockedGoals(spots: Map<string, CatSpot> | undefined, selfId: string): Set<string> {
+  const blocked = new Set<string>();
+  if (!spots) return blocked;
+  for (const [id, spot] of spots) {
+    if (id === selfId) continue;
+    blocked.add(tileKey(spot.tile));
+    if (spot.goal) blocked.add(tileKey(spot.goal));
+  }
+  return blocked;
+}
 
 function frameFor(sheet: CatSpriteSheet, anim: CatAnimName, elapsedMs: number): string {
   const idle = anim.endsWith("_r") && sheet.animations.idle_sit_r ? sheet.animations.idle_sit_r : sheet.animations.idle_sit;
@@ -101,24 +146,43 @@ function actionFrame(frames: string[], fps: number, elapsedMs: number): string {
   return frames[idx] ?? frames[frames.length - 1] ?? "sit";
 }
 
-function seedTile(walkable: CatTile[]): CatTile {
+function seedTile(walkable: CatTile[], slot: number, occupied: Set<string>): CatTile {
   const region = largestWalkableComponent(walkable);
-  return (
-    region.find((tile) => tile.col === 4 && tile.row === 5) ??
-    region.find((tile) => tile.col === 3 && tile.row === 4) ??
-    region[Math.floor(region.length / 2)] ??
-    walkable[0] ?? { col: 4, row: 5 }
-  );
+  const prefs = SEED_PREFS.map((_, index) => SEED_PREFS[(slot + index) % SEED_PREFS.length]);
+  for (const pool of [region, walkable]) {
+    for (const pref of prefs) {
+      const found = pool.find(
+        (tile) => tile.col === pref.col && tile.row === pref.row && !occupied.has(tileKey(tile)),
+      );
+      if (found) return found;
+    }
+    const free = pool.find((tile) => !occupied.has(tileKey(tile)));
+    if (free) return free;
+  }
+  return region[Math.floor(region.length / 2)] ?? walkable[0] ?? { col: 4, row: 5 };
 }
 
-function pickWalkPath(from: CatTile, walkable: CatTile[]): CatTile[] | null {
+function nearestFree(from: CatTile, walkable: CatTile[], occupied: Set<string>): CatTile | null {
+  const free = walkable.filter((tile) => !occupied.has(tileKey(tile)));
+  return nearestWalkable(from, free.length ? free : walkable);
+}
+
+function pickWalkPath(from: CatTile, walkable: CatTile[], blocked: Set<string>): CatTile[] | null {
   const reachable = reachableTiles(from, walkable);
   if (reachable.length < 2) return null;
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const goal = randomWalkable(reachable, from);
-    if (!goal) break;
+  const tryGoal = (goal: CatTile | null) => {
+    if (!goal || (goal.col === from.col && goal.row === from.row)) return null;
+    if (blocked.has(tileKey(goal))) return null;
     const path = findPath(from, goal, reachable);
-    if (path.length >= 2) return path;
+    return path.length >= 2 ? path : null;
+  };
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const path = tryGoal(randomWalkable(reachable, from));
+    if (path) return path;
+  }
+  for (const tile of reachable) {
+    const path = tryGoal(tile);
+    if (path) return path;
   }
   const other = reachable.find((tile) => tile.col !== from.col || tile.row !== from.row);
   if (!other) return null;
@@ -143,6 +207,8 @@ export function useRoomCat({
   active,
   reducedMotion,
   reducedTapMotion = false,
+  spotsRef,
+  slot = 0,
 }: UseRoomCatArgs): {
   view: RoomCatView;
   motionRef: CatMotionRef;
@@ -209,6 +275,8 @@ export function useRoomCat({
   const depthRef = useRef({ col: 4, row: 5 });
   const sleepRef = useRef(false);
   const opacityRef = useRef(1);
+  const slotRef = useRef(slot);
+  slotRef.current = slot;
 
   floorRef.current = floor;
   itemsRef.current = itemsById;
@@ -232,8 +300,7 @@ export function useRoomCat({
       if (cancelled) return;
       const entry = cats.find((cat) => cat.id === catId) ?? null;
       tapActionRef.current = entry?.tapAction ?? null;
-      const sprite = entry?.sprite || undefined;
-      void loadCatSpriteSheet(sprite).then((loaded) => {
+      void loadCatSpriteSheet(spriteFileForBreed(catId)).then((loaded) => {
         if (cancelled) return;
         sheetRef.current = loaded;
         const happyFrames = Math.max(
@@ -264,21 +331,23 @@ export function useRoomCat({
     // Re-home when the cat is stranded on an isolated walkable tile.
     if (!needSeed && onRegion && reachableTiles(current, walkable).length >= 2) return;
 
+    const occupied = occupiedTiles(spotsRef?.current, catIdRef.current);
     const start = needSeed
-      ? seedTile(walkable)
-      : (nearestWalkable(current, region) ?? seedTile(walkable));
+      ? seedTile(walkable, slotRef.current, occupied)
+      : (nearestFree(current, region, occupied) ?? seedTile(walkable, slotRef.current, occupied));
     seededRef.current = roomId;
     tileRef.current = start;
     fromRef.current = start;
     toRef.current = null;
     progressRef.current = 0;
     depthRef.current = { col: start.col, row: start.row };
+    spotsRef?.current.set(catIdRef.current, { tile: start, goal: null });
     placeMotion(catMotion.current, start, "idle_sit");
     // Start walking almost immediately so a cold browser load looks alive.
     phaseRef.current = { kind: "idle", until: performance.now() + (needSeed ? 200 : 80), anim: "idle_sit" };
     setView((prev) => ({ ...prev, depthCol: start.col, depthRow: start.row }));
     for (const listener of listenersRef.current) listener();
-  }, [floor, itemsById, roomId, catMotion]);
+  }, [floor, itemsById, roomId, catMotion, spotsRef]);
 
   useEffect(() => {
     if (mode === "edit") {
@@ -313,6 +382,10 @@ export function useRoomCat({
       for (const listener of listeners) listener();
     };
 
+    const publishSpot = (goal: CatTile | null) => {
+      spotsRef?.current.set(catIdRef.current, { tile: tileRef.current, goal });
+    };
+
     const beginWalk = (path: CatTile[], ts: number) => {
       phaseRef.current = {
         kind: "walk",
@@ -325,6 +398,7 @@ export function useRoomCat({
       toRef.current = path[1];
       progressRef.current = 0;
       animElapsedRef.current = 0;
+      publishSpot(path[path.length - 1] ?? null);
     };
 
     const loop = (ts: number) => {
@@ -334,6 +408,9 @@ export function useRoomCat({
         raf = requestAnimationFrame(loop);
         return;
       }
+      const phaseGoal =
+        phaseRef.current.kind === "walk" ? (phaseRef.current.path[phaseRef.current.path.length - 1] ?? null) : null;
+      publishSpot(phaseGoal);
 
       const last = lastTsRef.current || ts;
       const dt = Math.min(64, ts - last);
@@ -418,17 +495,23 @@ export function useRoomCat({
             }
           }
         } else if (phase.kind === "idle" && ts >= phase.until) {
-          let path = pickWalkPath(tileRef.current, walkable);
+          const blocked = blockedGoals(spotsRef?.current, catIdRef.current);
+          let path = pickWalkPath(tileRef.current, walkable, blocked);
           if (!path) {
             // Stranded on a 1-tile island — hop to the main walkable region.
-            const home = seedTile(walkable);
+            const home = seedTile(
+              walkable,
+              slotRef.current,
+              occupiedTiles(spotsRef?.current, catIdRef.current),
+            );
             if (home.col !== tileRef.current.col || home.row !== tileRef.current.row) {
               tileRef.current = home;
               fromRef.current = home;
               toRef.current = null;
               progressRef.current = 0;
+              publishSpot(null);
               placeMotion(catMotion.current, home, "idle_sit");
-              path = pickWalkPath(home, walkable);
+              path = pickWalkPath(home, walkable, blockedGoals(spotsRef?.current, catIdRef.current));
             }
           }
           if (path) {
@@ -491,10 +574,13 @@ export function useRoomCat({
               : live.kind === "action"
                 ? `action:${live.frames.join(",") || "bubble"}`
                 : `idle:${live.anim}`;
-        (window as Window & { __luckyCat?: unknown }).__luckyCat = {
+        const debug = {
           roomId: roomIdRef.current,
+          catId: catIdRef.current,
           phase: phaseKind,
           tile: { ...tileRef.current },
+          goal:
+            live.kind === "walk" ? { ...(live.path[live.path.length - 1] ?? tileRef.current) } : null,
           anim,
           worldX: Math.round(motion.worldX),
           worldY: Math.round(motion.worldY),
@@ -504,6 +590,13 @@ export function useRoomCat({
           edit: isEdit,
           reduce,
         };
+        const host = window as Window & {
+          __luckyCat?: unknown;
+          __luckyCats?: Record<string, unknown>;
+        };
+        if (!host.__luckyCats) host.__luckyCats = {};
+        host.__luckyCats[catIdRef.current] = debug;
+        host.__luckyCat = debug;
       }
 
       const nextOpacity = isEdit ? 0.5 : 1;
@@ -536,7 +629,17 @@ export function useRoomCat({
       lastTsRef.current = 0;
       listeners.clear();
     };
-  }, [catMotion]);
+  }, [catMotion, spotsRef]);
+
+  useEffect(() => {
+    const spots = spotsRef?.current;
+    const id = breedId || "cheese";
+    return () => {
+      spots?.delete(id);
+      const host = window as Window & { __luckyCats?: Record<string, unknown> };
+      if (host.__luckyCats) delete host.__luckyCats[id];
+    };
+  }, [spotsRef, breedId]);
 
   const playTapped = (now: number) => {
     phaseRef.current = { kind: "tap", step: "tapped", until: now + 600 };

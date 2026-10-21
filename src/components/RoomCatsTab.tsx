@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { nyNotify } from "../lib/nyangNotify";
 import { roomAsset } from "../lib/roomCatalog";
 import {
   isRoomCatSelectable,
@@ -8,19 +9,20 @@ import {
   roomCatRuleText,
   type RoomCatEntry,
 } from "../lib/roomCats";
+import { ROOM_CAT_MAX } from "../lib/roomStore";
 
 import "./RoomCatsTab.css";
 
 type RoomCatsTabProps = {
-  /** roomLayout.roamingCatId */
-  selectedId: string | null;
-  /** Set roomLayout.roamingCatId and save. Only called for selectable cats. */
-  onSelect: (catId: string) => void;
+  /** Cats currently in this room. */
+  selectedIds: string[];
+  /** Replace the room's cat list and save. */
+  onChange: (catIds: string[]) => void;
   /** Owned dex card ids, for later unlocks. Not needed at launch. */
   ownedCardIds?: ReadonlySet<string>;
 };
 
-export function RoomCatsTab({ selectedId, onSelect, ownedCardIds }: RoomCatsTabProps) {
+export function RoomCatsTab({ selectedIds, onChange, ownedCardIds }: RoomCatsTabProps) {
   const [cats, setCats] = useState<RoomCatEntry[]>([]);
   const [info, setInfo] = useState<RoomCatEntry | null>(null);
 
@@ -38,6 +40,7 @@ export function RoomCatsTab({ selectedId, onSelect, ownedCardIds }: RoomCatsTabP
 
   return (
     <div className="rc-tab">
+      <p className="rc-count">고양이 {selectedIds.length}/{ROOM_CAT_MAX}</p>
       {hasComingSoon ? (
         <div className="rc-banner" role="note">
           <img className="rc-banner-cat" src={roomAsset("cat-friends/cheese.webp")} alt="" aria-hidden="true" />
@@ -68,7 +71,7 @@ export function RoomCatsTab({ selectedId, onSelect, ownedCardIds }: RoomCatsTabP
       <div className="rc-grid">
         {cats.map((cat) => {
           const selectable = isRoomCatSelectable(cat, ownedCardIds);
-          const selected = selectable && cat.id === selectedId;
+          const selected = selectable && selectedIds.includes(cat.id);
           const soon = cat.status === "comingSoon";
           const icon = !soon && cat.icon ? roomAsset(cat.icon) : ROOM_CAT_SILHOUETTE;
           return (
@@ -81,7 +84,20 @@ export function RoomCatsTab({ selectedId, onSelect, ownedCardIds }: RoomCatsTabP
               onClick={() => {
                 if (selectable) {
                   setInfo(null);
-                  if (!selected) onSelect(cat.id);
+                  if (selected) {
+                    if (selectedIds.length <= 1) return;
+                    onChange(selectedIds.filter((id) => id !== cat.id));
+                    return;
+                  }
+                  if (selectedIds.length >= ROOM_CAT_MAX) {
+                    nyNotify({
+                      key: "room-cat-cap",
+                      kind: "info",
+                      title: "한 방에 고양이는 3마리까지 들어갈 수 있어요",
+                    });
+                    return;
+                  }
+                  onChange([...selectedIds, cat.id]);
                   return;
                 }
                 setInfo(cat);

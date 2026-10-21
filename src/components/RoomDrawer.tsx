@@ -50,8 +50,8 @@ type RoomDrawerProps = {
   onHelp?: () => void;
   /** Collapsed sheet dragged down past dismiss threshold. */
   onRequestClose?: () => void;
-  roamingCatId: string | null;
-  onSelectCat: (id: string) => void;
+  roamingCatIds: string[];
+  onChangeCats: (ids: string[]) => void;
 };
 
 function tileState(
@@ -123,8 +123,8 @@ export function RoomDrawer({
   onUndo,
   onHelp,
   onRequestClose,
-  roamingCatId,
-  onSelectCat,
+  roamingCatIds,
+  onChangeCats,
 }: RoomDrawerProps) {
   const gridRef = useRef<HTMLDivElement | null>(null);
   const scrollLocked = useRef(false);
@@ -374,7 +374,7 @@ export function RoomDrawer({
         ))}
       </div>
       {catsTab ? (
-        <RoomCatsTab selectedId={roamingCatId} onSelect={onSelectCat} />
+        <RoomCatsTab selectedIds={roamingCatIds} onChange={onChangeCats} />
       ) : (
         <>
       <div className="lucky-theme-filters" role="tablist" aria-label="테마 필터">
