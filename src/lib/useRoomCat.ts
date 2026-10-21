@@ -540,7 +540,7 @@ export function useRoomCat({
     const action = tapActionRef.current;
     const framesOk = Boolean(action && sheet && action.frames.every((name) => sheet.frames[name]));
     const cooldown = action?.cooldownMs ?? TAP_COOLDOWN_MS;
-    const cooling = now - lastActionAtRef.current < cooldown;
+    const cooling = lastActionAtRef.current > 0 && now - lastActionAtRef.current < cooldown;
     if (!action || !framesOk || cooling || !sheet) {
       playTapped(now);
       return;

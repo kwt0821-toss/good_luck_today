@@ -963,6 +963,7 @@
   z-index: 5;
   overflow: visible;
   will-change: transform;
+  container-type: size;
 }
 
 .lucky-roam-frame {
@@ -987,18 +988,19 @@
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 10px 18px;
+  gap: 0.15em;
+  padding: 0.28em 0.62em;
   border-radius: 999px;
   background: #fff8ee;
   color: #221d38;
   font-family: "Jua", "Noto Sans KR", sans-serif;
-  font-size: 56px;
+  font-size: 13px;
+  font-size: 42cqh;
   line-height: 1.1;
   white-space: nowrap;
   pointer-events: none;
-  transform: translate(-50%, -78%);
-  box-shadow: 0 8px 18px rgba(34, 29, 56, 0.18);
+  transform: translate(-50%, -88%);
+  box-shadow: 0 0.18em 0.4em rgba(34, 29, 56, 0.18);
 }
 
 .lucky-cat-tap-bubble[hidden] {
