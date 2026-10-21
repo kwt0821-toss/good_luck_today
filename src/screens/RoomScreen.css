@@ -975,6 +975,7 @@ button.lucky-roam-cat:active,
 .lucky-roam-cat .lucky-roam-frame:focus-visible,
 .lucky-roam-cat .lucky-roam-frame:active {
   outline: none;
+  outline-width: 0;
   outline-offset: 0;
   box-shadow: none;
   border: 0;

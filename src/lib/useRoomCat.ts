@@ -277,6 +277,17 @@ export function useRoomCat({
   const opacityRef = useRef(1);
   const slotRef = useRef(slot);
   slotRef.current = slot;
+  catIdRef.current = breedId || "cheese";
+  if (spotsRef && !spotsRef.current.has(catIdRef.current)) {
+    const walkableNow = walkableTiles(floor, itemsById);
+    if (walkableNow.length) {
+      const startNow = seedTile(walkableNow, slot, occupiedTiles(spotsRef.current, catIdRef.current));
+      spotsRef.current.set(catIdRef.current, { tile: startNow, goal: null });
+      tileRef.current = startNow;
+      fromRef.current = startNow;
+      depthRef.current = { col: startNow.col, row: startNow.row };
+    }
+  }
 
   floorRef.current = floor;
   itemsRef.current = itemsById;
