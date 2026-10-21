@@ -975,8 +975,11 @@
 
 .lucky-roam-cat.is-sleeping .lucky-roam-frame,
 .lucky-roam-cat[data-cat-anim="idle_sit"] .lucky-roam-frame,
+.lucky-roam-cat[data-cat-anim="idle_sit_r"] .lucky-roam-frame,
 .lucky-roam-cat[data-cat-anim="loaf"] .lucky-roam-frame,
-.lucky-roam-cat[data-cat-anim="happy"][data-happy-frames="1"] .lucky-roam-frame {
+.lucky-roam-cat[data-cat-anim="loaf_r"] .lucky-roam-frame,
+.lucky-roam-cat[data-cat-anim="happy"][data-happy-frames="1"] .lucky-roam-frame,
+.lucky-roam-cat[data-cat-anim="happy_r"][data-happy-frames="1"] .lucky-roam-frame {
   transform-origin: 50% 90%;
   animation: lucky-roam-breathe 2s ease-in-out infinite;
 }
@@ -2217,8 +2220,11 @@
   .lucky-sprite.is-catbed img,
   .lucky-roam-cat.is-sleeping .lucky-roam-frame,
   .lucky-roam-cat[data-cat-anim="idle_sit"] .lucky-roam-frame,
+  .lucky-roam-cat[data-cat-anim="idle_sit_r"] .lucky-roam-frame,
   .lucky-roam-cat[data-cat-anim="loaf"] .lucky-roam-frame,
+  .lucky-roam-cat[data-cat-anim="loaf_r"] .lucky-roam-frame,
   .lucky-roam-cat[data-cat-anim="happy"] .lucky-roam-frame,
+  .lucky-roam-cat[data-cat-anim="happy_r"] .lucky-roam-frame,
   .lucky-drawer,
   .lucky-island,
   .lucky-island-scale {

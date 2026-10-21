@@ -225,7 +225,11 @@ function RoamingCatShadow({
       const el = imgRef.current;
       if (!el) return;
       const motion = motionRef.current;
-      const loafish = motion.anim === "loaf" || motion.anim === "sleep";
+      const loafish =
+        motion.anim === "loaf" ||
+        motion.anim === "loaf_r" ||
+        motion.anim === "sleep" ||
+        motion.anim === "sleep_r";
       const scale = loafish ? 0.8 : 1;
       const x = motion.worldX - shadow.anchor[0] * scale;
       const y = motion.worldY - shadow.anchor[1] * scale;
@@ -279,7 +283,7 @@ function RoamingCatBody({
       btn.style.height = pctY(fh);
       btn.style.opacity = String(motion.opacity);
       btn.style.transform = "";
-      btn.classList.toggle("is-sleeping", motion.anim === "sleep");
+      btn.classList.toggle("is-sleeping", motion.anim === "sleep" || motion.anim === "sleep_r");
       btn.dataset.catAnim = motion.anim;
       const bubble = bubbleRef.current;
       if (bubble && textRef.current && emojiRef.current) {

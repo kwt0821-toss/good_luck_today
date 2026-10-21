@@ -9,6 +9,7 @@ import {
   type CatSpriteSheet,
   type CatTile,
   type CatWalkDir,
+  facedPoseName,
   findPath,
   largestWalkableComponent,
   loadCatSpriteSheet,
@@ -84,8 +85,9 @@ type UseRoomCatArgs = {
 };
 
 function frameFor(sheet: CatSpriteSheet, anim: CatAnimName, elapsedMs: number): string {
-  const def = sheet.animations[anim] ?? sheet.animations.idle_sit;
-  const frames = def?.frames?.length ? def.frames : ["sit"];
+  const idle = anim.endsWith("_r") && sheet.animations.idle_sit_r ? sheet.animations.idle_sit_r : sheet.animations.idle_sit;
+  const def = sheet.animations[anim] ?? idle;
+  const frames = def?.frames?.length ? def.frames : idle === sheet.animations.idle_sit_r ? ["sit_r"] : ["sit"];
   if (frames.length <= 1) return frames[0] ?? "sit";
   const fps = def && def.fps > 0 ? def.fps : CAT_WALK_FPS;
   const raw = Math.floor((elapsedMs / 1000) * fps);
@@ -128,7 +130,7 @@ function placeMotion(motion: RoomCatMotion, tile: CatTile, anim: CatAnimName = "
   const centre = tileCentreWorld(tile.col, tile.row);
   motion.worldX = centre.x;
   motion.worldY = centre.y;
-  motion.frameName = anim === "idle_sit" ? "sit" : motion.frameName;
+  motion.frameName = anim === "idle_sit" ? "sit" : anim === "idle_sit_r" ? "sit_r" : motion.frameName;
   motion.anim = anim;
 }
 
@@ -184,6 +186,7 @@ export function useRoomCat({
   });
 
   const phaseRef = useRef<Phase>({ kind: "idle", until: 0, anim: "idle_sit" });
+  const facingRef = useRef<CatWalkDir>("walk_dl");
   const tileRef = useRef<CatTile>({ col: 4, row: 5 });
   const fromRef = useRef<CatTile>({ col: 4, row: 5 });
   const toRef = useRef<CatTile | null>(null);
@@ -220,6 +223,7 @@ export function useRoomCat({
     const catId = breedId || "cheese";
     catIdRef.current = catId;
     phaseRef.current = { kind: "idle", until: performance.now() + 200, anim: "idle_sit" };
+    facingRef.current = "walk_dl";
     animElapsedRef.current = 0;
     lastActionAtRef.current = 0;
     bubbleUntilRef.current = 0;
@@ -232,7 +236,10 @@ export function useRoomCat({
       void loadCatSpriteSheet(sprite).then((loaded) => {
         if (cancelled) return;
         sheetRef.current = loaded;
-        const happyFrames = loaded.animations.happy?.frames.length ?? 1;
+        const happyFrames = Math.max(
+          loaded.animations.happy?.frames.length ?? 1,
+          loaded.animations.happy_r?.frames.length ?? 1,
+        );
         setView((prev) => ({
           ...prev,
           sheet: loaded,
@@ -361,10 +368,11 @@ export function useRoomCat({
         } else if (phase.kind === "tap") {
           if (ts >= phase.until) {
             if (phase.step === "tapped") {
+              const happyClip = facedPoseName(sheet, "happy", facingRef.current);
               phaseRef.current = {
                 kind: "tap",
                 step: "happy",
-                until: ts + animDurationMs(sheet.animations.happy),
+                until: ts + animDurationMs(sheet.animations[happyClip] ?? sheet.animations.happy),
               };
               animElapsedRef.current = 0;
             } else if (phase.step === "happy") {
@@ -392,7 +400,7 @@ export function useRoomCat({
               if (nextIndex >= phase.path.length - 1) {
                 toRef.current = null;
                 progressRef.current = 0;
-                const pose = pickIdlePose(sheet, false);
+                const pose = pickIdlePose(sheet, false, facingRef.current);
                 phaseRef.current = { kind: "idle", until: ts + pose.durationMs, anim: pose.anim };
                 animElapsedRef.current = 0;
               } else {
@@ -426,7 +434,7 @@ export function useRoomCat({
           if (path) {
             beginWalk(path, ts);
           } else {
-            const pose = pickIdlePose(sheet, false);
+            const pose = pickIdlePose(sheet, false, facingRef.current);
             phaseRef.current = { kind: "idle", until: ts + pose.durationMs, anim: pose.anim };
             animElapsedRef.current = 0;
           }
@@ -442,9 +450,13 @@ export function useRoomCat({
       const live = phaseRef.current;
       let anim: CatAnimName | "tap_action" = "idle_sit";
       let frameOverride: string | null = null;
-      if (live.kind === "walk") anim = live.dir;
-      else if (live.kind === "tap") anim = live.step === "wait" ? "happy" : live.step;
-      else if (live.kind === "action") {
+      if (live.kind === "walk") {
+        facingRef.current = live.dir;
+        anim = live.dir;
+      } else if (live.kind === "tap") {
+        const pose = live.step === "wait" ? "happy" : live.step;
+        anim = facedPoseName(sheet, pose, facingRef.current) as CatAnimName;
+      } else if (live.kind === "action") {
         if (live.frames.length) {
           anim = "tap_action";
           frameOverride = actionFrame(live.frames, live.fps, ts - live.startedAt);
@@ -452,7 +464,7 @@ export function useRoomCat({
           frameOverride = catMotion.current.frameName;
           anim = catMotion.current.anim === "tap_action" ? "idle_sit" : catMotion.current.anim;
         }
-      } else anim = live.anim;
+      } else anim = facedPoseName(sheet, live.anim, facingRef.current) as CatAnimName;
 
       const from = fromRef.current;
       const to = toRef.current;
@@ -495,7 +507,7 @@ export function useRoomCat({
       }
 
       const nextOpacity = isEdit ? 0.5 : 1;
-      const nextSleeping = anim === "sleep";
+      const nextSleeping = anim === "sleep" || anim === "sleep_r";
       if (
         depthTile.col !== depthRef.current.col ||
         depthTile.row !== depthRef.current.row ||

@@ -33,7 +33,16 @@ export type CatSpriteSheet = {
 
 export type CatWalkDir = "walk_dl" | "walk_dr" | "walk_ul" | "walk_ur";
 export type CatIdlePose = "idle_sit" | "groom" | "loaf" | "stretch" | "yawn" | "sleep";
-export type CatAnimName = CatWalkDir | CatIdlePose | "tapped" | "happy";
+export type CatPoseName = CatIdlePose | "tapped" | "happy";
+export type CatAnimName = CatWalkDir | CatPoseName | `${CatPoseName}_r`;
+
+/** Right-facing walks keep later sit/tap poses on the `_r` clip when the sheet has one. */
+export function facedPoseName(sheet: CatSpriteSheet, anim: string, facing: CatWalkDir): string {
+  if (anim.startsWith("walk_")) return anim;
+  if (facing !== "walk_dr" && facing !== "walk_ur") return anim;
+  const mirrored = `${anim}_r`;
+  return sheet.animations[mirrored] ? mirrored : anim;
+}
 
 export type CatTile = { col: number; row: number };
 
@@ -370,6 +379,7 @@ export function animDurationMs(def: { frames: string[]; fps?: number; holdMs?: n
 export function pickIdlePose(
   sheet: CatSpriteSheet,
   preferSleep = false,
+  facing: CatWalkDir = "walk_dl",
 ): { anim: CatIdlePose; durationMs: number } {
   // Rare, short sleeps — long idle made the cat look broken in the browser.
   if (preferSleep || Math.random() < 0.04) {
@@ -377,7 +387,7 @@ export function pickIdlePose(
   }
   const poses: CatIdlePose[] = ["idle_sit", "groom", "loaf", "stretch", "yawn"];
   const anim = poses[Math.floor(Math.random() * poses.length)] ?? "idle_sit";
-  const def = sheet.animations[anim];
+  const def = sheet.animations[facedPoseName(sheet, anim, facing)] ?? sheet.animations[anim];
   if (anim === "stretch" || anim === "yawn") return { anim, durationMs: animDurationMs(def) };
   if (anim === "groom") {
     const fps = def?.fps && def.fps > 0 ? def.fps : 1;
