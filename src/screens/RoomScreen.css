@@ -975,9 +975,34 @@
 .lucky-roam-cat.is-sleeping .lucky-roam-frame,
 .lucky-roam-cat[data-cat-anim="idle_sit"] .lucky-roam-frame,
 .lucky-roam-cat[data-cat-anim="loaf"] .lucky-roam-frame,
-.lucky-roam-cat[data-cat-anim="happy"] .lucky-roam-frame {
+.lucky-roam-cat[data-cat-anim="happy"][data-happy-frames="1"] .lucky-roam-frame {
   transform-origin: 50% 90%;
   animation: lucky-roam-breathe 2s ease-in-out infinite;
+}
+
+.lucky-cat-tap-bubble {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #fff8ee;
+  color: #221d38;
+  font-family: "Jua", "Noto Sans KR", sans-serif;
+  font-size: 56px;
+  line-height: 1.1;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -78%);
+  box-shadow: 0 8px 18px rgba(34, 29, 56, 0.18);
+}
+
+.lucky-cat-tap-bubble[hidden] {
+  display: none;
 }
 
 .lucky-world.is-view .lucky-sprite:not(.lucky-roam-cat) {

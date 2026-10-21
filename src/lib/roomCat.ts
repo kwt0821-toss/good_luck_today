@@ -19,6 +19,8 @@ export type CatBreed = {
 
 export type CatFrameRect = { x: number; y: number; w: number; h: number };
 
+export type CatAnimDef = { frames: string[]; fps: number; loop: boolean; holdMs?: number };
+
 export type CatSpriteSheet = {
   image: string;
   frameSize: [number, number];
@@ -26,7 +28,7 @@ export type CatSpriteSheet = {
   anchor: { x: number; y: number };
   shadow: { image: string; size: [number, number]; anchor: [number, number] };
   frames: Record<string, CatFrameRect>;
-  animations: Record<string, { frames: string[]; fps: number; loop: boolean; holdMs?: number }>;
+  animations: Record<string, CatAnimDef>;
 };
 
 export type CatWalkDir = "walk_dl" | "walk_dr" | "walk_ul" | "walk_ur";
@@ -99,7 +101,8 @@ const FALLBACK_SHEET: CatSpriteSheet = {
   },
 };
 
-let sheetPromise: Promise<CatSpriteSheet> | null = null;
+const DEFAULT_SPRITE_FILE = "cat-sprite.png";
+const sheetCache = new Map<string, Promise<CatSpriteSheet>>();
 
 function sheetSizeFromFrames(frames: Record<string, CatFrameRect>): [number, number] {
   let w = 0;
@@ -111,36 +114,84 @@ function sheetSizeFromFrames(frames: Record<string, CatFrameRect>): [number, num
   return [w || 1392, h || 411];
 }
 
-export function loadCatSpriteSheet(): Promise<CatSpriteSheet> {
-  if (!sheetPromise) {
-    sheetPromise = fetch(`/assets/room/${CAT_BASE}/cat-sprite.json`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((raw) => {
-        if (!raw || typeof raw !== "object") return FALLBACK_SHEET;
-        const frames = (raw.frames ?? FALLBACK_SHEET.frames) as Record<string, CatFrameRect>;
-        const anims = (raw.animations ?? FALLBACK_SHEET.animations) as CatSpriteSheet["animations"];
-        const shadow = raw.shadow ?? FALLBACK_SHEET.shadow;
-        return {
-          image: typeof raw.image === "string" ? raw.image : FALLBACK_SHEET.image,
-          frameSize: Array.isArray(raw.frameSize)
-            ? (raw.frameSize as [number, number])
-            : FALLBACK_SHEET.frameSize,
-          sheetSize: sheetSizeFromFrames(frames),
-          anchor: raw.anchor ?? FALLBACK_SHEET.anchor,
-          shadow: {
-            image: typeof shadow.image === "string" ? shadow.image : FALLBACK_SHEET.shadow.image,
-            size: Array.isArray(shadow.size) ? (shadow.size as [number, number]) : FALLBACK_SHEET.shadow.size,
-            anchor: Array.isArray(shadow.anchor)
-              ? (shadow.anchor as [number, number])
-              : FALLBACK_SHEET.shadow.anchor,
-          },
-          frames,
-          animations: anims,
-        };
-      })
-      .catch(() => FALLBACK_SHEET);
+function spriteJsonName(spriteFile: string) {
+  if (/\.json$/i.test(spriteFile)) return spriteFile;
+  return spriteFile.replace(/\.[^.]+$/, ".json");
+}
+
+function isDefaultSprite(spriteFile: string | undefined) {
+  if (!spriteFile) return true;
+  const name = spriteFile.replace(/^\//, "");
+  return name === DEFAULT_SPRITE_FILE || name === "cat-sprite.json";
+}
+
+function parseSheet(raw: unknown, imageFallback: string): CatSpriteSheet | null {
+  if (!raw || typeof raw !== "object") return null;
+  const data = raw as Record<string, unknown>;
+  if (!data.frames || typeof data.frames !== "object" || !data.animations || typeof data.animations !== "object") {
+    return null;
   }
-  return sheetPromise;
+  const frames = data.frames as Record<string, CatFrameRect>;
+  if (!Object.keys(frames).length) return null;
+  const animations: Record<string, CatAnimDef> = {};
+  for (const [name, value] of Object.entries(data.animations as Record<string, unknown>)) {
+    if (!value || typeof value !== "object") continue;
+    const def = value as Record<string, unknown>;
+    if (!Array.isArray(def.frames) || !def.frames.every((frame) => typeof frame === "string")) continue;
+    animations[name] = {
+      frames: def.frames as string[],
+      fps: typeof def.fps === "number" && def.fps > 0 ? def.fps : 1,
+      loop: def.loop === true,
+      ...(typeof def.holdMs === "number" ? { holdMs: def.holdMs } : {}),
+    };
+  }
+  const shadowRaw =
+    data.shadow && typeof data.shadow === "object" ? (data.shadow as Record<string, unknown>) : {};
+  const anchorRaw =
+    data.anchor && typeof data.anchor === "object" ? (data.anchor as Record<string, unknown>) : {};
+  return {
+    image: typeof data.image === "string" ? data.image : imageFallback,
+    frameSize: Array.isArray(data.frameSize) ? (data.frameSize as [number, number]) : FALLBACK_SHEET.frameSize,
+    sheetSize: sheetSizeFromFrames(frames),
+    anchor: {
+      x: typeof anchorRaw.x === "number" ? anchorRaw.x : FALLBACK_SHEET.anchor.x,
+      y: typeof anchorRaw.y === "number" ? anchorRaw.y : FALLBACK_SHEET.anchor.y,
+    },
+    shadow: {
+      image: "cat-shadow.png",
+      size: Array.isArray(shadowRaw.size) ? (shadowRaw.size as [number, number]) : FALLBACK_SHEET.shadow.size,
+      anchor: Array.isArray(shadowRaw.anchor)
+        ? (shadowRaw.anchor as [number, number])
+        : FALLBACK_SHEET.shadow.anchor,
+    },
+    frames,
+    animations,
+  };
+}
+
+function loadDefaultSheet(): Promise<CatSpriteSheet> {
+  const cached = sheetCache.get(DEFAULT_SPRITE_FILE);
+  if (cached) return cached;
+  const promise = fetch(catAsset("cat-sprite.json"))
+    .then((res) => (res.ok ? res.json() : null))
+    .then((raw) => parseSheet(raw, FALLBACK_SHEET.image) ?? FALLBACK_SHEET)
+    .catch(() => FALLBACK_SHEET);
+  sheetCache.set(DEFAULT_SPRITE_FILE, promise);
+  return promise;
+}
+
+/** `spriteFile` is a filename under /assets/room/cat/ (e.g. cat-sprite-korean_shorthair.png). */
+export function loadCatSpriteSheet(spriteFile?: string): Promise<CatSpriteSheet> {
+  const file = spriteFile?.trim();
+  if (!file || isDefaultSprite(file)) return loadDefaultSheet();
+  const cached = sheetCache.get(file);
+  if (cached) return cached;
+  const promise = fetch(catAsset(spriteJsonName(file)))
+    .then((res) => (res.ok ? res.json() : null))
+    .then((raw) => parseSheet(raw, file) ?? loadDefaultSheet())
+    .catch(() => loadDefaultSheet());
+  sheetCache.set(file, promise);
+  return promise;
 }
 
 export function catAsset(relative: string) {
@@ -309,15 +360,30 @@ export function findPath(from: CatTile, to: CatTile, walkable: CatTile[]): CatTi
   return [];
 }
 
-export function pickIdlePose(preferSleep = false): { anim: CatIdlePose; durationMs: number } {
+/** One full play of `def`, plus its hold. Looping clips use this as a minimum, not a stop. */
+export function animDurationMs(def: { frames: string[]; fps?: number; holdMs?: number } | null | undefined): number {
+  const count = def?.frames.length ?? 0;
+  const fps = def?.fps && def.fps > 0 ? def.fps : 1;
+  return (count / fps) * 1000 + (def?.holdMs ?? 0);
+}
+
+export function pickIdlePose(
+  sheet: CatSpriteSheet,
+  preferSleep = false,
+): { anim: CatIdlePose; durationMs: number } {
   // Rare, short sleeps — long idle made the cat look broken in the browser.
   if (preferSleep || Math.random() < 0.04) {
     return { anim: "sleep", durationMs: 2500 + Math.random() * 2500 };
   }
   const poses: CatIdlePose[] = ["idle_sit", "groom", "loaf", "stretch", "yawn"];
   const anim = poses[Math.floor(Math.random() * poses.length)] ?? "idle_sit";
-  if (anim === "stretch") return { anim, durationMs: 700 };
-  if (anim === "yawn") return { anim, durationMs: 700 };
+  const def = sheet.animations[anim];
+  if (anim === "stretch" || anim === "yawn") return { anim, durationMs: animDurationMs(def) };
+  if (anim === "groom") {
+    const fps = def?.fps && def.fps > 0 ? def.fps : 1;
+    const once = ((def?.frames.length ?? 1) / fps) * 1000;
+    return { anim, durationMs: Math.max(once, 400 + Math.random() * 700) };
+  }
   // Prefer getting back on the path quickly so roaming is obvious.
   return { anim, durationMs: 400 + Math.random() * 700 };
 }

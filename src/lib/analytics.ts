@@ -21,7 +21,8 @@ export type AnalyticsEvent =
   | "toss_reward_request"
   | "toss_reward_result"
   | "room_open"
-  | "room_item_buy";
+  | "room_item_buy"
+  | "room_cat_tap";
 
 export type AdPlacement =
   | "draw_normal"
@@ -35,7 +36,7 @@ type AnalyticsValue = string | number | boolean | undefined;
 const MAX_PARAMS = 6;
 
 function blockedParamKey(key: string): boolean {
-  if (key === "item_id") return false;
+  if (key === "item_id" || key === "cat_id" || key === "action_id") return false;
   const lower = key.toLowerCase();
   if (lower.includes("user") || lower.includes("key") || lower.includes("token")) return true;
   return lower.includes("id");

@@ -247,13 +247,19 @@ function RoamingCatBody({
   view,
   motionRef,
   onTap,
+  tapEnabled,
 }: {
   view: RoomCatView;
   motionRef: CatMotionRef;
   onTap: () => void;
+  tapEnabled: boolean;
 }) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const frameRef = useRef<HTMLSpanElement>(null);
+  const bubbleRef = useRef<HTMLSpanElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const emojiRef = useRef<HTMLSpanElement>(null);
+  const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
   useEffect(() => {
     if (!view.sheet) return;
     const sheet = view.sheet;
@@ -275,6 +281,15 @@ function RoamingCatBody({
       btn.style.transform = "";
       btn.classList.toggle("is-sleeping", motion.anim === "sleep");
       btn.dataset.catAnim = motion.anim;
+      const bubble = bubbleRef.current;
+      if (bubble && textRef.current && emojiRef.current) {
+        const show = motion.bubbleOn && (motion.bubbleText || motion.bubbleEmoji);
+        bubble.hidden = !show;
+        textRef.current.textContent = motion.bubbleText;
+        emojiRef.current.textContent = motion.bubbleEmoji;
+        textRef.current.hidden = !motion.bubbleText;
+        emojiRef.current.hidden = !motion.bubbleEmoji;
+      }
       const [sw, sh] = sheet.sheetSize;
       frameEl.style.backgroundSize = `${(sw / fw) * 100}% ${(sh / fh) * 100}%`;
       frameEl.style.backgroundPosition = `${sw === fw ? 0 : (frame.x / (sw - fw)) * 100}% ${sh === fh ? 0 : (frame.y / (sh - fh)) * 100}%`;
@@ -285,19 +300,40 @@ function RoamingCatBody({
   if (!view.sheet || !view.ready) return null;
   const [fw, fh] = view.sheet.frameSize;
   const [sw, sh] = view.sheet.sheetSize;
+  const onPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (event.button !== 0) return;
+    downRef.current = { x: event.clientX, y: event.clientY, t: performance.now() };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const onPointerUp = (event: PointerEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    const down = downRef.current;
+    downRef.current = null;
+    if (!down || !tapEnabled) return;
+    const dist = Math.hypot(event.clientX - down.x, event.clientY - down.y);
+    const elapsed = performance.now() - down.t;
+    if (dist <= 8 && elapsed <= 300) onTap();
+  };
   return (
     <button
       ref={btnRef}
       type="button"
       className={`lucky-sprite lucky-roam-cat ${view.sleeping ? "is-sleeping" : ""}`}
       aria-label="돌아다니는 고양이"
+      data-happy-frames={view.happyFrames >= 2 ? "multi" : "1"}
       style={{ width: pctX(fw), height: pctY(fh), opacity: view.opacity, left: 0, top: 0 }}
-      onPointerDown={(event) => event.stopPropagation()}
-      onClick={(event) => {
-        event.stopPropagation();
-        onTap();
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerCancel={() => {
+        downRef.current = null;
       }}
+      onClick={(event) => event.stopPropagation()}
     >
+      <span ref={bubbleRef} className="lucky-cat-tap-bubble" hidden>
+        <span ref={textRef} />
+        <span ref={emojiRef} />
+      </span>
       <span
         ref={frameRef}
         className="lucky-roam-frame"
@@ -364,6 +400,7 @@ export function RoomWorld({
     mode,
     active: roamingActive,
     reducedMotion: false,
+    reducedTapMotion: reduceMotion,
   });
   const onCatTap = () => {
     // Manual tap only — never auto-play meows.
@@ -688,7 +725,13 @@ export function RoomWorld({
       {drawList.map((entry) => {
         if (entry.kind === "cat") {
           return (
-            <RoamingCatBody key="roaming-cat" view={catView} motionRef={catMotionRef} onTap={onCatTap} />
+            <RoamingCatBody
+              key="roaming-cat"
+              view={catView}
+              motionRef={catMotionRef}
+              onTap={onCatTap}
+              tapEnabled={mode !== "edit" && !dragging && !previewGhost}
+            />
           );
         }
         const place = entry.place;

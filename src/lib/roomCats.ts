@@ -5,6 +5,15 @@ export type RoomCatStatus = "available" | "comingSoon";
 export type RoomCatType = "breed" | "legend";
 export type RoomCatUnlockRule = { breedId: string } | { legendCardId: string } | null;
 
+export type RoomCatTapAction = {
+  id: string;
+  frames: string[];
+  fps?: number;
+  bubble?: string;
+  emoji?: string;
+  cooldownMs?: number;
+};
+
 export type RoomCatEntry = {
   id: string;
   nameKo: string;
@@ -17,6 +26,8 @@ export type RoomCatEntry = {
   sprite: string | null;
   /** Drawer icon, relative to /assets/room/. null = use the shared silhouette. */
   icon: string | null;
+  /** Played when the cat is tapped in the room. Omitted when the json has none. */
+  tapAction?: RoomCatTapAction;
 };
 
 export const ROOM_CATS_URL = roomAsset("cat-friends/roomCats.json");
@@ -37,7 +48,7 @@ const FALLBACK: RoomCatEntry[] = [
 
 let catsPromise: Promise<RoomCatEntry[]> | null = null;
 
-function isEntry(value: unknown): value is RoomCatEntry {
+function isEntry(value: unknown): value is Record<string, unknown> & RoomCatEntry {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
   return (
@@ -48,12 +59,50 @@ function isEntry(value: unknown): value is RoomCatEntry {
   );
 }
 
+function readTapAction(value: unknown): RoomCatTapAction | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const v = value as Record<string, unknown>;
+  if (typeof v.id !== "string" || !v.id) return undefined;
+  if (
+    !Array.isArray(v.frames) ||
+    v.frames.length === 0 ||
+    !v.frames.every((frame) => typeof frame === "string" && frame.length > 0)
+  ) {
+    return undefined;
+  }
+  const action: RoomCatTapAction = { id: v.id, frames: v.frames as string[] };
+  if (typeof v.fps === "number") action.fps = v.fps;
+  if (typeof v.bubble === "string") action.bubble = v.bubble;
+  if (typeof v.emoji === "string") action.emoji = v.emoji;
+  if (typeof v.cooldownMs === "number") action.cooldownMs = v.cooldownMs;
+  return action;
+}
+
+function toEntry(value: unknown): RoomCatEntry | null {
+  if (!isEntry(value)) return null;
+  const entry: RoomCatEntry = {
+    id: value.id,
+    nameKo: value.nameKo,
+    type: value.type,
+    unlockRule: value.unlockRule ?? null,
+    status: value.status,
+    sprite: typeof value.sprite === "string" ? value.sprite : null,
+    icon: typeof value.icon === "string" ? value.icon : null,
+  };
+  if (value.default === true) entry.default = true;
+  const tapAction = readTapAction(value.tapAction);
+  if (tapAction) entry.tapAction = tapAction;
+  return entry;
+}
+
 export function loadRoomCats(): Promise<RoomCatEntry[]> {
   if (!catsPromise) {
     catsPromise = fetch(ROOM_CATS_URL)
       .then((res) => (res.ok ? res.json() : null))
       .then((raw) => {
-        const list = Array.isArray(raw?.cats) ? (raw.cats as unknown[]).filter(isEntry) : [];
+        const list = Array.isArray(raw?.cats)
+          ? (raw.cats as unknown[]).map(toEntry).filter((cat): cat is RoomCatEntry => cat !== null)
+          : [];
         return list.length ? list : FALLBACK;
       })
       .catch(() => FALLBACK);

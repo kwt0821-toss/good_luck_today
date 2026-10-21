@@ -63,9 +63,17 @@
       "unlockRule": {
         "breedId": "korean_shorthair"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-korean_shorthair.png",
+      "icon": "cat-friends/korean_shorthair.webp",
+      "tapAction": {
+        "id": "nyang",
+        "frames": ["tap_0", "tap_1", "tap_2"],
+        "fps": 8,
+        "bubble": "냥!",
+        "emoji": "❗",
+        "cooldownMs": 4000
+      }
     },
     {
       "id": "lykoi",
