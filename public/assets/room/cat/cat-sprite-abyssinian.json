@@ -1560,6 +1560,12 @@
    "y": 4836,
    "w": 200,
    "h": 156
+  },
+  "sit": {
+   "x": 800,
+   "y": 3432,
+   "w": 200,
+   "h": 156
   }
  },
  "animations": {
@@ -2029,5 +2035,8 @@
    "loop": false,
    "holdMs": 600
   }
+ },
+ "frameAliases": {
+  "sit": "sit_0 (fallback name used by the app)"
  }
 }
