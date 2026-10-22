@@ -1,0 +1,82 @@
+.att-notify-host {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 170;
+  padding: 0 14px calc(14px + var(--sa-bottom, env(safe-area-inset-bottom, 0px)));
+  pointer-events: none;
+}
+
+.att-notify-card {
+  pointer-events: auto;
+  padding: 20px 18px 16px;
+  border-radius: 22px;
+  background: #fff6e6;
+  color: #2a2238;
+  box-shadow:
+    0 16px 36px rgba(6, 5, 16, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.55) inset;
+  animation: att-notify-rise 280ms cubic-bezier(0.2, 0.9, 0.3, 1.12);
+}
+
+.att-notify-card h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  line-height: 1.35;
+}
+
+.att-notify-card p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #6e6478;
+}
+
+.att-notify-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.att-notify-later,
+.att-notify-accept {
+  height: 48px;
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.att-notify-later {
+  flex: 0 0 96px;
+  background: #ede3d2;
+  color: #2a2238;
+}
+
+.att-notify-accept {
+  flex: 1;
+  background: #1e1a2b;
+  color: #fff6e6;
+}
+
+@keyframes att-notify-rise {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .att-notify-card {
+    animation: none;
+  }
+}

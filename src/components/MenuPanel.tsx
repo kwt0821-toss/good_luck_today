@@ -44,7 +44,10 @@ import { claimAttendanceDay7, claimAttendanceGift } from "../lib/opsRewards";
 import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
 import type { MenuSheetId } from "../lib/menuTypes";
 import { track } from "../lib/analytics";
-import { requestAttendanceNotification } from "../lib/attendanceNotify";
+import {
+  recordAttendanceNotifyResult,
+  requestAttendanceNotification,
+} from "../lib/attendanceNotify";
 import { haptic } from "../lib/native";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
 import type { HelpTabId } from "../lib/helpConfig";
@@ -65,6 +68,8 @@ type MenuPanelProps = {
   onPawAd: () => void;
   /** Play long ad for weekly day7 bonus; retries load once upstream. */
   onAttendanceDay7Ad?: () => Promise<"completed" | "cancelled" | "failed" | "offline">;
+  /** Fired once a check-in reward has been granted. */
+  onAttendanceRewarded?: () => void;
   onReplayTutorial: () => void;
   /** Start rate-up draw from ticket shop CTA. */
   onRateUpDraw?: () => void;
@@ -110,6 +115,7 @@ export function MenuPanel({
   onOpenRoom,
   onPawAd,
   onAttendanceDay7Ad,
+  onAttendanceRewarded,
   onReplayTutorial,
   onRateUpDraw,
   forceSheet = null,
@@ -472,6 +478,7 @@ export function MenuPanel({
       day7RequestIdRef.current = null;
       setDay7AdExhausted(false);
       onOpsChange(result.state);
+      onAttendanceRewarded?.();
       if (withAd) {
         track("ad_complete", { placement: "attendance_day7", ad_length: "long" });
       }
@@ -563,6 +570,7 @@ export function MenuPanel({
     setPopDay(day);
     setStampDay(day);
     onOpsChange(result.state);
+    onAttendanceRewarded?.();
     track("attendance_claim", { day, doubled: false });
     void haptic("success");
     window.setTimeout(() => AudioManager.playSfx("stamp"), 180);
@@ -1611,7 +1619,9 @@ export function MenuPanel({
                               className="link"
                               onClick={() => {
                                 if (item.action === "notification.attendance") {
-                                  requestAttendanceNotification();
+                                  requestAttendanceNotification({
+                                    onResult: recordAttendanceNotifyResult,
+                                  });
                                   return;
                                 }
                                 closeSheet();

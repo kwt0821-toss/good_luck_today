@@ -6,6 +6,7 @@ import { AdIntro } from "./components/AdIntro";
 import { AdModal } from "./components/AdModal";
 import { NyangNotifyHost } from "./components/NyangNotifyHost";
 import { nyConfirm, nyDismiss, nyNotify } from "./lib/nyangNotify";
+import { AttendanceNotifyCard } from "./components/AttendanceNotifyCard";
 import { MenuPanel } from "./components/MenuPanel";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import {
@@ -106,6 +107,7 @@ const DRAW_LOADING_MESSAGES = ["카드를 섞는 중이냥...", "거의 다 됐�
 import { preloadAdFallbackCat, preloadLoadingAssets } from "./lib/preloadLoading";
 import { setLoadingBlocked, useLoadingHold } from "./lib/loadingGate";
 import { DevBackButton } from "./components/DevBackButton";
+import { useAttendanceNotifyOffer } from "./lib/useAttendanceNotifyOffer";
 import { useBackHandler } from "./hooks/useBackHandler";
 import { useExitConfirmOnBack } from "./hooks/useExitConfirmOnBack";
 import { CollectionScreen } from "./screens/CollectionScreen";
@@ -250,6 +252,10 @@ export default function App() {
   const [revealSpotlight, setRevealSpotlight] = useState(false);
   const [hideRevealToast, setHideRevealToast] = useState(false);
   const [rewardsIntro, setRewardsIntro] = useState<RewardsIntroSession | null>(null);
+  const attendanceNotifyBlocked = Boolean(
+    (ops && !ops.tutorialDone) || tutorialReplayStep != null || rewardsIntro,
+  );
+  const attendanceNotifyOffer = useAttendanceNotifyOffer(attendanceNotifyBlocked);
   const [forceMenuSheet, setForceMenuSheet] = useState<MenuSheetId>(initialForceSheet);
   const promoTargetRef = useRef<PromoTarget | null>(readPromoTarget());
   const [promoGate, setPromoGate] = useState<PromoTarget | null>(promoTargetRef.current);
@@ -1839,6 +1845,7 @@ export default function App() {
           })();
         }}
         onAttendanceDay7Ad={() => runAttendanceDay7Ad()}
+        onAttendanceRewarded={attendanceNotifyOffer.offerAfterReward}
         onRateUpDraw={() => {
           closeMenu();
           void beginDraw("rateUp");
@@ -1943,7 +1950,11 @@ export default function App() {
         />
       ) : null}
 
-      <NyangNotifyHost dock={menuOpen ? "bottom" : "top"} />
+      {attendanceNotifyOffer.open ? (
+        <AttendanceNotifyCard onClose={attendanceNotifyOffer.dismiss} />
+      ) : null}
+
+      <NyangNotifyHost dock={menuOpen && !attendanceNotifyOffer.open ? "bottom" : "top"} />
       {showDevBack ? <DevBackButton /> : null}
       {exitModal}
     </>
