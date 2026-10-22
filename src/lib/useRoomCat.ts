@@ -6,6 +6,7 @@ import {
   CAT_WALK_FPS,
   DEFAULT_CAT_BREED_ID,
   animDurationMs,
+  defaultSitFrame,
   type CatAnimName,
   type CatSpriteSheet,
   type CatTile,
@@ -65,7 +66,7 @@ type WalkPhase = { kind: "walk"; path: CatTile[]; index: number; startedAt: numb
 type Phase =
   | { kind: "idle"; until: number; anim: CatAnimName }
   | WalkPhase
-  | { kind: "tap"; step: "tapped" | "head_tilt" | "happy" | "wait"; until: number }
+  | { kind: "tap"; step: "tapped" | "special" | "happy" | "wait"; until: number }
   | {
       kind: "action";
       frames: string[];
@@ -132,14 +133,15 @@ function blockedGoals(spots: Map<string, CatSpot> | undefined, selfId: string): 
 }
 
 function frameFor(sheet: CatSpriteSheet, anim: CatAnimName, elapsedMs: number): string {
+  const sit = defaultSitFrame(sheet);
   const idle = anim.endsWith("_r") && sheet.animations.idle_sit_r ? sheet.animations.idle_sit_r : sheet.animations.idle_sit;
   const def = sheet.animations[anim] ?? idle;
-  const frames = def?.frames?.length ? def.frames : idle === sheet.animations.idle_sit_r ? ["sit_r"] : ["sit"];
-  if (frames.length <= 1) return frames[0] ?? "sit";
+  const frames = def?.frames?.length ? def.frames : idle === sheet.animations.idle_sit_r ? ["sit_r"] : [sit];
+  if (frames.length <= 1) return frames[0] ?? sit;
   const fps = def && def.fps > 0 ? def.fps : CAT_WALK_FPS;
   const raw = Math.floor((elapsedMs / 1000) * fps);
   const idx = def?.loop === true ? raw % frames.length : Math.min(raw, frames.length - 1);
-  return frames[idx] ?? frames[0] ?? "sit";
+  return frames[idx] ?? frames[0] ?? sit;
 }
 
 function actionFrame(frames: string[], fps: number, elapsedMs: number): string {
@@ -192,11 +194,17 @@ function pickWalkPath(from: CatTile, walkable: CatTile[], blocked: Set<string>):
   return path.length >= 2 ? path : null;
 }
 
-function placeMotion(motion: RoomCatMotion, tile: CatTile, anim: CatAnimName = "idle_sit") {
+function placeMotion(
+  motion: RoomCatMotion,
+  tile: CatTile,
+  sheet: CatSpriteSheet | null,
+  anim: CatAnimName = "idle_sit",
+) {
   const centre = tileCentreWorld(tile.col, tile.row);
   motion.worldX = centre.x;
   motion.worldY = centre.y;
-  motion.frameName = anim === "idle_sit" ? "sit" : anim === "idle_sit_r" ? "sit_r" : motion.frameName;
+  motion.frameName =
+    anim === "idle_sit" ? (sheet ? defaultSitFrame(sheet) : "sit") : anim === "idle_sit_r" ? "sit_r" : motion.frameName;
   motion.anim = anim;
 }
 
@@ -356,7 +364,7 @@ export function useRoomCat({
     progressRef.current = 0;
     depthRef.current = { col: start.col, row: start.row };
     spotsRef?.current.set(catIdRef.current, { tile: start, goal: null });
-    placeMotion(catMotion.current, start, "idle_sit");
+    placeMotion(catMotion.current, start, sheetRef.current, "idle_sit");
     // Start walking almost immediately so a cold browser load looks alive.
     phaseRef.current = { kind: "idle", until: performance.now() + (needSeed ? 200 : 80), anim: "idle_sit" };
     setView((prev) => ({ ...prev, depthCol: start.col, depthRow: start.row }));
@@ -459,11 +467,12 @@ export function useRoomCat({
         } else if (phase.kind === "tap") {
           if (ts >= phase.until) {
             if (phase.step === "tapped") {
-              if (sheet.animations.head_tilt) {
+              const special = sheet.special?.tap;
+              if (special && sheet.animations[special]) {
                 phaseRef.current = {
                   kind: "tap",
-                  step: "head_tilt",
-                  until: ts + animDurationMs(sheet.animations.head_tilt),
+                  step: "special",
+                  until: ts + animDurationMs(sheet.animations[special]),
                 };
               } else {
                 const happyClip = resolveFacedPose(sheet, "happy", facingRef.current);
@@ -474,7 +483,7 @@ export function useRoomCat({
                 };
               }
               animElapsedRef.current = 0;
-            } else if (phase.step === "happy" || phase.step === "head_tilt") {
+            } else if (phase.step === "happy" || phase.step === "special") {
               phaseRef.current = { kind: "tap", step: "wait", until: ts + 1000 };
               animElapsedRef.current = 0;
             } else {
@@ -532,7 +541,7 @@ export function useRoomCat({
               toRef.current = null;
               progressRef.current = 0;
               publishSpot(null);
-              placeMotion(catMotion.current, home, "idle_sit");
+              placeMotion(catMotion.current, home, sheet, "idle_sit");
               path = pickWalkPath(home, walkable, blockedGoals(spotsRef?.current, catIdRef.current));
             }
           }
@@ -563,12 +572,15 @@ export function useRoomCat({
         anim = faced.anim as CatAnimName;
         flip = faced.flip;
       } else if (live.kind === "tap") {
-        const pose = live.step === "wait" ? (sheet.animations.head_tilt ? "head_tilt" : "happy") : live.step;
+        const special = sheet.special?.tap;
+        const specialOk = Boolean(special && sheet.animations[special]);
+        const pose =
+          live.step === "special" || live.step === "wait" ? (specialOk ? special! : "happy") : live.step;
         const faced = resolveFacedPose(sheet, pose, facingRef.current);
         anim = faced.anim as CatAnimName;
         flip = faced.flip;
-        if (live.step === "wait" && sheet.animations.head_tilt) {
-          const hold = sheet.animations[faced.anim] ?? sheet.animations.head_tilt;
+        if (live.step === "wait" && specialOk && special) {
+          const hold = sheet.animations[faced.anim] ?? sheet.animations[special];
           frameOverride = hold.frames[hold.frames.length - 1] ?? null;
         }
       } else if (live.kind === "action") {
@@ -693,6 +705,24 @@ export function useRoomCat({
     const now = performance.now();
     const sheet = sheetRef.current;
     const action = tapActionRef.current;
+    const specialTap = sheet?.special?.tap;
+    if (sheet && specialTap && sheet.animations[specialTap]) {
+      const cooldown = action?.cooldownMs ?? TAP_COOLDOWN_MS;
+      const cooling = lastActionAtRef.current > 0 && now - lastActionAtRef.current < cooldown;
+      if (action && !cooling) {
+        lastActionAtRef.current = now;
+        track("room_cat_tap", { cat_id: catIdRef.current, action_id: action.id });
+        const text = action.bubble ?? "";
+        const emoji = action.emoji ?? "";
+        const showBubble = Boolean(text || emoji);
+        bubbleUntilRef.current = showBubble ? now + TAP_BUBBLE_MS : 0;
+        catMotion.current.bubbleOn = showBubble;
+        catMotion.current.bubbleText = text;
+        catMotion.current.bubbleEmoji = emoji;
+      }
+      playTapped(now);
+      return;
+    }
     const framesOk = Boolean(action && sheet && action.frames.every((name) => sheet.frames[name]));
     const cooldown = action?.cooldownMs ?? TAP_COOLDOWN_MS;
     const cooling = lastActionAtRef.current > 0 && now - lastActionAtRef.current < cooldown;

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Poin
 
 import { roomAsset } from "../lib/roomCatalog";
 import { AudioManager } from "../audio/AudioManager";
-import { DEFAULT_CAT_BREED_ID, catAsset, catDepthKey, furnitureDepthKey } from "../lib/roomCat";
+import { DEFAULT_CAT_BREED_ID, catAsset, catDepthKey, defaultSitFrame, furnitureDepthKey } from "../lib/roomCat";
 import {
   WALL_BANDS,
   WALL_SLOTS,
@@ -273,7 +273,7 @@ function RoamingCatBody({
       const frameEl = frameRef.current;
       if (!btn || !frameEl) return;
       const motion = motionRef.current;
-      const frame = sheet.frames[motion.frameName] ?? sheet.frames.sit;
+      const frame = sheet.frames[motion.frameName] ?? sheet.frames[defaultSitFrame(sheet)];
       if (!frame) return;
       const x = motion.worldX - sheet.anchor.x;
       const y = motion.worldY - sheet.anchor.y;

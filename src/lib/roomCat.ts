@@ -38,17 +38,19 @@ export type CatSpriteSheet = {
   animations: Record<string, CatAnimDef>;
   /** Sheet draws right-facing poses by mirroring, instead of shipping `_r` clips. */
   mirrorRightFacing?: boolean;
+  /** Extra idle clips and the tap pose. Names differ per breed and must exist in `animations`. */
+  special?: { idle: string[]; tap?: string };
 };
 
 export type CatWalkDir = "walk_dl" | "walk_dr" | "walk_ul" | "walk_ur";
-export type CatIdlePose = "idle_sit" | "groom" | "loaf" | "stretch" | "yawn" | "look_around" | "sleep";
-export type CatPoseName = CatIdlePose | "tapped" | "happy" | "head_tilt";
+export type CatIdlePose = "idle_sit" | "groom" | "loaf" | "stretch" | "yawn" | "sleep" | (string & {});
+export type CatPoseName = CatIdlePose | "tapped" | "happy" | (string & {});
 export type CatAnimName = CatWalkDir | CatPoseName | `${CatPoseName}_r`;
 
 export type FacedPose = { anim: string; flip: boolean };
 
 /**
- * Pick the clip for `facing`. Sheets with `_r` clips (cheese, korean shorthair) keep those.
+ * Pick the clip for `facing`. Sheets that still ship `_r` clips keep those.
  * Sheets without them mirror the base clip when the cat last walked right.
  */
 export function resolveFacedPose(sheet: CatSpriteSheet, anim: string, facing: CatWalkDir): FacedPose {
@@ -147,6 +149,23 @@ function spriteJsonName(spriteFile: string) {
   return spriteFile.replace(/\.[^.]+$/, ".json");
 }
 
+function readSpecial(raw: unknown, animations: Record<string, CatAnimDef>): CatSpriteSheet["special"] | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const data = raw as Record<string, unknown>;
+  const idle = Array.isArray(data.idle)
+    ? data.idle.filter((name): name is string => typeof name === "string" && name in animations)
+    : [];
+  const tap = typeof data.tap === "string" && data.tap in animations ? data.tap : undefined;
+  if (!idle.length && !tap) return undefined;
+  return tap ? { idle, tap } : { idle };
+}
+
+/** First idle frame. New sheets alias this as `sit`; older ones only list it on `idle_sit`. */
+export function defaultSitFrame(sheet: CatSpriteSheet): string {
+  if (sheet.frames.sit) return "sit";
+  return sheet.animations.idle_sit?.frames[0] ?? "sit";
+}
+
 function isDefaultSprite(spriteFile: string | undefined) {
   if (!spriteFile) return true;
   const name = spriteFile.replace(/^\//, "");
@@ -178,6 +197,7 @@ function parseSheet(raw: unknown, imageFallback: string): CatSpriteSheet | null 
     data.shadow && typeof data.shadow === "object" ? (data.shadow as Record<string, unknown>) : {};
   const anchorRaw =
     data.anchor && typeof data.anchor === "object" ? (data.anchor as Record<string, unknown>) : {};
+  const special = readSpecial(data.special, animations);
   return {
     image: typeof data.image === "string" ? data.image : imageFallback,
     frameSize: Array.isArray(data.frameSize) ? (data.frameSize as [number, number]) : FALLBACK_SHEET.frameSize,
@@ -196,6 +216,7 @@ function parseSheet(raw: unknown, imageFallback: string): CatSpriteSheet | null 
     frames,
     animations,
     ...(data.mirrorRightFacing === true ? { mirrorRightFacing: true } : {}),
+    ...(special ? { special } : {}),
   };
 }
 
@@ -407,20 +428,18 @@ export function pickIdlePose(
     return { anim: "sleep", durationMs: 2500 + Math.random() * 2500 };
   }
   const poses: CatIdlePose[] = ["idle_sit", "groom", "loaf", "stretch", "yawn"];
-  if (sheet.animations.look_around) poses.push("look_around");
+  for (const name of sheet.special?.idle ?? []) {
+    if (!poses.includes(name)) poses.push(name);
+  }
   const anim = poses[Math.floor(Math.random() * poses.length)] ?? "idle_sit";
   const faced = resolveFacedPose(sheet, anim, facing);
   const def = sheet.animations[faced.anim] ?? sheet.animations[anim];
-  if (anim === "stretch" || anim === "yawn" || anim === "look_around") {
-    return { anim, durationMs: animDurationMs(def) };
+  // Sit and loaf are 8fps breath/tail loops; a short hold looks frozen.
+  if (anim === "idle_sit" || anim === "loaf") {
+    return { anim, durationMs: 1200 + Math.random() * 1400 };
   }
-  if (anim === "groom") {
-    const fps = def?.fps && def.fps > 0 ? def.fps : 1;
-    const once = ((def?.frames.length ?? 1) / fps) * 1000;
-    return { anim, durationMs: Math.max(once, 400 + Math.random() * 700) };
-  }
-  // Prefer getting back on the path quickly so roaming is obvious.
-  return { anim, durationMs: 400 + Math.random() * 700 };
+  if (def?.loop !== true) return { anim, durationMs: animDurationMs(def) };
+  return { anim, durationMs: Math.max(animDurationMs(def), 400 + Math.random() * 700) };
 }
 
 export function catDepthKey(col: number, row: number) {
