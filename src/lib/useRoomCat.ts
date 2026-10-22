@@ -10,7 +10,7 @@ import {
   type CatSpriteSheet,
   type CatTile,
   type CatWalkDir,
-  facedPoseName,
+  resolveFacedPose,
   findPath,
   largestWalkableComponent,
   loadCatSpriteSheet,
@@ -36,6 +36,8 @@ export type RoomCatMotion = {
   worldY: number;
   frameName: string;
   anim: CatAnimName | "tap_action";
+  /** Mirror the frame around the foot anchor. `_r` clips stay unflipped. */
+  flip: boolean;
   opacity: number;
   bubbleOn: boolean;
   bubbleText: string;
@@ -63,7 +65,7 @@ type WalkPhase = { kind: "walk"; path: CatTile[]; index: number; startedAt: numb
 type Phase =
   | { kind: "idle"; until: number; anim: CatAnimName }
   | WalkPhase
-  | { kind: "tap"; step: "tapped" | "happy" | "wait"; until: number }
+  | { kind: "tap"; step: "tapped" | "head_tilt" | "happy" | "wait"; until: number }
   | {
       kind: "action";
       frames: string[];
@@ -222,6 +224,7 @@ export function useRoomCat({
       worldY: 0,
       frameName: "sit",
       anim: "idle_sit",
+      flip: false,
       opacity: 1,
       bubbleOn: false,
       bubbleText: "",
@@ -456,14 +459,22 @@ export function useRoomCat({
         } else if (phase.kind === "tap") {
           if (ts >= phase.until) {
             if (phase.step === "tapped") {
-              const happyClip = facedPoseName(sheet, "happy", facingRef.current);
-              phaseRef.current = {
-                kind: "tap",
-                step: "happy",
-                until: ts + animDurationMs(sheet.animations[happyClip] ?? sheet.animations.happy),
-              };
+              if (sheet.animations.head_tilt) {
+                phaseRef.current = {
+                  kind: "tap",
+                  step: "head_tilt",
+                  until: ts + animDurationMs(sheet.animations.head_tilt),
+                };
+              } else {
+                const happyClip = resolveFacedPose(sheet, "happy", facingRef.current);
+                phaseRef.current = {
+                  kind: "tap",
+                  step: "happy",
+                  until: ts + animDurationMs(sheet.animations[happyClip.anim] ?? sheet.animations.happy),
+                };
+              }
               animElapsedRef.current = 0;
-            } else if (phase.step === "happy") {
+            } else if (phase.step === "happy" || phase.step === "head_tilt") {
               phaseRef.current = { kind: "tap", step: "wait", until: ts + 1000 };
               animElapsedRef.current = 0;
             } else {
@@ -543,22 +554,39 @@ export function useRoomCat({
 
       const live = phaseRef.current;
       let anim: CatAnimName | "tap_action" = "idle_sit";
+      let flip = false;
       let frameOverride: string | null = null;
+      const facingRight = facingRef.current === "walk_dr" || facingRef.current === "walk_ur";
       if (live.kind === "walk") {
         facingRef.current = live.dir;
-        anim = live.dir;
+        const faced = resolveFacedPose(sheet, live.dir, live.dir);
+        anim = faced.anim as CatAnimName;
+        flip = faced.flip;
       } else if (live.kind === "tap") {
-        const pose = live.step === "wait" ? "happy" : live.step;
-        anim = facedPoseName(sheet, pose, facingRef.current) as CatAnimName;
+        const pose = live.step === "wait" ? (sheet.animations.head_tilt ? "head_tilt" : "happy") : live.step;
+        const faced = resolveFacedPose(sheet, pose, facingRef.current);
+        anim = faced.anim as CatAnimName;
+        flip = faced.flip;
+        if (live.step === "wait" && sheet.animations.head_tilt) {
+          const hold = sheet.animations[faced.anim] ?? sheet.animations.head_tilt;
+          frameOverride = hold.frames[hold.frames.length - 1] ?? null;
+        }
       } else if (live.kind === "action") {
         if (live.frames.length) {
           anim = "tap_action";
           frameOverride = actionFrame(live.frames, live.fps, ts - live.startedAt);
+          const hasRightFrame = live.frames.some((name) => Boolean(sheet.frames[`${name}_r`]));
+          flip = facingRight && !hasRightFrame;
         } else {
           frameOverride = catMotion.current.frameName;
           anim = catMotion.current.anim === "tap_action" ? "idle_sit" : catMotion.current.anim;
+          flip = catMotion.current.flip;
         }
-      } else anim = facedPoseName(sheet, live.anim, facingRef.current) as CatAnimName;
+      } else {
+        const faced = resolveFacedPose(sheet, live.anim, facingRef.current);
+        anim = faced.anim as CatAnimName;
+        flip = faced.flip;
+      }
 
       const from = fromRef.current;
       const to = toRef.current;
@@ -573,6 +601,7 @@ export function useRoomCat({
       motion.worldY = a.y + (b.y - a.y) * progress;
       motion.frameName = frameOverride ?? frameFor(sheet, anim === "tap_action" ? "idle_sit" : anim, animElapsedRef.current);
       motion.anim = anim;
+      motion.flip = flip;
       motion.opacity = isEdit ? 0.5 : 1;
       notify();
 

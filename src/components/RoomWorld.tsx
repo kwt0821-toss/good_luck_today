@@ -285,6 +285,9 @@ function RoamingCatBody({
       btn.style.transform = "";
       btn.classList.toggle("is-sleeping", motion.anim === "sleep" || motion.anim === "sleep_r");
       btn.dataset.catAnim = motion.anim;
+      btn.dataset.catFlip = motion.flip ? "1" : "0";
+      frameEl.style.transform = motion.flip ? "scaleX(-1)" : "";
+      frameEl.style.transformOrigin = `${(sheet.anchor.x / fw) * 100}% 100%`;
       const bubble = bubbleRef.current;
       if (bubble && textRef.current && emojiRef.current) {
         const show = motion.bubbleOn && (motion.bubbleText || motion.bubbleEmoji);
@@ -328,6 +331,7 @@ function RoamingCatBody({
       tabIndex={-1}
       aria-label="돌아다니는 고양이"
       data-cat-id={view.breedId}
+      data-cat-flip="0"
       data-happy-frames={view.happyFrames >= 2 ? "multi" : "1"}
       style={{ width: pctX(fw), height: pctY(fh), opacity: view.opacity, left: 0, top: 0 }}
       onPointerDown={onPointerDown}

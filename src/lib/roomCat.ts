@@ -19,7 +19,14 @@ export type CatBreed = {
 
 export type CatFrameRect = { x: number; y: number; w: number; h: number };
 
-export type CatAnimDef = { frames: string[]; fps: number; loop: boolean; holdMs?: number };
+export type CatAnimDef = {
+  frames: string[];
+  fps: number;
+  loop: boolean;
+  holdMs?: number;
+  /** Draw this clip mirrored. Used by right-facing walks that reuse left frames. */
+  flipX?: boolean;
+};
 
 export type CatSpriteSheet = {
   image: string;
@@ -29,19 +36,31 @@ export type CatSpriteSheet = {
   shadow: { image: string; size: [number, number]; anchor: [number, number] };
   frames: Record<string, CatFrameRect>;
   animations: Record<string, CatAnimDef>;
+  /** Sheet draws right-facing poses by mirroring, instead of shipping `_r` clips. */
+  mirrorRightFacing?: boolean;
 };
 
 export type CatWalkDir = "walk_dl" | "walk_dr" | "walk_ul" | "walk_ur";
-export type CatIdlePose = "idle_sit" | "groom" | "loaf" | "stretch" | "yawn" | "sleep";
-export type CatPoseName = CatIdlePose | "tapped" | "happy";
+export type CatIdlePose = "idle_sit" | "groom" | "loaf" | "stretch" | "yawn" | "look_around" | "sleep";
+export type CatPoseName = CatIdlePose | "tapped" | "happy" | "head_tilt";
 export type CatAnimName = CatWalkDir | CatPoseName | `${CatPoseName}_r`;
 
-/** Right-facing walks keep later sit/tap poses on the `_r` clip when the sheet has one. */
-export function facedPoseName(sheet: CatSpriteSheet, anim: string, facing: CatWalkDir): string {
-  if (anim.startsWith("walk_")) return anim;
-  if (facing !== "walk_dr" && facing !== "walk_ur") return anim;
-  const mirrored = `${anim}_r`;
-  return sheet.animations[mirrored] ? mirrored : anim;
+export type FacedPose = { anim: string; flip: boolean };
+
+/**
+ * Pick the clip for `facing`. Sheets with `_r` clips (cheese, korean shorthair) keep those.
+ * Sheets without them mirror the base clip when the cat last walked right.
+ */
+export function resolveFacedPose(sheet: CatSpriteSheet, anim: string, facing: CatWalkDir): FacedPose {
+  if (anim.startsWith("walk_")) {
+    return { anim, flip: sheet.animations[anim]?.flipX === true };
+  }
+  if (facing === "walk_dr" || facing === "walk_ur") {
+    const mirrored = `${anim}_r`;
+    if (sheet.animations[mirrored]) return { anim: mirrored, flip: false };
+    return { anim, flip: true };
+  }
+  return { anim, flip: false };
 }
 
 export type CatTile = { col: number; row: number };
@@ -152,6 +171,7 @@ function parseSheet(raw: unknown, imageFallback: string): CatSpriteSheet | null 
       fps: typeof def.fps === "number" && def.fps > 0 ? def.fps : 1,
       loop: def.loop === true,
       ...(typeof def.holdMs === "number" ? { holdMs: def.holdMs } : {}),
+      ...(def.flipX === true ? { flipX: true } : {}),
     };
   }
   const shadowRaw =
@@ -175,6 +195,7 @@ function parseSheet(raw: unknown, imageFallback: string): CatSpriteSheet | null 
     },
     frames,
     animations,
+    ...(data.mirrorRightFacing === true ? { mirrorRightFacing: true } : {}),
   };
 }
 
@@ -386,9 +407,13 @@ export function pickIdlePose(
     return { anim: "sleep", durationMs: 2500 + Math.random() * 2500 };
   }
   const poses: CatIdlePose[] = ["idle_sit", "groom", "loaf", "stretch", "yawn"];
+  if (sheet.animations.look_around) poses.push("look_around");
   const anim = poses[Math.floor(Math.random() * poses.length)] ?? "idle_sit";
-  const def = sheet.animations[facedPoseName(sheet, anim, facing)] ?? sheet.animations[anim];
-  if (anim === "stretch" || anim === "yawn") return { anim, durationMs: animDurationMs(def) };
+  const faced = resolveFacedPose(sheet, anim, facing);
+  const def = sheet.animations[faced.anim] ?? sheet.animations[anim];
+  if (anim === "stretch" || anim === "yawn" || anim === "look_around") {
+    return { anim, durationMs: animDurationMs(def) };
+  }
   if (anim === "groom") {
     const fps = def?.fps && def.fps > 0 ? def.fps : 1;
     const once = ((def?.frames.length ?? 1) / fps) * 1000;
