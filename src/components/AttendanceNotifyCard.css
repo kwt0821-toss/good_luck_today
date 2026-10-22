@@ -4,14 +4,13 @@
   right: 0;
   bottom: 0;
   z-index: 170;
-  padding: 0 14px calc(14px + var(--sa-bottom, env(safe-area-inset-bottom, 0px)));
   pointer-events: none;
 }
 
 .att-notify-card {
   pointer-events: auto;
-  padding: 20px 18px 16px;
-  border-radius: 22px;
+  padding: 20px 18px calc(16px + var(--sa-bottom, env(safe-area-inset-bottom, 0px)));
+  border-radius: 22px 22px 0 0;
   background: #fff6e6;
   color: #2a2238;
   box-shadow:
