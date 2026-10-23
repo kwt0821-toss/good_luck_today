@@ -104,9 +104,9 @@
       "unlockRule": {
         "breedId": "minskin"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-minskin.png",
+      "icon": "cat-friends/minskin.webp"
     },
     {
       "id": "munchkin",
