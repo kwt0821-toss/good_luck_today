@@ -115,9 +115,9 @@
       "unlockRule": {
         "breedId": "munchkin"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-munchkin.png",
+      "icon": "cat-friends/munchkin.webp"
     },
     {
       "id": "norwegian_forest",
