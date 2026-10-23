@@ -30,9 +30,9 @@
       "unlockRule": {
         "breedId": "bengal"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-bengal.png",
+      "icon": "cat-friends/bengal.webp"
     },
     {
       "id": "british_shorthair",
