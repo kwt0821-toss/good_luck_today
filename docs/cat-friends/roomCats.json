@@ -93,9 +93,9 @@
       "unlockRule": {
         "breedId": "maine_coon"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-maine_coon.png",
+      "icon": "cat-friends/maine_coon.webp"
     },
     {
       "id": "minskin",
