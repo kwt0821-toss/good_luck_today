@@ -126,9 +126,9 @@
       "unlockRule": {
         "breedId": "norwegian_forest"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-norwegian_forest.png",
+      "icon": "cat-friends/norwegian_forest.webp"
     },
     {
       "id": "persian",
