@@ -148,9 +148,9 @@
       "unlockRule": {
         "breedId": "peterbald"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-peterbald.png",
+      "icon": "cat-friends/peterbald.webp"
     },
     {
       "id": "ragdoll",
