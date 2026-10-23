@@ -159,9 +159,9 @@
       "unlockRule": {
         "breedId": "ragdoll"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-ragdoll.png",
+      "icon": "cat-friends/ragdoll.webp"
     },
     {
       "id": "russian_blue",
