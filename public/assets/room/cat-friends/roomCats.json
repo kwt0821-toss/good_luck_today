@@ -82,9 +82,9 @@
       "unlockRule": {
         "breedId": "lykoi"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-lykoi.png",
+      "icon": "cat-friends/lykoi.webp"
     },
     {
       "id": "maine_coon",
