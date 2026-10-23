@@ -41,9 +41,9 @@
       "unlockRule": {
         "breedId": "british_shorthair"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-british_shorthair.png",
+      "icon": "cat-friends/british_shorthair.webp"
     },
     {
       "id": "cornish_rex",
