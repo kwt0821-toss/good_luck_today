@@ -31,6 +31,9 @@ const TAP_ACTION_FPS = 8;
 const TAP_ACTION_HOLD_MS = 500;
 const TAP_BUBBLE_MS = 1200;
 const TAP_COOLDOWN_MS = 4000;
+/** Short lines drawn above the Siamese while its meow clip plays. */
+const MEOW_LINES = ["냥~", "야옹!", "냐아앙"] as const;
+const MEOW_BUBBLE_MS = 1500;
 
 export type RoomCatMotion = {
   worldX: number;
@@ -43,6 +46,8 @@ export type RoomCatMotion = {
   bubbleOn: boolean;
   bubbleText: string;
   bubbleEmoji: string;
+  /** Draw the line in the room, outside the island mask, so it is not clipped. */
+  bubbleRoom: boolean;
 };
 
 export type RoomCatView = {
@@ -237,6 +242,7 @@ export function useRoomCat({
       bubbleOn: false,
       bubbleText: "",
       bubbleEmoji: "",
+      bubbleRoom: false,
     };
     const ref = {
       current: motion,
@@ -318,6 +324,7 @@ export function useRoomCat({
     lastActionAtRef.current = 0;
     bubbleUntilRef.current = 0;
     catMotion.current.bubbleOn = false;
+    catMotion.current.bubbleRoom = false;
     void loadRoomCats().then((cats) => {
       if (cancelled) return;
       const entry = cats.find((cat) => cat.id === catId) ?? null;
@@ -382,6 +389,7 @@ export function useRoomCat({
       progressRef.current = 0;
       bubbleUntilRef.current = 0;
       catMotion.current.bubbleOn = false;
+      catMotion.current.bubbleRoom = false;
       catMotion.current.opacity = 0.5;
       setView((prev) => ({ ...prev, opacity: 0.5 }));
       for (const listener of listenersRef.current) listener();
@@ -451,6 +459,7 @@ export function useRoomCat({
       if (bubbleUntilRef.current && ts >= bubbleUntilRef.current) {
         bubbleUntilRef.current = 0;
         motionEarly.bubbleOn = false;
+        motionEarly.bubbleRoom = false;
       }
 
       if (isActive && !isEdit && !reduce) {
@@ -719,6 +728,15 @@ export function useRoomCat({
         catMotion.current.bubbleOn = showBubble;
         catMotion.current.bubbleText = text;
         catMotion.current.bubbleEmoji = emoji;
+        catMotion.current.bubbleRoom = false;
+      }
+      if (specialTap === "meow") {
+        const text = MEOW_LINES[Math.floor(Math.random() * MEOW_LINES.length)] ?? "야옹!";
+        bubbleUntilRef.current = now + MEOW_BUBBLE_MS;
+        catMotion.current.bubbleOn = true;
+        catMotion.current.bubbleText = text;
+        catMotion.current.bubbleEmoji = "";
+        catMotion.current.bubbleRoom = true;
       }
       playTapped(now);
       return;
@@ -756,6 +774,7 @@ export function useRoomCat({
     catMotion.current.bubbleOn = showBubble;
     catMotion.current.bubbleText = text;
     catMotion.current.bubbleEmoji = emoji;
+    catMotion.current.bubbleRoom = false;
   };
 
   return { view, motionRef: catMotion, tap };

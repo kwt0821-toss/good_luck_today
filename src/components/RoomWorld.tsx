@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { createPortal } from "react-dom";
 
 import { roomAsset } from "../lib/roomCatalog";
 import { AudioManager } from "../audio/AudioManager";
@@ -247,6 +248,30 @@ function RoamingCatShadow({
   return <img ref={imgRef} className="lucky-roam-shadow" src={catAsset(view.sheet.shadow.image)} alt="" draggable={false} />;
 }
 
+/** Keep the meow line inside the room viewport, above the cat, outside the island mask. */
+function placeMeowBubble(bubble: HTMLElement, btn: HTMLElement) {
+  const root = bubble.offsetParent instanceof HTMLElement ? bubble.offsetParent : bubble.parentElement;
+  if (!root) return;
+  const rootRect = root.getBoundingClientRect();
+  const catRect = btn.getBoundingClientRect();
+  const width = bubble.offsetWidth;
+  const tailDrop = 8;
+  const height = bubble.offsetHeight + tailDrop;
+  if (width < 1 || height < 1) return;
+  const pad = 8;
+  const maxLeft = Math.max(pad, root.clientWidth - width - pad);
+  const maxTop = Math.max(pad, root.clientHeight - height - pad);
+  let left = catRect.left + catRect.width / 2 - width / 2 - rootRect.left;
+  let top = catRect.top - height - 2 - rootRect.top;
+  left = Math.min(Math.max(left, pad), maxLeft);
+  top = Math.min(Math.max(top, pad), maxTop);
+  bubble.style.left = `${left}px`;
+  bubble.style.top = `${top}px`;
+  const catCenter = catRect.left + catRect.width / 2 - rootRect.left;
+  const tail = Math.min(Math.max(catCenter - left, 14), Math.max(14, width - 14));
+  bubble.style.setProperty("--meow-tail", `${tail}px`);
+}
+
 function RoamingCatBody({
   view,
   motionRef,
@@ -263,7 +288,14 @@ function RoamingCatBody({
   const bubbleRef = useRef<HTMLSpanElement>(null);
   const textRef = useRef<HTMLSpanElement>(null);
   const emojiRef = useRef<HTMLSpanElement>(null);
+  const meowRef = useRef<HTMLSpanElement>(null);
+  const meowTextRef = useRef<HTMLSpanElement>(null);
+  const [bubbleRoot, setBubbleRoot] = useState<HTMLElement | null>(null);
   const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  useLayoutEffect(() => {
+    const root = btnRef.current?.closest(".lucky-island-port");
+    if (root instanceof HTMLElement) setBubbleRoot(root);
+  }, [view.sheet]);
   useEffect(() => {
     if (!view.sheet) return;
     const sheet = view.sheet;
@@ -288,14 +320,21 @@ function RoamingCatBody({
       btn.dataset.catFlip = motion.flip ? "1" : "0";
       frameEl.style.transform = motion.flip ? "scaleX(-1)" : "";
       frameEl.style.transformOrigin = `${(sheet.anchor.x / fw) * 100}% 100%`;
+      const show = Boolean(motion.bubbleOn && (motion.bubbleText || motion.bubbleEmoji));
+      const float = show && motion.bubbleRoom && Boolean(meowRef.current);
       const bubble = bubbleRef.current;
       if (bubble && textRef.current && emojiRef.current) {
-        const show = motion.bubbleOn && (motion.bubbleText || motion.bubbleEmoji);
-        bubble.hidden = !show;
-        textRef.current.textContent = motion.bubbleText;
-        emojiRef.current.textContent = motion.bubbleEmoji;
-        textRef.current.hidden = !motion.bubbleText;
-        emojiRef.current.hidden = !motion.bubbleEmoji;
+        bubble.hidden = !show || float;
+        textRef.current.textContent = float ? "" : motion.bubbleText;
+        emojiRef.current.textContent = float ? "" : motion.bubbleEmoji;
+        textRef.current.hidden = float || !motion.bubbleText;
+        emojiRef.current.hidden = float || !motion.bubbleEmoji;
+      }
+      const meow = meowRef.current;
+      if (meow && meowTextRef.current) {
+        meowTextRef.current.textContent = float ? motion.bubbleText : "";
+        meow.hidden = !float;
+        if (float) placeMeowBubble(meow, btn);
       }
       const [sw, sh] = sheet.sheetSize;
       frameEl.style.backgroundSize = `${(sw / fw) * 100}% ${(sh / fh) * 100}%`;
@@ -345,6 +384,14 @@ function RoamingCatBody({
         <span ref={textRef} />
         <span ref={emojiRef} />
       </span>
+      {bubbleRoot
+        ? createPortal(
+            <span ref={meowRef} className="lucky-cat-meow-bubble" hidden>
+              <span ref={meowTextRef} />
+            </span>,
+            bubbleRoot,
+          )
+        : null}
       <span
         ref={frameRef}
         className="lucky-roam-frame"
