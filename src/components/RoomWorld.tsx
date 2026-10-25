@@ -290,6 +290,7 @@ function RoamingCatBody({
   const emojiRef = useRef<HTMLSpanElement>(null);
   const meowRef = useRef<HTMLSpanElement>(null);
   const meowTextRef = useRef<HTMLSpanElement>(null);
+  const postRef = useRef<HTMLSpanElement>(null);
   const [bubbleRoot, setBubbleRoot] = useState<HTMLElement | null>(null);
   const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
   useLayoutEffect(() => {
@@ -335,6 +336,15 @@ function RoamingCatBody({
         meowTextRef.current.textContent = float ? motion.bubbleText : "";
         meow.hidden = !float;
         if (float) placeMeowBubble(meow, btn);
+      }
+      const post = postRef.current;
+      if (post) {
+        const scratching = motion.anim === "scratch" || motion.anim === "scratch_r";
+        post.hidden = !scratching;
+        if (scratching) {
+          post.style.left = `${(sheet.anchor.x / fw) * 100}%`;
+          post.style.bottom = `${((fh - sheet.anchor.y) / fh) * 100}%`;
+        }
       }
       const [sw, sh] = sheet.sheetSize;
       frameEl.style.backgroundSize = `${(sw / fw) * 100}% ${(sh / fh) * 100}%`;
@@ -403,6 +413,10 @@ function RoamingCatBody({
           backgroundRepeat: "no-repeat",
         }}
       />
+      <span ref={postRef} className="lucky-cat-scratcher" hidden aria-hidden="true">
+        <span className="lucky-cat-scratcher-post" />
+        <span className="lucky-cat-scratcher-base" />
+      </span>
     </button>
   );
 }

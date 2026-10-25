@@ -203,9 +203,9 @@
       "unlockRule": {
         "breedId": "sokoke"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-sokoke.png",
+      "icon": "cat-friends/sokoke.webp"
     },
     {
       "id": "sphynx",
