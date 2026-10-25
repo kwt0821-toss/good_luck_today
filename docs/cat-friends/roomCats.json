@@ -225,9 +225,9 @@
       "unlockRule": {
         "legendCardId": "sabertooth"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-sabertooth.png",
+      "icon": "cat-friends/sabertooth.webp"
     },
     {
       "id": "lionking",
