@@ -483,6 +483,14 @@ export function useRoomCat({
                   step: "special",
                   until: ts + animDurationMs(sheet.animations[special]),
                 };
+                if (special === "meow") {
+                  const text = MEOW_LINES[Math.floor(Math.random() * MEOW_LINES.length)] ?? "야옹!";
+                  bubbleUntilRef.current = ts + MEOW_BUBBLE_MS;
+                  motionEarly.bubbleOn = true;
+                  motionEarly.bubbleText = text;
+                  motionEarly.bubbleEmoji = "";
+                  motionEarly.bubbleRoom = true;
+                }
               } else {
                 const happyClip = resolveFacedPose(sheet, "happy", facingRef.current);
                 phaseRef.current = {
@@ -731,12 +739,9 @@ export function useRoomCat({
         catMotion.current.bubbleRoom = false;
       }
       if (specialTap === "meow") {
-        const text = MEOW_LINES[Math.floor(Math.random() * MEOW_LINES.length)] ?? "야옹!";
-        bubbleUntilRef.current = now + MEOW_BUBBLE_MS;
-        catMotion.current.bubbleOn = true;
-        catMotion.current.bubbleText = text;
-        catMotion.current.bubbleEmoji = "";
-        catMotion.current.bubbleRoom = true;
+        bubbleUntilRef.current = 0;
+        catMotion.current.bubbleOn = false;
+        catMotion.current.bubbleRoom = false;
       }
       playTapped(now);
       return;
