@@ -181,9 +181,9 @@
       "unlockRule": {
         "breedId": "scottish_fold"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-scottish_fold.png",
+      "icon": "cat-friends/scottish_fold.webp"
     },
     {
       "id": "siamese",
