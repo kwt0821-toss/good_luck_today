@@ -214,9 +214,9 @@
       "unlockRule": {
         "breedId": "sphynx"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-sphynx.png",
+      "icon": "cat-friends/sphynx.webp"
     },
     {
       "id": "sabertooth",
