@@ -247,9 +247,9 @@
       "unlockRule": {
         "legendCardId": "tiger"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-tiger.png",
+      "icon": "cat-friends/tiger.webp"
     },
     {
       "id": "baekho",
