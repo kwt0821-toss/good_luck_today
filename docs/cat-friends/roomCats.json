@@ -52,9 +52,9 @@
       "unlockRule": {
         "breedId": "cornish_rex"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-cornish_rex.png",
+      "icon": "cat-friends/cornish_rex.webp"
     },
     {
       "id": "korean_shorthair",
