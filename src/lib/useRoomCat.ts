@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 
 import { track } from "./analytics";
+import { blizzardClock, saberCountedClip } from "./saberBlizzard";
 import {
   CAT_STEP_MS,
   CAT_WALK_FPS,
   DEFAULT_CAT_BREED_ID,
   animDurationMs,
+  clipPlayMs,
   defaultSitFrame,
   type CatAnimName,
   type CatSpriteSheet,
@@ -48,10 +50,14 @@ export type RoomCatMotion = {
   bubbleEmoji: string;
   /** Draw the line in the room, outside the island mask, so it is not clipped. */
   bubbleRoom: boolean;
-  /** App-drawn meditate cloud or aura. Empty unless that clip is playing. */
-  fx: "" | "meditate" | "aura";
+  /** App-drawn meditate cloud, aura, or sabertooth blizzard. Empty unless that clip is playing. */
+  fx: "" | "meditate" | "aura" | "blizzard";
   /** Milliseconds into the current effect clip, from the first frame. */
   fxMs: number;
+  /** Blizzard strength, 0 outside that effect. Fades particle count and alpha. */
+  fxK: number;
+  /** Hide the sprite and its ground shadow. Used while blizzard snow fades in. */
+  spriteHidden: boolean;
 };
 
 export type RoomCatView = {
@@ -75,7 +81,8 @@ type WalkPhase = { kind: "walk"; path: CatTile[]; index: number; startedAt: numb
 type Phase =
   | { kind: "idle"; until: number; anim: CatAnimName }
   | WalkPhase
-  | { kind: "tap"; step: "tapped" | "special" | "happy" | "wait"; until: number }
+  | { kind: "tap"; step: "tapped" | "special" | "happy" | "wait"; until: number; cooldown?: boolean }
+  | { kind: "blizzard"; startedAt: number }
   | {
       kind: "action";
       frames: string[];
@@ -249,6 +256,8 @@ export function useRoomCat({
       bubbleRoom: false,
       fx: "",
       fxMs: 0,
+      fxK: 0,
+      spriteHidden: false,
     };
     const ref = {
       current: motion,
@@ -293,6 +302,7 @@ export function useRoomCat({
   const tapActionRef = useRef<RoomCatTapAction | null>(null);
   const catIdRef = useRef(breedId || "cheese");
   const lastActionAtRef = useRef(0);
+  const saberTapRef = useRef(0);
   const bubbleUntilRef = useRef(0);
   const reduceTapRef = useRef(reducedTapMotion);
   const depthRef = useRef({ col: 4, row: 5 });
@@ -479,33 +489,44 @@ export function useRoomCat({
               animElapsedRef.current = 0;
             }
           }
+        } else if (phase.kind === "blizzard") {
+          const playMs = clipPlayMs(sheet.animations.blizzard);
+          if (blizzardClock(ts - phase.startedAt, playMs).stage === "done") {
+            phaseRef.current = { kind: "idle", until: ts + 200, anim: "idle_sit" };
+            animElapsedRef.current = 0;
+          }
         } else if (phase.kind === "tap") {
           if (ts >= phase.until) {
             if (phase.step === "tapped") {
-              const special = sheet.special?.tap;
-              if (special && sheet.animations[special]) {
-                phaseRef.current = {
-                  kind: "tap",
-                  step: "special",
-                  until: ts + animDurationMs(sheet.animations[special]),
-                };
-                if (special === "meow") {
-                  const text = MEOW_LINES[Math.floor(Math.random() * MEOW_LINES.length)] ?? "야옹!";
-                  bubbleUntilRef.current = ts + MEOW_BUBBLE_MS;
-                  motionEarly.bubbleOn = true;
-                  motionEarly.bubbleText = text;
-                  motionEarly.bubbleEmoji = "";
-                  motionEarly.bubbleRoom = true;
-                }
+              if (phase.cooldown) {
+                phaseRef.current = { kind: "idle", until: ts + 200, anim: "idle_sit" };
+                animElapsedRef.current = 0;
               } else {
-                const happyClip = resolveFacedPose(sheet, "happy", facingRef.current);
-                phaseRef.current = {
-                  kind: "tap",
-                  step: "happy",
-                  until: ts + animDurationMs(sheet.animations[happyClip.anim] ?? sheet.animations.happy),
-                };
+                const special = sheet.special?.tap;
+                if (special && sheet.animations[special]) {
+                  phaseRef.current = {
+                    kind: "tap",
+                    step: "special",
+                    until: ts + animDurationMs(sheet.animations[special]),
+                  };
+                  if (special === "meow") {
+                    const text = MEOW_LINES[Math.floor(Math.random() * MEOW_LINES.length)] ?? "야옹!";
+                    bubbleUntilRef.current = ts + MEOW_BUBBLE_MS;
+                    motionEarly.bubbleOn = true;
+                    motionEarly.bubbleText = text;
+                    motionEarly.bubbleEmoji = "";
+                    motionEarly.bubbleRoom = true;
+                  }
+                } else {
+                  const happyClip = resolveFacedPose(sheet, "happy", facingRef.current);
+                  phaseRef.current = {
+                    kind: "tap",
+                    step: "happy",
+                    until: ts + animDurationMs(sheet.animations[happyClip.anim] ?? sheet.animations.happy),
+                  };
+                }
+                animElapsedRef.current = 0;
               }
-              animElapsedRef.current = 0;
             } else if (phase.step === "happy" || phase.step === "special") {
               phaseRef.current = { kind: "tap", step: "wait", until: ts + 1000 };
               animElapsedRef.current = 0;
@@ -594,6 +615,23 @@ export function useRoomCat({
         const faced = resolveFacedPose(sheet, live.dir, live.dir);
         anim = faced.anim as CatAnimName;
         flip = faced.flip;
+      } else if (live.kind === "blizzard") {
+        const clip = sheet.animations.blizzard;
+        if (clip) {
+          const clock = blizzardClock(ts - live.startedAt, clipPlayMs(clip));
+          const faced = resolveFacedPose(sheet, "blizzard", facingRef.current);
+          anim = faced.anim as CatAnimName;
+          flip = faced.flip;
+          const frames = sheet.animations[faced.anim]?.frames ?? clip.frames;
+          frameOverride = frameFor(sheet, faced.anim as CatAnimName, clock.localMs) || frames[frames.length - 1] || null;
+          if (clock.stage === "hold" || clock.stage === "out") {
+            frameOverride = frames[frames.length - 1] ?? frameOverride;
+          }
+        } else {
+          const faced = resolveFacedPose(sheet, "idle_sit", facingRef.current);
+          anim = faced.anim as CatAnimName;
+          flip = faced.flip;
+        }
       } else if (live.kind === "tap") {
         const special = sheet.special?.tap;
         const specialOk = Boolean(special && sheet.animations[special]);
@@ -642,8 +680,18 @@ export function useRoomCat({
       const fxOn =
         (fxName === "meditate" && live.kind === "idle") ||
         (fxName === "aura" && live.kind === "tap" && live.step === "special");
-      motion.fx = fxOn ? fxName : "";
-      motion.fxMs = fxOn ? animElapsedRef.current : 0;
+      if (live.kind === "blizzard" && sheet.animations.blizzard) {
+        const clock = blizzardClock(ts - live.startedAt, clipPlayMs(sheet.animations.blizzard));
+        motion.fx = "blizzard";
+        motion.fxMs = ts - live.startedAt;
+        motion.fxK = clock.k;
+        motion.spriteHidden = clock.hideSprite;
+      } else {
+        motion.fx = fxOn ? fxName : "";
+        motion.fxMs = fxOn ? animElapsedRef.current : 0;
+        motion.fxK = 0;
+        motion.spriteHidden = false;
+      }
       notify();
 
       if (isActive) {
@@ -652,7 +700,9 @@ export function useRoomCat({
             ? `walk:${live.index}/${live.path.length - 1}`
             : live.kind === "tap"
               ? `tap:${live.step}`
-              : live.kind === "action"
+              : live.kind === "blizzard"
+                ? "blizzard"
+                : live.kind === "action"
                 ? `action:${live.frames.join(",") || "bubble"}`
                 : `idle:${live.anim}`;
         const debug = {
@@ -665,6 +715,9 @@ export function useRoomCat({
           anim,
           fx: motion.fx,
           fxMs: Math.round(motion.fxMs),
+          fxK: Math.round(motion.fxK * 100) / 100,
+          spriteHidden: motion.spriteHidden,
+          saberTap: saberTapRef.current,
           worldX: Math.round(motion.worldX),
           worldY: Math.round(motion.worldY),
           listeners: listeners.size,
@@ -737,6 +790,33 @@ export function useRoomCat({
     const sheet = sheetRef.current;
     const action = tapActionRef.current;
     const specialTap = sheet?.special?.tap;
+    if (sheet && catIdRef.current === "sabertooth" && sheet.animations.blizzard && specialTap === "roar") {
+      const phase = phaseRef.current;
+      const playing =
+        phase.kind === "blizzard" ||
+        (phase.kind === "tap" && !phase.cooldown && (phase.step === "tapped" || phase.step === "special"));
+      if (playing) return;
+      const cooling = lastActionAtRef.current > 0 && now - lastActionAtRef.current < TAP_COOLDOWN_MS;
+      if (cooling) {
+        phaseRef.current = { kind: "tap", step: "tapped", until: now + 600, cooldown: true };
+        toRef.current = null;
+        progressRef.current = 0;
+        animElapsedRef.current = 0;
+        return;
+      }
+      saberTapRef.current += 1;
+      lastActionAtRef.current = now;
+      const clip = saberCountedClip(saberTapRef.current);
+      toRef.current = null;
+      progressRef.current = 0;
+      animElapsedRef.current = 0;
+      if (clip === "blizzard") {
+        phaseRef.current = { kind: "blizzard", startedAt: now };
+      } else {
+        playTapped(now);
+      }
+      return;
+    }
     if (sheet && specialTap && sheet.animations[specialTap]) {
       const cooldown = action?.cooldownMs ?? TAP_COOLDOWN_MS;
       const cooling = lastActionAtRef.current > 0 && now - lastActionAtRef.current < cooldown;

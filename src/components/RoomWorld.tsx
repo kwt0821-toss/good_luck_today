@@ -13,6 +13,7 @@ import {
   furnitureDepthKey,
   meditateFloatPx,
 } from "../lib/roomCat";
+import { createSnowflakes, paintSnow, stepSnow, type SnowFlake } from "../lib/saberBlizzard";
 import {
   WALL_BANDS,
   WALL_SLOTS,
@@ -247,7 +248,7 @@ function RoamingCatShadow({
       el.style.top = pctY(y);
       el.style.width = pctX(shadow.size[0] * scale);
       el.style.height = pctY(shadow.size[1] * scale);
-      el.style.opacity = String(motion.opacity);
+      el.style.opacity = motion.spriteHidden ? "0" : String(motion.opacity);
       el.style.transform = "";
     };
     apply();
@@ -302,6 +303,9 @@ function RoamingCatBody({
   const postRef = useRef<HTMLSpanElement>(null);
   const cloudRef = useRef<HTMLSpanElement>(null);
   const auraRef = useRef<HTMLSpanElement>(null);
+  const backSnowRef = useRef<HTMLCanvasElement>(null);
+  const frontSnowRef = useRef<HTMLCanvasElement>(null);
+  const snowRef = useRef<{ flakes: SnowFlake[]; scale: number; last: number } | null>(null);
   const [bubbleRoot, setBubbleRoot] = useState<HTMLElement | null>(null);
   const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
   useLayoutEffect(() => {
@@ -331,6 +335,8 @@ function RoamingCatBody({
       btn.dataset.catAnim = motion.anim;
       btn.dataset.catFlip = motion.flip ? "1" : "0";
       btn.dataset.catFx = motion.fx;
+      btn.dataset.spriteHidden = motion.spriteHidden ? "1" : "0";
+      frameEl.style.opacity = motion.spriteHidden ? "0" : "1";
       const flip = motion.flip ? "scaleX(-1)" : "";
       frameEl.style.transformOrigin = `${(sheet.anchor.x / fw) * 100}% 100%`;
       const cloud = cloudRef.current;
@@ -382,6 +388,51 @@ function RoamingCatBody({
         if (scratching) {
           post.style.left = `${(sheet.anchor.x / fw) * 100}%`;
           post.style.bottom = `${((fh - sheet.anchor.y) / fh) * 100}%`;
+        }
+      }
+      const backSnow = backSnowRef.current;
+      const frontSnow = frontSnowRef.current;
+      if (backSnow && frontSnow) {
+        if (motion.fx === "blizzard") {
+          const rect = btn.getBoundingClientRect();
+          const scale = fw > 0 ? rect.width / fw : 1;
+          const now = performance.now();
+          if (!snowRef.current || Math.abs(snowRef.current.scale - scale) > 0.03) {
+            snowRef.current = {
+              flakes: createSnowflakes(scale, rect.width, rect.height, sheet.anchor.y),
+              scale,
+              last: now,
+            };
+          }
+          const snow = snowRef.current;
+          const dt = Math.min(0.05, Math.max(0, (now - snow.last) / 1000));
+          snow.last = now;
+          const tSec = motion.fxMs / 1000;
+          stepSnow(snow.flakes, dt, tSec, scale, rect.width, rect.height, sheet.anchor.y);
+          backSnow.hidden = false;
+          frontSnow.hidden = false;
+          const paint = {
+            k: motion.fxK,
+            tSec,
+            scale,
+            anchorX: sheet.anchor.x,
+            anchorY: sheet.anchor.y,
+            cssW: rect.width,
+            cssH: rect.height,
+            dpr: window.devicePixelRatio || 1,
+          };
+          const back = paintSnow(backSnow, snow.flakes, { ...paint, front: false });
+          const front = paintSnow(frontSnow, snow.flakes, { ...paint, front: true });
+          btn.dataset.snowBack = String(back.shown);
+          btn.dataset.snowFront = String(front.shown);
+          btn.dataset.snowFace = String(front.faceDimmed);
+        } else if (!backSnow.hidden || !frontSnow.hidden) {
+          backSnow.hidden = true;
+          frontSnow.hidden = true;
+          snowRef.current = null;
+          btn.dataset.snowBack = "0";
+          btn.dataset.snowFront = "0";
+          btn.dataset.snowFace = "0";
         }
       }
       const [sw, sh] = sheet.sheetSize;
@@ -446,6 +497,7 @@ function RoamingCatBody({
         <span />
         <span />
       </span>
+      <canvas ref={backSnowRef} className="lucky-cat-snow is-back" hidden aria-hidden="true" />
       <span
         ref={frameRef}
         className="lucky-roam-frame"
@@ -457,6 +509,7 @@ function RoamingCatBody({
           backgroundRepeat: "no-repeat",
         }}
       />
+      <canvas ref={frontSnowRef} className="lucky-cat-snow is-front" hidden aria-hidden="true" />
       <span ref={postRef} className="lucky-cat-scratcher" hidden aria-hidden="true">
         <span className="lucky-cat-scratcher-post" />
         <span className="lucky-cat-scratcher-base" />

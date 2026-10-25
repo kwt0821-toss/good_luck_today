@@ -1058,6 +1058,28 @@ button.lucky-roam-cat:active,
   height: 64%;
 }
 
+/* Sabertooth blizzard flakes. Behind the sprite, then in front of it. The room itself stays untouched. */
+.lucky-cat-snow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.lucky-cat-snow.is-back {
+  z-index: 1;
+}
+
+.lucky-cat-snow.is-front {
+  z-index: 4;
+}
+
+.lucky-cat-snow[hidden] {
+  display: none;
+}
+
 .lucky-roam-cat.is-sleeping .lucky-roam-frame,
 .lucky-roam-cat[data-cat-anim="idle_sit"] .lucky-roam-frame,
 .lucky-roam-cat[data-cat-anim="idle_sit_r"] .lucky-roam-frame,
