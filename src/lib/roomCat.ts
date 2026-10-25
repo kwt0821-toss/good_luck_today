@@ -418,6 +418,49 @@ export function animDurationMs(def: { frames: string[]; fps?: number; holdMs?: n
   return (count / fps) * 1000 + (def?.holdMs ?? 0);
 }
 
+/** Frame playback only, without the trailing hold. Effect curves use this so they finish with the art. */
+export function clipPlayMs(def: { frames: string[]; fps?: number } | null | undefined): number {
+  const count = def?.frames.length ?? 0;
+  const fps = def?.fps && def.fps > 0 ? def.fps : 1;
+  return (count / fps) * 1000;
+}
+
+const MEDITATE_LIFT_PX = 12;
+const MEDITATE_BOB_PX = 2;
+const MEDITATE_BOB_PERIOD_MS = 1800;
+const MEDITATE_EASE_MS = 280;
+
+function smoothStep(u: number): number {
+  const x = Math.min(1, Math.max(0, u));
+  return x * x * (3 - 2 * x);
+}
+
+/**
+ * Hover above the meditate cloud. `lift` is sprite pixels (about 12, bobbing ±2).
+ * `cloud` fades the cloud in and out with the same envelope.
+ */
+export function meditateFloatPx(elapsedMs: number, playMs: number): { lift: number; cloud: number } {
+  const span = playMs > 0 ? playMs : 1;
+  const fade = Math.min(MEDITATE_EASE_MS, span / 4);
+  let env = 0;
+  if (elapsedMs > 0 && elapsedMs < span) {
+    if (elapsedMs < fade) env = elapsedMs / fade;
+    else if (elapsedMs > span - fade) env = (span - elapsedMs) / fade;
+    else env = 1;
+  }
+  const cloud = smoothStep(env);
+  const bob = Math.sin((elapsedMs / MEDITATE_BOB_PERIOD_MS) * Math.PI * 2) * MEDITATE_BOB_PX;
+  return { lift: (MEDITATE_LIFT_PX + bob) * cloud, cloud };
+}
+
+/** Aura opacity. The blue eye glow is brightest around 45–60% of the clip, so the light peaks there. */
+export function auraStrength(t: number): number {
+  if (t <= 0 || t >= 1) return 0;
+  if (t < 0.45) return smoothStep(t / 0.45);
+  if (t <= 0.6) return 1;
+  return smoothStep((1 - t) / 0.4);
+}
+
 export function pickIdlePose(
   sheet: CatSpriteSheet,
   preferSleep = false,

@@ -3,7 +3,16 @@ import { createPortal } from "react-dom";
 
 import { roomAsset } from "../lib/roomCatalog";
 import { AudioManager } from "../audio/AudioManager";
-import { DEFAULT_CAT_BREED_ID, catAsset, catDepthKey, defaultSitFrame, furnitureDepthKey } from "../lib/roomCat";
+import {
+  DEFAULT_CAT_BREED_ID,
+  auraStrength,
+  catAsset,
+  catDepthKey,
+  clipPlayMs,
+  defaultSitFrame,
+  furnitureDepthKey,
+  meditateFloatPx,
+} from "../lib/roomCat";
 import {
   WALL_BANDS,
   WALL_SLOTS,
@@ -291,6 +300,8 @@ function RoamingCatBody({
   const meowRef = useRef<HTMLSpanElement>(null);
   const meowTextRef = useRef<HTMLSpanElement>(null);
   const postRef = useRef<HTMLSpanElement>(null);
+  const cloudRef = useRef<HTMLSpanElement>(null);
+  const auraRef = useRef<HTMLSpanElement>(null);
   const [bubbleRoot, setBubbleRoot] = useState<HTMLElement | null>(null);
   const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
   useLayoutEffect(() => {
@@ -319,8 +330,35 @@ function RoamingCatBody({
       btn.classList.toggle("is-sleeping", motion.anim === "sleep" || motion.anim === "sleep_r");
       btn.dataset.catAnim = motion.anim;
       btn.dataset.catFlip = motion.flip ? "1" : "0";
-      frameEl.style.transform = motion.flip ? "scaleX(-1)" : "";
+      btn.dataset.catFx = motion.fx;
+      const flip = motion.flip ? "scaleX(-1)" : "";
       frameEl.style.transformOrigin = `${(sheet.anchor.x / fw) * 100}% 100%`;
+      const cloud = cloudRef.current;
+      const aura = auraRef.current;
+      if (motion.fx === "meditate") {
+        const playMs = clipPlayMs(sheet.animations[motion.anim] ?? sheet.animations.meditate);
+        const floated = meditateFloatPx(motion.fxMs, playMs);
+        frameEl.style.transform = `translateY(-${(floated.lift / fh) * 100}%) ${flip}`.trim();
+        if (cloud) {
+          cloud.hidden = floated.cloud <= 0.01;
+          cloud.style.opacity = String(floated.cloud);
+          cloud.style.left = `${(sheet.anchor.x / fw) * 100}%`;
+          cloud.style.bottom = `${((fh - sheet.anchor.y) / fh) * 100}%`;
+        }
+      } else {
+        frameEl.style.transform = flip;
+        if (cloud) cloud.hidden = true;
+      }
+      if (aura) {
+        if (motion.fx === "aura") {
+          const playMs = clipPlayMs(sheet.animations[motion.anim] ?? sheet.animations.aura);
+          const strength = auraStrength(playMs > 0 ? motion.fxMs / playMs : 0);
+          aura.hidden = strength <= 0.01;
+          aura.style.opacity = String(strength);
+        } else {
+          aura.hidden = true;
+        }
+      }
       const show = Boolean(motion.bubbleOn && (motion.bubbleText || motion.bubbleEmoji));
       const float = show && motion.bubbleRoom && Boolean(meowRef.current);
       const bubble = bubbleRef.current;
@@ -402,6 +440,12 @@ function RoamingCatBody({
             bubbleRoot,
           )
         : null}
+      <span ref={auraRef} className="lucky-cat-aura" hidden aria-hidden="true" />
+      <span ref={cloudRef} className="lucky-cat-cloud" hidden aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </span>
       <span
         ref={frameRef}
         className="lucky-roam-frame"

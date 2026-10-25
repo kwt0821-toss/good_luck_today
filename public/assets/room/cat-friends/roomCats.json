@@ -258,9 +258,9 @@
       "unlockRule": {
         "legendCardId": "baekho"
       },
-      "status": "comingSoon",
-      "sprite": null,
-      "icon": null
+      "status": "available",
+      "sprite": "cat-sprite-baekho.png",
+      "icon": "cat-friends/baekho.webp"
     }
   ]
 }

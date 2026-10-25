@@ -48,6 +48,10 @@ export type RoomCatMotion = {
   bubbleEmoji: string;
   /** Draw the line in the room, outside the island mask, so it is not clipped. */
   bubbleRoom: boolean;
+  /** App-drawn meditate cloud or aura. Empty unless that clip is playing. */
+  fx: "" | "meditate" | "aura";
+  /** Milliseconds into the current effect clip, from the first frame. */
+  fxMs: number;
 };
 
 export type RoomCatView = {
@@ -243,6 +247,8 @@ export function useRoomCat({
       bubbleText: "",
       bubbleEmoji: "",
       bubbleRoom: false,
+      fx: "",
+      fxMs: 0,
     };
     const ref = {
       current: motion,
@@ -632,6 +638,12 @@ export function useRoomCat({
       motion.anim = anim;
       motion.flip = flip;
       motion.opacity = isEdit ? 0.5 : 1;
+      const fxName = anim.endsWith("_r") ? anim.slice(0, -2) : anim;
+      const fxOn =
+        (fxName === "meditate" && live.kind === "idle") ||
+        (fxName === "aura" && live.kind === "tap" && live.step === "special");
+      motion.fx = fxOn ? fxName : "";
+      motion.fxMs = fxOn ? animElapsedRef.current : 0;
       notify();
 
       if (isActive) {
@@ -651,6 +663,8 @@ export function useRoomCat({
           goal:
             live.kind === "walk" ? { ...(live.path[live.path.length - 1] ?? tileRef.current) } : null,
           anim,
+          fx: motion.fx,
+          fxMs: Math.round(motion.fxMs),
           worldX: Math.round(motion.worldX),
           worldY: Math.round(motion.worldY),
           listeners: listeners.size,
