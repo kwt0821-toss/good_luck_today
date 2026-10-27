@@ -1,10 +1,21 @@
+import { Environment } from "@apps-in-toss/web-framework";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
+import { isDebugSaveRequest } from "../lib/debugSaveQuery";
 import { serverSaveStatus, subscribeServerSave } from "../lib/serverSave";
 
 function debugSaveEnabled(): boolean {
   if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("debugSave") === "1";
+  return isDebugSaveRequest(window.location.search, readSchemeUrl());
+}
+
+function readSchemeUrl(): string {
+  try {
+    return Environment.initialURL || "";
+  } catch {
+    return "";
+  }
 }
 
 /** Visible only with ?debugSave=1. Shows the boot load result. */
@@ -24,19 +35,19 @@ export function ServerSaveDebug() {
     ? `load result=${load.result} serverVersion=${load.serverVersion ?? "null"} localVersion=${load.localVersion ?? "null"}`
     : "load result=pending";
 
-  return (
+  return createPortal(
     <div
       data-server-save-debug=""
       aria-hidden="true"
       style={{
         position: "fixed",
         left: 8,
-        bottom: "calc(72px + env(safe-area-inset-bottom, 0px))",
-        zIndex: 1200,
+        top: "calc(8px + env(safe-area-inset-top, 0px))",
+        zIndex: 2147483000,
         width: 168,
         padding: "3px 6px",
         borderRadius: 4,
-        background: "rgba(20, 16, 28, 0.72)",
+        background: "rgba(20, 16, 28, 0.92)",
         color: "#f4efe4",
         fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
         fontSize: 10,
@@ -45,6 +56,7 @@ export function ServerSaveDebug() {
       }}
     >
       {line}
-    </div>
+    </div>,
+    document.body,
   );
 }
