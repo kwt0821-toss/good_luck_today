@@ -23,6 +23,7 @@ import { toKstDateKey } from "./lib/date";
 import { refreshServerTime } from "./lib/tossClock";
 import { isTossApp } from "./lib/tossEnv";
 import { ensureGameUserHash } from "./lib/user";
+import { installServerSaveLifecycle, syncGameSaveOnBoot } from "./lib/serverSave";
 import { buildMenuViewModel } from "./lib/menuModel";
 import {
   MENU_SETTINGS_EVENT,
@@ -330,9 +331,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    installServerSaveLifecycle();
     let cancelled = false;
     void (async () => {
       try {
+        await syncGameSaveOnBoot();
+        if (cancelled) return;
         const [, nextConfig, nextOps] = await Promise.all([
           refreshServerTime(),
           loadOpsConfig(),

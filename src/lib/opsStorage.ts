@@ -3,6 +3,7 @@ import { Storage } from "@apps-in-toss/web-framework";
 import { toKstDateKey } from "./date";
 import { DEV_PAW_BALANCE, isDevBuild, RESET_BONUS_PAW } from "./devMode";
 import { isInTossApp } from "./native";
+import { markDirty } from "./serverSave";
 import { loadOpsConfig } from "./opsConfig";
 import { applyOpsDailyReset, createDefaultOpsState } from "./opsState";
 import type { OpsState } from "./opsTypes";
@@ -44,6 +45,7 @@ async function write(key: string, value: string): Promise<void> {
   if (isInTossApp()) {
     try {
       await withTimeout(Storage.setItem(key, value), 800);
+      markDirty();
       return;
     } catch {
       // preview fallback
@@ -54,6 +56,7 @@ async function write(key: string, value: string): Promise<void> {
   } catch {
     // ignore
   }
+  markDirty();
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

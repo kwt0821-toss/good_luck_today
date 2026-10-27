@@ -5,6 +5,7 @@ import { applyDailyReset, createDefaultUser } from "./user";
 import { toKstDateKey } from "./date";
 import { getItemById } from "./items";
 import { isInTossApp } from "./native";
+import { markDirty } from "./serverSave";
 import { createDefaultInventory, createDefaultRoom } from "./room";
 
 const USER_KEY = "lucky-cat.user-state";
@@ -44,6 +45,7 @@ async function write(key: string, value: string): Promise<void> {
   if (isInTossApp()) {
     try {
       await withTimeout(Storage.setItem(key, value), 800);
+      markDirty();
       return;
     } catch {
       // 웹 미리보기는 localStorage로 저장해요.
@@ -54,6 +56,7 @@ async function write(key: string, value: string): Promise<void> {
   } catch {
     // 저장에 실패해도 화면은 유지해요.
   }
+  markDirty();
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

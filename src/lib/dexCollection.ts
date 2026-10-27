@@ -1,6 +1,7 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
 import { isInTossApp } from "./native";
+import { markDirty } from "./serverSave";
 import type { DexOwnedMap, DexOwnedRecord } from "./dexTypes";
 
 const DEX_KEY = "lucky-cat.dex-collection";
@@ -77,6 +78,7 @@ async function writeKey(key: string, value: string): Promise<void> {
   if (isInTossApp()) {
     try {
       await Storage.setItem(key, value);
+      markDirty();
       return;
     } catch {
       // fall through
@@ -87,6 +89,7 @@ async function writeKey(key: string, value: string): Promise<void> {
   } catch {
     // ignore
   }
+  markDirty();
 }
 
 export async function loadDexOwned(): Promise<DexOwnedMap> {

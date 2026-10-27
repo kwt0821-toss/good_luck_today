@@ -1,6 +1,7 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
 import { isInTossApp } from "./native";
+import { markDirty } from "./serverSave";
 import { loadOpsConfig } from "./opsConfig";
 import { loadOpsState } from "./opsStorage";
 import type { OpsStarter, OpsState } from "./opsTypes";
@@ -428,6 +429,7 @@ async function writeKey(key: string, value: string): Promise<void> {
   if (isInTossApp()) {
     try {
       await Storage.setItem(key, value);
+      markDirty();
       return;
     } catch {
       // fall through
@@ -438,6 +440,7 @@ async function writeKey(key: string, value: string): Promise<void> {
   } catch {
     // ignore
   }
+  markDirty();
 }
 
 export async function loadRoomState(
