@@ -29,8 +29,27 @@ const FETCH_MS = 5000;
 const BOOT_MS = 3000;
 const DEBOUNCE_MS = 3000;
 
-type ServerState = { lastError: string | null };
-const serverState: ServerState = { lastError: null };
+export type ServerSaveLoadResultName =
+  | "empty"
+  | "applied-server"
+  | "kept-local"
+  | "uploaded-local"
+  | "skipped"
+  | "failed";
+
+export type ServerSaveLoadResult = {
+  result: ServerSaveLoadResultName;
+  serverVersion: number | null;
+  localVersion: number | null;
+};
+
+type ServerState = {
+  lastError: string | null;
+  lastLoadResult: ServerSaveLoadResult | null;
+};
+const serverState: ServerState = { lastError: null, lastLoadResult: null };
+const statusListeners = new Set<() => void>();
+let loadReported = false;
 
 let dirty = false;
 let debounceTimer: number | null = null;
@@ -53,7 +72,45 @@ function noteError(code: string, detail?: unknown) {
 }
 
 export function serverSaveStatus(): ServerState {
-  return { lastError: serverState.lastError };
+  return {
+    lastError: serverState.lastError,
+    lastLoadResult: serverState.lastLoadResult,
+  };
+}
+
+export function subscribeServerSave(listener: () => void): () => void {
+  statusListeners.add(listener);
+  return () => statusListeners.delete(listener);
+}
+
+function emitStatus() {
+  statusListeners.forEach((listener) => listener());
+}
+
+function versionText(version: number | null): string {
+  return version == null ? "null" : String(version);
+}
+
+function reportLoad(
+  result: ServerSaveLoadResultName,
+  serverVersion: number | null,
+  localVersion: number | null,
+) {
+  if (loadReported) return;
+  loadReported = true;
+  serverState.lastLoadResult = { result, serverVersion, localVersion };
+  console.info(
+    `[serverSave] load result=${result} serverVersion=${versionText(serverVersion)} localVersion=${versionText(localVersion)}`,
+  );
+  emitStatus();
+}
+
+function reportSaveOk(version: number) {
+  console.info(`[serverSave] save ok version=${version}`);
+}
+
+function reportSaveFailed(code: string) {
+  console.info(`[serverSave] save failed code=${code}`);
 }
 
 function endpoint(): { url: string; apikey: string } | null {
@@ -363,6 +420,7 @@ async function saveOnce(
   if (gate.kind === "skip") return true;
   if (gate.kind === "fail") {
     noteError("hash_unavailable");
+    reportSaveFailed("hash_unavailable");
     return false;
   }
   const hash = gate.hash;
@@ -370,6 +428,7 @@ async function saveOnce(
   const bytes = new TextEncoder().encode(JSON.stringify(bundle)).length;
   if (bytes > MAX_BYTES) {
     noteError("data_too_large", bytes);
+    reportSaveFailed("data_too_large");
     return true;
   }
   const meta = await readMeta();
@@ -386,13 +445,18 @@ async function saveOnce(
       link.signal,
       keepalive,
     );
-    if (result.kind === "aborted") return false;
+    if (result.kind === "aborted") {
+      noteError("aborted");
+      reportSaveFailed("aborted");
+      return false;
+    }
     const code = errorCode(result);
     if (!code && result.kind === "http") {
       const version = fieldNumber(result.json, "version");
       const saveToken = fieldString(result.json, "saveToken");
       if (version == null) {
         noteError("invalid_payload");
+        reportSaveFailed("invalid_payload");
         return false;
       }
       const saved = (async () => {
@@ -401,10 +465,12 @@ async function saveOnce(
       })();
       localWrite = saved;
       await saved;
+      reportSaveOk(version);
       return true;
     }
     if (code === "version_conflict") {
       noteError(code);
+      reportSaveFailed(code);
       if (drop?.current) return false;
       const json = result.kind === "http" ? result.json : null;
       const version = fieldNumber(json, "version");
@@ -423,6 +489,7 @@ async function saveOnce(
     }
     if (code === "save_token_invalid" && tokenRetry) {
       noteError(code);
+      reportSaveFailed(code);
       if (drop?.current) return false;
       const loaded = await requestLoad(hash, signal);
       if (drop?.current || !loaded) return false;
@@ -435,6 +502,7 @@ async function saveOnce(
       return performSave(signal, keepalive, false, undefined, drop);
     }
     if (code && code !== "network") noteError(code);
+    reportSaveFailed(code ?? "bad_response");
     return false;
   } finally {
     link.cancel();
@@ -461,20 +529,53 @@ export function saveToServer(options?: {
 }
 
 async function reconcile(signal: AbortSignal, drop: DropFlag) {
-  const loaded = await loadFromServer(signal);
-  if (!loaded || signal.aborted || drop.current) return;
+  const gate = await gameHash();
+  const localVersion = (await readMeta()).version;
+  if (gate.kind === "skip") {
+    reportLoad("skipped", null, localVersion);
+    return;
+  }
+  if (gate.kind === "fail") {
+    noteError("hash_unavailable");
+    reportLoad("failed", null, localVersion);
+    return;
+  }
+  const loaded = await requestLoad(gate.hash, signal);
+  if (!loaded || signal.aborted || drop.current) {
+    if (!serverState.lastError) noteError(signal.aborted || drop.current ? "timeout" : "load_failed");
+    reportLoad("failed", null, localVersion);
+    return;
+  }
   if (loaded.empty) {
     const local = await readBundle();
-    if (!localHasData(local) || drop.current) return;
+    if (!localHasData(local) || drop.current) {
+      if (drop.current && !serverState.lastError) noteError("timeout");
+      reportLoad(drop.current ? "failed" : "empty", null, localVersion);
+      return;
+    }
     const ok = await saveToServer({ signal, baseVersion: 0, drop });
-    if (!ok) dirty = true;
+    if (!ok || serverState.lastError === "data_too_large") {
+      if (!ok) dirty = true;
+      if (!serverState.lastError) noteError("save_failed");
+      reportLoad("failed", null, localVersion);
+      return;
+    }
+    reportLoad("uploaded-local", (await readMeta()).version, localVersion);
     return;
   }
   await rememberToken(loaded.saveToken);
-  if (drop.current) return;
-  if (await shouldTakeServer(loaded.version)) {
-    await applySnapshot(loaded.data, loaded.version, loaded.saveToken, drop);
+  if (drop.current) {
+    if (!serverState.lastError) noteError("timeout");
+    reportLoad("failed", loaded.version, localVersion);
+    return;
   }
+  if (await shouldTakeServer(loaded.version)) {
+    const applied = await applySnapshot(loaded.data, loaded.version, loaded.saveToken, drop);
+    if (!applied && !serverState.lastError) noteError(drop.current ? "timeout" : "invalid_payload");
+    reportLoad(applied ? "applied-server" : "failed", loaded.version, localVersion);
+    return;
+  }
+  reportLoad("kept-local", loaded.version, localVersion);
 }
 
 /** Loading screen waits at most 3s. A miss keeps the local keys. */
@@ -499,12 +600,20 @@ export function syncGameSaveOnBoot(): Promise<void> {
           drop.current = true;
           controller.abort();
           await localWrite;
+          if (!loadReported) {
+            if (!serverState.lastError) noteError("timeout");
+            reportLoad("failed", null, (await readMeta()).version);
+          }
         }
       } catch (error) {
         if (!controller.signal.aborted) noteError("boot_failed", error);
       } finally {
         window.clearTimeout(timer);
         bootFinished = true;
+        if (!loadReported) {
+          if (!serverState.lastError) noteError("boot_failed");
+          reportLoad("failed", null, null);
+        }
       }
     })();
   }
@@ -530,6 +639,7 @@ async function flush(keepalive: boolean) {
   } catch (error) {
     dirty = true;
     noteError("save_failed", error);
+    reportSaveFailed("save_failed");
   } finally {
     inFlight = false;
     if (runAgain) {

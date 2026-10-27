@@ -5,6 +5,7 @@ import { AchievementsSheet } from "./components/AchievementsSheet";
 import { AdIntro } from "./components/AdIntro";
 import { AdModal } from "./components/AdModal";
 import { NyangNotifyHost } from "./components/NyangNotifyHost";
+import { ServerSaveDebug } from "./components/ServerSaveDebug";
 import { nyConfirm, nyDismiss, nyNotify } from "./lib/nyangNotify";
 import { AttendanceNotifyCard } from "./components/AttendanceNotifyCard";
 import { MenuPanel } from "./components/MenuPanel";
@@ -1959,6 +1960,7 @@ export default function App() {
       ) : null}
 
       <NyangNotifyHost dock={menuOpen && !attendanceNotifyOffer.open ? "bottom" : "top"} />
+      <ServerSaveDebug />
       {showDevBack ? <DevBackButton /> : null}
       {exitModal}
     </>
