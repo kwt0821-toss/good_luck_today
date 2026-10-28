@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { getPlatformOS } from "@apps-in-toss/web-framework";
 
 import { CozySheet } from "../components/CozySheet";
@@ -111,6 +111,205 @@ function formatPoints(value: number) {
   return value.toLocaleString("en-US");
 }
 
+const PLACEMENT_SAFE_TOP = 96;
+const PLACEMENT_EDGE = 8;
+const PLACEMENT_GAP = 12;
+const ARROW_INSET = 14;
+const CHIP_GAP = 14;
+
+type PlacementSide = "above" | "below" | "left" | "right" | "park";
+type PlacementArrow = "down" | "up" | "left" | "right";
+
+type ToolbarFloat = {
+  left: number;
+  top: number;
+  arrowX: number;
+  arrowY: number;
+  arrow: PlacementArrow;
+  side: PlacementSide;
+  wrap: boolean;
+  maxWidth: number;
+  ready: boolean;
+};
+
+type ChipFloat = {
+  left: number;
+  top: number;
+  arrowX: number;
+  arrow: "up" | "down";
+  maxWidth: number;
+};
+
+type PlacementGeom = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  buttonSig: string;
+  showChip: boolean;
+};
+
+type PlacementBox = { left: number; top: number; right: number; bottom: number };
+type PlacementBounds = { left: number; right: number; top: number; bottom: number };
+
+function readRootPx(name: string) {
+  if (typeof document === "undefined") return 0;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const value = Number.parseFloat(raw);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function clampNum(value: number, min: number, max: number) {
+  if (max < min) return min;
+  return Math.min(max, Math.max(min, value));
+}
+
+function px(value: number) {
+  return Math.round(value);
+}
+
+function sameToolbar(a: ToolbarFloat | null, b: ToolbarFloat) {
+  if (!a) return false;
+  return (
+    a.left === b.left &&
+    a.top === b.top &&
+    a.arrowX === b.arrowX &&
+    a.arrowY === b.arrowY &&
+    a.arrow === b.arrow &&
+    a.side === b.side &&
+    a.wrap === b.wrap &&
+    a.maxWidth === b.maxWidth &&
+    a.ready === b.ready
+  );
+}
+
+function sameChip(a: ChipFloat | null, b: ChipFloat | null) {
+  if (!a || !b) return a === b;
+  return (
+    a.left === b.left &&
+    a.top === b.top &&
+    a.arrowX === b.arrowX &&
+    a.arrow === b.arrow &&
+    a.maxWidth === b.maxWidth
+  );
+}
+
+function placeToolbarInView(
+  bounds: PlacementBounds,
+  box: PlacementBox,
+  width: number,
+  height: number,
+): { left: number; top: number; side: PlacementSide; arrow: PlacementArrow } {
+  const centerX = box.left + (box.right - box.left) / 2;
+  const centerY = box.top + (box.bottom - box.top) / 2;
+  const placeX = () => clampNum(centerX - width / 2, bounds.left, bounds.right - width);
+  const fits = (left: number, top: number) =>
+    left >= bounds.left - 0.5 &&
+    top >= bounds.top - 0.5 &&
+    left + width <= bounds.right + 0.5 &&
+    top + height <= bounds.bottom + 0.5;
+
+  const aboveLeft = placeX();
+  const aboveTop = box.top - PLACEMENT_GAP - height;
+  if (fits(aboveLeft, aboveTop)) {
+    return { left: aboveLeft, top: aboveTop, side: "above", arrow: "down" };
+  }
+  const belowLeft = placeX();
+  const belowTop = box.bottom + PLACEMENT_GAP;
+  if (fits(belowLeft, belowTop)) {
+    return { left: belowLeft, top: belowTop, side: "below", arrow: "up" };
+  }
+
+  const spaceRight = bounds.right - (box.right + PLACEMENT_GAP);
+  const spaceLeft = box.left - PLACEMENT_GAP - bounds.left;
+  const sideTop = clampNum(
+    centerY - height / 2,
+    bounds.top,
+    Math.max(bounds.top, bounds.bottom - height),
+  );
+  const verticalOk = sideTop >= bounds.top - 0.5 && sideTop + height <= bounds.bottom + 0.5;
+  const rightOk = verticalOk && spaceRight + 0.5 >= width;
+  const leftOk = verticalOk && spaceLeft + 0.5 >= width;
+  if (rightOk && (!leftOk || spaceRight >= spaceLeft)) {
+    return {
+      left: clampNum(box.right + PLACEMENT_GAP, bounds.left, bounds.right - width),
+      top: sideTop,
+      side: "right",
+      arrow: "left",
+    };
+  }
+  if (leftOk) {
+    return {
+      left: clampNum(box.left - PLACEMENT_GAP - width, bounds.left, bounds.right - width),
+      top: sideTop,
+      side: "left",
+      arrow: "right",
+    };
+  }
+
+  // Last resort: sit in the tappable band above the drawer, even if that leaves the furniture.
+  const parkTop = clampNum(bounds.bottom - height, bounds.top, Math.max(bounds.top, bounds.bottom - height));
+  return {
+    left: placeX(),
+    top: parkTop,
+    side: "park",
+    arrow: centerY < parkTop + height / 2 ? "up" : "down",
+  };
+}
+
+function rectsOverlap(
+  a: { left: number; top: number; right: number; bottom: number },
+  b: { left: number; top: number; right: number; bottom: number },
+) {
+  return a.left < b.right - 0.5 && a.right > b.left + 0.5 && a.top < b.bottom - 0.5 && a.bottom > b.top + 0.5;
+}
+
+function placeChipInView(
+  bounds: PlacementBounds,
+  toolbar: PlacementBox,
+  box: PlacementBox,
+  centerX: number,
+  centerY: number,
+  width: number,
+  height: number,
+): { left: number; top: number; arrow: "up" | "down" } {
+  const leftFor = (anchorX: number) => clampNum(anchorX - width / 2, bounds.left, bounds.right - width);
+  const candidates: { left: number; top: number; arrow: "up" | "down" }[] = [
+    { left: leftFor(centerX), top: toolbar.top - CHIP_GAP - height, arrow: "down" },
+    { left: leftFor(centerX), top: toolbar.bottom + CHIP_GAP, arrow: "up" },
+    { left: leftFor(centerX), top: box.top - CHIP_GAP - height, arrow: "down" },
+    { left: leftFor(centerX), top: box.bottom + CHIP_GAP, arrow: "up" },
+    {
+      left: clampNum(toolbar.right + 8, bounds.left, bounds.right - width),
+      top: clampNum(toolbar.top, bounds.top, Math.max(bounds.top, bounds.bottom - height)),
+      arrow: toolbar.top + height / 2 > centerY ? "up" : "down",
+    },
+    {
+      left: clampNum(toolbar.left - 8 - width, bounds.left, bounds.right - width),
+      top: clampNum(toolbar.top, bounds.top, Math.max(bounds.top, bounds.bottom - height)),
+      arrow: toolbar.top + height / 2 > centerY ? "up" : "down",
+    },
+  ];
+  for (const slot of candidates) {
+    const rect = {
+      left: slot.left,
+      top: slot.top,
+      right: slot.left + width,
+      bottom: slot.top + height,
+    };
+    const inside =
+      rect.left >= bounds.left - 0.5 &&
+      rect.top >= bounds.top - 0.5 &&
+      rect.right <= bounds.right + 0.5 &&
+      rect.bottom <= bounds.bottom + 0.5;
+    if (inside && !rectsOverlap(rect, toolbar)) return slot;
+  }
+  // Prefer sitting above the toolbar, even a little into the header band, so the buttons stay clear.
+  const rescueTop = toolbar.top - CHIP_GAP - height;
+  const top = Math.max(bounds.top - 48, rescueTop);
+  return { left: leftFor(centerX), top, arrow: "down" };
+}
+
 export function RoomScreen({
   onBack,
   tutorialActive = false,
@@ -174,6 +373,268 @@ export function RoomScreen({
   const previewItemTap = useRef<{ instanceId: string; x: number; y: number } | null>(null);
   const previewKeyRef = useRef<string | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const chipRef = useRef<HTMLDivElement>(null);
+  const placementGeomRef = useRef<PlacementGeom | null>(null);
+  const naturalToolbarW = useRef(0);
+  const buttonSigRef = useRef("");
+  const toolbarFloatRef = useRef<ToolbarFloat | null>(null);
+  const chipFloatRef = useRef<ChipFloat | null>(null);
+  const observedToolbar = useRef<HTMLElement | null>(null);
+  const [toolbarFloat, setToolbarFloat] = useState<ToolbarFloat | null>(null);
+  const [chipFloat, setChipFloat] = useState<ChipFloat | null>(null);
+  const [, setLayoutEpoch] = useState(0);
+  toolbarFloatRef.current = toolbarFloat;
+  chipFloatRef.current = chipFloat;
+
+  // Measure the real toolbar (and the no-space chip) and keep both inside the stage.
+  // Runs before paint so the first clamped position is what the user sees.
+  useLayoutEffect(() => {
+    const geom = placementGeomRef.current;
+    const stage = stageRef.current;
+    const toolbar = toolbarRef.current;
+    if (!geom || !stage || !toolbar) {
+      naturalToolbarW.current = 0;
+      buttonSigRef.current = "";
+      if (toolbarFloatRef.current) setToolbarFloat(null);
+      if (chipFloatRef.current) setChipFloat(null);
+      return;
+    }
+
+    const stageRect = stage.getBoundingClientRect();
+    const padL = Math.max(PLACEMENT_EDGE, readRootPx("--sa-left"));
+    const padR = Math.max(PLACEMENT_EDGE, readRootPx("--sa-right"));
+    const padB = Math.max(PLACEMENT_EDGE, readRootPx("--sa-bottom"));
+    const drawer = stage.querySelector(".lucky-drawer");
+    const drawerRect = drawer?.getBoundingClientRect();
+    const bounds: PlacementBounds = {
+      left: stageRect.left + padL,
+      right: stageRect.right - padR,
+      top: stageRect.top + PLACEMENT_SAFE_TOP,
+      bottom:
+        drawerRect && drawerRect.height > 0 && drawerRect.top > stageRect.top
+          ? drawerRect.top - PLACEMENT_EDGE
+          : stageRect.bottom - padB,
+    };
+    if (bounds.bottom < bounds.top) bounds.bottom = bounds.top;
+    const availableW = Math.max(0, Math.floor(bounds.right - bounds.left) - 1);
+
+    if (buttonSigRef.current !== geom.buttonSig) {
+      buttonSigRef.current = geom.buttonSig;
+      naturalToolbarW.current = 0;
+      if (toolbar.classList.contains("is-wrapped")) {
+        const prev = toolbarFloatRef.current;
+        const next: ToolbarFloat = {
+          left: prev?.left ?? 0,
+          top: prev?.top ?? 0,
+          arrowX: prev?.arrowX ?? 0,
+          arrowY: prev?.arrowY ?? 0,
+          arrow: prev?.arrow ?? "down",
+          side: prev?.side ?? "above",
+          wrap: false,
+          maxWidth: 0,
+          ready: false,
+        };
+        if (!sameToolbar(prev, next)) setToolbarFloat(next);
+        return;
+      }
+    }
+
+    const measured = toolbar.getBoundingClientRect();
+    if (measured.width < 1 || measured.height < 1) return;
+    const wrapped = toolbar.classList.contains("is-wrapped");
+    if (!wrapped) naturalToolbarW.current = measured.width;
+    const naturalW = naturalToolbarW.current || measured.width;
+    const wantWrap = naturalW > availableW + 0.5;
+    if (wantWrap !== wrapped) {
+      const prev = toolbarFloatRef.current;
+      const next: ToolbarFloat = {
+        left: prev?.left ?? 0,
+        top: prev?.top ?? 0,
+        arrowX: prev?.arrowX ?? 0,
+        arrowY: prev?.arrowY ?? 0,
+        arrow: prev?.arrow ?? "down",
+        side: prev?.side ?? "above",
+        wrap: wantWrap,
+        maxWidth: wantWrap ? availableW : 0,
+        ready: false,
+      };
+      if (!sameToolbar(prev, next)) setToolbarFloat(next);
+      return;
+    }
+
+    const width = measured.width;
+    const height = measured.height;
+    const box: PlacementBox = {
+      left: stageRect.left + geom.left,
+      top: stageRect.top + geom.top,
+      right: stageRect.left + geom.left + geom.width,
+      bottom: stageRect.top + geom.top + geom.height,
+    };
+    const centerX = box.left + (box.right - box.left) / 2;
+    const centerY = box.top + (box.bottom - box.top) / 2;
+    const placed = placeToolbarInView(bounds, box, width, height);
+    const arrowX = clampNum(
+      centerX - placed.left,
+      Math.min(ARROW_INSET, width / 2),
+      Math.max(width / 2, width - ARROW_INSET),
+    );
+    const arrowY = clampNum(
+      centerY - placed.top,
+      Math.min(ARROW_INSET, height / 2),
+      Math.max(height / 2, height - ARROW_INSET),
+    );
+    const hudX = stageRect.left + geom.left;
+    const hudY = stageRect.top + geom.top;
+    let toolbarLeft = px(placed.left - hudX);
+    let toolbarTop = px(placed.top - hudY);
+    if (hudX + toolbarLeft < bounds.left) toolbarLeft += 1;
+    if (hudX + toolbarLeft + width > bounds.right && hudX + toolbarLeft - 1 >= bounds.left) toolbarLeft -= 1;
+    if (hudY + toolbarTop < bounds.top) toolbarTop += 1;
+    if (hudY + toolbarTop + height > bounds.bottom && hudY + toolbarTop - 1 >= bounds.top) toolbarTop -= 1;
+    const nextToolbar: ToolbarFloat = {
+      left: toolbarLeft,
+      top: toolbarTop,
+      arrowX: px(arrowX),
+      arrowY: px(arrowY),
+      arrow: placed.arrow,
+      side: placed.side,
+      wrap: wrapped,
+      maxWidth: wrapped ? availableW : 0,
+      ready: true,
+    };
+    if (!sameToolbar(toolbarFloatRef.current, nextToolbar)) setToolbarFloat(nextToolbar);
+
+    const chipEl = chipRef.current;
+    if (!geom.showChip || !chipEl) {
+      if (chipFloatRef.current) setChipFloat(null);
+      return;
+    }
+    const chipRect = chipEl.getBoundingClientRect();
+    const cap = availableW;
+    const tooWide = chipRect.width > cap + 0.5;
+    if (tooWide && (chipFloatRef.current?.maxWidth ?? 0) !== cap) {
+      const prevChip = chipFloatRef.current;
+      setChipFloat({
+        left: prevChip?.left ?? 0,
+        top: prevChip?.top ?? 0,
+        arrowX: prevChip?.arrowX ?? 28,
+        arrow: prevChip?.arrow ?? "down",
+        maxWidth: cap,
+      });
+      return;
+    }
+    const chipW = tooWide ? cap : chipRect.width;
+    const chipH = chipRect.height;
+    const toolbarBox: PlacementBox = {
+      left: placed.left,
+      top: placed.top,
+      right: placed.left + width,
+      bottom: placed.top + height,
+    };
+    const chipPlace = placeChipInView(bounds, toolbarBox, box, centerX, centerY, chipW, chipH);
+    const chipArrow = clampNum(centerX - chipPlace.left - 5.5, 10, Math.max(10, chipW - 21));
+    let chipLeft = px(chipPlace.left - hudX);
+    let chipTop = px(chipPlace.top - hudY);
+    if (hudX + chipLeft < bounds.left) chipLeft += 1;
+    if (hudX + chipLeft + chipW > bounds.right && hudX + chipLeft - 1 >= bounds.left) chipLeft -= 1;
+    if (hudY + chipTop < bounds.top) chipTop += 1;
+    if (hudY + chipTop + chipH > bounds.bottom && hudY + chipTop - 1 >= bounds.top) chipTop -= 1;
+    const nextChip: ChipFloat = {
+      left: chipLeft,
+      top: chipTop,
+      arrowX: px(chipArrow),
+      arrow: chipPlace.arrow,
+      maxWidth: tooWide ? cap : 0,
+    };
+    if (!sameChip(chipFloatRef.current, nextChip)) setChipFloat(nextChip);
+  });
+
+  useEffect(() => {
+    if (!state || !roomsFile) return;
+    const stage = stageRef.current;
+    if (!stage) return;
+    let raf = 0;
+    let follow = false;
+    const bump = () => {
+      if (follow || raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        setLayoutEpoch((n) => n + 1);
+      });
+    };
+    const step = () => {
+      if (!follow) return;
+      setLayoutEpoch((n) => n + 1);
+      raf = requestAnimationFrame(step);
+    };
+    const drawerOf = () => stage.querySelector(".lucky-drawer");
+    const startFollow = (event: Event) => {
+      const drawer = drawerOf();
+      if (!drawer || event.target !== drawer || follow) return;
+      follow = true;
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(step);
+    };
+    const stopFollow = (event: Event) => {
+      const drawer = drawerOf();
+      if (!drawer || event.target !== drawer) return;
+      follow = false;
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      setLayoutEpoch((n) => n + 1);
+    };
+    window.addEventListener("resize", bump);
+    const drawer = drawerOf();
+    let ro: ResizeObserver | null = null;
+    if (drawer) {
+      drawer.addEventListener("transitionrun", startFollow);
+      drawer.addEventListener("transitionend", stopFollow);
+      drawer.addEventListener("animationstart", startFollow);
+      drawer.addEventListener("animationend", stopFollow);
+      drawer.addEventListener("animationcancel", stopFollow);
+      if (typeof ResizeObserver !== "undefined") {
+        ro = new ResizeObserver(() => bump());
+        ro.observe(drawer);
+      }
+      if (
+        typeof drawer.getAnimations === "function" &&
+        drawer.getAnimations().some((anim) => anim.playState === "running")
+      ) {
+        follow = true;
+        raf = requestAnimationFrame(step);
+      }
+    }
+    let toolbarRo: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      toolbarRo = new ResizeObserver(() => bump());
+      if (toolbarRef.current) {
+        toolbarRo.observe(toolbarRef.current);
+        observedToolbar.current = toolbarRef.current;
+      }
+      if (chipRef.current) toolbarRo.observe(chipRef.current);
+    }
+    return () => {
+      follow = false;
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("resize", bump);
+      drawer?.removeEventListener("transitionrun", startFollow);
+      drawer?.removeEventListener("transitionend", stopFollow);
+      drawer?.removeEventListener("animationstart", startFollow);
+      drawer?.removeEventListener("animationend", stopFollow);
+      drawer?.removeEventListener("animationcancel", stopFollow);
+      ro?.disconnect();
+      toolbarRo?.disconnect();
+      observedToolbar.current = null;
+    };
+  }, [
+    Boolean(state && roomsFile),
+    mode,
+    preview?.kind,
+    preview && "origin" in preview ? preview.origin : null,
+    preview && "instanceId" in preview ? preview.instanceId : null,
+  ]);
+
   const swipe = useRef({ x: 0, y: 0, dx: 0, active: false });
   const itemsById = useMemo(() => itemMap(items), [items]);
   const paintTab = tab === "벽지" || tab === "바닥";
@@ -388,6 +849,7 @@ export function RoomScreen({
   if (loadError) throw loadError;
 
   if (!state || !roomsFile) {
+    placementGeomRef.current = null;
     return <div className="lucky-room is-loading" />;
   }
 
@@ -1251,26 +1713,23 @@ export function RoomScreen({
         : preview?.kind === "paint"
           ? null
           : selected ?? null;
-  const rawHud =
+  const hud =
     preview?.kind === "paint"
       ? null
       : previewItem && hudPlace
         ? selectionHud(previewItem, hudPlace, layout, itemsById, screen)
         : null;
-  // Keep furniture floating toolbar inside the stage; flip below the sprite when it
-  // would collide with the top safe/header band, and clamp horizontally.
-  const hud = rawHud
-    ? (() => {
-        const TOOLBAR_H = 52;
-        const SAFE_TOP = 96;
-        const MARGIN = 8;
-        const viewW = typeof window !== "undefined" ? window.innerWidth : 390;
-        const flipped = rawHud.top - TOOLBAR_H < SAFE_TOP;
-        const width = rawHud.width;
-        const left = Math.min(Math.max(MARGIN, rawHud.left), Math.max(MARGIN, viewW - width - MARGIN));
-        return { ...rawHud, left, flipped };
-      })()
-    : null;
+  placementGeomRef.current =
+    hud && preview && preview.kind !== "paint"
+      ? {
+          left: hud.left,
+          top: hud.top,
+          width: hud.width,
+          height: hud.height,
+          buttonSig: `${preview.kind}|${preview.origin}`,
+          showChip: !preview.valid && Boolean(preview.reason),
+        }
+      : null;
 
   return (
     <div
@@ -1648,7 +2107,7 @@ export function RoomScreen({
       {mode === "edit" && preview && preview.kind !== "paint" && hud && previewItem ? (
         <div
           className={`lucky-select-hud lucky-placement-hud ${preview.valid ? "" : "is-invalid"} ${
-            hud.flipped ? "is-flipped" : ""
+            toolbarFloat?.arrow === "up" ? "is-flipped" : ""
           }`}
           style={{ left: hud.left, top: hud.top, width: hud.width, height: hud.height }}
         >
@@ -1658,7 +2117,29 @@ export function RoomScreen({
             <i />
             <i />
           </div>
-          <div className="lucky-placement-toolbar" role="toolbar" aria-label="배치 미리보기">
+          <div
+            ref={toolbarRef}
+            className={`lucky-placement-toolbar${toolbarFloat?.wrap ? " is-wrapped" : ""}${
+              toolbarFloat?.arrow === "up"
+                ? " is-arrow-up"
+                : toolbarFloat?.arrow === "left"
+                  ? " is-arrow-left"
+                  : toolbarFloat?.arrow === "right"
+                    ? " is-arrow-right"
+                    : ""
+            }`}
+            style={{
+              left: toolbarFloat?.left ?? 0,
+              top: toolbarFloat?.top ?? 0,
+              transform: "none",
+              visibility: toolbarFloat?.ready ? "visible" : "hidden",
+              ["--arrow-x" as string]: `${toolbarFloat?.arrowX ?? 0}px`,
+              ["--arrow-y" as string]: `${toolbarFloat?.arrowY ?? 0}px`,
+              ["--toolbar-max" as string]: `${toolbarFloat?.maxWidth ?? 0}px`,
+            }}
+            role="toolbar"
+            aria-label="배치 미리보기"
+          >
             <button
               type="button"
               className="is-icon"
@@ -1729,10 +2210,20 @@ export function RoomScreen({
             </button>
           </div>
           {!preview.valid && preview.reason ? (
-            <div className="ny-chip-placement">
+            <div
+              ref={chipRef}
+              className={`ny-chip-placement${chipFloat?.maxWidth ? " is-capped" : ""}`}
+              style={{
+                left: chipFloat?.left ?? 0,
+                top: chipFloat?.top ?? 0,
+                transform: "none",
+                visibility: chipFloat ? "visible" : "hidden",
+                ["--chip-max" as string]: chipFloat?.maxWidth ? `${chipFloat.maxWidth}px` : undefined,
+              }}
+            >
               <NyChip
-                arrow="up"
-                arrowX={36}
+                arrow={chipFloat?.arrow ?? "down"}
+                arrowX={chipFloat?.arrowX ?? 28}
                 action={
                   preview.reason.includes("자리")
                     ? {
