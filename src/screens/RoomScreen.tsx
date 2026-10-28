@@ -114,18 +114,13 @@ function formatPoints(value: number) {
 const PLACEMENT_SAFE_TOP = 96;
 const PLACEMENT_EDGE = 8;
 const PLACEMENT_GAP = 12;
-const ARROW_INSET = 14;
 const CHIP_GAP = 14;
 
 type PlacementSide = "above" | "below" | "left" | "right" | "park";
-type PlacementArrow = "down" | "up" | "left" | "right";
 
 type ToolbarFloat = {
   left: number;
   top: number;
-  arrowX: number;
-  arrowY: number;
-  arrow: PlacementArrow;
   side: PlacementSide;
   wrap: boolean;
   maxWidth: number;
@@ -173,9 +168,6 @@ function sameToolbar(a: ToolbarFloat | null, b: ToolbarFloat) {
   return (
     a.left === b.left &&
     a.top === b.top &&
-    a.arrowX === b.arrowX &&
-    a.arrowY === b.arrowY &&
-    a.arrow === b.arrow &&
     a.side === b.side &&
     a.wrap === b.wrap &&
     a.maxWidth === b.maxWidth &&
@@ -199,7 +191,7 @@ function placeToolbarInView(
   box: PlacementBox,
   width: number,
   height: number,
-): { left: number; top: number; side: PlacementSide; arrow: PlacementArrow } {
+): { left: number; top: number; side: PlacementSide } {
   const centerX = box.left + (box.right - box.left) / 2;
   const centerY = box.top + (box.bottom - box.top) / 2;
   const placeX = () => clampNum(centerX - width / 2, bounds.left, bounds.right - width);
@@ -212,12 +204,12 @@ function placeToolbarInView(
   const aboveLeft = placeX();
   const aboveTop = box.top - PLACEMENT_GAP - height;
   if (fits(aboveLeft, aboveTop)) {
-    return { left: aboveLeft, top: aboveTop, side: "above", arrow: "down" };
+    return { left: aboveLeft, top: aboveTop, side: "above" };
   }
   const belowLeft = placeX();
   const belowTop = box.bottom + PLACEMENT_GAP;
   if (fits(belowLeft, belowTop)) {
-    return { left: belowLeft, top: belowTop, side: "below", arrow: "up" };
+    return { left: belowLeft, top: belowTop, side: "below" };
   }
 
   const spaceRight = bounds.right - (box.right + PLACEMENT_GAP);
@@ -235,7 +227,6 @@ function placeToolbarInView(
       left: clampNum(box.right + PLACEMENT_GAP, bounds.left, bounds.right - width),
       top: sideTop,
       side: "right",
-      arrow: "left",
     };
   }
   if (leftOk) {
@@ -243,7 +234,6 @@ function placeToolbarInView(
       left: clampNum(box.left - PLACEMENT_GAP - width, bounds.left, bounds.right - width),
       top: sideTop,
       side: "left",
-      arrow: "right",
     };
   }
 
@@ -253,7 +243,6 @@ function placeToolbarInView(
     left: placeX(),
     top: parkTop,
     side: "park",
-    arrow: centerY < parkTop + height / 2 ? "up" : "down",
   };
 }
 
@@ -427,9 +416,6 @@ export function RoomScreen({
         const next: ToolbarFloat = {
           left: prev?.left ?? 0,
           top: prev?.top ?? 0,
-          arrowX: prev?.arrowX ?? 0,
-          arrowY: prev?.arrowY ?? 0,
-          arrow: prev?.arrow ?? "down",
           side: prev?.side ?? "above",
           wrap: false,
           maxWidth: 0,
@@ -451,9 +437,6 @@ export function RoomScreen({
       const next: ToolbarFloat = {
         left: prev?.left ?? 0,
         top: prev?.top ?? 0,
-        arrowX: prev?.arrowX ?? 0,
-        arrowY: prev?.arrowY ?? 0,
-        arrow: prev?.arrow ?? "down",
         side: prev?.side ?? "above",
         wrap: wantWrap,
         maxWidth: wantWrap ? availableW : 0,
@@ -474,16 +457,6 @@ export function RoomScreen({
     const centerX = box.left + (box.right - box.left) / 2;
     const centerY = box.top + (box.bottom - box.top) / 2;
     const placed = placeToolbarInView(bounds, box, width, height);
-    const arrowX = clampNum(
-      centerX - placed.left,
-      Math.min(ARROW_INSET, width / 2),
-      Math.max(width / 2, width - ARROW_INSET),
-    );
-    const arrowY = clampNum(
-      centerY - placed.top,
-      Math.min(ARROW_INSET, height / 2),
-      Math.max(height / 2, height - ARROW_INSET),
-    );
     const hudX = stageRect.left + geom.left;
     const hudY = stageRect.top + geom.top;
     let toolbarLeft = px(placed.left - hudX);
@@ -495,9 +468,6 @@ export function RoomScreen({
     const nextToolbar: ToolbarFloat = {
       left: toolbarLeft,
       top: toolbarTop,
-      arrowX: px(arrowX),
-      arrowY: px(arrowY),
-      arrow: placed.arrow,
       side: placed.side,
       wrap: wrapped,
       maxWidth: wrapped ? availableW : 0,
@@ -2106,9 +2076,7 @@ export function RoomScreen({
 
       {mode === "edit" && preview && preview.kind !== "paint" && hud && previewItem ? (
         <div
-          className={`lucky-select-hud lucky-placement-hud ${preview.valid ? "" : "is-invalid"} ${
-            toolbarFloat?.arrow === "up" ? "is-flipped" : ""
-          }`}
+          className={`lucky-select-hud lucky-placement-hud ${preview.valid ? "" : "is-invalid"}`}
           style={{ left: hud.left, top: hud.top, width: hud.width, height: hud.height }}
         >
           <div className="lucky-select-box">
@@ -2119,22 +2087,12 @@ export function RoomScreen({
           </div>
           <div
             ref={toolbarRef}
-            className={`lucky-placement-toolbar${toolbarFloat?.wrap ? " is-wrapped" : ""}${
-              toolbarFloat?.arrow === "up"
-                ? " is-arrow-up"
-                : toolbarFloat?.arrow === "left"
-                  ? " is-arrow-left"
-                  : toolbarFloat?.arrow === "right"
-                    ? " is-arrow-right"
-                    : ""
-            }`}
+            className={`lucky-placement-toolbar${toolbarFloat?.wrap ? " is-wrapped" : ""}`}
             style={{
               left: toolbarFloat?.left ?? 0,
               top: toolbarFloat?.top ?? 0,
               transform: "none",
               visibility: toolbarFloat?.ready ? "visible" : "hidden",
-              ["--arrow-x" as string]: `${toolbarFloat?.arrowX ?? 0}px`,
-              ["--arrow-y" as string]: `${toolbarFloat?.arrowY ?? 0}px`,
               ["--toolbar-max" as string]: `${toolbarFloat?.maxWidth ?? 0}px`,
             }}
             role="toolbar"
