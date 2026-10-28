@@ -13,11 +13,11 @@
       "toTossPoint": {
         "rate": 1,
         "unit": "KRW",
-        "text": "1냥코인 = 토스 포인트 1원"
+        "text": "1냥코인 = 1원"
       },
       "earnOnly": "광고 뽑기·젤리 광고(1회 1개), 도감 보상(새 카드·세트·전체 완성), 업적, 출석 7일차로 얻어요. 구매·무료 뽑기·뽑기권 뽑기로는 안 줘요. (ncoinSources)",
       "spendInApp": false,
-      "note": "앱 안에서 쓰지 않고 토스 포인트 지급만 해요. 젤리(발바닥, paw)와 별개 화폐예요."
+      "note": "지급은 서버가 처리해요. 지급 코드는 서버에만 있어요. 젤리(발바닥, paw)와 별개 화폐예요."
     }
   },
   "pawSources": {
@@ -131,6 +131,7 @@
     "claimMode": "manual"
   },
   "nyangCoin": {
+    "walletMode": "server",
     "maxEarnPerUser": "고정 아님: 광고 하루 최대 14(뽑기 4 + 젤리 광고 10) + 도감·업적 988 + 출석 7일차",
     "formula": "새 카드 597 (54×1 + 18×5 + 18×10 + 9×5 + 4×7 + 4×50) + 세트 210 (18×10 + 3×10) + 도감 완성 100 + 업적 81 = 988",
     "grant": {
@@ -152,7 +153,7 @@
         "계정당 동시 요청 1건 (row lock)"
       ],
       "idempotencyKey": "tossUserKey + withdrawRequestId (클라이언트 UUID, 재시도 시 같은 값)",
-      "payout": "토스 앱 안에서는 grantPromotionRewardForGame으로 토스 포인트를 지급해요. 토스 밖에서는 연습용 지급이에요.",
+      "payout": "지급은 서버가 처리해요. 지급 코드는 서버에만 있어요.",
       "flow": [
         "POST /wallet/withdraw {amount, requestId}",
         "서버: 검증 → 잔액 차감(hold) → 기록 status=pending",
@@ -167,9 +168,6 @@
       ],
       "onUnknownResult": "결과 불명 → pending 유지. 앱이 꺼진 pending은 자동으로 다시 지급하지 않아요.",
       "dailyLimit": 50,
-      "promotionCode": "01M59GH02QQ13C7ZY3W11SG2XH",
-      "testPromotionCode": "TEST_01M59GH02QQ13C7ZY3W11SG2XH",
-      "promotionLive": true,
       "history": {
         "keepDays": 365,
         "fields": [
@@ -181,8 +179,8 @@
         ]
       },
       "budgetAlertKRW": null,
-      "policyCheck": "promotionLive가 true면 promotionCode로 토스 포인트를 지급해요.",
-      "dailyLimitUnit": "토스 포인트 원 (= 냥코인 개수), KST 00:00 초기화",
+      "policyCheck": "지급은 서버가 처리해요. 지급 코드는 서버에만 있어요.",
+      "dailyLimitUnit": "원 (= 냥코인 개수), KST 00:00 초기화",
       "ui": "−/+ 스테퍼 (10 단위, 최소 10, 최대 min(잔액 내림 10단위, 오늘 남은 한도))"
     },
     "maxWithdrawable": 980,
@@ -206,7 +204,7 @@
       },
       "breakevenGrossEcpmKRW": "초반 뽑기 광고 1회당 지급 ≈ 2.3원 → 손익분기 총 eCPM ≈ 3,300원 (운영비 30% 차감), 수수료 15% 부활 시 ≈ 3,900원",
       "watch": [
-        "레전드 50 한 번에 크게 지급 → 하루 토스 포인트 지급 한도 50으로 분산",
+        "레전드 50 한 번에 크게 지급 → 하루 받을 수 있는 한도 50으로 분산",
         "다계정 어뷰징: 토스 계정당 1회 지급 + antiAbuse",
         "실제 eCPM이 손익분기보다 낮으면 4★/5★ 지급을 먼저 낮추기"
       ],
@@ -664,7 +662,7 @@
     "deviceChange": "계정 기준 지급 (기기 무관)",
     "attendance": "출석은 서버 시각(KST) 기준 계정당 하루 1회, attendanceDays는 서버에서만 증가. 기념 보상은 계정당 milestone별 1회(멱등키 tossUserKey+attendanceMilestone:{days}).",
     "nyangCoinGrantOncePerReward": true,
-    "withdraw": "토스 포인트 지급은 게임 SDK에서 검증해요(10 단위, 잔액 이하, requestId 멱등, 계정당 동시 1건). 앱이 꺼지면 pending은 다시 지급하지 않아요."
+    "withdraw": "받기는 서버가 검증해요(10 단위, 잔액 이하, requestId 멱등, 계정당 동시 1건). 앱이 꺼지면 pending은 다시 지급하지 않아요."
   },
   "files": {
     "prices": "prices.json",

@@ -1,17 +1,30 @@
-import { grantPromotionRewardForGame } from "@apps-in-toss/web-framework";
+import { Storage } from "@apps-in-toss/web-framework";
 
 import { toKstDateKey } from "./date";
+import { isInTossApp } from "./native";
 import { loadOpsConfig } from "./opsConfig";
 import { saveOpsState } from "./opsStorage";
 import type { OpsEconomy, OpsState, WalletHistoryItem, WalletWithdrawStatus } from "./opsTypes";
 import { refreshServerTime, trustedKstDateKey, trustedNow, hasServerTime } from "./tossClock";
 import { track } from "./analytics";
 import { isTossApp } from "./tossEnv";
-import { ensureGameUserHash, readStoredGameUserHash, TOSS_APP_UPDATE_MESSAGE } from "./user";
+import { ensureGameUserHash, readStoredGameUserHash } from "./user";
+import { withTimeout } from "./serverSave";
+import {
+  applyWalletViewToOps,
+  getWalletSnapshot,
+  scheduleWalletRecheck,
+  serverWalletActive,
+  walletGet,
+  walletWithdraw,
+  type WalletHistoryRow,
+  type WalletView,
+} from "./serverWallet";
 
 /**
- * 냥코인 → 토스 포인트 지급.
- * 토스 앱 안에서는 grantPromotionRewardForGame, 토스 밖에서는 연습용 지급.
+ * 냥코인 받기.
+ * 서버 모드에서는 wallet 함수가 잔액과 지급을 정한다.
+ * 로컬(연습) 모드에서는 mockGrant만 사용한다.
  */
 
 export type WalletWithdrawRequest = {
@@ -28,7 +41,7 @@ export type WalletWithdrawResponse =
       nyangCoinBalance: number;
       remainingToday: number;
       alreadyProcessed?: boolean;
-      /** TEST_ 코드 성공. 실제 토스 포인트는 지급되지 않아요. */
+      /** 연습 지급. 실제로는 받지 않아요. */
       testGrant?: boolean;
     }
   | {
@@ -62,7 +75,7 @@ const GRANT_GAP_MS = 10_000;
 const LAST_GRANT_KEY = "lucky-cat.promo-last-grant.v1";
 
 export const SERVER_TIME_BLOCK_MESSAGE =
-  "토스 서버 시간을 확인하지 못해 지금은 토스 포인트를 지급할 수 없어요";
+  "서버 시간을 확인하지 못해 지금은 받을 수 없어요";
 
 export type TossPointGrantGate = { ok: true } | { ok: false; reason: string };
 
@@ -136,42 +149,6 @@ function markGrantAt(hash: string, at: number) {
   }
 }
 
-function messageForPromoError(code: string): string {
-  switch (code) {
-    case "4109":
-      return "지금은 토스 포인트를 지급할 수 없어요";
-    case "4100":
-      return "토스 포인트 지급 정보를 찾지 못했어요";
-    case "4110":
-      return "토스 포인트를 지급하지 못했어요. 잠시 후 다시 시도해 주세요";
-    case "4112":
-      return "준비한 토스 포인트가 부족해요";
-    case "4114":
-      return "한 번에 지급할 수 있는 금액을 넘었어요";
-    case "4116":
-      return "토스 포인트 지급 한도를 넘었어요";
-    case "40000":
-      return "토스 포인트 지급 요청이 올바르지 않아요";
-    default:
-      return "토스 포인트를 지급하지 못했어요";
-  }
-}
-
-type PromotionCodeChoice = { code: string; test: boolean };
-
-/**
- * 정식 코드로 지급해요. VITE_USE_TEST_PROMOTION=true 이거나 promotionLive 가 아니면 TEST_ 코드를 써요.
- */
-function promotionCodeFrom(economy: OpsEconomy): PromotionCodeChoice {
-  const block = economy.nyangCoin.withdraw;
-  const testCode = typeof block?.testPromotionCode === "string" ? block.testPromotionCode.trim() : "";
-  const liveCode = typeof block?.promotionCode === "string" ? block.promotionCode.trim() : "";
-  const liveOn = block?.promotionLive === true;
-  const forceTest = import.meta.env.VITE_USE_TEST_PROMOTION === "true";
-  const test = forceTest || !liveOn;
-  return { code: test ? testCode : liveCode, test };
-}
-
 function pendingForHash(state: OpsState, hash: string): WalletHistoryItem | undefined {
   return state.walletHistory.find(
     (row) => row.status === "pending" && (!row.userHash || row.userHash === hash),
@@ -183,71 +160,145 @@ type GrantOutcome =
   | { kind: "failed"; reason: string; code: string }
   | { kind: "unconfirmed"; reason: string; code: string };
 
-function shortGrantCode(code: string, fallback: string): string {
-  const trimmed = code.trim();
-  return /^[A-Za-z0-9_-]{1,32}$/.test(trimmed) ? trimmed : fallback;
-}
-
-/** Practice grant outside Toss. Does not call the promotion SDK. */
+/** Practice grant. Does not call the promotion SDK. */
 async function mockGrant(): Promise<GrantOutcome> {
   await delay(80);
   return { kind: "done", key: `mock_${Date.now().toString(36)}` };
-}
-
-async function liveGrant(promotionCode: string, amountKRW: number): Promise<GrantOutcome> {
-  try {
-    const result = await grantPromotionRewardForGame({
-      params: { promotionCode, amount: amountKRW },
-    });
-    if (result == null) {
-      return { kind: "failed", reason: TOSS_APP_UPDATE_MESSAGE, code: "UNSUPPORTED" };
-    }
-    if (result === "ERROR") {
-      return {
-        kind: "failed",
-        reason: "토스 포인트를 지급하지 못했어요. 잠시 후 다시 시도해 주세요",
-        code: "ERROR",
-      };
-    }
-    if ("key" in result && typeof result.key === "string" && result.key) {
-      return { kind: "done", key: result.key };
-    }
-    if ("errorCode" in result && result.errorCode) {
-      const raw = String(result.errorCode);
-      return {
-        kind: "failed",
-        reason: messageForPromoError(raw),
-        code: shortGrantCode(raw, "ERROR"),
-      };
-    }
-    return { kind: "unconfirmed", reason: "지급 결과를 확인하지 못했어요", code: "UNCONFIRMED" };
-  } catch {
-    // The call may have reached Toss. Leave the row pending instead of paying twice.
-    return { kind: "unconfirmed", reason: "지급 결과를 확인하지 못했어요", code: "UNCONFIRMED" };
-  }
 }
 
 /**
  * Whether the payout button may start a new grant.
  * Pending rows are never retried here.
  */
+const PREPARE_MESSAGE = "지금은 받기를 준비하고 있어요";
+const BLOCKED_MESSAGE = "지금은 받을 수 없어요";
+const OFFLINE_MESSAGE = "연결을 확인하지 못해 지금은 받을 수 없어요";
+const FRESH_MS = 15_000;
+const PENDING_KEY = "lucky-cat.wallet.pending-withdraw.v1";
+
+type PendingWithdraw = { requestId: string; amount: number; sentAt?: number };
+
+async function readStorage(key: string): Promise<string | null> {
+  if (isInTossApp()) {
+    try {
+      return await withTimeout(Storage.getItem(key), 800);
+    } catch {
+      // 브라우저 미리보기는 localStorage를 써요.
+    }
+  }
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+async function writeStorage(key: string, value: string): Promise<void> {
+  if (isInTossApp()) {
+    try {
+      await withTimeout(Storage.setItem(key, value), 800);
+      return;
+    } catch {
+      // fall through
+    }
+  }
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // ignore
+  }
+}
+
+async function removeStorage(key: string): Promise<void> {
+  if (isInTossApp()) {
+    try {
+      await withTimeout(Storage.removeItem(key), 800);
+      return;
+    } catch {
+      // fall through
+    }
+  }
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+}
+
+async function readPending(): Promise<PendingWithdraw | null> {
+  const raw = await readStorage(PENDING_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return null;
+    const record = parsed as Record<string, unknown>;
+    if (typeof record.requestId !== "string" || typeof record.amount !== "number") return null;
+    return {
+      requestId: record.requestId,
+      amount: record.amount,
+      ...(typeof record.sentAt === "number" ? { sentAt: record.sentAt } : {}),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function writePending(pending: PendingWithdraw): Promise<void> {
+  await writeStorage(PENDING_KEY, JSON.stringify(pending));
+}
+
+async function clearPending(requestId?: string): Promise<void> {
+  if (!requestId) {
+    await removeStorage(PENDING_KEY);
+    return;
+  }
+  const stored = await readPending();
+  if (stored?.requestId === requestId) await removeStorage(PENDING_KEY);
+}
+
+function inflightRow(history: WalletHistoryRow[]): WalletHistoryRow | undefined {
+  return history.find(
+    (row) => row.status === "sending" || row.status === "unknown" || row.status === "manual_review",
+  );
+}
+
+function classifyPending(view: WalletView | null, pending: PendingWithdraw): "reuse" | "replace" | "unknown" {
+  if (!pending.sentAt) return "reuse";
+  if (!view || view.fetchedAt < pending.sentAt) return "unknown";
+  const row = view.history.find((item) => item.requestId === pending.requestId);
+  if (!row || row.status === "done" || row.status === "failed") return "replace";
+  return "reuse";
+}
+
+async function freshWalletView(): Promise<WalletView | null> {
+  const snap = getWalletSnapshot();
+  if (snap && Date.now() - snap.fetchedAt < FRESH_MS) return snap;
+  const got = await walletGet();
+  if (!got.ok) return null;
+  return got.view;
+}
+
 export async function inspectTossPointGrant(state: OpsState): Promise<TossPointGrantGate> {
+  if (await serverWalletActive()) {
+    const view = await freshWalletView();
+    if (!view) return { ok: false, reason: OFFLINE_MESSAGE };
+    if (!view.migrated || !view.withdrawEnabled) return { ok: false, reason: PREPARE_MESSAGE };
+    if (view.blocked) return { ok: false, reason: BLOCKED_MESSAGE };
+    if (inflightRow(view.history)) return { ok: false, reason: "확인 중인 지급이 있어요" };
+    return { ok: true };
+  }
   const identity = await ensureGameUserHash();
   if (!identity.ok) return identity;
   if (isTossApp()) {
     const timed = await refreshServerTime();
     if (!timed || !hasServerTime()) return { ok: false, reason: SERVER_TIME_BLOCK_MESSAGE };
-    const config = await loadOpsConfig();
-    if (!promotionCodeFrom(config.economy).code) {
-      return { ok: false, reason: "토스 포인트 지급 코드가 아직 없어요" };
-    }
   }
   if (pendingForHash(state, identity.hash)) {
     return { ok: false, reason: "확인 중인 지급이 있어요" };
   }
   const waited = Date.now() - lastGrantAt(identity.hash);
   if (lastGrantAt(identity.hash) > 0 && waited < GRANT_GAP_MS) {
-    return { ok: false, reason: "10초 뒤에 다시 토스 포인트를 지급할 수 있어요" };
+    return { ok: false, reason: "10초 뒤에 다시 받을 수 있어요" };
   }
   const lock = locks.get(identity.hash);
   if (lock && lock.until > Date.now()) {
@@ -273,15 +324,209 @@ function withRemaining(
   return { ...response, remainingToday: response.remainingToday ?? remainingToday };
 }
 
+function withdrawFailReason(error: string): { reason: string; code?: "DAILY_LIMIT" } {
+  switch (error) {
+    case "DAILY_LIMIT":
+      return { reason: "오늘 받을 수 있는 한도를 넘었어요", code: "DAILY_LIMIT" };
+    case "INSUFFICIENT":
+      return { reason: "냥코인이 부족해요" };
+    case "BUSY":
+      return { reason: "확인 중인 신청이 있어요" };
+    case "BUDGET":
+    case "DISABLED":
+    case "NOT_MIGRATED":
+    case "server_not_configured":
+      return { reason: PREPARE_MESSAGE };
+    case "BLOCKED":
+      return { reason: BLOCKED_MESSAGE };
+    case "rate_limited":
+      return { reason: "잠시 후 다시 시도해 주세요" };
+    default:
+      return { reason: "지금은 받지 못했어요. 잠시 후 다시 시도해 주세요" };
+  }
+}
+
+let withdrawInflight: Promise<{ state: OpsState; response: WalletWithdrawResponse }> | null = null;
+
 /**
  * POST /wallet/withdraw
- * - amount % unit == 0, >= min, <= balance
- * - (withdrawnToday + amount) <= dailyLimit → else 409 DAILY_LIMIT
- * - deduct + pending → Toss grant → done / refund+failed
- * - idempotent on tossUserKey+requestId
- * - one in-flight lock per account
+ * Server mode asks the wallet function. Local mode keeps the practice grant.
  */
-export async function postWalletWithdraw(
+export function postWalletWithdraw(
+  state: OpsState,
+  body: WalletWithdrawRequest,
+): Promise<{ state: OpsState; response: WalletWithdrawResponse }> {
+  if (withdrawInflight) return withdrawInflight;
+  withdrawInflight = postWalletWithdrawRun(state, body).finally(() => {
+    withdrawInflight = null;
+  });
+  return withdrawInflight;
+}
+
+async function postWalletWithdrawRun(
+  state: OpsState,
+  body: WalletWithdrawRequest,
+): Promise<{ state: OpsState; response: WalletWithdrawResponse }> {
+  if (await serverWalletActive()) return postWalletWithdrawServer(state, body);
+  return postWalletWithdrawLocal(state, body);
+}
+
+async function postWalletWithdrawServer(
+  state: OpsState,
+  body: WalletWithdrawRequest,
+): Promise<{ state: OpsState; response: WalletWithdrawResponse }> {
+  const snap = getWalletSnapshot();
+  const min = snap?.min ?? 10;
+  const unit = snap?.unit ?? 10;
+  let amount = body.amount;
+  const requestId = body.requestId;
+  if (!requestId || typeof requestId !== "string") {
+    return { state, response: { ok: false, reason: "requestId가 필요해요" } };
+  }
+  const stored = await readPending();
+  if (stored && stored.requestId === requestId && stored.amount !== amount) {
+    amount = stored.amount;
+  }
+  if (!Number.isInteger(amount) || amount < min || (unit > 0 && amount % unit !== 0)) {
+    return {
+      state,
+      response: { ok: false, reason: `${min}냥코인부터 ${unit}단위로 받을 수 있어요` },
+    };
+  }
+
+  const got = await walletGet();
+  if (!got.ok) {
+    return { state, response: { ok: false, reason: OFFLINE_MESSAGE } };
+  }
+  let next = applyWalletViewToOps(state, got.view);
+  if (!got.view.migrated || !got.view.withdrawEnabled) {
+    await saveOpsState(next);
+    return { state: next, response: { ok: false, reason: PREPARE_MESSAGE } };
+  }
+  if (got.view.blocked) {
+    await saveOpsState(next);
+    return { state: next, response: { ok: false, reason: BLOCKED_MESSAGE } };
+  }
+  const busy = inflightRow(got.view.history);
+  if (busy) {
+    await saveOpsState(next);
+    return {
+      state: next,
+      response: {
+        ok: true,
+        status: "pending",
+        amount: busy.amount,
+        requestId: busy.requestId,
+        nyangCoinBalance: got.view.balance,
+        remainingToday: got.view.remainingToday,
+        alreadyProcessed: true,
+      },
+    };
+  }
+
+  await writePending({ requestId, amount, sentAt: Date.now() });
+  track("toss_reward_request", { amount });
+  const result = await walletWithdraw(requestId, amount);
+  const view = getWalletSnapshot() ?? got.view;
+  next = applyWalletViewToOps(state, view);
+
+  if (!result.ok) {
+    if (result.network) {
+      const pendingRow: WalletHistoryItem = {
+        requestId,
+        amount,
+        status: "pending",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        userHash: readStoredGameUserHash() || undefined,
+      };
+      next = {
+        ...next,
+        walletHistory: [pendingRow, ...next.walletHistory.filter((row) => row.requestId !== requestId)].slice(0, 50),
+      };
+      await saveOpsState(next);
+      scheduleWalletRecheck();
+      track("toss_reward_result", { amount, success: false, error_code: "network" });
+      return {
+        state: next,
+        response: {
+          ok: true,
+          status: "pending",
+          amount,
+          requestId,
+          nyangCoinBalance: view.balance,
+          remainingToday: view.remainingToday,
+        },
+      };
+    }
+    await clearPending(requestId);
+    await saveOpsState(next);
+    const mapped = withdrawFailReason(result.error);
+    track("toss_reward_result", { amount, success: false, error_code: result.error });
+    return {
+      state: next,
+      response: {
+        ok: false,
+        reason: mapped.reason,
+        code: mapped.code,
+        remainingToday: result.remainingToday ?? view.remainingToday,
+        ...(result.error === "DAILY_LIMIT" ? {} : {}),
+      },
+    };
+  }
+
+  const balance = result.balance;
+  const remainingToday = result.remainingToday;
+  next = applyWalletViewToOps(state, { ...view, balance, remainingToday });
+  if (result.status === "done" && !result.pending) {
+    await clearPending(requestId);
+    await saveOpsState(next);
+    track("toss_reward_result", { amount, success: true });
+    return {
+      state: next,
+      response: {
+        ok: true,
+        status: "done",
+        amount,
+        requestId,
+        nyangCoinBalance: balance,
+        remainingToday,
+        testGrant: result.item?.isTest || undefined,
+      },
+    };
+  }
+  if (result.status === "failed" && !result.pending) {
+    await clearPending(requestId);
+    await saveOpsState(next);
+    track("toss_reward_result", { amount, success: false, error_code: "failed" });
+    return {
+      state: next,
+      response: {
+        ok: false,
+        status: "failed",
+        reason: "보내지 못해 냥코인을 돌려드렸어요",
+      },
+    };
+  }
+  await saveOpsState(next);
+  track("toss_reward_result", { amount, success: false, error_code: result.status });
+  return {
+    state: next,
+    response: {
+      ok: true,
+      status: "pending",
+      amount,
+      requestId,
+      nyangCoinBalance: balance,
+      remainingToday,
+    },
+  };
+}
+
+/**
+ * Local practice withdraw. Deducts on this device and never calls the promotion SDK.
+ */
+async function postWalletWithdrawLocal(
   state: OpsState,
   body: WalletWithdrawRequest,
 ): Promise<{ state: OpsState; response: WalletWithdrawResponse }> {
@@ -418,17 +663,14 @@ export async function postWalletWithdraw(
   await saveOpsState(next);
   markGrantAt(identity.hash, Date.now());
 
-  const amountKRW = amount * (config.economy.nyangCoin.toTossPointRate ?? 1);
-  const code = promotionCodeFrom(config.economy);
   track("toss_reward_request", { amount });
-  const grant = isTossApp() ? await liveGrant(code.code, amountKRW) : await mockGrant();
+  const grant = await mockGrant();
   track("toss_reward_result", {
     amount,
     success: grant.kind === "done",
     error_code: grant.kind === "done" ? undefined : grant.code,
   });
-  // TEST_ 성공은 resultType SUCCESS({ key })지만 실제 포인트는 나가지 않아요.
-  const testGrant = grant.kind === "done" && code.test && isTossApp();
+  const testGrant = false;
 
   if (grant.kind === "done") {
     const done: WalletHistoryItem = {
@@ -511,6 +753,39 @@ export async function postWalletWithdraw(
 
 /** GET /wallet — balance + remainingToday + history. Pending rows stay pending. */
 export async function getWallet(state: OpsState): Promise<{ state: OpsState; wallet: WalletGetResponse }> {
+  if (await serverWalletActive()) {
+    const got = await walletGet();
+    const view = got.ok ? got.view : getWalletSnapshot();
+    if (!view) {
+      return {
+        state,
+        wallet: {
+          nyangCoinBalance: state.nyangCoinBalance,
+          remainingToday: 0,
+          dailyLimit: 0,
+          min: 10,
+          unit: 10,
+          withdrawnToday: 0,
+          history: state.walletHistory,
+        },
+      };
+    }
+    const next = applyWalletViewToOps(state, view);
+    await saveOpsState(next);
+    const withdrawnToday = Math.max(0, view.dailyLimit - view.remainingToday);
+    return {
+      state: next,
+      wallet: {
+        nyangCoinBalance: view.balance,
+        remainingToday: view.remainingToday,
+        dailyLimit: view.dailyLimit,
+        min: view.min,
+        unit: view.unit,
+        withdrawnToday,
+        history: next.walletHistory,
+      },
+    };
+  }
   await delay(30);
   const config = await loadOpsConfig();
   const rules = getWithdrawRules(config.economy);
@@ -545,6 +820,38 @@ export async function getWalletHistory(
 
 export function buildWithdrawRequestId(): string {
   return `wd_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+let idInflight: Promise<string> | null = null;
+
+/** Server mode reuses one id until the payout is final. Local mode mints a new id. */
+export function acquireWithdrawRequestId(amount: number): Promise<string> {
+  if (idInflight) return idInflight;
+  idInflight = acquireWithdrawRequestIdBody(amount).finally(() => {
+    idInflight = null;
+  });
+  return idInflight;
+}
+
+async function acquireWithdrawRequestIdBody(amount: number): Promise<string> {
+  if (!(await serverWalletActive())) return buildWithdrawRequestId();
+  const stored = await readPending();
+  if (!stored) {
+    const requestId = buildWithdrawRequestId();
+    await writePending({ requestId, amount });
+    return requestId;
+  }
+  let decision = classifyPending(getWalletSnapshot(), stored);
+  if (decision === "unknown") {
+    const got = await walletGet();
+    decision = classifyPending(got.ok ? got.view : null, stored);
+    if (decision === "unknown") return stored.requestId;
+  }
+  if (decision === "reuse") return stored.requestId;
+  await clearPending(stored.requestId);
+  const requestId = buildWithdrawRequestId();
+  await writePending({ requestId, amount });
+  return requestId;
 }
 
 /** @deprecated chips replaced by stepper — kept for any stray imports */

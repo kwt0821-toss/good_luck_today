@@ -9,6 +9,7 @@ import type {
   AttendanceReward,
 } from "./attendanceTypes";
 import { grantNyangCoinOnce } from "./mockToss";
+import { serverWalletActive, walletEarn } from "./serverWallet";
 import { loadOpsConfig } from "./opsConfig";
 import type {
   AttendanceDay7BonusConfig,
@@ -473,8 +474,10 @@ export async function claimAttendanceDay7OnServer(
   }
 
   const cycleKey = day7CycleIdempotencyKey(state.userId, cycleNo);
+  const serverRewardId = `att7:${cycleNo}`;
   if (
     state.grantedNyangCoinRewardIds.includes(cycleKey) ||
+    state.grantedNyangCoinRewardIds.includes(serverRewardId) ||
     (state.attendanceDay7Ledger ?? []).some((row) => row.cycleNo === cycleNo)
   ) {
     return { state, response: { ok: false, reason: "이번 주기 보너스는 이미 받았어요" } };
@@ -482,6 +485,27 @@ export async function claimAttendanceDay7OnServer(
 
   if (withAd && !adToken) {
     return { state, response: { ok: false, reason: "광고 완료를 확인하지 못했어요" } };
+  }
+
+  const serverOn = await serverWalletActive();
+  let serverAmount: number | null = null;
+  let serverBalance: number | null = null;
+  if (serverOn) {
+    let earned: Awaited<ReturnType<typeof walletEarn>>;
+    try {
+      earned = await walletEarn([{ rewardId: serverRewardId, withAd }]);
+    } catch {
+      earned = { ok: false, error: "network", network: true };
+    }
+    const row = earned.ok ? earned.results[0] : undefined;
+    if (!earned.ok || !row?.ok) {
+      return { state, response: { ok: false, reason: "연결이 불안정해요. 잠시 후 다시 받아 주세요" } };
+    }
+    if (row.alreadyGranted) {
+      return { state, response: { ok: false, reason: "이번 주기 보너스는 이미 받았어요" } };
+    }
+    serverAmount = row.amount ?? 0;
+    serverBalance = earned.balance;
   }
 
   const maxHold = config.economy.tickets?.rateUpTicket?.maxHold ?? 3;
@@ -506,13 +530,15 @@ export async function claimAttendanceDay7OnServer(
 
   next = applyRewards(next, existingRewards, milestoneHit);
 
-  // Yearly 냥코인 cap → overflow to P (10P each)
+  // Yearly 냥코인 cap → overflow to P (10P each). Server mode uses the server amount.
   const yearKey = toKstYearKey();
   const yearGranted =
     next.attendanceNyangYearKey === yearKey ? next.attendanceNyangCoinYear : 0;
   let overflowPaw = 0;
   const cap = bonus.yearlyCoinCap;
-  if (cap?.enabled) {
+  if (serverOn && serverAmount != null) {
+    wantNyang = serverAmount;
+  } else if (cap?.enabled) {
     const limit = cap.proposal ?? 300;
     const room = Math.max(0, limit - yearGranted);
     if (wantNyang > room) {
@@ -534,15 +560,29 @@ export async function claimAttendanceDay7OnServer(
     attendanceNyangCoinYear: yearGranted + wantNyang,
   };
 
-  if (wantNyang > 0) {
-    const toss = await grantNyangCoinOnce(next, {
-      tossUserKey: next.userId,
-      rewardId: cycleKey,
-      amount: wantNyang,
-    });
+  if (serverOn && serverBalance != null) {
+    const ids = next.grantedNyangCoinRewardIds;
+    const withCycle = ids.includes(cycleKey) ? ids : [...ids, cycleKey];
+    const withServer = withCycle.includes(serverRewardId) ? withCycle : [...withCycle, serverRewardId];
+    next = { ...next, nyangCoinBalance: serverBalance, grantedNyangCoinRewardIds: withServer };
+  } else if (wantNyang > 0) {
+    let toss: Awaited<ReturnType<typeof grantNyangCoinOnce>>;
+    try {
+      toss = await grantNyangCoinOnce(next, {
+        tossUserKey: next.userId,
+        rewardId: cycleKey,
+        amount: wantNyang,
+        withAd,
+      });
+    } catch {
+      toss = { state: next, result: { ok: false, reason: "network" } };
+    }
     next = toss.state;
-    if (toss.result.ok && toss.result.alreadyGranted) {
-      // Cycle already granted somehow — keep paw/tickets from this attempt? Prefer fail-safe.
+    if (!next.grantedNyangCoinRewardIds.includes(serverRewardId)) {
+      next = {
+        ...next,
+        grantedNyangCoinRewardIds: [...next.grantedNyangCoinRewardIds, serverRewardId],
+      };
     }
   } else {
     // Still mark cycle claimed even when all 냥코인 converted to P

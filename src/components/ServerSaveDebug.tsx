@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 
 import { isDebugSaveRequest } from "../lib/debugSaveQuery";
 import { serverSaveStatus, subscribeServerSave } from "../lib/serverSave";
+import { resolveWalletMode, serverWalletStatus, subscribeServerWallet } from "../lib/serverWallet";
 
 function debugSaveEnabled(): boolean {
   if (typeof window === "undefined") return false;
@@ -25,7 +26,13 @@ export function ServerSaveDebug() {
 
   useEffect(() => {
     if (!enabled) return;
-    return subscribeServerSave(() => bump((n) => n + 1));
+    const bumpSave = subscribeServerSave(() => bump((n) => n + 1));
+    const bumpWallet = subscribeServerWallet(() => bump((n) => n + 1));
+    void resolveWalletMode();
+    return () => {
+      bumpSave();
+      bumpWallet();
+    };
   }, [enabled]);
 
   if (!enabled) return null;
@@ -34,6 +41,13 @@ export function ServerSaveDebug() {
   const line = load
     ? `load result=${load.result} serverVersion=${load.serverVersion ?? "null"} localVersion=${load.localVersion ?? "null"}`
     : "load result=pending";
+  const wallet = serverWalletStatus();
+  const walletLine =
+    wallet.mode === "local"
+      ? "wallet mode=local"
+      : wallet.last
+        ? `wallet mode=${wallet.mode} last=${wallet.last}${wallet.balance != null ? ` bal=${wallet.balance}` : ""}${wallet.remainingToday != null ? ` rem=${wallet.remainingToday}` : ""}`
+        : `wallet mode=${wallet.mode} last=pending`;
 
   return createPortal(
     <div
@@ -44,7 +58,7 @@ export function ServerSaveDebug() {
         left: 8,
         top: "calc(8px + env(safe-area-inset-top, 0px))",
         zIndex: 2147483000,
-        width: 168,
+        width: 220,
         padding: "3px 6px",
         borderRadius: 4,
         background: "rgba(20, 16, 28, 0.92)",
@@ -56,6 +70,8 @@ export function ServerSaveDebug() {
       }}
     >
       {line}
+      <br />
+      {walletLine}
     </div>,
     document.body,
   );

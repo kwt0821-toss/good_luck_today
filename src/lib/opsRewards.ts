@@ -137,11 +137,16 @@ export async function confirmDrawAfterAd(
 
   let adNyangCoin = 0;
   if (wantNyang > 0) {
-    const toss = await grantNyangCoinOnce(next, {
-      tossUserKey: next.userId,
-      rewardId: adDrawRewardId(drawId),
-      amount: wantNyang,
-    });
+    let toss: Awaited<ReturnType<typeof grantNyangCoinOnce>>;
+    try {
+      toss = await grantNyangCoinOnce(next, {
+        tossUserKey: next.userId,
+        rewardId: adDrawRewardId(drawId),
+        amount: wantNyang,
+      });
+    } catch {
+      toss = { state: next, result: { ok: false, reason: "network" } };
+    }
     next = toss.state;
     if (toss.result.ok && !toss.result.alreadyGranted) {
       adNyangCoin = toss.result.amount;
@@ -260,11 +265,16 @@ export async function grantPawAdReward(
 
   let adPawNyangCoin = 0;
   if (grantNyang > 0) {
-    const toss = await grantNyangCoinOnce(next, {
-      tossUserKey: next.userId,
-      rewardId: adPawRewardId(requestId),
-      amount: grantNyang,
-    });
+    let toss: Awaited<ReturnType<typeof grantNyangCoinOnce>>;
+    try {
+      toss = await grantNyangCoinOnce(next, {
+        tossUserKey: next.userId,
+        rewardId: adPawRewardId(requestId),
+        amount: grantNyang,
+      });
+    } catch {
+      toss = { state: next, result: { ok: false, reason: "network" } };
+    }
     next = toss.state;
     if (toss.result.ok && !toss.result.alreadyGranted) {
       adPawNyangCoin = toss.result.amount;

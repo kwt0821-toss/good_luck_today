@@ -25,6 +25,7 @@ import { refreshServerTime } from "./lib/tossClock";
 import { isTossApp } from "./lib/tossEnv";
 import { ensureGameUserHash } from "./lib/user";
 import { installServerSaveLifecycle, syncGameSaveOnBoot } from "./lib/serverSave";
+import { applyWalletViewToOps, subscribeWalletView, syncWalletOnBoot } from "./lib/serverWallet";
 import { buildMenuViewModel } from "./lib/menuModel";
 import {
   MENU_SETTINGS_EVENT,
@@ -332,6 +333,17 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    return subscribeWalletView((view) => {
+      setOps((current) => {
+        if (!current) return current;
+        const applied = applyWalletViewToOps(current, view);
+        void saveOpsState(applied);
+        return applied;
+      });
+    });
+  }, []);
+
+  useEffect(() => {
     installServerSaveLifecycle();
     let cancelled = false;
     void (async () => {
@@ -347,6 +359,7 @@ export default function App() {
         if (cancelled) return;
         setConfig(nextConfig);
         setOps(nextOps);
+        void syncWalletOnBoot();
         if (promoTargetRef.current && !nextOps.tutorialDone) {
           setScreen({ name: "home" });
           setMenuOpen(false);

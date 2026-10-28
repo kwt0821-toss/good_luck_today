@@ -1,6 +1,7 @@
 import { cardsOfType, groupBreedRows, loadDexCatalog } from "./dexCatalog";
 import { loadDexOwned } from "./dexCollection";
 import { grantNyangCoinOnce } from "./mockToss";
+import { serverWalletActive, walletEarn } from "./serverWallet";
 import { loadOpsConfig } from "./opsConfig";
 import { saveOpsState } from "./opsStorage";
 import type { OpsState } from "./opsTypes";
@@ -333,24 +334,84 @@ export async function postAchievementClaim(
   let totalPaw = 0;
   let totalNyang = 0;
   const claimedIds: string[] = [];
+  const fresh = selected.filter((item) => !(next.claimedAchievementIds ?? []).includes(item.def.id));
 
-  for (const item of selected) {
-    if ((next.claimedAchievementIds ?? []).includes(item.def.id)) continue;
-    totalPaw += item.def.reward.paw;
-    totalNyang += item.def.reward.nyangCoin;
-    claimedIds.push(item.def.id);
-    next = {
-      ...next,
-      pawBalance: next.pawBalance + item.def.reward.paw,
-      claimedAchievementIds: [...(next.claimedAchievementIds ?? []), item.def.id],
-    };
-    if (item.def.reward.nyangCoin > 0) {
-      const toss = await grantNyangCoinOnce(next, {
-        tossUserKey: next.userId,
-        rewardId: `achv:${item.def.id}`,
-        amount: item.def.reward.nyangCoin,
-      });
-      next = toss.state;
+  if (await serverWalletActive()) {
+    const free = fresh.filter((item) => item.def.reward.nyangCoin <= 0);
+    const paid = fresh.filter((item) => item.def.reward.nyangCoin > 0);
+    for (const item of free) {
+      totalPaw += item.def.reward.paw;
+      claimedIds.push(item.def.id);
+      next = {
+        ...next,
+        pawBalance: next.pawBalance + item.def.reward.paw,
+        claimedAchievementIds: [...(next.claimedAchievementIds ?? []), item.def.id],
+      };
+    }
+    if (paid.length) {
+      let earned: Awaited<ReturnType<typeof walletEarn>>;
+      try {
+        earned = await walletEarn(
+          paid.map((item) => ({ rewardId: `achv:${item.def.id}` })),
+        );
+      } catch {
+        earned = { ok: false, error: "network", network: true };
+      }
+      if (earned.ok) {
+        next = { ...next, nyangCoinBalance: earned.balance };
+        for (const item of paid) {
+          const rewardId = `achv:${item.def.id}`;
+          const row = earned.results.find((entry) => entry.rewardId === rewardId);
+          if (!row?.ok) continue;
+          totalPaw += item.def.reward.paw;
+          totalNyang += row.amount ?? 0;
+          claimedIds.push(item.def.id);
+          const grantedIds = next.grantedNyangCoinRewardIds.includes(rewardId)
+            ? next.grantedNyangCoinRewardIds
+            : [...next.grantedNyangCoinRewardIds, rewardId];
+          next = {
+            ...next,
+            pawBalance: next.pawBalance + item.def.reward.paw,
+            claimedAchievementIds: [...(next.claimedAchievementIds ?? []), item.def.id],
+            grantedNyangCoinRewardIds: grantedIds,
+          };
+        }
+      }
+    }
+    if (!claimedIds.length) {
+      return {
+        state,
+        response: {
+          ok: false,
+          reason: fresh.length
+            ? "연결이 불안정해요. 잠시 후 다시 받아 주세요"
+            : "이미 받은 칭호예요",
+        },
+      };
+    }
+  } else {
+    for (const item of fresh) {
+      totalPaw += item.def.reward.paw;
+      totalNyang += item.def.reward.nyangCoin;
+      claimedIds.push(item.def.id);
+      next = {
+        ...next,
+        pawBalance: next.pawBalance + item.def.reward.paw,
+        claimedAchievementIds: [...(next.claimedAchievementIds ?? []), item.def.id],
+      };
+      if (item.def.reward.nyangCoin > 0) {
+        let toss: Awaited<ReturnType<typeof grantNyangCoinOnce>>;
+        try {
+          toss = await grantNyangCoinOnce(next, {
+            tossUserKey: next.userId,
+            rewardId: `achv:${item.def.id}`,
+            amount: item.def.reward.nyangCoin,
+          });
+        } catch {
+          toss = { state: next, result: { ok: false, reason: "network" } };
+        }
+        next = toss.state;
+      }
     }
   }
 

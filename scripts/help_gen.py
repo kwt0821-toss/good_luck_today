@@ -5,31 +5,31 @@ ps=e['pawSources']; ns=e['ncoinSources']; nc=ps['newCardFirstGet']['nyangCoinByG
 d7=ps['attendance']['weeklyCycle']['day7Bonus']; wd=ps['attendance']['weeklyCycle']['pawDays1to6']; dc=ps['duplicateConvert']
 at=sum(x['reward']['nyangCoin'] for x in ach['items']); ap=sum(x['reward']['paw'] for x in ach['items'])
 tk=e['shop']['tickets']['rateUpTicket']; wl=e['nyangCoin']['withdraw']; rp=[r['unlock']['paw'] for r in e['rooms'] if r['unlock'].get('paw')]
-J={"_version":"help-1.0","_source":"economy.json "+e['_version']+" + achievements.json "+ach['_version']+" (help_gen.py로 생성)","title":"냥코인·포인트 얻는 법",
+J={"_version":"help-1.0","_source":"economy.json "+e['_version']+" + achievements.json "+ach['_version']+" (help_gen.py로 생성)","title":"냥코인·젤리 얻는 법",
 "tabs":[
-{"id":"ncoin","label":"냥코인","icon":"ncoin","lead":"1냥코인 = 토스포인트 1원","sections":[
+{"id":"ncoin","label":"냥코인","icon":"ncoin","lead":"1냥코인 = 1원","sections":[
  {"h":"매일 모으기","rows":[
   {"t":"광고 보고 뽑기","d":"새 카드든 중복이든 1번에","amt":f"+{ns['adDraw']}","cap":f"하루 {ns['adDrawRule']['dailyMax']}번"},
-  {"t":"광고 보고 포인트 받기","d":"포인트와 함께 덤으로","amt":f"+{ns['adPaw']}","cap":f"하루 {ns['adPawRule']['dailyMax']}번"},
+  {"t":"광고 보고 젤리 받기","d":"젤리와 함께 덤으로","amt":f"+{ns['adPaw']}","cap":f"하루 {ns['adPawRule']['dailyMax']}번"},
   {"t":"출석 7일째","d":f"광고 보면 {d7['adBonus']['nyangCoin']}개 + 뽑기권","amt":f"+{d7['base']['nyangCoin']}","cap":"매주 1번"}]},
  {"h":"도감 채우기","rows":[
   {"t":"새 고양이 처음 만나기","d":f"높은 등급일수록 많이, 레전드는 {nc['legend']}개","amt":f"+{nc['b1']}~{nc['legend']}","cap":"카드마다 1번"},
   {"t":"세트 완성","d":"품종·밈·캐릭터·레전드 세트","amt":f"+{sc['breed_1to5star']['nyangCoin']}","cap":"세트마다 1번"},
   {"t":"도감 전부 채우기","d":"107칸 모두","amt":f"+{sc['fullDex']['nyangCoin']}","cap":"1번"},
   {"t":"칭호 얻기","d":f"칭호 {len(ach['items'])}개, 모두 모으면 {at}개","amt":"+1~","cap":"칭호마다 1번"}]}],
- "use":{"h":"이렇게 써요","t":f"{wl['min']}냥코인부터 {wl['unit']}개 단위로 토스포인트로 바꿔요","d":f"하루 최대 {wl['dailyLimit']}원 · 보상함 › 토스포인트로 받기"}},
-{"id":"paw","label":"발바닥 포인트","icon":"paw","lead":"방을 꾸미고 뽑기권을 사요","sections":[
+ "use":{"h":"이렇게 써요","t":f"{wl['min']}냥코인부터 {wl['unit']}개 단위로 받아요","d":f"하루 최대 {wl['dailyLimit']}원 · 보상함 › 냥코인 받기"}},
+{"id":"paw","label":"발바닥 젤리","icon":"paw","lead":"방을 꾸미고 뽑기권을 사요","sections":[
  {"h":"매일 모으기","rows":[
-  {"t":"광고 보고 포인트 받기","d":"주말엔 2배","amt":f"+{ad['pawPerAd']}P","cap":f"하루 {ad['maxPerDay']}번"},
+  {"t":"광고 보고 젤리 받기","d":"주말엔 2배","amt":f"+{ad['pawPerAd']}P","cap":f"하루 {ad['maxPerDay']}번"},
   {"t":"출석","d":f"1~6일째 {wd[0]}~{wd[-1]}P, 7일째 광고 보면 {d7['adBonus']['paw']}P","amt":f"+{wd[0]}~{d7['base']['paw']}P","cap":"하루 1번"}]},
  {"h":"카드로 모으기","rows":[
   {"t":"새 고양이 처음 만나기","d":"등급 상관없이","amt":f"+{ps['newCardFirstGet']['paw']}P","cap":"카드마다 1번"},
-  {"t":"중복 카드 바꾸기","d":f"남는 카드를 포인트로, 레전드는 {dc['legend']}P","amt":f"+{dc['common_1to2star']}~{dc['legend']}P","cap":"장마다"},
+  {"t":"중복 카드 바꾸기","d":f"남는 카드를 젤리로, 레전드는 {dc['legend']}P","amt":f"+{dc['common_1to2star']}~{dc['legend']}P","cap":"장마다"},
   {"t":"세트 완성","d":f"품종 {sc['breed_1to5star']['paw']}P · 특별 세트 {sc['special']['paw']}P","amt":f"+{sc['breed_1to5star']['paw']}~{sc['special']['paw']}P","cap":"세트마다 1번"},
   {"t":"도감 전부 채우기","d":"107칸 모두","amt":f"+{sc['fullDex']['paw']}P","cap":"1번"},
   {"t":"칭호 얻기","d":f"모두 모으면 {ap}P","amt":"+20P~","cap":"칭호마다 1번"}]}],
  "use":{"h":"이렇게 써요","t":f"확률업 뽑기권 {tk['pricePaw']}P · 방꾸미기 아이템 · 새 방 열기","d":f"뽑기권은 하루 {tk['dailyCap']}장, 최대 {e['tickets']['rateUpTicket']['maxHold']}장 보관 · 새 방 {rp[0]:,}P~"}}],
-"entry":["보상함 지갑 카드 오른쪽 위 ? 버튼","메뉴 › 냥코인·포인트 얻는 법"],"footnote":"모든 보상은 서버에서 확인 후 지급돼요"}
+"entry":["보상함 지갑 카드 오른쪽 위 ? 버튼","메뉴 › 냥코인·젤리 얻는 법"],"footnote":"모든 보상은 서버에서 확인 후 지급돼요"}
 json.dump(J,open(A+'help/help.json','w'),ensure_ascii=False,indent=2)
 CSS="""*{box-sizing:border-box;margin:0}body{width:390px;height:844px;overflow:hidden;font-family:'Pretendard','Noto Sans CJK KR',sans-serif;background:radial-gradient(120% 70% at 70% 0%,#3A2F5C 0%,#1E1A2B 55%,#141120 100%);position:relative;color:#2A2238}
 .st{position:absolute;inset:0}.st i{position:absolute;width:2px;height:2px;border-radius:50%;background:#FFF6E6;opacity:.7}

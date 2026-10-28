@@ -29,10 +29,11 @@ import {
   type MenuSettings,
 } from "../lib/menuSettings";
 import {
-  buildWithdrawRequestId,
+  acquireWithdrawRequestId,
   inspectTossPointGrant,
   postWalletWithdraw,
 } from "../lib/mockWallet";
+import { getWalletSnapshot, serverWalletActive, walletGet } from "../lib/serverWallet";
 import {
   buildTicketBuyRequestId,
   postShopTicketsBuy,
@@ -302,9 +303,15 @@ export function MenuPanel({
   useEffect(() => {
     if (sheet !== "rewards") return;
     let cancel = false;
-    void inspectTossPointGrant(ops).then((result) => {
+    void (async () => {
+      if (await serverWalletActive()) {
+        const snap = getWalletSnapshot();
+        if (!snap || Date.now() - snap.fetchedAt >= 15_000) await walletGet();
+      }
+      if (cancel) return;
+      const result = await inspectTossPointGrant(ops);
       if (!cancel) setGrantHold(result.ok ? null : result.reason);
-    });
+    })();
     return () => {
       cancel = true;
     };
@@ -315,10 +322,23 @@ export function MenuPanel({
     if (withdrawAmount > model.wallet.maxWithdrawable) return;
     setWithdrawBusy(true);
     try {
-      const requestId = buildWithdrawRequestId();
+      const requestId = await acquireWithdrawRequestId(withdrawAmount);
       const result = await postWalletWithdraw(ops, { amount: withdrawAmount, requestId });
       onOpsChange(result.state);
-      const row = result.state.walletHistory.find((item) => item.requestId === requestId) ?? null;
+      const responseId = result.response.ok ? result.response.requestId : requestId;
+      const shownAmount = result.response.ok ? result.response.amount : withdrawAmount;
+      const row =
+        result.state.walletHistory.find((item) => item.requestId === responseId) ??
+        (result.response.ok
+          ? {
+              requestId: responseId,
+              amount: shownAmount,
+              status: result.response.status,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+              testGrant: result.response.testGrant,
+            }
+          : null);
       setLastWithdraw(row);
       if (result.response.ok && result.response.status === "done") {
         setRewardsView("success");
@@ -329,12 +349,12 @@ export function MenuPanel({
                 key: "withdraw-test",
                 kind: "success",
                 title: "테스트 지급을 확인했어요",
-                sub: "실제 토스 포인트는 들어가지 않아요",
+                sub: "연습이라 실제로는 받지 않아요",
               }
             : {
                 key: "withdraw-done",
                 kind: "success",
-                title: `토스 포인트 <b>${withdrawAmount}원</b>을 받았어요`,
+                title: `<b>${shownAmount}원</b>을 받았어요`,
               },
         );
       } else if (result.response.ok && result.response.status === "pending") {
@@ -1385,24 +1405,24 @@ export function MenuPanel({
                           : lastWithdraw?.status === "pending"
                             ? "확인 중이에요"
                             : (model.menu.sheets.rewards.wallet?.successTitle ??
-                              "토스 포인트를 받았어요")}
+                              "받았어요")}
                       </h4>
                       <p>
                         {lastWithdraw
                           ? lastWithdraw.testGrant
-                            ? "실제 토스 포인트는 들어가지 않아요. 냥코인은 그대로예요."
+                            ? "연습이라 실제로는 받지 않아요. 냥코인은 그대로예요."
                             : lastWithdraw.status === "pending"
                               ? `${lastWithdraw.amount}원 지급을 확인하고 있어요.`
-                              : `${lastWithdraw.amount}원이 토스 포인트로 들어갔어요.`
+                              : `${lastWithdraw.amount}원을 받았어요.`
                           : null}
                       </p>
                     </div>
                   ) : rewardsView === "confirm" ? (
                     <div className="wallet-success">
                       <img src={NCOIN_ICON.lg} alt="" width={64} height={64} />
-                      <h4>{model.menu.sheets.rewards.wallet?.confirmTitle ?? "토스 포인트를 지급할까요?"}</h4>
+                      <h4>{model.menu.sheets.rewards.wallet?.confirmTitle ?? "냥코인을 받을까요?"}</h4>
                       <p>
-                        {withdrawAmount}냥코인을 토스 포인트 {withdrawAmount}원으로 지급해요.
+                        {withdrawAmount}냥코인을 {withdrawAmount}원으로 받아요.
                       </p>
                     </div>
                   ) : (
@@ -1451,7 +1471,7 @@ export function MenuPanel({
                                   "오늘 {remainingToday}원 더 받을 수 있어요 · 하루 최대 {dailyLimit}원")
                                   .replace("{remainingToday}", String(remainingToday))
                                   .replace("{dailyLimit}", String(dailyLimit));
-                          const cta = walletCopy?.withdrawCta ?? "토스 포인트 지급";
+                          const cta = walletCopy?.withdrawCta ?? "냥코인 받기";
                           return (
                             <>
                               <div
@@ -1506,7 +1526,7 @@ export function MenuPanel({
                                   <NyChip arrow="down" arrowX={40} wide>
                                     {lowBalance
                                       ? `10냥코인부터 받을 수 있어요 · ${needMore}개 더 모으면 돼요`
-                                      : "오늘 토스 포인트 지급 한도를 다 썼어요 · 내일 0시에 다시 받을 수 있어요"}
+                                      : "오늘 받을 수 있는 한도를 다 썼어요 · 내일 0시에 다시 받을 수 있어요"}
                                   </NyChip>
                                 </div>
                               ) : (
@@ -1522,7 +1542,7 @@ export function MenuPanel({
                               ) : null}
                               <p className="wallet-policy">
                                 {walletCopy?.policy ??
-                                  "받으면 바로 지급돼요. 10냥코인부터 10개씩이고, 1냥코인은 토스 포인트 1원이에요. 탈퇴하거나 부정하게 참여하면 받을 수 없어요. 이 프로모션은 사전 고지 없이 중단될 수 있어요."}
+                                  "받으면 바로 지급돼요. 10냥코인부터 10개씩이고, 1냥코인은 1원이에요. 탈퇴하거나 부정하게 참여하면 받을 수 없어요. 이 프로모션은 사전 고지 없이 중단될 수 있어요."}
                               </p>
                               <button
                                 type="button"
@@ -1538,8 +1558,8 @@ export function MenuPanel({
                                   void (async () => {
                                     const ok = await nyConfirm({
                                       key: "withdraw",
-                                      title: `토스 포인트 ${withdrawAmount}원을 지급할까요?`,
-                                      body: "받은 토스 포인트는 냥코인으로 되돌릴 수 없어요. 이 프로모션은 사전 고지 없이 중단될 수 있어요.",
+                                      title: `냥코인 ${withdrawAmount}원을 받을까요?`,
+                                      body: "받은 뒤에는 냥코인으로 되돌릴 수 없어요. 이 프로모션은 사전 고지 없이 중단될 수 있어요.",
                                       cancelLabel: "취소",
                                       confirmLabel: "받기",
                                     });

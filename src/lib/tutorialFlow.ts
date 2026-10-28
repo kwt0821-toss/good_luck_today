@@ -356,7 +356,7 @@ export function step5CoachMark(
   return {
     id: "step-5-3",
     target: resolveTutorialTarget(sub.target || "#withdraw-picker", {}, sub.fallbackTarget),
-    copy: (sub.copy ?? "냥코인 10개부터 토스 포인트 지급을 받을 수 있어요").split("\n")[0],
+    copy: (sub.copy ?? "냥코인 10개부터 받을 수 있어요").split("\n")[0],
     sub: lowHint ? `${footnote}\n${lowHint}` : footnote,
     cta: "시작하기",
     ackOnly: true,

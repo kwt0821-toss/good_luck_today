@@ -78,7 +78,7 @@
      "lines": [
       {
        "icon": "ncoin",
-       "text": "토스 포인트 지급으로 바꿀 수 있는 코인이에요 · 1냥코인 = 1원"
+       "text": "받을 수 있는 코인이에요 · 1냥코인 = 1원"
       },
       {
        "icon": "ncoin",
@@ -168,7 +168,7 @@
      "screen": "menu",
      "target": "#menu-row-rewards",
      "copy": "보상함을 눌러 보세요",
-     "sub": "모은 냥코인과 토스 포인트 지급이 여기 있어요",
+     "sub": "모은 냥코인과 받기가 여기 있어요",
      "skip": true,
      "onlyTarget": true,
      "action": "tap → 보상함 시트",
@@ -179,7 +179,7 @@
      "label": "STEP 5-3",
      "screen": "rewards sheet",
      "target": ".wallet (잔액 + 지급 영역)",
-     "copy": "냥코인 10개부터 토스 포인트 지급을 받을 수 있어요",
+     "copy": "냥코인 10개부터 받을 수 있어요",
      "sub": "하루 최대 50원까지 받을 수 있어요 · 지금은 {bal}개, {10-bal}개만 더 모아요",
      "button": "알겠어요",
      "state": "잔액<10: −/+ 비활성, 버튼 비활성 '조금만 더 모으면 받을 수 있어요', 진행바 bal/10",
@@ -281,7 +281,7 @@
      "screen": "menu",
      "target": "#menu-row-rewards",
      "copy": "냥코인이 10개 모였어요!",
-     "sub": "보상함에서 토스 포인트 지급을 받을 수 있어요",
+     "sub": "보상함에서 냥코인을 받을 수 있어요",
      "button": "보상함 열기",
      "action": "tap #menu-row-rewards",
      "mockup": "tutorial-rewards-1.png"
@@ -291,7 +291,7 @@
      "screen": "sheet:rewards",
      "target": "#wallet-card",
      "copy": "내 냥코인은 여기 모여요",
-     "sub": "1냥코인은 토스 포인트 1원이에요. 지금 {balance}냥코인 있어요",
+     "sub": "1냥코인은 1원이에요. 지금 {balance}냥코인 있어요",
      "button": "다음",
      "mockup": "tutorial-rewards-2.png"
     },

@@ -21,7 +21,7 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
   const currency = { ...(raw.currency as Record<string, unknown>) };
   if (!currency.nyangCoin && currency.toss) {
     const toss = currency.toss as { nameKo?: string; unit?: string };
-    currency.nyangCoin = { nameKo: "냥코인", unit: "NYANG", note: "1냥코인 = 토스 포인트 1원", ...toss };
+    currency.nyangCoin = { nameKo: "냥코인", unit: "NYANG", note: "1냥코인 = 1원", ...toss };
     delete currency.toss;
   }
   const pawSources = JSON.parse(JSON.stringify(raw.pawSources)) as OpsEconomy["pawSources"] &
@@ -64,6 +64,7 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
     withdrawMin: 10,
     withdrawStep: 10,
     toTossPointRate: 1,
+    walletMode: "server" as const,
   };
   const grant = (baseNyang as { grant?: Record<string, unknown> }).grant;
   const withdrawRaw = (baseNyang.withdraw ?? {}) as {
@@ -72,9 +73,6 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
     dailyLimit?: number;
     resetTimeKST?: string;
     note?: string;
-    promotionCode?: string;
-    testPromotionCode?: string;
-    promotionLive?: boolean;
   };
   const withdraw = {
     min: Number(withdrawRaw.min ?? baseNyang.withdrawMin ?? 10),
@@ -82,12 +80,8 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
     dailyLimit: Number(withdrawRaw.dailyLimit ?? 50),
     resetTimeKST: String(withdrawRaw.resetTimeKST ?? "00:00"),
     note: typeof withdrawRaw.note === "string" ? withdrawRaw.note : undefined,
-    promotionCode:
-      typeof withdrawRaw.promotionCode === "string" ? withdrawRaw.promotionCode : "",
-    testPromotionCode:
-      typeof withdrawRaw.testPromotionCode === "string" ? withdrawRaw.testPromotionCode : "",
-    promotionLive: withdrawRaw.promotionLive === true,
   };
+  const walletMode = baseNyang.walletMode === "local" ? "local" : "server";
   const maxPerUserKRW =
     baseNyang.maxPerUserKRW ??
     baseNyang.maxEarnPerUser ??
@@ -113,6 +107,7 @@ function normalizeEconomy(raw: OpsEconomy & Record<string, unknown>): OpsEconomy
           ? grant.idempotencyKey
           : "tossUserKey + rewardId"),
       toTossPointRate: baseNyang.toTossPointRate ?? 1,
+      walletMode,
       withdraw,
       withdrawMin: withdraw.min,
       withdrawStep: withdraw.unit,

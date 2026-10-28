@@ -11,6 +11,7 @@ import {
   remainingTodayAmount,
   withdrawnTodayAmount,
 } from "./mockWallet";
+import { getWalletSnapshot, serverWalletActiveNow } from "./serverWallet";
 import { isWeekendDoublePaw, loadOpsConfig } from "./opsConfig";
 import { getTicketShopStatus } from "./mockTicketShop";
 import { remainingPawAds } from "./opsState";
@@ -200,9 +201,20 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     section.rows.some((row) => row.badge.type === "dot"),
   );
 
-  const withdrawRules = getWithdrawRules(config.economy);
-  const withdrawnToday = withdrawnTodayAmount(ops);
-  const remainingToday = remainingTodayAmount(ops, withdrawRules.dailyLimit);
+  let withdrawRules = getWithdrawRules(config.economy);
+  let withdrawnToday = withdrawnTodayAmount(ops);
+  let remainingToday = remainingTodayAmount(ops, withdrawRules.dailyLimit);
+  if (serverWalletActiveNow()) {
+    const snap = getWalletSnapshot();
+    if (snap) {
+      withdrawRules = { min: snap.min, unit: snap.unit, dailyLimit: snap.dailyLimit };
+      remainingToday = snap.remainingToday;
+      withdrawnToday = Math.max(0, snap.dailyLimit - snap.remainingToday);
+    } else {
+      remainingToday = 0;
+      withdrawnToday = withdrawRules.dailyLimit;
+    }
+  }
   const maxWithdrawable = maxWithdrawableAmount(
     ops.nyangCoinBalance,
     remainingToday,

@@ -171,6 +171,8 @@ export type OpsEconomy = {
     serverVerified?: boolean;
     idempotencyKey?: string;
     toTossPointRate?: number;
+    /** server: 잔액·금액·한도는 서버가 정한다. local: 이 기기의 연습 지급. */
+    walletMode?: "server" | "local";
     maxWithdrawable?: number;
     grant?: Record<string, unknown>;
     sustainability?: Record<string, unknown>;

@@ -333,7 +333,7 @@ export function DexScreen({
           key: "ncoin-10",
           kind: "reward",
           title: "{ncoin} 10개!",
-          sub: "토스 포인트 지급을 받을 수 있어요",
+          sub: "냥코인을 받을 수 있어요",
           action: {
             label: "보상함",
             onClick: () => {

@@ -113,16 +113,20 @@ function reportSaveFailed(code: string) {
   console.info(`[serverSave] save failed code=${code}`);
 }
 
-function endpoint(): { url: string; apikey: string } | null {
+export function functionEndpoint(name: "game-save" | "wallet"): { url: string; apikey: string } | null {
   const rawUrl = import.meta.env.VITE_SUPABASE_URL;
   const rawKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   const url = typeof rawUrl === "string" ? rawUrl.trim().replace(/\/$/, "") : "";
   const apikey = typeof rawKey === "string" ? rawKey.trim() : "";
   if (!url || !apikey) return null;
-  return { url: `${url}/functions/v1/game-save`, apikey };
+  return { url: `${url}/functions/v1/${name}`, apikey };
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+function endpoint(): { url: string; apikey: string } | null {
+  return functionEndpoint("game-save");
+}
+
+export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = window.setTimeout(() => reject(new Error("timeout")), ms);
     promise.then(
@@ -235,6 +239,20 @@ async function rememberToken(token: string | undefined) {
   await writeMeta({ token, version: meta.version });
 }
 
+export async function readSaveToken(): Promise<string | null> {
+  return (await readMeta()).token;
+}
+
+/** Ask the server for a fresh save token. Does not apply the snapshot or reload. */
+export async function refreshSaveToken(): Promise<string | null> {
+  const gate = await gameHash();
+  if (gate.kind !== "hash") return null;
+  const loaded = await requestLoad(gate.hash, undefined);
+  if (!loaded || loaded.empty || !loaded.saveToken) return null;
+  await rememberToken(loaded.saveToken);
+  return loaded.saveToken;
+}
+
 async function backupLocalOnce() {
   if ((await readKey(BACKUP_KEY)) != null) return;
   const bundle = await readBundle();
@@ -334,7 +352,7 @@ function fieldNumber(json: unknown, key: string): number | undefined {
   return json[key];
 }
 
-function linkedSignal(parent: AbortSignal | undefined, ms: number): { signal: AbortSignal; cancel: () => void } {
+export function linkedSignal(parent: AbortSignal | undefined, ms: number): { signal: AbortSignal; cancel: () => void } {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), ms);
   const onParent = () => controller.abort();
