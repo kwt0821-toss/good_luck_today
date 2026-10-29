@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from "react";
-import { getPlatformOS } from "@apps-in-toss/web-framework";
+import { Environment, getPlatformOS } from "@apps-in-toss/web-framework";
 
 import { CozySheet } from "../components/CozySheet";
 import { useBackHandler } from "../hooks/useBackHandler";
@@ -7,6 +7,7 @@ import { useLoadingHold } from "../lib/loadingGate";
 import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
 import { NyChip } from "../components/NyChip";
 import { track } from "../lib/analytics";
+import { isDebugHitRequest } from "../lib/debugSaveQuery";
 import { jellyLabel } from "../lib/jellyLabel";
 import { withJosa } from "../lib/josa";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
@@ -32,20 +33,28 @@ import {
   type RoomsFile,
 } from "../lib/roomCatalog";
 import { applyOpsPrices, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
+import { furnitureDepthKey } from "../lib/roomCat";
 import {
   cloneLayout,
   hitTestPaint,
   hitTestTile,
   hitTestWall,
+  hostOf,
+  isDecal,
   isWallDecor,
   nearestHints,
+  pickExpandedSpriteHit,
   screenOf,
   snapWallHit,
+  sortFloor,
   spriteRect,
   toggledOrientation,
   wallPlaceFromSlot,
   wallSpriteRect,
+  WORLD_H,
+  WORLD_W,
   resolvedWallSlot,
+  type SpriteHitBox,
 } from "../lib/roomLayout";
 import {
   currentRoom,
@@ -109,6 +118,19 @@ type RoomScreenProps = {
 
 function formatPoints(value: number) {
   return value.toLocaleString("en-US");
+}
+
+function readTossSchemeUrl() {
+  try {
+    return Environment.initialURL || "";
+  } catch {
+    return "";
+  }
+}
+
+function debugHitEnabled() {
+  if (typeof window === "undefined") return false;
+  return isDebugHitRequest(window.location.search, readTossSchemeUrl());
 }
 
 const PLACEMENT_SAFE_TOP = 96;
@@ -1111,9 +1133,107 @@ export function RoomScreen({
     setPaintHover(target);
   };
 
+  const shownFloorForHit = () =>
+    layout.floor.map((place) => {
+      if (dragging?.kind === "floor" && dragging.instanceId === place.instanceId && !place.onTopOf) {
+        return { ...place, col: dragging.col, row: dragging.row };
+      }
+      return place;
+    });
+
+  const shownWallForHit = (place: (typeof layout.walls)[number]) => {
+    if (dragging?.kind !== "wall" || dragging.instanceId !== place.instanceId) return place;
+    const item = itemsById.get(place.id);
+    if (!item) return place;
+    return {
+      ...place,
+      ...wallPlaceFromSlot(item, dragging.wall, dragging.slot, dragging.band),
+      worldPx: undefined,
+    };
+  };
+
+  /** Screen boxes for the 44px fallback. Exact sprite taps never reach this. */
+  const expandedHitBoxes = (world: DOMRect): SpriteHitBox[] => {
+    const floorShown = shownFloorForHit();
+    const wallsShown = layout.walls.map(shownWallForHit);
+    const onlyId = preview && preview.kind !== "paint" ? preview.instanceId : null;
+    const toBox = (
+      instanceId: string,
+      rect: { x: number; y: number; w: number; h: number },
+      order: number,
+      decal: boolean,
+    ): SpriteHitBox => ({
+      instanceId,
+      left: world.left + (rect.x / WORLD_W) * world.width,
+      top: world.top + (rect.y / WORLD_H) * world.height,
+      width: (rect.w / WORLD_W) * world.width,
+      height: (rect.h / WORLD_H) * world.height,
+      order,
+      decal,
+    });
+    const boxes: SpriteHitBox[] = [];
+    const sorted = sortFloor(floorShown, itemsById);
+    sorted.forEach((place, index) => {
+      if (!isDecal(itemsById.get(place.id))) return;
+      if (onlyId && place.instanceId !== onlyId) return;
+      const item = itemsById.get(place.id);
+      if (!item) return;
+      boxes.push(toBox(place.instanceId, spriteRect(item, place, floorShown, itemsById), index, true));
+    });
+    wallsShown.forEach((place, index) => {
+      if (onlyId && place.instanceId !== onlyId) return;
+      const item = itemsById.get(place.id);
+      if (!item) return;
+      boxes.push(toBox(place.instanceId, wallSpriteRect(item, place), 1000 + index, false));
+    });
+    const furniture = sorted.filter((place) => !isDecal(itemsById.get(place.id)));
+    const lifted = new Set<string>();
+    const selectedFloor = floorShown.find((place) => place.instanceId === selectedId);
+    if (selectedFloor) {
+      lifted.add(selectedFloor.instanceId);
+      for (const child of floorShown) {
+        if (child.onTopOf === selectedFloor.id || child.onTopOf === selectedFloor.instanceId) {
+          lifted.add(child.instanceId);
+        }
+      }
+    }
+    const furnitureDrawn = [
+      ...furniture.filter((place) => !lifted.has(place.instanceId)),
+      ...furniture.filter((place) => lifted.has(place.instanceId)),
+    ].sort((a, b) => {
+      const ia = itemsById.get(a.id);
+      const ib = itemsById.get(b.id);
+      if (!ia || !ib) return 0;
+      const ka = furnitureDepthKey(a, ia);
+      const kb = furnitureDepthKey(b, ib);
+      if (ka.front !== kb.front) return ka.front - kb.front;
+      return ka.bias - kb.bias;
+    });
+    furnitureDrawn.forEach((place, index) => {
+      if (onlyId && place.instanceId !== onlyId) return;
+      const item = itemsById.get(place.id);
+      if (!item) return;
+      boxes.push(toBox(place.instanceId, spriteRect(item, place, floorShown, itemsById), 10000 + index, false));
+    });
+    return boxes;
+  };
+
   const onFloorPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (mode !== "edit") return;
     if ((event.target as HTMLElement).closest(".lucky-sprite")) return;
+
+    // Empty floor only. A real sprite hit is handled by that button first.
+    if (!tutLock && !paintTab && preview?.kind !== "paint") {
+      const world = event.currentTarget.getBoundingClientRect();
+      if (world.width > 0 && world.height > 0) {
+        const hit = pickExpandedSpriteHit(event.clientX, event.clientY, expandedHitBoxes(world));
+        if (hit) {
+          event.stopPropagation();
+          pressPlacedItem(hit, event, stageRef.current);
+          return;
+        }
+      }
+    }
 
     // Preview active: tap empty tile moves preview (furniture) or paint target.
     if (preview && !tutLock) {
@@ -1178,11 +1298,17 @@ export function RoomScreen({
     setSelectedId(null);
   };
 
-  const beginPreviewFromPlaced = (instanceId: string) => {
-    if (tutLock) return;
+  const beginPreviewFromPlaced = (instanceId: string, depth = 0) => {
+    if (tutLock || depth > 4) return;
     const floorPlace = layout.floor.find((item) => item.instanceId === instanceId);
     const wallPlace = layout.walls.find((item) => item.instanceId === instanceId);
-    if (floorPlace && !floorPlace.onTopOf) {
+    if (floorPlace?.onTopOf) {
+      const host = hostOf(floorPlace, layout.floor);
+      if (!host) return;
+      beginPreviewFromPlaced(host.instanceId, depth + 1);
+      return;
+    }
+    if (floorPlace) {
       const item = itemsById.get(floorPlace.id);
       if (!item) return;
       const check = validateFloorPreview(
@@ -1249,21 +1375,17 @@ export function RoomScreen({
     }
   };
 
-  const onItemPointerDown = (event: PointerEvent<HTMLButtonElement>, instanceId: string) => {
-    if (mode !== "edit" || paintTab) return;
-    if (tutLock) {
-      // Tutorial: only the active preview draft may be interacted with (move locked separately).
-      if (!preview || preview.kind === "paint" || preview.instanceId !== instanceId) return;
-      return;
-    }
-    event.stopPropagation();
-
+  const pressPlacedItem = (
+    instanceId: string,
+    point: { clientX: number; clientY: number; pointerId: number },
+    captureTarget: HTMLElement | null,
+  ) => {
     // Same preview instance: wait for tap vs drag (message↔toolbar / cancel).
     if (preview && preview.kind !== "paint" && preview.instanceId === instanceId) {
-      previewItemTap.current = { instanceId, x: event.clientX, y: event.clientY };
+      previewItemTap.current = { instanceId, x: point.clientX, y: point.clientY };
       previewMoving.current = false;
       try {
-        event.currentTarget.setPointerCapture(event.pointerId);
+        captureTarget?.setPointerCapture(point.pointerId);
       } catch {
         // ignore
       }
@@ -1276,6 +1398,17 @@ export function RoomScreen({
       patchLayoutLocal(cleared);
     }
     beginPreviewFromPlaced(instanceId);
+  };
+
+  const onItemPointerDown = (event: PointerEvent<HTMLButtonElement>, instanceId: string) => {
+    if (mode !== "edit" || paintTab) return;
+    if (tutLock) {
+      // Tutorial: only the active preview draft may be interacted with (move locked separately).
+      if (!preview || preview.kind === "paint" || preview.instanceId !== instanceId) return;
+      return;
+    }
+    event.stopPropagation();
+    pressPlacedItem(instanceId, event, event.currentTarget);
   };
 
   const onStagePointerMove = (event: PointerEvent<HTMLDivElement>) => {
@@ -1975,6 +2108,7 @@ export function RoomScreen({
                       placeFxId={placeFxId}
                       previewGhost={Boolean(active && preview && preview.kind !== "paint")}
                       previewInvalid={Boolean(active && preview && !preview.valid)}
+                      debugHit={debugHitEnabled()}
                       onSelect={onSelect}
                       onItemPointerDown={onItemPointerDown}
                       onFloorPointerDown={onFloorPointerDown}

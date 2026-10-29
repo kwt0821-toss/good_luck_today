@@ -1224,6 +1224,15 @@ button.lucky-roam-cat:active,
   pointer-events: none;
 }
 
+/* Edit: the roaming cat must not cover furniture taps. View mode still meows. */
+.lucky-world:not(.is-view) .lucky-roam-cat {
+  pointer-events: none;
+}
+
+.lucky-world.is-debug-hit .lucky-sprite {
+  outline: 1px dashed rgba(255, 80, 80, 0.8);
+}
+
 @keyframes lucky-roam-breathe {
   0%,
   100% {

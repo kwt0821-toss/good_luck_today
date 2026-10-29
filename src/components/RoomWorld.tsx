@@ -89,6 +89,8 @@ type RoomWorldProps = {
   previewGhost?: boolean;
   /** Placement preview: tint red when invalid. */
   previewInvalid?: boolean;
+  /** `?debugHit=1` outlines each sprite's real hit box. */
+  debugHit?: boolean;
   onSelect: (instanceId: string | null, kind: "floor" | "wall") => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, instanceId: string) => void;
   onFloorPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
@@ -595,6 +597,7 @@ export function RoomWorld({
   placeFxId = null,
   previewGhost = false,
   previewInvalid = false,
+  debugHit = false,
   onSelect,
   onItemPointerDown,
   onFloorPointerDown,
@@ -756,7 +759,7 @@ export function RoomWorld({
 
   return (
     <div
-      className={`lucky-world ${painting ? "is-painting" : ""} ${mode === "view" ? "is-view" : ""}`}
+      className={`lucky-world ${painting ? "is-painting" : ""} ${mode === "view" ? "is-view" : ""} ${debugHit ? "is-debug-hit" : ""}`}
       style={{ ["--room-fit" as string]: fit }}
       onPointerDown={onFloorPointerDown}
     >

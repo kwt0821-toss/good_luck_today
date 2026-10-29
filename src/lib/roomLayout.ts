@@ -311,6 +311,48 @@ export function wallImageSize(item: RoomItem): [number, number] {
   return [Math.round(shearedW), Math.round(fh + 0.5 * shearedW)];
 }
 
+/** Finger-sized minimum for the edit-mode fallback hit test. The drawn sprite stays smaller. */
+export const MIN_SPRITE_HIT_PX = 44;
+
+export type SpriteHitBox = {
+  instanceId: string;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  /** Higher is drawn later (in front). Used only when centers are equally close. */
+  order: number;
+  decal: boolean;
+};
+
+/**
+ * Pick a placed item whose drawn rect, grown to at least 44×44 around its center,
+ * contains the point. Rugs lose to any other item. Equal distance keeps the later draw.
+ */
+export function pickExpandedSpriteHit(clientX: number, clientY: number, boxes: SpriteHitBox[]): string | null {
+  let best: { instanceId: string; dist: number; order: number; decal: boolean } | null = null;
+  for (const box of boxes) {
+    const width = Math.max(box.width, MIN_SPRITE_HIT_PX);
+    const height = Math.max(box.height, MIN_SPRITE_HIT_PX);
+    const left = box.left - (width - box.width) / 2;
+    const top = box.top - (height - box.height) / 2;
+    if (clientX < left || clientY < top || clientX > left + width || clientY > top + height) continue;
+    const dist = Math.hypot(clientX - (box.left + box.width / 2), clientY - (box.top + box.height / 2));
+    if (!best) {
+      best = { instanceId: box.instanceId, dist, order: box.order, decal: box.decal };
+      continue;
+    }
+    const prefer =
+      best.decal !== box.decal
+        ? !box.decal
+        : Math.abs(dist - best.dist) > 0.01
+          ? dist < best.dist
+          : box.order > best.order;
+    if (prefer) best = { instanceId: box.instanceId, dist, order: box.order, decal: box.decal };
+  }
+  return best?.instanceId ?? null;
+}
+
 export function wallSpriteRect(item: RoomItem, place: WallPlacement): SpriteRect {
   const src =
     (place.wall === "L" ? item.wallImages?.left : item.wallImages?.right) ?? item.image ?? "";
