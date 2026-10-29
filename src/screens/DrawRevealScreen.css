@@ -426,6 +426,18 @@
   cursor: default;
 }
 
+.draw-reveal-rewards-nudge {
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 196, 138, 0.55);
+  background: linear-gradient(180deg, rgba(255, 211, 160, 0.22), rgba(255, 179, 107, 0.1));
+  color: #ffe3c0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .draw-reveal-confirm {
   margin-top: 4px;
   height: 44px;

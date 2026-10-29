@@ -585,6 +585,13 @@ export type WalletHistoryItem = {
   testGrant?: boolean;
 };
 
+/** Attendance-push consent remembered across devices (ops-state + localStorage). */
+export type NotifyAttendanceState = {
+  agreed: boolean;
+  askCount: number;
+  askedAt: number;
+};
+
 export type OpsState = {
   userId: string;
   pawBalance: number;
@@ -717,6 +724,11 @@ export type OpsState = {
   attendanceNyangYearKey: string;
   /** 냥코인 granted from attendance day7 bonus in the current KST year. */
   attendanceNyangCoinYear: number;
+  /**
+   * Attendance notification consent. Missing on older saves — treat as
+   * { agreed: false, askCount: 0, askedAt: 0 }.
+   */
+  notifyAttendance?: NotifyAttendanceState;
   /** Legacy debug override. Always cleared on load. */
   devForceCozyLevel?: number | null;
 };

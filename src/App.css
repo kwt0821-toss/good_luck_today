@@ -1690,6 +1690,46 @@
   letter-spacing: -0.02em;
 }
 
+.main-rewards-nudge {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  margin: 0;
+  padding: 10px 12px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 196, 138, 0.35);
+  background: rgba(20, 17, 36, 0.82);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+}
+
+.main-rewards-nudge-copy {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  color: rgba(243, 233, 215, 0.88);
+}
+
+.main-rewards-nudge-btn {
+  min-height: 36px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 196, 138, 0.55);
+  background: linear-gradient(180deg, rgba(255, 211, 160, 0.28), rgba(255, 179, 107, 0.14));
+  color: #ffe3c0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+}
+
 .main-ops-row {
   position: relative;
   z-index: 1;

@@ -55,6 +55,9 @@ export function AttendanceNotifyCard({ onClose }: AttendanceNotifyCardProps) {
                   recordAttendanceNotifyResult(type);
                   onClose();
                 },
+                onError: () => {
+                  onClose();
+                },
               });
             }}
           >

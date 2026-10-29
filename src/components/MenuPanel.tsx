@@ -79,6 +79,9 @@ type MenuPanelProps = {
   /** Block panel/sheet swipe & dim dismiss while coach marks are active. */
   lockDismiss?: boolean;
   onSheetOpen?: (id: NonNullable<MenuSheetId>) => void;
+  /** Scroll this menu row into view and sparkle it once. */
+  highlightRowId?: string | null;
+  onHighlightDone?: () => void;
 };
 
 function formatMeta(text: string) {
@@ -122,6 +125,8 @@ export function MenuPanel({
   forceSheet = null,
   lockDismiss = false,
   onSheetOpen,
+  highlightRowId = null,
+  onHighlightDone,
 }: MenuPanelProps) {
   const [model, setModel] = useState<MenuViewModel | null>(null);
   const [closing, setClosing] = useState(false);
@@ -160,6 +165,19 @@ export function MenuPanel({
   const pointsTopRef = useRef<HTMLSpanElement>(null);
   const [pointsWeekendBelow, setPointsWeekendBelow] = useState(false);
   withdrawAmountRef.current = withdrawAmount;
+
+  useEffect(() => {
+    if (!open || !highlightRowId || !model) return;
+    const row = document.getElementById(`menu-row-${highlightRowId}`);
+    row?.scrollIntoView({ block: "center", inline: "nearest", behavior: reduce ? "auto" : "smooth" });
+    const timer = window.setTimeout(() => onHighlightDone?.(), 2600);
+    return () => window.clearTimeout(timer);
+  }, [open, highlightRowId, model, reduce, onHighlightDone]);
+
+  useEffect(() => {
+    if (open || !highlightRowId) return;
+    onHighlightDone?.();
+  }, [open, highlightRowId, onHighlightDone]);
 
   useEffect(() => {
     if (!open) {
@@ -899,7 +917,7 @@ export function MenuPanel({
                       key={row.id}
                       id={`menu-row-${row.id}`}
                       type="button"
-                      className={`menu-row ${row.id === "points" ? "is-points" : ""} ${row.enabled ? "" : "is-disabled"}`}
+                      className={`menu-row ${row.id === "points" ? "is-points" : ""} ${row.enabled ? "" : "is-disabled"} ${highlightRowId === row.id ? (reduce ? "is-highlight-still" : "is-highlight") : ""}`}
                       style={{ animationDelay: reduce ? "0ms" : `${index * 30}ms` }}
                       onClick={() => onRow(row.open, row.enabled, row.id)}
                     >
@@ -1639,6 +1657,14 @@ export function MenuPanel({
                               className="link"
                               onClick={() => {
                                 if (item.action === "notification.attendance") {
+                                  if (ops.notifyAttendance?.agreed) {
+                                    nyNotify({
+                                      key: "attendance-notify-already",
+                                      kind: "info",
+                                      title: "이미 출석 알림을 받고 있어요.",
+                                    });
+                                    return;
+                                  }
                                   requestAttendanceNotification({
                                     onResult: recordAttendanceNotifyResult,
                                   });
@@ -1649,7 +1675,9 @@ export function MenuPanel({
                                 onReplayTutorial();
                               }}
                             >
-                              {item.label}
+                              {item.action === "notification.attendance" && ops.notifyAttendance?.agreed
+                                ? "출석 알림 받는 중"
+                                : item.label}
                             </button>
                           </div>
                         );

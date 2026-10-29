@@ -3,6 +3,7 @@ import { Storage } from "@apps-in-toss/web-framework";
 import { toKstDateKey } from "./date";
 import { DEV_PAW_BALANCE, isDevBuild, RESET_BONUS_PAW } from "./devMode";
 import { isInTossApp } from "./native";
+import { hydrateAttendanceNotify, normalizeNotifyAttendance, stampNotifyAttendance } from "./attendanceNotify";
 import { markDirty } from "./serverSave";
 import { loadOpsConfig } from "./opsConfig";
 import { applyOpsDailyReset, createDefaultOpsState } from "./opsState";
@@ -320,6 +321,9 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         typeof parsed.attendanceNyangCoinYear === "number"
           ? parsed.attendanceNyangCoinYear
           : fallback.attendanceNyangCoinYear,
+      notifyAttendance: normalizeNotifyAttendance(
+        isRecord(parsed.notifyAttendance) ? parsed.notifyAttendance : fallback.notifyAttendance,
+      ),
       devForceCozyLevel: null,
     };
   } catch {
@@ -333,6 +337,16 @@ export async function loadOpsState(): Promise<OpsState> {
   const fallback = createDefaultOpsState(config, today);
   const parsed = parseOps(await read(OPS_KEY), fallback);
   let next = applyOpsDailyReset(parsed, today);
+  const notifyAttendance = hydrateAttendanceNotify(next.notifyAttendance);
+  const prevNotify = next.notifyAttendance;
+  if (
+    !prevNotify ||
+    prevNotify.agreed !== notifyAttendance.agreed ||
+    prevNotify.askCount !== notifyAttendance.askCount ||
+    prevNotify.askedAt !== notifyAttendance.askedAt
+  ) {
+    next = { ...next, notifyAttendance };
+  }
   // Keep the post-reset test grant; otherwise top up local DEV to a generous balance.
   if (isDevBuild && next.pawBalance !== DEV_PAW_BALANCE && next.pawBalance !== RESET_BONUS_PAW) {
     next = { ...next, pawBalance: DEV_PAW_BALANCE };
@@ -342,5 +356,5 @@ export async function loadOpsState(): Promise<OpsState> {
 }
 
 export async function saveOpsState(state: OpsState): Promise<void> {
-  await write(OPS_KEY, JSON.stringify(state));
+  await write(OPS_KEY, JSON.stringify(stampNotifyAttendance(state)));
 }

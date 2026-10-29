@@ -8,6 +8,10 @@ import { NyangNotifyHost } from "./components/NyangNotifyHost";
 import { ServerSaveDebug } from "./components/ServerSaveDebug";
 import { nyConfirm, nyDismiss, nyNotify } from "./lib/nyangNotify";
 import { AttendanceNotifyCard } from "./components/AttendanceNotifyCard";
+import {
+  ATTENDANCE_NOTIFY_STATE_EVENT,
+  mergeNotifyAttendance,
+} from "./lib/attendanceNotify";
 import { MenuPanel } from "./components/MenuPanel";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import {
@@ -65,6 +69,7 @@ import {
   nextDrawKind,
   nextDrawSlot,
   remainingNormalDraws,
+  remainingPawAds,
   remainingRateUpDraws,
   remainingTotalDraws,
   willUseRateUpTicket,
@@ -75,6 +80,7 @@ import type {
   CoachMark,
   DrawReservation,
   FeatureIntro,
+  NotifyAttendanceState,
   OpsConfig,
   OpsState,
   TutorialStep,
@@ -260,6 +266,7 @@ export default function App() {
   );
   const attendanceNotifyOffer = useAttendanceNotifyOffer(attendanceNotifyBlocked);
   const [forceMenuSheet, setForceMenuSheet] = useState<MenuSheetId>(initialForceSheet);
+  const [highlightMenuRowId, setHighlightMenuRowId] = useState<string | null>(null);
   const promoTargetRef = useRef<PromoTarget | null>(readPromoTarget());
   const [promoGate, setPromoGate] = useState<PromoTarget | null>(promoTargetRef.current);
   const [promoHoldIntros, setPromoHoldIntros] = useState(false);
@@ -478,13 +485,44 @@ export default function App() {
       setForceMenuSheet("rewards");
       setMenuOpen(true);
     };
+    const openMenuPoints = () => {
+      setScreen({ name: "home" });
+      setMenuOpen(true);
+      setHighlightMenuRowId("points");
+    };
+    const onNotifyAttendance = (event: Event) => {
+      const detail = (event as CustomEvent<NotifyAttendanceState>).detail;
+      if (!detail) return;
+      setOps((current) => {
+        if (!current) return current;
+        const notifyAttendance = mergeNotifyAttendance(current.notifyAttendance, detail);
+        const prev = current.notifyAttendance;
+        if (
+          prev &&
+          prev.agreed === notifyAttendance.agreed &&
+          prev.askCount === notifyAttendance.askCount &&
+          prev.askedAt === notifyAttendance.askedAt
+        ) {
+          return current;
+        }
+        const next = { ...current, notifyAttendance };
+        void saveOpsState(next);
+        return next;
+      });
+    };
     window.addEventListener("lucky-open-dex", openDex);
     window.addEventListener("lucky-open-rewards", openRewards);
+    window.addEventListener("lucky-open-menu-points", openMenuPoints);
+    window.addEventListener(ATTENDANCE_NOTIFY_STATE_EVENT, onNotifyAttendance);
     return () => {
       window.removeEventListener("lucky-open-dex", openDex);
       window.removeEventListener("lucky-open-rewards", openRewards);
+      window.removeEventListener("lucky-open-menu-points", openMenuPoints);
+      window.removeEventListener(ATTENDANCE_NOTIFY_STATE_EVENT, onNotifyAttendance);
     };
   }, [setScreen]);
+
+  const clearMenuHighlight = useCallback(() => setHighlightMenuRowId(null), []);
 
   const closeMenu = useCallback(() => {
     setMenuOpen(false);
@@ -690,6 +728,18 @@ export default function App() {
     roomScreenReady,
     rewardsTutPhase,
   ]);
+
+  const rewardsNudgeHidden = Boolean(
+    !ops ||
+      !ops.tutorialDone ||
+      tutorialReplayStep != null ||
+      rewardsIntro ||
+      featureIntro ||
+      coachMark,
+  );
+  const showRewardsNudgeBase = Boolean(
+    ops && config && !rewardsNudgeHidden && remainingPawAds(ops, config) > 0,
+  );
 
   const coachLockDismiss = Boolean(rewardsIntro && rewardsIntroConfig?.lockDismiss);
 
@@ -1739,6 +1789,7 @@ export default function App() {
           hideToast={hideRevealToast || revealTutPhase === "to-dex"}
           onToastShown={onRevealToastShown}
           onSpotlightChange={setRevealSpotlight}
+          showRewardsNudge={showRewardsNudgeBase && remainingDraws <= 0}
           onToDex={() => {
             void (async () => {
               if (tutorialReplayStep != null && tutorialReplayStep === 2) {
@@ -1834,6 +1885,7 @@ export default function App() {
           onOpenCollection={() => setScreen({ name: "collection" })}
           onOpenRoom={() => setScreen({ name: "room" })}
           onOpenTitles={() => setAchvOpen(true)}
+          showRewardsNudge={showRewardsNudgeBase && remainingNormal <= 0}
         />
       ) : null}
 
@@ -1864,6 +1916,8 @@ export default function App() {
         }}
         onAttendanceDay7Ad={() => runAttendanceDay7Ad()}
         onAttendanceRewarded={attendanceNotifyOffer.offerAfterReward}
+        highlightRowId={highlightMenuRowId}
+        onHighlightDone={clearMenuHighlight}
         onRateUpDraw={() => {
           closeMenu();
           void beginDraw("rateUp");

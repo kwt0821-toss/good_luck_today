@@ -141,6 +141,8 @@ type DrawRevealScreenProps = {
   onBack?: () => void;
   /** Full-screen card is covering the settled result. */
   onSpotlightChange?: (open: boolean) => void;
+  /** Shown under the disabled draw button when 보상 받기 still has claims left. */
+  showRewardsNudge?: boolean;
 };
 
 const clamp = (x: number, a = 0, b = 1) => Math.max(a, Math.min(b, x));
@@ -190,6 +192,7 @@ export function DrawRevealScreen({
   onRetry,
   onBack,
   onSpotlightChange,
+  showRewardsNudge = false,
 }: DrawRevealScreenProps) {
   useBackHandler(true, () => onBack?.());
   const screenRef = useRef<HTMLDivElement>(null);
@@ -820,6 +823,15 @@ export function DrawRevealScreen({
                 "내일 또 만나요"
               )}
             </button>
+            {showRewardsNudge && remainingDraws <= 0 ? (
+              <button
+                type="button"
+                className="draw-reveal-rewards-nudge"
+                onClick={() => window.dispatchEvent(new CustomEvent("lucky-open-menu-points"))}
+              >
+                보상 받으러 가기
+              </button>
+            ) : null}
           </div>
           <button type="button" className="draw-reveal-confirm" onClick={() => onBack?.()}>
             확인

@@ -61,6 +61,8 @@ type HomeScreenProps = {
   onOpenCollection: () => void;
   onOpenRoom: () => void;
   onOpenTitles?: () => void;
+  /** Draws are used up and 보상 받기 still has claims left. */
+  showRewardsNudge?: boolean;
 };
 
 export function HomeScreen({
@@ -84,6 +86,7 @@ export function HomeScreen({
   onOpenCollection,
   onOpenRoom,
   onOpenTitles,
+  showRewardsNudge = false,
 }: HomeScreenProps) {
   const [waking, setWaking] = useState(false);
   const [flipping, setFlipping] = useState(false);
@@ -516,6 +519,20 @@ export function HomeScreen({
           </span>
           <span className="main-count-copy">{countCopy}</span>
         </div>
+        {showRewardsNudge ? (
+          <div className="main-rewards-nudge">
+            <p className="main-rewards-nudge-copy">
+              카드는 내일 또 뽑을 수 있어요. 메뉴의 &apos;보상 받기&apos;에서 냥코인과 발바닥 젤리를 받아 보세요!
+            </p>
+            <button
+              type="button"
+              className="main-rewards-nudge-btn"
+              onClick={() => window.dispatchEvent(new CustomEvent("lucky-open-menu-points"))}
+            >
+              보상 받으러 가기
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <nav className="main-footer">
