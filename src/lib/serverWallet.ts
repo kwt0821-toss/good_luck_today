@@ -560,6 +560,7 @@ async function runBoot(): Promise<WalletView | null> {
 }
 
 export function applyWalletViewToOps(state: OpsState, view: WalletView): OpsState {
+  if (!view.migrated) return state;
   const userHash = readStoredGameUserHash() || undefined;
   const walletHistory: WalletHistoryItem[] = view.history.map((row) => ({
     requestId: row.requestId,

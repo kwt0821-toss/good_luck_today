@@ -342,6 +342,7 @@ export default function App() {
 
   useEffect(() => {
     return subscribeWalletView((view) => {
+      if (!view.migrated) return;
       setOps((current) => {
         if (!current) return current;
         const applied = applyWalletViewToOps(current, view);
