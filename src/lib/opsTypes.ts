@@ -665,6 +665,12 @@ export type OpsState = {
    * A red dot means a claimable id is missing from this list.
    */
   seenDexClaimableIds: string[];
+  /**
+   * Owned dex card ids the member has already seen.
+   * Missing on older saves — backfill with the cards they already own
+   * so an update does not light the home dex dot for everyone.
+   */
+  seenDexCardIds: string[];
   /** Idempotent ledger for POST /dex/rewards/claim (tossUserKey + requestId) */
   dexClaimLedger: Array<{
     requestId: string;

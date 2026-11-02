@@ -331,7 +331,32 @@ button.menu-dim:focus-visible {
 }
 
 .menu-root.is-open .menu-row.is-highlight {
-  animation: menu-row-in 180ms ease forwards, menu-row-spark 850ms ease-in-out 3;
+  animation: menu-row-in 180ms ease forwards, menu-row-spark 800ms ease-in-out 5;
+}
+
+.menu-point-finger {
+  position: fixed;
+  z-index: 120;
+  pointer-events: none;
+  font-size: 28px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+}
+
+.menu-point-finger.is-bounce {
+  animation: menu-finger-bob 0.7s ease-in-out infinite;
+}
+
+@keyframes menu-finger-bob {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-point-finger.is-bounce {
+    animation: none;
+  }
 }
 
 .menu-row.is-highlight-still,

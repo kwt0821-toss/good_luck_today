@@ -4,6 +4,7 @@ import { toKstDateKey } from "./date";
 import { DEV_PAW_BALANCE, isDevBuild, RESET_BONUS_PAW } from "./devMode";
 import { isInTossApp } from "./native";
 import { hydrateAttendanceNotify, normalizeNotifyAttendance, stampNotifyAttendance } from "./attendanceNotify";
+import { loadDexOwned } from "./dexCollection";
 import { markDirty } from "./serverSave";
 import { loadOpsConfig } from "./opsConfig";
 import { applyOpsDailyReset, createDefaultOpsState } from "./opsState";
@@ -210,6 +211,7 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         return [...new Set([...fromCards, ...fromSets])];
       })(),
       seenDexClaimableIds: parseStringArray(parsed.seenDexClaimableIds),
+      seenDexCardIds: parseStringArray(parsed.seenDexCardIds),
       dexClaimLedger: Array.isArray(parsed.dexClaimLedger)
         ? parsed.dexClaimLedger
             .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
@@ -331,12 +333,30 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
   }
 }
 
+function rawHasSeenDexCardIds(raw: string | null): boolean {
+  if (!raw) return false;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return isRecord(parsed) && Array.isArray(parsed.seenDexCardIds);
+  } catch {
+    return false;
+  }
+}
+
 export async function loadOpsState(): Promise<OpsState> {
   const config = await loadOpsConfig();
   const today = toKstDateKey();
   const fallback = createDefaultOpsState(config, today);
-  const parsed = parseOps(await read(OPS_KEY), fallback);
+  const raw = await read(OPS_KEY);
+  const parsed = parseOps(raw, fallback);
   let next = applyOpsDailyReset(parsed, today);
+  if (raw && !rawHasSeenDexCardIds(raw)) {
+    const owned = await loadDexOwned();
+    const seenDexCardIds = Object.values(owned)
+      .filter((row) => row.count > 0 && row.id)
+      .map((row) => row.id);
+    next = { ...next, seenDexCardIds };
+  }
   const notifyAttendance = hydrateAttendanceNotify(next.notifyAttendance);
   const prevNotify = next.notifyAttendance;
   if (

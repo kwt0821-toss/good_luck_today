@@ -52,6 +52,7 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     grantedSetRewardIds: [],
     claimedDexRewardIds: [],
     seenDexClaimableIds: [],
+    seenDexCardIds: [],
     dexClaimLedger: [],
     ownedItemIds: [...new Set(starterItems)],
     unlockedRoomIds: ["moon_bedroom"],

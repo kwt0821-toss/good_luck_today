@@ -22,6 +22,8 @@ type DexCardSlotProps = {
   pulse?: boolean;
   /** When false, claim badge ignores taps (tutorial gate). */
   claimEnabled?: boolean;
+  /** Owned card the member has not opened in the dex yet. */
+  unseen?: boolean;
 };
 
 function starsLabel(count: number): string {
@@ -52,6 +54,7 @@ export function DexCardSlot({
   claimBusy = false,
   pulse = false,
   claimEnabled = true,
+  unseen = false,
 }: DexCardSlotProps) {
   const owned = (record?.count ?? 0) > 0;
   const dupBadge = formatDupBadge(record?.count ?? 0);
@@ -65,7 +68,9 @@ export function DexCardSlot({
       className={`dex-slot dex-slot-${kind} ${owned ? "is-owned" : "is-locked"} ${comingSoon ? "is-soon" : ""} ${claimable ? "has-claim" : ""} ${pulse ? "is-tut-pulse" : ""}`}
       onClick={comingSoon ? undefined : onClick}
       disabled={comingSoon}
-      aria-label={comingSoon ? "곧 만나요" : owned ? name : "잠긴 카드"}
+      aria-label={
+        comingSoon ? "곧 만나요" : owned ? `${name ?? "카드"}${unseen ? ", 새 카드" : ""}` : "잠긴 카드"
+      }
     >
       {owned && card ? <DexThumb card={card} /> : comingSoon ? (
         <>
@@ -99,6 +104,7 @@ export function DexCardSlot({
       )}
       {owned ? <span className="dex-slot-shine" aria-hidden="true" /> : null}
       {owned && record?.isNew ? <span className="dex-tag-new">NEW</span> : null}
+      {owned && unseen ? <span className="dex-slot-unseen" aria-hidden="true" /> : null}
       {owned && dupBadge ? <span className="dex-badge-dup">{dupBadge}</span> : null}
       {owned && claimable && card ? (
         <span

@@ -92,6 +92,14 @@ async function writeKey(key: string, value: string): Promise<void> {
   markDirty();
 }
 
+/** Owned card ids that are not in `seenDexCardIds`. */
+export function unseenOwnedCardIds(owned: DexOwnedMap, seen: readonly string[]): string[] {
+  const seenSet = new Set(seen);
+  return Object.values(owned)
+    .filter((row) => row.count > 0 && row.id && !seenSet.has(row.id))
+    .map((row) => row.id);
+}
+
 export async function loadDexOwned(): Promise<DexOwnedMap> {
   const raw = await readKey(DEX_KEY);
   // Explicit empty `{}` (e.g. DEV new-user reset) must not re-seed the mock catalog.

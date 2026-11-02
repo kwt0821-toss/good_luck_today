@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 
+import { HomeWalletChips } from "../components/HomeWalletChips";
 import { TitleRibbon } from "../components/TitleRibbon";
 import { formatCountdownHms, formatLuckyCatalogDate, msUntilNextKstMidnight } from "../lib/date";
 import { MENU_SETTINGS_EVENT, shouldReduceMenuMotion } from "../lib/menuSettings";
@@ -44,8 +45,12 @@ type HomeScreenProps = {
   offerTicketShop?: boolean;
   ticketShopPricePaw?: number;
   menuBadge?: boolean;
-  /** Red dot on #icon-dex when a dex reward is claimable and not yet seen. */
+  /** Red dot on #icon-dex for an unseen card or an unseen dex reward. */
   dexBadge?: boolean;
+  pawBalance: number;
+  nyangCoinBalance: number;
+  /** Tutorial is in progress — currency chips do not navigate. */
+  walletChipsLocked?: boolean;
   titleRibbon?: {
     equippedId?: string | null;
     equippedName?: string | null;
@@ -77,6 +82,9 @@ export function HomeScreen({
   ticketShopPricePaw = 200,
   menuBadge = false,
   dexBadge = false,
+  pawBalance,
+  nyangCoinBalance,
+  walletChipsLocked = false,
   titleRibbon,
   nextDrawKind,
   onDraw,
@@ -305,6 +313,12 @@ export function HomeScreen({
         </div>
 
         <div className="main-rule" aria-hidden="true" />
+
+        <HomeWalletChips
+          pawBalance={pawBalance}
+          nyangCoinBalance={nyangCoinBalance}
+          locked={walletChipsLocked}
+        />
 
         <div className="main-meta">
           <p>고양이가 골라 주는 오늘의 행운</p>

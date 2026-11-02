@@ -74,6 +74,7 @@ import {
   remainingTotalDraws,
   willUseRateUpTicket,
 } from "./lib/opsState";
+import { loadDexOwned, unseenOwnedCardIds } from "./lib/dexCollection";
 import { loadOpsState, saveOpsState } from "./lib/opsStorage";
 import { clearPromoUrl, readPromoTarget, type PromoTarget } from "./lib/promoEntry";
 import type {
@@ -410,10 +411,11 @@ export default function App() {
   useEffect(() => {
     if (!ops) return;
     let cancelled = false;
-    void buildMenuViewModel(ops).then((model) => {
+    void Promise.all([buildMenuViewModel(ops), loadDexOwned()]).then(([model, owned]) => {
       if (cancelled) return;
       setMenuIconDot(model.menuIconDot);
-      setDexClaimDot(model.rewards.unseenCount > 0);
+      const unseenCards = unseenOwnedCardIds(owned, ops.seenDexCardIds).length > 0;
+      setDexClaimDot(model.rewards.unseenCount > 0 || unseenCards);
     });
     void (async () => {
       try {
@@ -541,6 +543,25 @@ export default function App() {
   const persistOps = useCallback(async (next: OpsState) => {
     setOps(next);
     await saveOpsState(next);
+  }, []);
+
+  const noteSeenDexCards = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+    setOps((current) => {
+      if (!current) return current;
+      const have = new Set(current.seenDexCardIds);
+      let changed = false;
+      for (const id of ids) {
+        if (!have.has(id)) {
+          have.add(id);
+          changed = true;
+        }
+      }
+      if (!changed) return current;
+      const next = { ...current, seenDexCardIds: [...have] };
+      void saveOpsState(next);
+      return next;
+    });
   }, []);
 
   const queueAd = useCallback((session: AdSession, detail: string) => {
@@ -1731,6 +1752,7 @@ export default function App() {
           }
           reduceMotion={reduceMotion}
           onTutorialScrollDone={onDexTutorialScrollDone}
+          onSeenDexCards={noteSeenDexCards}
           onTutorialClaimed={() => {
             if (dexTutPhase !== "claim") return;
             setDexTutPhase("toast");
@@ -1867,6 +1889,9 @@ export default function App() {
           rateUpPct={rateLabels.rateUpPct}
           menuBadge={menuIconDot}
           dexBadge={dexClaimDot}
+          pawBalance={ops.pawBalance}
+          nyangCoinBalance={ops.nyangCoinBalance}
+          walletChipsLocked={tutorialStep != null}
           titleRibbon={{
             equippedId: ops.equippedTitleId || null,
             equippedName:

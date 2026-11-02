@@ -852,7 +852,9 @@
   font-family: "Noto Sans KR", "Toss Product Sans", sans-serif;
   box-sizing: border-box;
   margin: 0;
-  padding: 0 var(--sa-right, 0px) 0 var(--sa-left, 0px);
+  padding:
+    0 max(var(--sa-right, 0px), env(safe-area-inset-right, 0px))
+    0 max(var(--sa-left, 0px), env(safe-area-inset-left, 0px));
   background-color: #14132a;
   background-size: cover;
   background-position: top center;

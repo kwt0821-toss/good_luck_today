@@ -621,6 +621,19 @@
   animation: dex-shine 4s ease-in-out infinite;
 }
 
+.dex-slot-unseen {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 5;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5a5f;
+  box-shadow: 0 0 0 2px #1a1731;
+  pointer-events: none;
+}
+
 .dex-tag-new {
   position: absolute;
   /* Outside the art corner so breed stars stay readable. */

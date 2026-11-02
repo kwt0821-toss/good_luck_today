@@ -61,6 +61,8 @@ type DexScreenProps = {
   reduceMotion?: boolean;
   onTutorialScrollDone?: () => void;
   onTutorialClaimed?: () => void;
+  /** Mark these owned card ids as seen. Does not replace the rest of ops. */
+  onSeenDexCards?: (ids: string[]) => void;
 };
 
 type CelebrateKind = "breedSet" | "typeSet" | "fullDex";
@@ -106,6 +108,7 @@ export function DexScreen({
   reduceMotion = false,
   onTutorialScrollDone,
   onTutorialClaimed,
+  onSeenDexCards,
 }: DexScreenProps) {
   const [catalog, setCatalog] = useState<DexCatalog | null>(null);
   const [imagesReady, setImagesReady] = useState(false);
@@ -449,7 +452,13 @@ export function DexScreen({
     setOpenCard(card);
     void haptic("tap");
     void markDexCardViewed(owned, card.id).then(setOwned);
+    if (!ops.seenDexCardIds.includes(card.id)) onSeenDexCards?.([card.id]);
   };
+
+  const onSeenDexCardsRef = useRef(onSeenDexCards);
+  onSeenDexCardsRef.current = onSeenDexCards;
+  const seenIdsRef = useRef(ops.seenDexCardIds);
+  seenIdsRef.current = ops.seenDexCardIds;
 
   const onSlot = (card: DexCard) => {
     if (tutLocked) return;
@@ -471,6 +480,19 @@ export function DexScreen({
   }, [imagesReady, overlayVisible]);
   // The preparing class hides the grid, so the coach has nothing to point at.
   const preparing = tutorialPhase == null && (!imagesReady || artOverlay);
+  useEffect(() => {
+    if (!catalog || preparing) return;
+    // Let the grid paint the unseen dots, then mark this tab's owned cards.
+    const timer = window.setTimeout(() => {
+      const seen = new Set(seenIdsRef.current);
+      const ids = catalog.cards
+        .filter((card) => card.type === tab && (owned[card.id]?.count ?? 0) > 0 && !seen.has(card.id))
+        .map((card) => card.id);
+      if (ids.length === 0) return;
+      onSeenDexCardsRef.current?.(ids);
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [catalog, tab, owned, preparing]);
   useBackHandler(true, () => {
     if (tutLocked) return;
     if (openCard) {
@@ -672,6 +694,9 @@ export function DexScreen({
                           onClaim={() => {
                             if (cardReward) void runClaim([cardReward.id]);
                           }}
+                          unseen={
+                            (owned[card.id]?.count ?? 0) > 0 && !ops.seenDexCardIds.includes(card.id)
+                          }
                           onClick={() => onSlot(card)}
                         />
                       );
@@ -696,6 +721,7 @@ export function DexScreen({
             focusCardId={focusCardId}
             claimGate={tutorialPhase === "claim"}
             tutLocked={tutLocked}
+            seenIds={ops.seenDexCardIds}
             onClaimCard={(rewardId) => void runClaim([rewardId])}
             onClaimSet={(rewardId) => void runClaim([rewardId], "typeSet")}
             onSlot={onSlot}
@@ -847,6 +873,7 @@ function GridTab({
   focusCardId,
   claimGate,
   tutLocked,
+  seenIds,
   onClaimCard,
   onClaimSet,
   onSlot,
@@ -862,6 +889,7 @@ function GridTab({
   focusCardId: string | null;
   claimGate: boolean;
   tutLocked: boolean;
+  seenIds: readonly string[];
   onClaimCard: (rewardId: string) => void;
   onClaimSet: (rewardId: string) => void;
   onSlot: (card: DexCard) => void;
@@ -915,6 +943,7 @@ function GridTab({
                 onClaim={() => {
                   if (cardReward) onClaimCard(cardReward.id);
                 }}
+                unseen={(owned[card.id]?.count ?? 0) > 0 && !seenIds.includes(card.id)}
                 onClick={() => onSlot(card)}
               />
               <p className={`dex-cell-name ${owned[card.id] ? "" : "is-locked"}`}>

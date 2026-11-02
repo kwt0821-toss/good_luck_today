@@ -11,6 +11,7 @@ type CollectionScreenProps = {
   reduceMotion?: boolean;
   onTutorialScrollDone?: () => void;
   onTutorialClaimed?: () => void;
+  onSeenDexCards?: (ids: string[]) => void;
 };
 
 export function CollectionScreen({
@@ -23,6 +24,7 @@ export function CollectionScreen({
   reduceMotion = false,
   onTutorialScrollDone,
   onTutorialClaimed,
+  onSeenDexCards,
 }: CollectionScreenProps) {
   return (
     <DexScreen
@@ -35,6 +37,7 @@ export function CollectionScreen({
       reduceMotion={reduceMotion}
       onTutorialScrollDone={onTutorialScrollDone}
       onTutorialClaimed={onTutorialClaimed}
+      onSeenDexCards={onSeenDexCards}
     />
   );
 }

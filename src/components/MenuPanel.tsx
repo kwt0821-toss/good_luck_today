@@ -164,14 +164,46 @@ export function MenuPanel({
   const withdrawAmountRef = useRef(withdrawAmount);
   const pointsTopRef = useRef<HTMLSpanElement>(null);
   const [pointsWeekendBelow, setPointsWeekendBelow] = useState(false);
+  const [pointFinger, setPointFinger] = useState<{ top: number; left: number } | null>(null);
   withdrawAmountRef.current = withdrawAmount;
 
   useEffect(() => {
     if (!open || !highlightRowId || !model) return;
     const row = document.getElementById(`menu-row-${highlightRowId}`);
-    row?.scrollIntoView({ block: "center", inline: "nearest", behavior: reduce ? "auto" : "smooth" });
-    const timer = window.setTimeout(() => onHighlightDone?.(), 2600);
-    return () => window.clearTimeout(timer);
+    if (!row) return;
+    let stopped = false;
+    const place = () => {
+      if (stopped) return;
+      const rect = row.getBoundingClientRect();
+      if (rect.width < 1 || rect.height < 1) return;
+      const top = Math.min(rect.bottom - 8, window.innerHeight - 52);
+      const left = Math.min(Math.max(8, rect.right - 40), window.innerWidth - 48);
+      setPointFinger({ top, left });
+    };
+    row.scrollIntoView({ block: "center", inline: "nearest", behavior: reduce ? "auto" : "smooth" });
+    const scroller = row.closest(".menu-scroll");
+    let scrollTimer = 0;
+    const onScroll = () => {
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(place, 60);
+    };
+    scroller?.addEventListener("scroll", onScroll, { passive: true });
+    const panel = row.closest(".menu-panel");
+    panel?.addEventListener("transitionend", place);
+    const kick = window.setTimeout(place, reduce ? 0 : 360);
+    const done = window.setTimeout(() => onHighlightDone?.(), 4000);
+    const onTap = () => onHighlightDone?.();
+    window.addEventListener("pointerdown", onTap, true);
+    return () => {
+      stopped = true;
+      window.clearTimeout(scrollTimer);
+      window.clearTimeout(kick);
+      window.clearTimeout(done);
+      scroller?.removeEventListener("scroll", onScroll);
+      panel?.removeEventListener("transitionend", place);
+      window.removeEventListener("pointerdown", onTap, true);
+      setPointFinger(null);
+    };
   }, [open, highlightRowId, model, reduce, onHighlightDone]);
 
   useEffect(() => {
@@ -819,6 +851,15 @@ export function MenuPanel({
     <div
       className={`menu-root ${open && !closing ? "is-open" : ""} ${closing ? "is-closing" : ""} ${reduce ? "is-reduce" : ""} ${helpOpen ? "is-help-open" : ""}`}
     >
+      {pointFinger ? (
+        <span
+          className={`menu-point-finger ${reduce ? "is-still" : "is-bounce"}`}
+          style={{ top: pointFinger.top, left: pointFinger.left }}
+          aria-hidden="true"
+        >
+          👆
+        </span>
+      ) : null}
       <button
         type="button"
         className="menu-dim"

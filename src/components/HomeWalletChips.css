@@ -1,0 +1,88 @@
+.home-wallet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 2px 0 0;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+.home-wallet-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 0 1 auto;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: calc(50% - 4px);
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: #f3ebd7;
+  color: #221e3a;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  cursor: pointer;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-wallet-chip:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.home-wallet-chip img {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  pointer-events: none;
+}
+
+.home-wallet-chip b {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  transform-origin: 50% 60%;
+}
+
+.home-wallet-chip b.is-pop {
+  animation: home-wallet-pop 0.3s ease;
+}
+
+@keyframes home-wallet-pop {
+  50% {
+    transform: scale(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-wallet-chip b.is-pop {
+    animation: none;
+  }
+}
+
+@media (max-width: 340px) {
+  .home-wallet-row {
+    gap: 6px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .home-wallet-chip {
+    padding: 0 8px;
+    font-size: 12px;
+    gap: 3px;
+  }
+}
