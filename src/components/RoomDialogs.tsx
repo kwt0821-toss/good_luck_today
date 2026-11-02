@@ -100,7 +100,7 @@ export function RoomBuySheet({
           <>
             <div className="ny-chip-anchor" style={{ position: "relative", margin: "12px 0" }}>
               <NyChip arrow="down" arrowX={48} wide>
-                {`젤리가 ${item.price - points} 모자라요 · 출석·보상 받기로 모아요`}
+                {`젤리가 ${item.price - points} 모자라요 · 출석·젤리 받기로 모아요`}
               </NyChip>
             </div>
             <div className="lucky-modal-actions">

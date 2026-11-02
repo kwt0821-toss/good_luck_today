@@ -1030,7 +1030,7 @@ export default function App() {
         key: "paw-ad",
         kind: "reward",
         title: `{paw} <b>+${result.gained}</b> 받았어요`,
-        sub: "메뉴 › 보상 받기",
+        sub: "메뉴 › 젤리·냥코인 받기",
         count: result.gained,
       });
       await haptic("success");

@@ -480,7 +480,7 @@ export function MenuPanel({
         nyNotify({
           key: "paw-ad-closed",
           kind: "info",
-          title: "오늘 보상 받기를 모두 했어요",
+          title: "오늘 젤리·냥코인을 모두 받았어요",
           sub: "내일 0시에 다시 열려요",
         });
         return;

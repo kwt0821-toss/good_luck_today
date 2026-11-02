@@ -94,7 +94,7 @@ export function HomeWalletChips({
         type="button"
         id="home-chip-paw"
         className="home-wallet-chip"
-        aria-label={`발바닥 젤리 ${formatCount(paw)}개, 보상 받기로 이동`}
+        aria-label={`발바닥 젤리 ${formatCount(paw)}개, 젤리·냥코인 받기로 이동`}
         aria-disabled={locked}
         disabled={locked}
         onClick={openPoints}

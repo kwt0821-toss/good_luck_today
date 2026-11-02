@@ -141,7 +141,7 @@ type DrawRevealScreenProps = {
   onBack?: () => void;
   /** Full-screen card is covering the settled result. */
   onSpotlightChange?: (open: boolean) => void;
-  /** Shown under the disabled draw button when 보상 받기 still has claims left. */
+  /** Shown under the disabled draw button when 젤리·냥코인 받기 still has claims left. */
   showRewardsNudge?: boolean;
 };
 
@@ -829,7 +829,7 @@ export function DrawRevealScreen({
                 className="draw-reveal-rewards-nudge"
                 onClick={() => window.dispatchEvent(new CustomEvent("lucky-open-menu-points"))}
               >
-                보상 받으러 가기
+                냥코인 더 받으러 가기
               </button>
             ) : null}
           </div>

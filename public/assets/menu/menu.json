@@ -85,7 +85,7 @@
    }
   },
   "points": {
-   "label": "보상 받기",
+   "label": "젤리·냥코인 받기",
    "icon": "icon-points.svg",
    "enabled": true,
    "open": "action:rewardedAd(paw)",
