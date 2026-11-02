@@ -1,6 +1,6 @@
 import { toKstDateKey } from "./date";
 import { loadDexCatalog } from "./dexCatalog";
-import { loadDexOwned, saveDexOwned } from "./dexCollection";
+import { readDexOwnedForUpdate, saveDexOwned } from "./dexCollection";
 import type { DexCard, DexOwnedMap } from "./dexTypes";
 import { duplicateRevealCopy, isManualDexClaim, newCardRevealCopy } from "./dexRewards";
 import { dupPawForCard } from "./drawRates";
@@ -101,7 +101,9 @@ export async function confirmDrawAfterAd(
   const card = catalog.cards.find((item) => item.id === reservation.cardId);
   if (!card) return { error: "카드 정보를 찾지 못했어요" };
 
-  let owned = await loadDexOwned();
+  const baseOwned = await readDexOwnedForUpdate();
+  if (!baseOwned) return { error: "도감을 불러오지 못했어요" };
+  let owned = baseOwned;
   const prev = owned[card.id];
   const isNew = !prev || prev.count <= 0;
   owned = {

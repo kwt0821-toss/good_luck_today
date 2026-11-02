@@ -1,5 +1,5 @@
 import { loadDexCatalog } from "./dexCatalog";
-import { loadDexOwned, saveDexOwned } from "./dexCollection";
+import { readDexOwnedForUpdate, saveDexOwned } from "./dexCollection";
 import type { DexCard, DexOwnedMap } from "./dexTypes";
 import { dupPawForCard } from "./drawRates";
 import { loadOpsConfig } from "./opsConfig";
@@ -128,14 +128,16 @@ export async function postDupExchange(
 ): Promise<{ state: OpsState; owned: DexOwnedMap; response: DupExchangeResponse }> {
   await delay(40);
   const { mode, requestId, cardId, qty } = body;
+  const owned = await readDexOwnedForUpdate();
+  if (!owned) {
+    return { state, owned: {}, response: { ok: false, reason: "도감을 불러오지 못했어요" } };
+  }
   if (!requestId || typeof requestId !== "string") {
-    const owned = await loadDexOwned();
     return { state, owned, response: { ok: false, reason: "requestId가 필요해요" } };
   }
 
   const prior = state.dupExchangeLedger.find((row) => row.requestId === requestId);
   if (prior) {
-    const owned = await loadDexOwned();
     return {
       state,
       owned,
@@ -151,7 +153,6 @@ export async function postDupExchange(
 
   const config = await loadOpsConfig();
   const catalog = await loadDexCatalog();
-  const owned = await loadDexOwned();
   const nextOwned: DexOwnedMap = { ...owned };
   let gained = 0;
   let converted = 0;

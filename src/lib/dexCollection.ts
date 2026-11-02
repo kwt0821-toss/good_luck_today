@@ -59,18 +59,28 @@ function parseOwned(raw: string | null): DexOwnedMap | null {
   }
 }
 
-async function readKey(key: string): Promise<string | null> {
+type DexRawRead =
+  | { status: "missing" }
+  | { status: "value"; raw: string }
+  | { status: "error" };
+
+/** Missing key and a failed read stay distinct so a blip cannot be saved as `{}`. */
+async function readDexRaw(): Promise<DexRawRead> {
   if (isInTossApp()) {
     try {
-      return await Storage.getItem(key);
+      const value = await Storage.getItem(DEX_KEY);
+      if (value == null) return { status: "missing" };
+      return { status: "value", raw: value };
     } catch {
-      // 웹 미리보기는 localStorage를 써요.
+      return { status: "error" };
     }
   }
   try {
-    return window.localStorage.getItem(key);
+    const value = window.localStorage.getItem(DEX_KEY);
+    if (value == null) return { status: "missing" };
+    return { status: "value", raw: value };
   } catch {
-    return null;
+    return { status: "error" };
   }
 }
 
@@ -100,17 +110,37 @@ export function unseenOwnedCardIds(owned: DexOwnedMap, seen: readonly string[]):
     .map((row) => row.id);
 }
 
+/**
+ * Read the collection without writing.
+ * Null when the key is absent or the read/parse failed.
+ */
+export async function peekDexOwned(): Promise<DexOwnedMap | null> {
+  const read = await readDexRaw();
+  if (read.status !== "value") return null;
+  return parseOwned(read.raw);
+}
+
+/**
+ * Collection for a mutation.
+ * `{}` when the member has no key yet (the first card may create it).
+ * Null when the read failed — callers must not save over the real collection.
+ */
+export async function readDexOwnedForUpdate(): Promise<DexOwnedMap | null> {
+  const read = await readDexRaw();
+  if (read.status === "error") return null;
+  if (read.status === "missing") return {};
+  return parseOwned(read.raw);
+}
+
 export async function loadDexOwned(): Promise<DexOwnedMap> {
-  const raw = await readKey(DEX_KEY);
+  const read = await readDexRaw();
   // Explicit empty `{}` (e.g. DEV new-user reset) must not re-seed the mock catalog.
-  if (raw !== null) {
-    const stored = parseOwned(raw);
+  // A missing or unreadable key stays unwritten. The first real card calls saveDexOwned.
+  if (read.status === "value") {
+    const stored = parseOwned(read.raw);
     if (stored) return stored;
   }
-  // Fresh install: empty collection. MOCK_DEX_OWNED is design preview data only.
-  const empty: DexOwnedMap = {};
-  await writeKey(DEX_KEY, JSON.stringify(empty));
-  return empty;
+  return {};
 }
 
 export async function saveDexOwned(owned: DexOwnedMap): Promise<void> {

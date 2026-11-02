@@ -4,13 +4,16 @@ import { toKstDateKey } from "./date";
 import { DEV_PAW_BALANCE, isDevBuild, RESET_BONUS_PAW } from "./devMode";
 import { isInTossApp } from "./native";
 import { hydrateAttendanceNotify, normalizeNotifyAttendance, stampNotifyAttendance } from "./attendanceNotify";
-import { loadDexOwned } from "./dexCollection";
+import { peekDexOwned } from "./dexCollection";
 import { markDirty } from "./serverSave";
 import { loadOpsConfig } from "./opsConfig";
 import { applyOpsDailyReset, createDefaultOpsState } from "./opsState";
 import type { OpsState } from "./opsTypes";
 
 const OPS_KEY = "lucky-cat.ops-state.v1";
+
+/** Dex could not be read, so do not persist `seenDexCardIds` until a later boot can fill it. */
+let deferSeenDexCardBackfill = false;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -351,11 +354,18 @@ export async function loadOpsState(): Promise<OpsState> {
   const parsed = parseOps(raw, fallback);
   let next = applyOpsDailyReset(parsed, today);
   if (raw && !rawHasSeenDexCardIds(raw)) {
-    const owned = await loadDexOwned();
-    const seenDexCardIds = Object.values(owned)
-      .filter((row) => row.count > 0 && row.id)
-      .map((row) => row.id);
-    next = { ...next, seenDexCardIds };
+    const owned = await peekDexOwned();
+    if (owned) {
+      deferSeenDexCardBackfill = false;
+      const seenDexCardIds = Object.values(owned)
+        .filter((row) => row.count > 0 && row.id)
+        .map((row) => row.id);
+      next = { ...next, seenDexCardIds };
+    } else {
+      deferSeenDexCardBackfill = true;
+    }
+  } else {
+    deferSeenDexCardBackfill = false;
   }
   const notifyAttendance = hydrateAttendanceNotify(next.notifyAttendance);
   const prevNotify = next.notifyAttendance;
@@ -376,5 +386,8 @@ export async function loadOpsState(): Promise<OpsState> {
 }
 
 export async function saveOpsState(state: OpsState): Promise<void> {
-  await write(OPS_KEY, JSON.stringify(stampNotifyAttendance(state)));
+  const stamped = stampNotifyAttendance(state);
+  const payload: Record<string, unknown> = { ...stamped };
+  if (deferSeenDexCardBackfill) delete payload.seenDexCardIds;
+  await write(OPS_KEY, JSON.stringify(payload));
 }

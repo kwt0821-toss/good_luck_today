@@ -74,7 +74,7 @@ import {
   remainingTotalDraws,
   willUseRateUpTicket,
 } from "./lib/opsState";
-import { loadDexOwned, unseenOwnedCardIds } from "./lib/dexCollection";
+import { peekDexOwned, unseenOwnedCardIds } from "./lib/dexCollection";
 import { loadOpsState, saveOpsState } from "./lib/opsStorage";
 import { clearPromoUrl, readPromoTarget, type PromoTarget } from "./lib/promoEntry";
 import type {
@@ -411,10 +411,10 @@ export default function App() {
   useEffect(() => {
     if (!ops) return;
     let cancelled = false;
-    void Promise.all([buildMenuViewModel(ops), loadDexOwned()]).then(([model, owned]) => {
+    void Promise.all([buildMenuViewModel(ops), peekDexOwned()]).then(([model, owned]) => {
       if (cancelled) return;
       setMenuIconDot(model.menuIconDot);
-      const unseenCards = unseenOwnedCardIds(owned, ops.seenDexCardIds).length > 0;
+      const unseenCards = owned != null && unseenOwnedCardIds(owned, ops.seenDexCardIds).length > 0;
       setDexClaimDot(model.rewards.unseenCount > 0 || unseenCards);
     });
     void (async () => {

@@ -22,7 +22,7 @@ import {
   shuffleBreedRows,
   shuffleCards,
 } from "../lib/dexCatalog";
-import { loadDexOwned, markDexCardViewed } from "../lib/dexCollection";
+import { markDexCardViewed, peekDexOwned } from "../lib/dexCollection";
 import {
   buildDexClaimRequestId,
   claimableBreedSet,
@@ -154,7 +154,8 @@ export function DexScreen({
 
   useEffect(() => {
     let cancelled = false;
-    void Promise.all([loadDexCatalog(), loadDexOwned(), loadOpsConfig()]).then(async ([nextCatalog, nextOwned, config]) => {
+    void Promise.all([loadDexCatalog(), peekDexOwned(), loadOpsConfig()]).then(async ([nextCatalog, peeked, config]) => {
+      const nextOwned = peeked ?? {};
       if (cancelled) return;
       setCatalog(nextCatalog);
       setOwned(nextOwned);
