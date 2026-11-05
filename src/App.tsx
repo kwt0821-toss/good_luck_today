@@ -49,7 +49,7 @@ import { configureNavigationBar, haptic, isInTossApp } from "./lib/native";
 import { isOffline } from "./lib/network";
 import { useTossSafeArea } from "./lib/useTossSafeArea";
 import { isWeekendDoublePaw, loadOpsConfig } from "./lib/opsConfig";
-import { bumpMission, listMissions } from "./lib/dailyMissions";
+import { bumpMission, listMissions, reconcileMissions } from "./lib/dailyMissions";
 import { josa } from "./lib/josa";
 import { readDay7BonusConfig } from "./lib/attendanceServer";
 import {
@@ -367,13 +367,15 @@ export default function App() {
       try {
         await syncGameSaveOnBoot();
         if (cancelled) return;
-        const [, nextConfig, nextOps] = await Promise.all([
+        const [, nextConfig, loadedOps] = await Promise.all([
           refreshServerTime(),
           loadOpsConfig(),
           loadOpsState(),
         ]);
         if (isTossApp()) void ensureGameUserHash();
         if (cancelled) return;
+        const nextOps = reconcileMissions(loadedOps, nextConfig.economy);
+        if (nextOps !== loadedOps) await saveOpsState(nextOps);
         setConfig(nextConfig);
         setOps(nextOps);
         void syncWalletOnBoot();

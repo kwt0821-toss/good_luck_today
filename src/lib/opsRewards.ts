@@ -348,7 +348,8 @@ export async function claimAttendanceGift(
   const itemId =
     result.response.rewards.find((reward) => reward.kind === "item")?.itemId ?? null;
   const bumped = bumpMission(result.state, "attend_1");
-  if (bumped !== result.state) await saveOpsState(bumped);
+  await saveOpsState(bumped);
+  markDirtyUrgent();
   return { state: bumped, itemId, response: result.response };
 }
 
@@ -371,7 +372,8 @@ export async function claimAttendanceDay7(
   const result = await claimAttendanceDay7OnServer(next, body);
   if (!result.response.ok) return result;
   const bumped = bumpMission(result.state, "attend_1");
-  if (bumped !== result.state) await saveOpsState(bumped);
+  await saveOpsState(bumped);
+  markDirtyUrgent();
   return { state: bumped, response: result.response };
 }
 

@@ -62,6 +62,43 @@ export function ensureMissionDay(state: OpsState, today = toKstDateKey()): OpsSt
   };
 }
 
+function raiseToTarget(state: OpsState, id: string, target: number): OpsState {
+  const current = state.missionProgress[id] ?? 0;
+  if (current >= target) return state;
+  return {
+    ...state,
+    missionProgress: { ...state.missionProgress, [id]: target },
+  };
+}
+
+/** A draw that already counted today: normal, rate-up, or a confirmed reservation. */
+function drewToday(state: OpsState, today: string): boolean {
+  if (state.dateKey === today && (state.normalDrawsUsed > 0 || state.rateUpUsed > 0)) return true;
+  const pending = state.pendingDraw;
+  if (!pending?.confirmed) return false;
+  return toKstDateKey(new Date(pending.createdAt)) === today;
+}
+
+/**
+ * Line today's checklist up with what already happened.
+ * Attendance and draws fill to their target. A claimed mission stays claimed.
+ * Room visits are not guessed. Does not save.
+ */
+export function reconcileMissions(state: OpsState, economy?: OpsEconomy, today = toKstDateKey()): OpsState {
+  let next = ensureMissionDay(state, today);
+  const defs = missionDefs(economy);
+  const attended = next.lastAttendDateKST === today || next.lastAttendanceDateKey === today;
+  if (attended) {
+    const target = defs.find((item) => item.id === "attend_1")?.target;
+    if (target) next = raiseToTarget(next, "attend_1", target);
+  }
+  if (drewToday(next, today)) {
+    const target = defs.find((item) => item.id === "draw_1")?.target;
+    if (target) next = raiseToTarget(next, "draw_1", target);
+  }
+  return next;
+}
+
 /**
  * Raise progress up to the mission target. Already-claimed missions keep their progress.
  * Does not save — callers persist with the rest of the success path.
@@ -73,12 +110,12 @@ export function bumpMission(
   today = toKstDateKey(),
   economy?: OpsEconomy,
 ): OpsState {
-  const base = ensureMissionDay(state, today);
+  const base = reconcileMissions(state, economy, today);
   const def = missionDefs(economy).find((item) => item.id === missionId);
-  if (!def) return base === state ? state : base;
+  if (!def) return base;
   const current = base.missionProgress[missionId] ?? 0;
   const value = Math.min(def.target, current + Math.max(0, Math.floor(by)));
-  if (value === current) return base === state ? state : base;
+  if (value === current) return base;
   track("mission_progress", { mission: missionId, current: value, target: def.target });
   return {
     ...base,
@@ -91,7 +128,7 @@ export async function claimMission(
   missionId: string,
   economy: OpsEconomy,
 ): Promise<{ state: OpsState; gained: number } | { error: string }> {
-  const base = ensureMissionDay(state);
+  const base = reconcileMissions(state, economy);
   const def = missionDefs(economy).find((item) => item.id === missionId);
   if (!def) return { error: "미션을 찾지 못했어요" };
   if (base.missionClaimedIds.includes(missionId)) return { error: "이미 받았어요" };
@@ -109,7 +146,7 @@ export async function claimMission(
 }
 
 export function listMissions(state: OpsState, economy: OpsEconomy, today = toKstDateKey()): MissionRow[] {
-  const base = ensureMissionDay(state, today);
+  const base = reconcileMissions(state, economy, today);
   return missionDefs(economy).map((def) => {
     const current = Math.min(def.target, Math.max(0, base.missionProgress[def.id] ?? 0));
     const claimed = base.missionClaimedIds.includes(def.id);

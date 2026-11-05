@@ -90,15 +90,14 @@ export function syncTicketShopWindows(state: OpsState, today = toKstDateKey()): 
 export function applyOpsDailyReset(state: OpsState, today = toKstDateKey()): OpsState {
   const synced = syncTicketShopWindows(state, today);
   const missionsStale = synced.missionDateKey !== today;
-  if (synced.dateKey === today && !missionsStale) return synced;
-  if (synced.dateKey === today) {
-    return {
-      ...synced,
-      missionDateKey: today,
-      missionProgress: {},
-      missionClaimedIds: [],
-    };
-  }
+  const dayStale = synced.dateKey !== today;
+  if (!dayStale && !missionsStale) return synced;
+  // Midnight clears a checklist that belongs to another day. A checklist already
+  // stamped today stays, even when the rest of the day counters still roll.
+  const missionPatch = missionsStale
+    ? { missionDateKey: today, missionProgress: {}, missionClaimedIds: [] as string[] }
+    : null;
+  if (!dayStale) return { ...synced, ...missionPatch };
   return {
     ...synced,
     dateKey: today,
@@ -108,9 +107,7 @@ export function applyOpsDailyReset(state: OpsState, today = toKstDateKey()): Ops
     adDrawNyangToday: 0,
     adPawNyangToday: 0,
     pendingDraw: null,
-    missionDateKey: today,
-    missionProgress: {},
-    missionClaimedIds: [],
+    ...(missionPatch ?? {}),
   };
 }
 

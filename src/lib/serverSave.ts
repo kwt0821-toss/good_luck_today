@@ -1,5 +1,6 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
+import { toKstDateKey } from "./date";
 import { isInTossApp } from "./native";
 import { isTossApp } from "./tossEnv";
 import { ensureGameUserHash } from "./user";
@@ -281,10 +282,71 @@ async function applySnapshot(
   return job;
 }
 
+const OPS_STATE_KEY = "lucky-cat.ops-state.v1";
+
+function progressMap(value: unknown): Record<string, number> {
+  if (!isRecord(value)) return {};
+  const out: Record<string, number> = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (typeof item === "number" && Number.isFinite(item)) out[key] = item;
+  }
+  return out;
+}
+
+function idList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string" && item.length > 0);
+}
+
+/**
+ * A server ops blob must not erase today's checklist.
+ * Same day: keep the higher progress and every claimed id.
+ * Older or pre-mission server blob: keep the local checklist that is already today.
+ */
+function mergeTodayMissions(localRaw: string | null, serverRaw: string): string {
+  let server: Record<string, unknown>;
+  try {
+    const parsed = JSON.parse(serverRaw) as unknown;
+    if (!isRecord(parsed)) return serverRaw;
+    server = parsed;
+  } catch {
+    return serverRaw;
+  }
+  if (!localRaw) return serverRaw;
+  let local: Record<string, unknown>;
+  try {
+    const parsed = JSON.parse(localRaw) as unknown;
+    if (!isRecord(parsed)) return serverRaw;
+    local = parsed;
+  } catch {
+    return serverRaw;
+  }
+  const today = toKstDateKey();
+  const localDay = typeof local.missionDateKey === "string" ? local.missionDateKey : "";
+  if (localDay !== today) return serverRaw;
+  const serverDay = typeof server.missionDateKey === "string" ? server.missionDateKey : "";
+  if (serverDay === today) {
+    const progress = progressMap(local.missionProgress);
+    for (const [key, value] of Object.entries(progressMap(server.missionProgress))) {
+      progress[key] = Math.max(progress[key] ?? 0, value);
+    }
+    server.missionDateKey = today;
+    server.missionProgress = progress;
+    server.missionClaimedIds = [...new Set([...idList(local.missionClaimedIds), ...idList(server.missionClaimedIds)])];
+    return JSON.stringify(server);
+  }
+  server.missionDateKey = today;
+  server.missionProgress = progressMap(local.missionProgress);
+  server.missionClaimedIds = idList(local.missionClaimedIds);
+  return JSON.stringify(server);
+}
+
 async function applySnapshotNow(bundle: SaveBundle, version: number, saveToken?: string): Promise<boolean> {
   await backupLocalOnce();
+  const localOps = await readKey(OPS_STATE_KEY);
   for (const key of SAVE_KEYS) {
-    const value = bundle.keys[key];
+    let value = bundle.keys[key];
+    if (key === OPS_STATE_KEY && value != null) value = mergeTodayMissions(localOps, value);
     if (value == null) await removeKey(key);
     else await writeKey(key, value);
   }
