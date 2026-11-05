@@ -30,6 +30,12 @@ import { isTossApp } from "./lib/tossEnv";
 import { ensureGameUserHash } from "./lib/user";
 import { installServerSaveLifecycle, syncGameSaveOnBoot } from "./lib/serverSave";
 import {
+  displayJellyBalance,
+  installJellyLifecycle,
+  subscribeJelly,
+  syncJellyOnBoot,
+} from "./lib/serverJelly";
+import {
   applyWalletViewToOps,
   installWalletBalanceRefresh,
   subscribeWalletView,
@@ -348,6 +354,19 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    return subscribeJelly(() => {
+      setOps((current) => {
+        if (!current) return current;
+        const shown = displayJellyBalance(current.pawBalance);
+        if (shown === current.pawBalance) return current;
+        const next = { ...current, pawBalance: shown };
+        void saveOpsState(next);
+        return next;
+      });
+    });
+  }, []);
+
+  useEffect(() => {
     return subscribeWalletView((view) => {
       if (!view.migrated) return;
       setOps((current) => {
@@ -362,6 +381,7 @@ export default function App() {
   useEffect(() => {
     installServerSaveLifecycle();
     installWalletBalanceRefresh();
+    installJellyLifecycle();
     let cancelled = false;
     void (async () => {
       try {
@@ -377,6 +397,7 @@ export default function App() {
         setConfig(nextConfig);
         setOps(nextOps);
         void syncWalletOnBoot();
+        void syncJellyOnBoot(nextOps.pawBalance);
         if (promoTargetRef.current && !nextOps.tutorialDone) {
           setScreen({ name: "home" });
           setMenuOpen(false);

@@ -5,6 +5,7 @@ import { dupPawForCard } from "./drawRates";
 import { loadOpsConfig } from "./opsConfig";
 import { saveOpsState } from "./opsStorage";
 import { markDirtyUrgent } from "./serverSave";
+import { displayJellyBalance, jellyEnqueue, serverJellyActive } from "./serverJelly";
 import type { OpsEconomy, OpsState } from "./opsTypes";
 
 export type DupExchangeGradeLine = {
@@ -81,6 +82,14 @@ export function formatDupBadge(ownedCount: number): string | null {
   if (dups < 1) return null;
   if (dups >= 100) return "x99+";
   return `x${dups}`;
+}
+
+function jellyGrade(card: DexCard): "common" | "rare" | "special" | "character" | "legend" {
+  if (card.type === "legend") return "legend";
+  if (card.type === "character") return "character";
+  if (card.type === "special") return "special";
+  if ((card.stars ?? 1) <= 2) return "common";
+  return "rare";
 }
 
 function gradeKey(card: DexCard): string {
@@ -186,14 +195,18 @@ export async function postDupExchange(
   const nextOwned: DexOwnedMap = { ...owned };
   let gained = 0;
   let converted = 0;
+  const byGrade = new Map<string, number>();
 
   if (mode === "all") {
     for (const card of catalog.cards) {
       const record = nextOwned[card.id];
       if (!record || record.count <= 1) continue;
       const extras = record.count - 1;
-      gained += dupPawForCard(card, config.economy) * extras;
+      const paw = dupPawForCard(card, config.economy) * extras;
+      gained += paw;
       converted += extras;
+      const grade = jellyGrade(card);
+      byGrade.set(grade, (byGrade.get(grade) ?? 0) + paw);
       nextOwned[card.id] = { ...record, count: 1 };
     }
   } else {
@@ -212,6 +225,7 @@ export async function postDupExchange(
     }
     gained = dupPawForCard(card, config.economy) * take;
     converted = take;
+    byGrade.set(jellyGrade(card), gained);
     nextOwned[cardId] = { ...record, count: record.count - take };
   }
 
@@ -219,7 +233,18 @@ export async function postDupExchange(
     return { state, owned, response: { ok: false, reason: "바꿀 중복 카드가 없어요" } };
   }
 
-  const pawBalance = state.pawBalance + gained;
+  let pawBalance = state.pawBalance + gained;
+  if (await serverJellyActive()) {
+    for (const [grade, optimistic] of byGrade) {
+      if (optimistic <= 0) continue;
+      await jellyEnqueue({
+        rewardId: `dup:${grade}:${requestId}`,
+        reason: "dup",
+        optimistic,
+      });
+    }
+    pawBalance = displayJellyBalance(state.pawBalance);
+  }
   const entry: DupExchangeLedgerItem = {
     requestId,
     createdAt: Date.now(),

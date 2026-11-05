@@ -1,6 +1,7 @@
 import { track } from "./analytics";
 import { toKstDateKey } from "./date";
 import { saveOpsState } from "./opsStorage";
+import { displayJellyBalance, jellyEnqueue, serverJellyActive } from "./serverJelly";
 import type { OpsEconomy, OpsState } from "./opsTypes";
 
 /** v1 payout caps. Config cannot grant more 발바닥 젤리 than this table. */
@@ -98,9 +99,19 @@ export async function claimMission(
   const current = base.missionProgress[missionId] ?? 0;
   if (current < def.target) return { error: "아직이에요" };
   if (def.paw <= 0) return { error: "받을 젤리가 없어요" };
+  const today = base.missionDateKey || toKstDateKey();
+  let pawBalance = base.pawBalance + def.paw;
+  if (await serverJellyActive()) {
+    await jellyEnqueue({
+      rewardId: `mission:${missionId}:${today}`,
+      reason: "mission",
+      optimistic: def.paw,
+    });
+    pawBalance = displayJellyBalance(base.pawBalance);
+  }
   const next: OpsState = {
     ...base,
-    pawBalance: base.pawBalance + def.paw,
+    pawBalance,
     missionClaimedIds: [...base.missionClaimedIds, missionId],
   };
   await saveOpsState(next);

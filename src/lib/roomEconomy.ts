@@ -1,5 +1,6 @@
 import { loadOpsConfig, priceById } from "./opsConfig";
 import { loadOpsState, saveOpsState } from "./opsStorage";
+import { displayJellyBalance, serverJellyActive } from "./serverJelly";
 import { resolveCozyStatus } from "./roomCozy";
 import type { RoomItem, RoomSaveState } from "./roomTypes";
 
@@ -64,14 +65,20 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
     forceLevel: ops.devForceCozyLevel,
   });
 
-  // Prefer ops balance as source of truth when room still has mock seed.
-  const points = ops.pawBalance > 0 || state.points === 1240 ? ops.pawBalance : state.points;
+  // Server jelly spends before a room opens. Local preview still opens from the balance.
+  const serverJelly = await serverJellyActive();
+  const points = serverJelly
+    ? displayJellyBalance(ops.pawBalance)
+    : ops.pawBalance > 0 || state.points === 1240
+      ? ops.pawBalance
+      : state.points;
 
   const unlocked = config.economy.rooms
     .filter((room) => {
       if (room.unlock.type === "default") return true;
       // ops is source of truth — ignore mock-seeded state.unlocked
       if (ops.unlockedRoomIds.includes(room.id)) return true;
+      if (serverJelly) return false;
       const needPaw = room.unlock.paw ?? 0;
       const needLv = room.unlock.cozyLevel ?? 0;
       return points >= needPaw && cozy.level >= needLv;
