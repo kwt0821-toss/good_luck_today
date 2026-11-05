@@ -38,6 +38,35 @@ function delay(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+export const DUP_EXCHANGE_TIMEOUT_MS = 15_000;
+
+export class DupExchangeTimeoutError extends Error {
+  constructor() {
+    super("dup exchange timed out");
+    this.name = "DupExchangeTimeoutError";
+  }
+}
+
+/** Settle even if the exchange never returns, so the loading window can close. */
+export function withDupExchangeTimeout<T>(
+  promise: Promise<T>,
+  ms = DUP_EXCHANGE_TIMEOUT_MS,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new DupExchangeTimeoutError()), ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 export function buildDupExchangeRequestId(mode: "all" | "card", cardId?: string) {
   const id =
     typeof crypto !== "undefined" && "randomUUID" in crypto

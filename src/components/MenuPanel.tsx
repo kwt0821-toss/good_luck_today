@@ -38,7 +38,12 @@ import {
   buildTicketBuyRequestId,
   postShopTicketsBuy,
 } from "../lib/mockTicketShop";
-import { buildDupExchangeRequestId, postDupExchange } from "../lib/dupExchange";
+import {
+  DupExchangeTimeoutError,
+  buildDupExchangeRequestId,
+  postDupExchange,
+  withDupExchangeTimeout,
+} from "../lib/dupExchange";
 import { buildAttendanceDay7RequestId, readDay7BonusConfig } from "../lib/attendanceServer";
 import { ratesDisclosureNote, ratesDisclosureRows } from "../lib/drawRates";
 import { claimMission, listMissions } from "../lib/dailyMissions";
@@ -738,10 +743,12 @@ export function MenuPanel({
     if (!ok) return;
     setExchangeBusy(true);
     try {
-      const result = await postDupExchange(ops, {
-        mode: "all",
-        requestId: buildDupExchangeRequestId("all"),
-      });
+      const result = await withDupExchangeTimeout(
+        postDupExchange(ops, {
+          mode: "all",
+          requestId: buildDupExchangeRequestId("all"),
+        }),
+      );
       if (!result.response.ok) {
         nyNotify({
           key: "dup-exchange-fail",
@@ -762,6 +769,13 @@ export function MenuPanel({
       AudioManager.playSfx("reward-coin");
       void haptic("success");
       closeSheet();
+    } catch (error) {
+      nyNotify({
+        key: error instanceof DupExchangeTimeoutError ? "dup-exchange-timeout" : "dup-exchange-fail",
+        kind: "error",
+        title:
+          error instanceof DupExchangeTimeoutError ? "잠시 후 다시 시도해 주세요" : "바꾸지 못했어요",
+      });
     } finally {
       setExchangeBusy(false);
     }

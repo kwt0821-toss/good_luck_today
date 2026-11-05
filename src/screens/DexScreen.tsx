@@ -38,10 +38,15 @@ import {
 import { unseenDexRewardIds } from "../lib/dexSeen";
 import { track } from "../lib/analytics";
 import { haptic } from "../lib/native";
-import { nyConfirm, nyNotify } from "../lib/nyangNotify";
+import { nyNotify } from "../lib/nyangNotify";
 import { NyChip } from "../components/NyChip";
 import type { DexCard, DexCatalog, DexOwnedMap, DexTab } from "../lib/dexTypes";
-import { buildDupExchangeRequestId, postDupExchange } from "../lib/dupExchange";
+import {
+  DupExchangeTimeoutError,
+  buildDupExchangeRequestId,
+  postDupExchange,
+  withDupExchangeTimeout,
+} from "../lib/dupExchange";
 import { dupPawForCard } from "../lib/drawRates";
 import { loadOpsConfig } from "../lib/opsConfig";
 import type { OpsEconomy, OpsState } from "../lib/opsTypes";
@@ -743,41 +748,44 @@ export function DexScreen({
           onClose={() => setOpenCard(null)}
           onChangeCard={setOpenCard}
           onConvertDuplicate={async (card, qty) => {
-            const unit = economy ? dupPawForCard(card, economy) : 0;
-            const ok = await nyConfirm({
-              key: "dex-dup",
-              title: `중복 카드 ${qty}장을 바꿀까요?`,
-              body: "젤리로 바꾸면 되돌릴 수 없어요",
-              badge: unit > 0 ? `+${unit * qty} 젤리` : undefined,
-              cancelLabel: "취소",
-              confirmLabel: "바꾸기",
-            });
-            if (!ok) return;
-            const result = await postDupExchange(ops, {
-              mode: "card",
-              cardId: card.id,
-              qty,
-              requestId: buildDupExchangeRequestId("card", card.id),
-            });
-            if (!result.response.ok) {
+            try {
+              const result = await withDupExchangeTimeout(
+                postDupExchange(ops, {
+                  mode: "card",
+                  cardId: card.id,
+                  qty,
+                  requestId: buildDupExchangeRequestId("card", card.id),
+                }),
+              );
+              if (!result.response.ok) {
+                nyNotify({
+                  key: "dex-dup-fail",
+                  kind: "error",
+                  title: "바꾸지 못했어요",
+                  sub: result.response.reason,
+                });
+                return;
+              }
+              onOpsChange(result.state);
+              setOwned(result.owned);
               nyNotify({
-                key: "dex-dup-fail",
-                kind: "error",
-                title: "바꾸지 못했어요",
-                sub: result.response.reason,
+                key: "dup-exchange-done",
+                kind: "reward",
+                title: `{paw} <b>+${result.response.gained}</b> 받았어요`,
+                count: result.response.gained,
               });
-              return;
+              void haptic("success");
+              AudioManager.playSfx("reward-coin");
+            } catch (error) {
+              nyNotify({
+                key: error instanceof DupExchangeTimeoutError ? "dex-dup-timeout" : "dex-dup-fail",
+                kind: "error",
+                title:
+                  error instanceof DupExchangeTimeoutError
+                    ? "잠시 후 다시 시도해 주세요"
+                    : "바꾸지 못했어요",
+              });
             }
-            onOpsChange(result.state);
-            setOwned(result.owned);
-            nyNotify({
-              key: "dup-exchange-done",
-              kind: "reward",
-              title: `{paw} <b>+${result.response.gained}</b> 받았어요`,
-              count: result.response.gained,
-            });
-            void haptic("success");
-            AudioManager.playSfx("reward-coin");
           }}
         />
       ) : null}

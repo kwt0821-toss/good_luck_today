@@ -496,7 +496,7 @@ export function DexDetailSheet({
         {dupCount > 0 && onConvertDuplicate && dupPhase === "confirm" ? (
           <div className="dex-dup-confirm" role="alertdialog" aria-label="중복 카드 바꾸기 확인">
             <p className="dex-dup-confirm-title">
-              {dupQty}장을 {dupPawTotal.toLocaleString("ko-KR")}P로 바꿀까요?
+              {dupQty}장을 발바닥 젤리 {dupPawTotal.toLocaleString("ko-KR")}개로 바꿀까요?
             </p>
             <p className="dex-dup-meta">카드마다 1장은 도감에 남아요 · 바꾼 카드는 되돌릴 수 없어요</p>
             <div className="dex-dup-actions">
