@@ -55,6 +55,9 @@ let dirty = false;
 let debounceTimer: number | null = null;
 let inFlight = false;
 let runAgain = false;
+let runAgainUrgent = false;
+/** True only while an urgent flush is inside saveToServer, so logs name that save. */
+let urgentSave = false;
 let lifecycleInstalled = false;
 let bootFinished = false;
 let bootPromise: Promise<void> | null = null;
@@ -106,11 +109,13 @@ function reportLoad(
 }
 
 function reportSaveOk(version: number) {
-  console.info(`[serverSave] save ok version=${version}`);
+  const kind = urgentSave ? "save urgent ok" : "save ok";
+  console.info(`[serverSave] ${kind} version=${version}`);
 }
 
 function reportSaveFailed(code: string) {
-  console.info(`[serverSave] save failed code=${code}`);
+  const kind = urgentSave ? "save urgent failed" : "save failed";
+  console.info(`[serverSave] ${kind} code=${code}`);
 }
 
 export function functionEndpoint(name: "game-save" | "wallet"): { url: string; apikey: string } | null {
@@ -638,7 +643,7 @@ export function syncGameSaveOnBoot(): Promise<void> {
   return bootPromise;
 }
 
-async function flush(keepalive: boolean) {
+async function flush(keepalive: boolean, urgent = false) {
   if (debounceTimer != null) {
     window.clearTimeout(debounceTimer);
     debounceTimer = null;
@@ -646,12 +651,15 @@ async function flush(keepalive: boolean) {
   if (!dirty) return;
   if (inFlight) {
     runAgain = true;
+    if (urgent) runAgainUrgent = true;
     return;
   }
   dirty = false;
   inFlight = true;
+  urgentSave = urgent;
   let ok = false;
   try {
+    if (urgent) console.info("[serverSave] save urgent start");
     ok = await saveToServer({ keepalive });
     if (!ok) dirty = true;
   } catch (error) {
@@ -660,13 +668,18 @@ async function flush(keepalive: boolean) {
     reportSaveFailed("save_failed");
   } finally {
     inFlight = false;
+    urgentSave = false;
     if (runAgain) {
+      const againUrgent = urgent || runAgainUrgent;
       runAgain = false;
+      runAgainUrgent = false;
       dirty = true;
-      if (ok) void flush(keepalive);
+      if (ok) void flush(keepalive, againUrgent);
     }
   }
 }
+
+const URGENT_MAX_MS = 500;
 
 /** One of the four local keys was written. Upload 3s later. */
 export function markDirty() {
@@ -677,6 +690,31 @@ export function markDirty() {
     debounceTimer = null;
     void flush(false);
   }, DEBOUNCE_MS);
+}
+
+/**
+ * Upload the current bundle without waiting out the 3s debounce.
+ * Used after a draw grows the dex, once ops is saved into the same bundle.
+ * In-flight saves stay serialized: a second call sets runAgain instead of posting twice.
+ */
+export function markDirtyUrgent(options?: { delayMs?: number; keepalive?: boolean }): void {
+  if (!endpoint() || !isTossApp()) return;
+  dirty = true;
+  const raw = options?.delayMs ?? 0;
+  const delayMs = Math.min(URGENT_MAX_MS, Math.max(0, Number.isFinite(raw) ? raw : 0));
+  const keepalive = options?.keepalive === true;
+  if (debounceTimer != null) {
+    window.clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+  if (delayMs <= 0) {
+    void flush(keepalive, true);
+    return;
+  }
+  debounceTimer = window.setTimeout(() => {
+    debounceTimer = null;
+    void flush(keepalive, true);
+  }, delayMs);
 }
 
 export function installServerSaveLifecycle() {

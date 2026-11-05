@@ -15,6 +15,7 @@ import {
   remainingTotalDraws,
 } from "./opsState";
 import { saveOpsState } from "./opsStorage";
+import { markDirtyUrgent } from "./serverSave";
 import type { ConfirmDrawResult, DrawReservation, OpsConfig, OpsState } from "./opsTypes";
 
 function delay(ms: number) {
@@ -184,6 +185,7 @@ export async function confirmDrawAfterAd(
 
   next = bumpMission({ ...next, pendingDraw: confirmed }, "draw_1", 1, today, config.economy);
   await saveOpsState(next);
+  markDirtyUrgent();
 
   return {
     state: next,
