@@ -22,7 +22,9 @@ export type AnalyticsEvent =
   | "toss_reward_result"
   | "room_open"
   | "room_item_buy"
-  | "room_cat_tap";
+  | "room_cat_tap"
+  | "mission_progress"
+  | "mission_claim";
 
 export type AdPlacement =
   | "draw_normal"

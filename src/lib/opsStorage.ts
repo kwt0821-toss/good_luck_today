@@ -73,6 +73,16 @@ function parseStringArray(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === "string");
 }
 
+function parseMissionProgress(value: unknown): Record<string, number> {
+  if (!isRecord(value)) return {};
+  const out: Record<string, number> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (typeof raw !== "number" || !Number.isFinite(raw) || raw <= 0) continue;
+    out[key] = Math.floor(raw);
+  }
+  return out;
+}
+
 function parseOps(raw: string | null, fallback: OpsState): OpsState {
   if (!raw) return fallback;
   try {
@@ -326,6 +336,10 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         typeof parsed.attendanceNyangCoinYear === "number"
           ? parsed.attendanceNyangCoinYear
           : fallback.attendanceNyangCoinYear,
+      missionDateKey:
+        typeof parsed.missionDateKey === "string" ? parsed.missionDateKey : fallback.missionDateKey,
+      missionProgress: parseMissionProgress(parsed.missionProgress),
+      missionClaimedIds: parseStringArray(parsed.missionClaimedIds),
       notifyAttendance: normalizeNotifyAttendance(
         isRecord(parsed.notifyAttendance) ? parsed.notifyAttendance : fallback.notifyAttendance,
       ),

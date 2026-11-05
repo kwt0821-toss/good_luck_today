@@ -52,6 +52,7 @@
    "id": "daily",
    "label": "DAILY",
    "rows": [
+    "missions",
     "attendance",
     "points",
     "exchange",
@@ -72,6 +73,12 @@
   }
  ],
  "rows": {
+  "missions": {
+   "label": "오늘의 미션",
+   "icon": "icon-stamp.svg",
+   "enabled": true,
+   "open": "sheet:missions"
+  },
   "attendance": {
    "label": "출석 체크",
    "icon": "icon-attendance.svg",

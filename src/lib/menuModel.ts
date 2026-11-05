@@ -1,4 +1,5 @@
 import { getAttendanceStatus } from "./attendanceServer";
+import { listMissions } from "./dailyMissions";
 import type { AttendanceStatusResponse } from "./attendanceTypes";
 import { loadDexCatalog } from "./dexCatalog";
 import { loadDexOwned } from "./dexCollection";
@@ -122,7 +123,20 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
     let badge: MenuBadge = { type: "none" };
     let rowDisabled = !enabled;
 
-    if (id === "attendance") {
+    if (id === "missions") {
+      const missions = listMissions(ops, config.economy);
+      const claimable = missions.filter((item) => item.status === "claimable").length;
+      const done = missions.filter((item) => item.status === "done").length;
+      const reached = missions.filter((item) => item.current >= item.target).length;
+      if (claimable > 0) {
+        meta = `받을 보상 ${claimable}`;
+        badge = { type: "dot" };
+      } else if (missions.length > 0 && done === missions.length) {
+        meta = "오늘 전부 완료";
+      } else {
+        meta = `진행 ${reached}/${missions.length}`;
+      }
+    } else if (id === "attendance") {
       meta = attendance.canClaimToday
         ? `${Math.max(1, attendance.attendanceDays + 1)}일째 · 선물`
         : `누적 ${attendance.attendanceDays}일`;

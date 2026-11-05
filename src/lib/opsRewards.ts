@@ -1,3 +1,4 @@
+import { bumpMission } from "./dailyMissions";
 import { toKstDateKey } from "./date";
 import { loadDexCatalog } from "./dexCatalog";
 import { readDexOwnedForUpdate, saveDexOwned } from "./dexCollection";
@@ -181,7 +182,7 @@ export async function confirmDrawAfterAd(
       : duplicateRevealCopy(dupPaw);
   }
 
-  next = { ...next, pendingDraw: confirmed };
+  next = bumpMission({ ...next, pendingDraw: confirmed }, "draw_1", 1, today, config.economy);
   await saveOpsState(next);
 
   return {
@@ -344,7 +345,9 @@ export async function claimAttendanceGift(
   }
   const itemId =
     result.response.rewards.find((reward) => reward.kind === "item")?.itemId ?? null;
-  return { state: result.state, itemId, response: result.response };
+  const bumped = bumpMission(result.state, "attend_1");
+  if (bumped !== result.state) await saveOpsState(bumped);
+  return { state: bumped, itemId, response: result.response };
 }
 
 /** POST /attendance/day7/claim — weekly cycle day 7 + optional ad bonus. */
@@ -363,7 +366,11 @@ export async function claimAttendanceDay7(
   const { claimAttendanceDay7OnServer } = await import("./attendanceServer");
   const today = toKstDateKey();
   const next = applyOpsDailyReset(state, today);
-  return claimAttendanceDay7OnServer(next, body);
+  const result = await claimAttendanceDay7OnServer(next, body);
+  if (!result.response.ok) return result;
+  const bumped = bumpMission(result.state, "attend_1");
+  if (bumped !== result.state) await saveOpsState(bumped);
+  return { state: bumped, response: result.response };
 }
 
 /** @deprecated attendance is never auto-granted on boot */

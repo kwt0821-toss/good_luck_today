@@ -44,6 +44,7 @@ import { configureNavigationBar, haptic, isInTossApp } from "./lib/native";
 import { isOffline } from "./lib/network";
 import { useTossSafeArea } from "./lib/useTossSafeArea";
 import { isWeekendDoublePaw, loadOpsConfig } from "./lib/opsConfig";
+import { bumpMission, listMissions } from "./lib/dailyMissions";
 import { josa } from "./lib/josa";
 import { readDay7BonusConfig } from "./lib/attendanceServer";
 import {
@@ -64,6 +65,7 @@ import {
   shouldOfferTicketShopOnRateUp,
 } from "./lib/mockTicketShop";
 import {
+  applyOpsDailyReset,
   daysSinceInstall,
   drawAgainLabel,
   nextDrawKind,
@@ -493,6 +495,11 @@ export default function App() {
       setMenuOpen(true);
       setHighlightMenuRowId("points");
     };
+    const openMissions = () => {
+      setScreen({ name: "home" });
+      setForceMenuSheet("missions");
+      setMenuOpen(true);
+    };
     const onNotifyAttendance = (event: Event) => {
       const detail = (event as CustomEvent<NotifyAttendanceState>).detail;
       if (!detail) return;
@@ -516,16 +523,29 @@ export default function App() {
     window.addEventListener("lucky-open-dex", openDex);
     window.addEventListener("lucky-open-rewards", openRewards);
     window.addEventListener("lucky-open-menu-points", openMenuPoints);
+    window.addEventListener("lucky-open-missions", openMissions);
     window.addEventListener(ATTENDANCE_NOTIFY_STATE_EVENT, onNotifyAttendance);
     return () => {
       window.removeEventListener("lucky-open-dex", openDex);
       window.removeEventListener("lucky-open-rewards", openRewards);
       window.removeEventListener("lucky-open-menu-points", openMenuPoints);
+      window.removeEventListener("lucky-open-missions", openMissions);
       window.removeEventListener(ATTENDANCE_NOTIFY_STATE_EVENT, onNotifyAttendance);
     };
   }, [setScreen]);
 
   const clearMenuHighlight = useCallback(() => setHighlightMenuRowId(null), []);
+
+  const onRoomOpened = useCallback(() => {
+    setOps((current) => {
+      if (!current) return current;
+      const reset = applyOpsDailyReset(current);
+      const next = bumpMission(reset, "room_1");
+      if (next === current) return current;
+      void saveOpsState(next);
+      return next;
+    });
+  }, []);
 
   const closeMenu = useCallback(() => {
     setMenuOpen(false);
@@ -632,6 +652,10 @@ export default function App() {
     if (current.session.purpose === "paw") setMenuOpen(true);
   }, [adIntro, ops, persistOps]);
 
+  const missionNudge =
+    ops && config
+      ? listMissions(ops, config.economy).some((item) => item.status === "claimable")
+      : false;
   const remainingDraws = ops && config ? remainingTotalDraws(ops, config) : 0;
   const remainingNormal = ops && config ? remainingNormalDraws(ops, config) : 0;
   const remainingRateUp = ops && config ? remainingRateUpDraws(ops, config) : 0;
@@ -1783,6 +1807,7 @@ export default function App() {
           }
           reduceMotion={reduceMotion}
           onReady={() => setRoomScreenReady(true)}
+          onRoomOpened={onRoomOpened}
           onTutorialPicked={() => {
             if (roomTutPhase === "pick") setRoomTutPhase("preview");
           }}
@@ -1912,6 +1937,11 @@ export default function App() {
           onOpenRoom={() => setScreen({ name: "room" })}
           onOpenTitles={() => setAchvOpen(true)}
           showRewardsNudge={showRewardsNudgeBase && remainingNormal <= 0}
+          missionNudge={missionNudge}
+          onOpenMissions={() => {
+            setForceMenuSheet("missions");
+            setMenuOpen(true);
+          }}
         />
       ) : null}
 

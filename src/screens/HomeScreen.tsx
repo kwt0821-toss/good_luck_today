@@ -68,6 +68,9 @@ type HomeScreenProps = {
   onOpenTitles?: () => void;
   /** Draws are used up and 젤리·냥코인 받기 still has claims left. */
   showRewardsNudge?: boolean;
+  /** A finished mission is waiting to be claimed. */
+  missionNudge?: boolean;
+  onOpenMissions?: () => void;
 };
 
 export function HomeScreen({
@@ -95,6 +98,8 @@ export function HomeScreen({
   onOpenRoom,
   onOpenTitles,
   showRewardsNudge = false,
+  missionNudge = false,
+  onOpenMissions,
 }: HomeScreenProps) {
   const [waking, setWaking] = useState(false);
   const [flipping, setFlipping] = useState(false);
@@ -319,6 +324,12 @@ export function HomeScreen({
           nyangCoinBalance={nyangCoinBalance}
           locked={walletChipsLocked}
         />
+
+        {missionNudge && !walletChipsLocked && onOpenMissions ? (
+          <button type="button" className="main-mission-nudge" onClick={onOpenMissions}>
+            오늘의 미션 보상 기다리는 중
+          </button>
+        ) : null}
 
         <div className="main-meta">
           <p>고양이가 골라 주는 오늘의 행운</p>

@@ -67,6 +67,9 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     attendanceDay7Ledger: [],
     attendanceNyangYearKey: today.slice(0, 4),
     attendanceNyangCoinYear: 0,
+    missionDateKey: today,
+    missionProgress: {},
+    missionClaimedIds: [],
     notifyAttendance: { agreed: false, askCount: 0, askedAt: 0 },
   };
 }
@@ -86,7 +89,16 @@ export function syncTicketShopWindows(state: OpsState, today = toKstDateKey()): 
 
 export function applyOpsDailyReset(state: OpsState, today = toKstDateKey()): OpsState {
   const synced = syncTicketShopWindows(state, today);
-  if (synced.dateKey === today) return synced;
+  const missionsStale = synced.missionDateKey !== today;
+  if (synced.dateKey === today && !missionsStale) return synced;
+  if (synced.dateKey === today) {
+    return {
+      ...synced,
+      missionDateKey: today,
+      missionProgress: {},
+      missionClaimedIds: [],
+    };
+  }
   return {
     ...synced,
     dateKey: today,
@@ -96,6 +108,9 @@ export function applyOpsDailyReset(state: OpsState, today = toKstDateKey()): Ops
     adDrawNyangToday: 0,
     adPawNyangToday: 0,
     pendingDraw: null,
+    missionDateKey: today,
+    missionProgress: {},
+    missionClaimedIds: [],
   };
 }
 

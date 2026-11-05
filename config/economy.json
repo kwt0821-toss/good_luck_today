@@ -746,5 +746,14 @@
     "adsDailyMaxTotal": 14,
     "adsYearlyMaxTotal": 5110,
     "adsDailyMaxNote": "광고 뽑기 4 + 젤리 광고 10"
+  },
+  "dailyMissions": {
+    "resetTimeKST": "00:00",
+    "claimMode": "manual",
+    "items": [
+      { "id": "draw_1", "title": "카드 뽑기", "desc": "오늘 카드 1장 뽑기", "target": 1, "paw": 10 },
+      { "id": "attend_1", "title": "출석 체크", "desc": "오늘 출석 선물 받기", "target": 1, "paw": 10 },
+      { "id": "room_1", "title": "방 놀러 가기", "desc": "내 방에 한 번 들어가기", "target": 1, "paw": 5 }
+    ]
   }
 }

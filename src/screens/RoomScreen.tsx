@@ -114,6 +114,8 @@ type RoomScreenProps = {
   onTutorialComplete?: () => void;
   /** Fires once when catalog/layout/ops are ready (after loading gate). */
   onReady?: () => void;
+  /** Fires with room_open, once the room screen is actually up. */
+  onRoomOpened?: () => void;
 };
 
 function formatPoints(value: number) {
@@ -331,6 +333,7 @@ export function RoomScreen({
   onTutorialPlaced,
   onTutorialComplete,
   onReady,
+  onRoomOpened,
 }: RoomScreenProps) {
   const [items, setItems] = useState<RoomItem[]>([]);
   const [grid, setGrid] = useState<RoomGridFile | null>(null);
@@ -639,6 +642,7 @@ export function RoomScreen({
     let alive = true;
     const timer = window.setTimeout(() => {
       if (!alive) return;
+      onRoomOpened?.();
       let platform: "ios" | "android" | undefined;
       try {
         const os = getPlatformOS();
@@ -652,7 +656,7 @@ export function RoomScreen({
       alive = false;
       window.clearTimeout(timer);
     };
-  }, []);
+  }, [onRoomOpened]);
 
   useEffect(() => {
     previewHudModeRef.current = previewHudMode;

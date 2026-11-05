@@ -41,6 +41,7 @@ import {
 import { buildDupExchangeRequestId, postDupExchange } from "../lib/dupExchange";
 import { buildAttendanceDay7RequestId, readDay7BonusConfig } from "../lib/attendanceServer";
 import { ratesDisclosureNote, ratesDisclosureRows } from "../lib/drawRates";
+import { claimMission, listMissions } from "../lib/dailyMissions";
 import { claimAttendanceDay7, claimAttendanceGift } from "../lib/opsRewards";
 import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
 import type { MenuSheetId } from "../lib/menuTypes";
@@ -151,9 +152,16 @@ export function MenuPanel({
   const [exchangeBusy, setExchangeBusy] = useState(false);
   const [pawTipOpen, setPawTipOpen] = useState(false);
   const [day7Busy, setDay7Busy] = useState(false);
+  const [missionBusy, setMissionBusy] = useState(false);
+  const missionBusyRef = useRef(false);
   const [day7AdExhausted, setDay7AdExhausted] = useState(false);
   const menuRequestBusy =
-    withdrawBusy || exchangeBusy || ticketBuyBusy || attendBusy || (day7Busy && !day7AdWaiting);
+    withdrawBusy ||
+    exchangeBusy ||
+    ticketBuyBusy ||
+    attendBusy ||
+    missionBusy ||
+    (day7Busy && !day7AdWaiting);
   useLoadingHold("menu-request", menuRequestBusy);
   const day7RequestIdRef = useRef<string | null>(null);
   const reduce = shouldReduceMenuMotion(settings);
@@ -497,6 +505,29 @@ export function MenuPanel({
       return;
     }
     if (open === "page:settings") openSheet("settings");
+  };
+
+  const claimMissionReward = async (missionId: string) => {
+    if (!model || missionBusyRef.current) return;
+    missionBusyRef.current = true;
+    setMissionBusy(true);
+    try {
+      const result = await claimMission(ops, missionId, model.config.economy);
+      if ("error" in result) {
+        nyNotify({ key: "mission-claim", kind: "info", title: result.error });
+        return;
+      }
+      onOpsChange(result.state);
+      nyNotify({
+        key: "mission-claim",
+        kind: "reward",
+        title: jellyLabel(result.gained, true),
+        anchor: "menu",
+      });
+    } finally {
+      missionBusyRef.current = false;
+      setMissionBusy(false);
+    }
   };
 
   const notifyDay7Claim = (
@@ -1062,7 +1093,9 @@ export function MenuPanel({
               onPointerUp={onSheetPointerUp}
               style={{
                 minHeight:
-                  sheet === "attendance"
+                  sheet === "missions"
+                    ? 480
+                    : sheet === "attendance"
                     ? attState === "weeklyCycle"
                       ? 520
                       : 560
@@ -1078,7 +1111,9 @@ export function MenuPanel({
               <div className="menu-grab" />
               <div className="menu-sheet-head">
                 <p className="menu-sheet-eye">
-                  {sheet === "attendance"
+                  {sheet === "missions"
+                    ? "TODAY"
+                    : sheet === "attendance"
                     ? model.menu.sheets.attendance.eyebrow
                     : sheet === "rates"
                       ? model.menu.sheets.rates.eyebrow
@@ -1093,7 +1128,9 @@ export function MenuPanel({
                               : "NOTICE"}
                 </p>
                 <h3 className="menu-sheet-title">
-                  {sheet === "attendance"
+                  {sheet === "missions"
+                    ? "오늘의 미션"
+                    : sheet === "attendance"
                     ? model.menu.sheets.attendance.title
                     : sheet === "rates"
                       ? model.menu.sheets.rates.title
@@ -1108,7 +1145,9 @@ export function MenuPanel({
                               : "공지·이벤트"}
                 </h3>
                 <p className="menu-sheet-desc">
-                  {sheet === "attendance"
+                  {sheet === "missions"
+                    ? "매일 밤 12시(한국 시간)에 새로워져요"
+                    : sheet === "attendance"
                     ? (attCopy?.desc ?? model.menu.sheets.attendance.desc ?? "").replace(
                         "{day7.nameKo}",
                         model.attendance.firstWeekGifts[6]?.nameKo ?? "캣타워",
@@ -1137,6 +1176,38 @@ export function MenuPanel({
               </div>
 
               <div className="menu-sheet-body">
+                {sheet === "missions" && model ? (
+                  <ul className="mission-list">
+                    {listMissions(ops, model.config.economy).map((mission) => {
+                      const label =
+                        mission.status === "done"
+                          ? "받음"
+                          : mission.status === "claimable"
+                            ? "젤리 받기"
+                            : "아직이에요";
+                      return (
+                        <li key={mission.id} className="mission-item">
+                          <div className="mission-copy">
+                            <p className="mission-title">{mission.title}</p>
+                            <p className="mission-desc">{mission.desc}</p>
+                            <p className="mission-progress">
+                              {mission.current}/{mission.target} · {jellyLabel(mission.paw, true)}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            className="mission-claim"
+                            disabled={mission.status !== "claimable" || missionBusy}
+                            onClick={() => void claimMissionReward(mission.id)}
+                          >
+                            {label}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : null}
+
                 {sheet === "attendance" && attState === "firstWeek" ? (
                   <>
                     <div className="att-grid">

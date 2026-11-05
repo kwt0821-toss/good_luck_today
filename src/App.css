@@ -987,6 +987,22 @@
   box-sizing: border-box;
 }
 
+.main-mission-nudge {
+  display: block;
+  width: calc(100% - 48px);
+  margin: 6px 24px 0;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(243, 235, 215, 0.35);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cream, #f3ebd7);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .main-meta {
   display: flex;
   align-items: center;

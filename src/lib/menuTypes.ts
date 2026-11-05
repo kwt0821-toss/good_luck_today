@@ -175,6 +175,7 @@ export type MenuSheetId =
   | "rewards"
   | "notice"
   | "settings"
+  | "missions"
   | null;
 
 export type RewardInboxItem = {

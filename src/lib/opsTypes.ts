@@ -278,6 +278,18 @@ export type OpsEconomy = {
       grantOn?: string;
     };
   };
+  /** Daily checklist. Rewards are 발바닥 젤리 only, claimed by hand. */
+  dailyMissions?: {
+    resetTimeKST?: string;
+    claimMode?: string;
+    items?: Array<{
+      id: string;
+      title: string;
+      desc: string;
+      target: number;
+      paw: number;
+    }>;
+  };
 };
 
 export type PriceTier = "small" | "normal" | "large" | "wall" | "tile" | "legend";
@@ -730,6 +742,12 @@ export type OpsState = {
   attendanceNyangYearKey: string;
   /** 냥코인 granted from attendance day7 bonus in the current KST year. */
   attendanceNyangCoinYear: number;
+  /** KST date the daily missions belong to. */
+  missionDateKey: string;
+  /** Mission id → progress today. Capped at each mission's target. */
+  missionProgress: Record<string, number>;
+  /** Mission ids whose 발바닥 젤리 was claimed today. */
+  missionClaimedIds: string[];
   /**
    * Attendance notification consent. Missing on older saves — treat as
    * { agreed: false, askCount: 0, askedAt: 0 }.
