@@ -33,7 +33,14 @@ import {
   inspectTossPointGrant,
   postWalletWithdraw,
 } from "../lib/mockWallet";
-import { getWalletSnapshot, serverWalletActive, walletGet } from "../lib/serverWallet";
+import {
+  displayNyangBalance,
+  getWalletSnapshot,
+  serverWalletActive,
+  subscribeServerWallet,
+  subscribeWalletView,
+  walletGet,
+} from "../lib/serverWallet";
 import {
   buildTicketBuyRequestId,
   postShopTicketsBuy,
@@ -135,6 +142,7 @@ export function MenuPanel({
   onHighlightDone,
 }: MenuPanelProps) {
   const [model, setModel] = useState<MenuViewModel | null>(null);
+  const [shownNyang, setShownNyang] = useState<number | null>(null);
   const [closing, setClosing] = useState(false);
   const [sheet, setSheet] = useState<MenuSheetId>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -223,6 +231,18 @@ export function MenuPanel({
     if (open || !highlightRowId) return;
     onHighlightDone?.();
   }, [open, highlightRowId, onHighlightDone]);
+
+  useEffect(() => {
+    if (!model) return;
+    const sync = () => setShownNyang(displayNyangBalance(model.nyangCoinBalance));
+    sync();
+    const offStatus = subscribeServerWallet(sync);
+    const offView = subscribeWalletView(sync);
+    return () => {
+      offStatus();
+      offView();
+    };
+  }, [model]);
 
   useEffect(() => {
     if (!open) {
@@ -959,7 +979,7 @@ export function MenuPanel({
                 <button type="button" className="menu-stat is-tap" onClick={() => openSheet("rewards")}>
                   <div className="menu-stat-value">
                     <img src={ncoinIcon(14)} alt="" />
-                    {model.nyangCoinBalance.toLocaleString("ko-KR")}
+                    {(shownNyang ?? model.nyangCoinBalance).toLocaleString("ko-KR")}
                   </div>
                   <div className="menu-stat-label">냥코인</div>
                 </button>
@@ -1585,7 +1605,7 @@ export function MenuPanel({
                         </div>
                         <div className="wallet-card-value">
                           <img src={ncoinIcon(24)} alt="" width={24} height={24} />
-                          {model.nyangCoinBalance.toLocaleString("ko-KR")}
+                          {(shownNyang ?? model.nyangCoinBalance).toLocaleString("ko-KR")}
                           <small>냥코인</small>
                         </div>
                       </div>

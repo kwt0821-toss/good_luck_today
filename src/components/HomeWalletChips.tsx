@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 
 import { shouldReduceMenuMotion } from "../lib/menuSettings";
 import { NCOIN_ICON } from "../lib/ncoinIcon";
-import { getWalletSnapshot, serverWalletActiveNow, subscribeWalletView } from "../lib/serverWallet";
+import {
+  displayNyangBalance,
+  subscribeServerWallet,
+  subscribeWalletView,
+} from "../lib/serverWallet";
 import "./HomeWalletChips.css";
 
 const PAW_ICON = "/assets/menu/icon-paw-coin.svg";
@@ -40,10 +44,7 @@ export function HomeWalletChips({
   locked = false,
 }: HomeWalletChipsProps) {
   const [reduce, setReduce] = useState(() => shouldReduceMenuMotion());
-  const [serverNyang, setServerNyang] = useState<number | null>(() =>
-    serverWalletActiveNow() ? (getWalletSnapshot()?.balance ?? null) : null,
-  );
-  const serverOn = serverWalletActiveNow();
+  const [nyang, setNyang] = useState(() => displayNyangBalance(nyangCoinBalance));
 
   useEffect(() => {
     const sync = () => setReduce(shouldReduceMenuMotion());
@@ -54,15 +55,15 @@ export function HomeWalletChips({
   }, []);
 
   useEffect(() => {
-    if (!serverWalletActiveNow()) {
-      setServerNyang(null);
-      return;
-    }
-    setServerNyang(getWalletSnapshot()?.balance ?? null);
-    return subscribeWalletView((view) => setServerNyang(view.balance));
-  }, [serverOn]);
-
-  const nyang = serverOn ? serverNyang : nyangCoinBalance;
+    const sync = () => setNyang(displayNyangBalance(nyangCoinBalance));
+    sync();
+    const offStatus = subscribeServerWallet(sync);
+    const offView = subscribeWalletView(sync);
+    return () => {
+      offStatus();
+      offView();
+    };
+  }, [nyangCoinBalance]);
   const paw: number | null = pawBalance;
   const nyangPop = usePop(nyang, reduce);
   const pawPop = usePop(paw, reduce);

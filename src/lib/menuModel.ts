@@ -12,7 +12,7 @@ import {
   remainingTodayAmount,
   withdrawnTodayAmount,
 } from "./mockWallet";
-import { getWalletSnapshot, serverWalletActiveNow } from "./serverWallet";
+import { displayNyangBalance, getWalletSnapshot, serverWalletActiveNow } from "./serverWallet";
 import { isWeekendDoublePaw, loadOpsConfig } from "./opsConfig";
 import { getTicketShopStatus } from "./mockTicketShop";
 import { remainingPawAds } from "./opsState";
@@ -158,10 +158,11 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
       const shop = getTicketShopStatus(ops, config);
       meta = `보유 ${shop.ticketsHeld}장`;
     } else if (id === "rewards") {
+      const shownNyang = displayNyangBalance(ops.nyangCoinBalance);
       meta =
         dexClaimableCount > 0
-          ? `{ncoin}${ops.nyangCoinBalance} · 보상 ${dexClaimableCount}`
-          : `{ncoin}${ops.nyangCoinBalance}`;
+          ? `{ncoin}${shownNyang} · 보상 ${dexClaimableCount}`
+          : `{ncoin}${shownNyang}`;
       if (unseenCount > 0) badge = { type: "dot" };
     } else if (id === "rates") {
       meta = `5성↑ ${highlightPct}%`;

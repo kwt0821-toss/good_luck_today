@@ -20,6 +20,8 @@ const MIGRATE_MS = 15_000;
 const WITHDRAW_MS = 25_000;
 const EARN_CHUNK = 60;
 const BOOT_WAIT_MS = 5000;
+const BOOT_RETRY_MS = [3_000, 10_000, 30_000];
+const BALANCE_CACHE_KEY = "lucky-cat.wallet-balance.v1";
 
 const HISTORY_STATUSES = ["sending", "done", "failed", "unknown", "manual_review"] as const;
 export type WalletHistoryStatus = (typeof HISTORY_STATUSES)[number];
@@ -102,6 +104,8 @@ let modeLogged = "";
 let bootSync: Promise<WalletView | null> | null = null;
 let earnTail: Promise<void> = Promise.resolve();
 let recheckTimers: number[] = [];
+let bootRetryTimers: number[] = [];
+let refreshInstalled = false;
 
 const status: ServerWalletStatus = {
   mode: "server",
@@ -176,10 +180,87 @@ function note(last: string) {
   emitStatus();
 }
 
+function readBalanceMap(): Record<string, number> {
+  try {
+    const raw = localStorage.getItem(BALANCE_CACHE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isRecord(parsed)) return {};
+    const map: Record<string, number> = {};
+    for (const [hash, value] of Object.entries(parsed)) {
+      if (typeof value === "number" && Number.isFinite(value)) map[hash] = value;
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+function rememberBalance(balance: number) {
+  const hash = readStoredGameUserHash();
+  if (!hash || hash === "local-dev" || !Number.isFinite(balance)) return;
+  try {
+    const map = readBalanceMap();
+    map[hash] = balance;
+    localStorage.setItem(BALANCE_CACHE_KEY, JSON.stringify(map));
+  } catch {
+    // private mode / quota
+  }
+}
+
+/** Last server balance for this device user. Null until a snapshot has been saved. */
+export function readCachedWalletBalance(): number | null {
+  const hash = readStoredGameUserHash();
+  if (!hash || hash === "local-dev") return null;
+  const value = readBalanceMap()[hash];
+  return typeof value === "number" ? value : null;
+}
+
+/**
+ * Number to paint while the live snapshot is still empty.
+ * Snapshot wins once walletGet succeeds. Until then, the last saved server
+ * balance is shown as soon as the app paints, before the mode flag turns on.
+ * Ops-state is used only when this user has no saved balance yet.
+ * Local wallet mode keeps the ops balance.
+ */
+export function displayNyangBalance(opsBalance: number): number {
+  if (snapshot) return snapshot.balance;
+  if (status.mode !== "local") {
+    const cached = readCachedWalletBalance();
+    if (cached != null) return cached;
+  }
+  return opsBalance;
+}
+
+function clearBootRetries() {
+  for (const timer of bootRetryTimers) window.clearTimeout(timer);
+  bootRetryTimers = [];
+}
+
+function scheduleBootRetries() {
+  if (!serverWalletActiveNow()) return;
+  clearBootRetries();
+  console.info("[serverWallet] get retry scheduled");
+  bootRetryTimers = BOOT_RETRY_MS.map((ms) =>
+    window.setTimeout(() => {
+      void (async () => {
+        if (snapshot) {
+          clearBootRetries();
+          return;
+        }
+        const got = await walletGet();
+        if (got.ok) clearBootRetries();
+      })();
+    }, ms),
+  );
+}
+
 function setSnapshot(next: WalletView) {
   snapshot = next;
   status.balance = next.balance;
   status.remainingToday = next.remainingToday;
+  rememberBalance(next.balance);
+  clearBootRetries();
   emitStatus();
   viewListeners.forEach((listener) => listener(next));
 }
@@ -541,12 +622,26 @@ export async function syncWalletOnBoot(): Promise<WalletView | null> {
   return bootSync;
 }
 
+/** One listener. A later visit with no snapshot tries walletGet again. */
+export function installWalletBalanceRefresh() {
+  if (refreshInstalled || typeof document === "undefined") return;
+  refreshInstalled = true;
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    if (snapshot || !serverWalletActiveNow()) return;
+    void walletGet();
+  });
+}
+
 async function runBoot(): Promise<WalletView | null> {
   try {
     const active = await serverWalletActive();
     if (!active) return null;
     const got = await walletGet();
-    if (!got.ok) return null;
+    if (!got.ok) {
+      scheduleBootRetries();
+      return null;
+    }
     if (got.view.migrated) return got.view;
     await saveToServer();
     const migrated = await walletMigrate();
@@ -555,6 +650,7 @@ async function runBoot(): Promise<WalletView | null> {
     return again.ok ? again.view : getWalletSnapshot();
   } catch {
     console.info("[serverWallet] get failed error=network");
+    scheduleBootRetries();
     return null;
   }
 }

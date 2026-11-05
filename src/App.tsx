@@ -29,7 +29,12 @@ import { refreshServerTime } from "./lib/tossClock";
 import { isTossApp } from "./lib/tossEnv";
 import { ensureGameUserHash } from "./lib/user";
 import { installServerSaveLifecycle, syncGameSaveOnBoot } from "./lib/serverSave";
-import { applyWalletViewToOps, subscribeWalletView, syncWalletOnBoot } from "./lib/serverWallet";
+import {
+  applyWalletViewToOps,
+  installWalletBalanceRefresh,
+  subscribeWalletView,
+  syncWalletOnBoot,
+} from "./lib/serverWallet";
 import { buildMenuViewModel } from "./lib/menuModel";
 import {
   MENU_SETTINGS_EVENT,
@@ -356,6 +361,7 @@ export default function App() {
 
   useEffect(() => {
     installServerSaveLifecycle();
+    installWalletBalanceRefresh();
     let cancelled = false;
     void (async () => {
       try {
