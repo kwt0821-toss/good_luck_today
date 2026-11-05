@@ -95,6 +95,11 @@ type MenuPanelProps = {
   /** Scroll this menu row into view and sparkle it once. */
   highlightRowId?: string | null;
   onHighlightDone?: () => void;
+  /**
+   * Mission row (not the claim button) asks to visit the linked place.
+   * attend_1 stays in the menu; draw_1 and room_1 leave it.
+   */
+  onMissionNavigate?: (missionId: string) => void;
 };
 
 function formatMeta(text: string) {
@@ -140,6 +145,7 @@ export function MenuPanel({
   onSheetOpen,
   highlightRowId = null,
   onHighlightDone,
+  onMissionNavigate,
 }: MenuPanelProps) {
   const [model, setModel] = useState<MenuViewModel | null>(null);
   const [shownNyang, setShownNyang] = useState<number | null>(null);
@@ -379,6 +385,32 @@ export function MenuPanel({
       setExchangeView("summary");
       setExchangeBusy(false);
     }, reduce ? 150 : 280);
+  };
+
+  const missionGoLabel = (missionId: string) => {
+    if (missionId === "attend_1") return "출석 체크로 이동";
+    if (missionId === "draw_1") return "카드 뽑기로 이동";
+    if (missionId === "room_1") return "방 놀러 가기로 이동";
+    return "";
+  };
+
+  const goMission = (missionId: string) => {
+    if (lockDismiss) return;
+    if (missionId === "attend_1") {
+      closeSheet();
+      onMissionNavigate?.("attend_1");
+      return;
+    }
+    if (missionId !== "draw_1" && missionId !== "room_1") return;
+    setSheetOpen(false);
+    setClosing(true);
+    AudioManager.playSfx("sheet-close");
+    window.setTimeout(() => {
+      setClosing(false);
+      setSheet(null);
+      onClose();
+    }, reduce ? 150 : 220);
+    onMissionNavigate?.(missionId);
   };
 
   useBackHandler(open, requestClose, 20);
@@ -1219,20 +1251,39 @@ export function MenuPanel({
                           : mission.status === "claimable"
                             ? "젤리 받기"
                             : "아직이에요";
+                      const goLabel = missionGoLabel(mission.id);
                       return (
                         <li key={mission.id} className="mission-item">
-                          <div className="mission-copy">
-                            <p className="mission-title">{mission.title}</p>
-                            <p className="mission-desc">{mission.desc}</p>
-                            <p className="mission-progress">
-                              {mission.current}/{mission.target} · {jellyLabel(mission.paw, true)}
-                            </p>
-                          </div>
+                          {goLabel ? (
+                            <button
+                              type="button"
+                              className="mission-copy"
+                              aria-label={goLabel}
+                              onClick={() => goMission(mission.id)}
+                            >
+                              <p className="mission-title">{mission.title}</p>
+                              <p className="mission-desc">{mission.desc}</p>
+                              <p className="mission-progress">
+                                {mission.current}/{mission.target} · {jellyLabel(mission.paw, true)}
+                              </p>
+                            </button>
+                          ) : (
+                            <div className="mission-copy">
+                              <p className="mission-title">{mission.title}</p>
+                              <p className="mission-desc">{mission.desc}</p>
+                              <p className="mission-progress">
+                                {mission.current}/{mission.target} · {jellyLabel(mission.paw, true)}
+                              </p>
+                            </div>
+                          )}
                           <button
                             type="button"
                             className="mission-claim"
                             disabled={mission.status !== "claimable" || missionBusy}
-                            onClick={() => void claimMissionReward(mission.id)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void claimMissionReward(mission.id);
+                            }}
                           >
                             {label}
                           </button>

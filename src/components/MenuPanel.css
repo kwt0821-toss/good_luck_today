@@ -1901,10 +1901,10 @@ button.menu-dim:focus-visible {
 
 .mission-item {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: stretch;
+  gap: 0;
   min-height: 72px;
-  padding: 12px;
+  padding: 0;
   border-radius: 16px;
   background: rgba(243, 233, 215, 0.06);
   border: 1px solid rgba(243, 233, 215, 0.12);
@@ -1913,6 +1913,14 @@ button.menu-dim:focus-visible {
 .mission-copy {
   flex: 1 1 auto;
   min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .mission-title {
@@ -1939,8 +1947,10 @@ button.menu-dim:focus-visible {
 
 .mission-claim {
   flex: 0 0 auto;
+  align-self: center;
   min-width: 88px;
   min-height: 44px;
+  margin: 12px 12px 12px 0;
   padding: 0 12px;
   border: 0;
   border-radius: 14px;

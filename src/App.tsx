@@ -1982,6 +1982,17 @@ export default function App() {
         onAttendanceRewarded={attendanceNotifyOffer.offerAfterReward}
         highlightRowId={highlightMenuRowId}
         onHighlightDone={clearMenuHighlight}
+        onMissionNavigate={(missionId) => {
+          if (missionId === "attend_1") {
+            setForceMenuSheet(null);
+            setHighlightMenuRowId("attendance");
+            return;
+          }
+          setForceMenuSheet(null);
+          setHighlightMenuRowId(null);
+          if (missionId === "draw_1") setScreen({ name: "home" });
+          if (missionId === "room_1") setScreen({ name: "room" });
+        }}
         onRateUpDraw={() => {
           closeMenu();
           void beginDraw("rateUp");
