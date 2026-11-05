@@ -694,7 +694,7 @@ export function markDirty() {
 
 /**
  * Upload the current bundle without waiting out the 3s debounce.
- * Used after a draw grows the dex, once ops is saved into the same bundle.
+ * Used for every dex write, and for a room edit confirmed with 완료 / 저장.
  * In-flight saves stay serialized: a second call sets runAgain instead of posting twice.
  */
 export function markDirtyUrgent(options?: { delayMs?: number; keepalive?: boolean }): void {
@@ -715,6 +715,16 @@ export function markDirtyUrgent(options?: { delayMs?: number; keepalive?: boolea
     debounceTimer = null;
     void flush(keepalive, true);
   }, delayMs);
+}
+
+/**
+ * Local write should reach the server on hide/pagehide only.
+ * Does not start the 3s timer and does not cancel one already scheduled by markDirty.
+ */
+export function markDirtyLifecycleOnly(): void {
+  if (!endpoint() || !isTossApp()) return;
+  dirty = true;
+  console.info("[serverSave] save lifecycle dirty");
 }
 
 export function installServerSaveLifecycle() {

@@ -1,7 +1,7 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
 import { isInTossApp } from "./native";
-import { markDirty } from "./serverSave";
+import { markDirtyLifecycleOnly, markDirtyUrgent } from "./serverSave";
 import { loadOpsConfig } from "./opsConfig";
 import { loadOpsState } from "./opsStorage";
 import type { OpsStarter, OpsState } from "./opsTypes";
@@ -425,11 +425,19 @@ async function readKey(key: string): Promise<string | null> {
   }
 }
 
-async function writeKey(key: string, value: string): Promise<void> {
+async function writeKey(
+  key: string,
+  value: string,
+  server: "lifecycle" | "urgent" = "lifecycle",
+): Promise<void> {
+  const note = () => {
+    if (server === "urgent") markDirtyUrgent();
+    else markDirtyLifecycleOnly();
+  };
   if (isInTossApp()) {
     try {
       await Storage.setItem(key, value);
-      markDirty();
+      note();
       return;
     } catch {
       // fall through
@@ -440,7 +448,7 @@ async function writeKey(key: string, value: string): Promise<void> {
   } catch {
     // ignore
   }
-  markDirty();
+  note();
 }
 
 export async function loadRoomState(
@@ -470,8 +478,11 @@ export async function loadRoomState(
   return fresh;
 }
 
-export async function saveRoomState(state: RoomSaveState): Promise<void> {
-  await writeKey(ROOM_KEY, JSON.stringify(state));
+export async function saveRoomState(
+  state: RoomSaveState,
+  options?: { server?: "lifecycle" | "urgent" },
+): Promise<void> {
+  await writeKey(ROOM_KEY, JSON.stringify(state), options?.server ?? "lifecycle");
 }
 
 export function newInstanceId(id: string) {

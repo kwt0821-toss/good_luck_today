@@ -781,9 +781,9 @@ export function RoomScreen({
     nyNotify({ key: `room:${message.slice(0, 28)}`, kind, title: message.replace(/\n/g, " · ") });
   };
 
-  const persist = (next: RoomSaveState) => {
+  const persist = (next: RoomSaveState, server: "lifecycle" | "urgent" = "lifecycle") => {
     setState(next);
-    void saveRoomState(next);
+    void saveRoomState(next, { server });
   };
 
   /** Update layout in React state without persisting (preview drafts). */
@@ -983,6 +983,17 @@ export function RoomScreen({
     setPaintHover(null);
     setEditUndo(null);
     if (saved) nyNotify({ key: "room-save", kind: "success", title: "방을 저장했어요", sub: roomDef?.nameKo });
+  };
+
+  const finishEditSaved = () => {
+    if (!state) return;
+    if (previewRef.current) {
+      const cleared = cancelPreview(layout);
+      persist(patchCurrentRoom(state, cleared), "urgent");
+    } else {
+      persist(state, "urgent");
+    }
+    leaveEdit(true);
   };
 
   const applyEditUndo = () => {
@@ -1945,14 +1956,7 @@ export function RoomScreen({
                   return;
                 }
                 if (tutLock) return;
-                if (previewRef.current) {
-                  const cleared = cancelPreview(layout);
-                  const next = patchCurrentRoom(state, cleared);
-                  persist(next);
-                } else {
-                  persist(state);
-                }
-                leaveEdit(true);
+                finishEditSaved();
               }}
             >
               완료
@@ -2491,14 +2495,8 @@ export function RoomScreen({
             leaveEdit(false);
           }}
           onConfirm={() => {
-            if (previewRef.current) {
-              const cleared = cancelPreview(layout);
-              persist(patchCurrentRoom(state, cleared));
-            } else {
-              persist(state);
-            }
             setConfirm(null);
-            leaveEdit(true);
+            finishEditSaved();
           }}
         />
       ) : null}

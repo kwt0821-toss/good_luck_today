@@ -4,6 +4,7 @@ import type { DexCard, DexOwnedMap } from "./dexTypes";
 import { dupPawForCard } from "./drawRates";
 import { loadOpsConfig } from "./opsConfig";
 import { saveOpsState } from "./opsStorage";
+import { markDirtyUrgent } from "./serverSave";
 import type { OpsEconomy, OpsState } from "./opsTypes";
 
 export type DupExchangeGradeLine = {
@@ -207,6 +208,7 @@ export async function postDupExchange(
 
   await saveDexOwned(nextOwned);
   await saveOpsState(nextState);
+  markDirtyUrgent();
   return {
     state: nextState,
     owned: nextOwned,
