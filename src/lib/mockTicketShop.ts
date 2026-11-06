@@ -1,9 +1,8 @@
 import { toKstDateKey } from "./date";
-import { josa } from "./josa";
-import { jellyLabel } from "./jellyLabel";
 import { loadOpsConfig } from "./opsConfig";
 import { syncTicketShopWindows } from "./opsState";
 import { saveOpsState } from "./opsStorage";
+import { displayJellyBalance, jellySpend, serverJellyActive } from "./serverJelly";
 import type { OpsConfig, OpsState, TicketShopLedgerItem } from "./opsTypes";
 
 /**
@@ -73,7 +72,7 @@ export function getTicketShopStatus(state: OpsState, config: OpsConfig): TicketS
   } else if (weekRemaining <= 0) {
     disabledReason = "이번 주 구매 한도에 도달했어요";
   } else if (synced.pawBalance < offer.pricePaw) {
-    disabledReason = `${jellyLabel(offer.pricePaw)}${josa(String(offer.pricePaw), "이가")} 필요해요`;
+    disabledReason = "젤리가 부족해요";
   }
   return {
     pricePaw: offer.pricePaw,
@@ -156,14 +155,25 @@ export async function postShopTicketsBuy(
   if (next.ticketShopWeekBought >= offer.weekLimit) {
     return { state: next, response: { ok: false, reason: "이번 주 구매 한도에 도달했어요" } };
   }
-  if (next.pawBalance < offer.pricePaw) {
-    return { state: next, response: { ok: false, reason: `${jellyLabel(offer.pricePaw)}${josa(String(offer.pricePaw), "이가")} 필요해요` } };
+  const serverJelly = await serverJellyActive();
+  if (!serverJelly && next.pawBalance < offer.pricePaw) {
+    return { state: next, response: { ok: false, reason: "젤리가 부족해요" } };
   }
 
   const weekBought = next.ticketShopWeekBought + 1;
   const dayBought = next.ticketShopDayBought + 1;
   const ticketsHeld = next.rateUpTickets + 1;
-  const paw = next.pawBalance - offer.pricePaw;
+  let paw = next.pawBalance - offer.pricePaw;
+  if (serverJelly) {
+    const spent = await jellySpend(`ticket:${requestId}`);
+    if (!spent.ok) {
+      const reason = spent.insufficient
+        ? "젤리가 부족해요"
+        : "연결이 불안정해요. 잠시 후 다시 받아 주세요";
+      return { state: next, response: { ok: false, reason } };
+    }
+    paw = displayJellyBalance(next.pawBalance);
+  }
   const entry: TicketShopLedgerItem = {
     requestId,
     ticketType: "rateUp",

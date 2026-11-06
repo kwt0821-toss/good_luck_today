@@ -32,7 +32,9 @@ import {
   type RoomGridFile,
   type RoomsFile,
 } from "../lib/roomCatalog";
+import { loadOpsState, saveOpsState } from "../lib/opsStorage";
 import { applyOpsPrices, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
+import { displayJellyBalance, jellySpend, serverJellyActive, subscribeJelly } from "../lib/serverJelly";
 import { furnitureDepthKey } from "../lib/roomCat";
 import {
   cloneLayout,
@@ -382,6 +384,7 @@ export function RoomScreen({
   const [editUndo, setEditUndo] = useState<RoomSaveState | null>(null);
   const [stars] = useState(() => makeStars());
   const previewRef = useRef<PlacementPreview | null>(null);
+  const buyBusyRef = useRef(false);
   const previewMoving = useRef(false);
   const previewHudModeRef = useRef<"message" | "toolbar">("message");
   const previewItemTap = useRef<{ instanceId: string; x: number; y: number } | null>(null);
@@ -661,6 +664,17 @@ export function RoomScreen({
   useEffect(() => {
     previewHudModeRef.current = previewHudMode;
   }, [previewHudMode]);
+
+  useEffect(() => {
+    return subscribeJelly(() => {
+      setState((prev) => {
+        if (!prev) return prev;
+        const shown = displayJellyBalance(prev.points);
+        if (shown === prev.points) return prev;
+        return { ...prev, points: shown };
+      });
+    });
+  }, []);
 
   useEffect(() => {
     const key = !preview
@@ -1769,27 +1783,18 @@ export function RoomScreen({
     setBuyItem(item);
   };
 
-  const buy = (item: RoomItem) => {
-    if (item.attendanceOnly) {
-      showToast("출석 한정 아이템은 구매할 수 없어요");
-      setBuyItem(null);
-      return;
-    }
-    if (state.points < item.price) return;
+  const finishBuy = (item: RoomItem, points: number) => {
     track("room_item_buy", { item_id: item.id, price: item.price });
-    const nextPoints = state.points - item.price;
     const nextOwned = { ...state.owned, [item.id]: (state.owned[item.id] ?? 0) + 1 };
     const draft = {
       ...state,
-      points: nextPoints,
+      points,
       owned: nextOwned,
     };
-    // Optimistic UI, then server cozy recalculation (GET /room/cozy rules).
     persist(draft);
     void recalculateRoomCozy(draft).then((withCozy) => {
       persist(withCozy);
     });
-    void spendRoomPoints(nextPoints);
     setBuyItem(null);
     setBuyMore(false);
     nyNotify({
@@ -1797,6 +1802,100 @@ export function RoomScreen({
       kind: "success",
       title: `${withJosa(item.nameKo, "을를")} 서랍에 넣었어요`,
       action: { label: "놓으러 가기", onClick: () => { /* stay in room edit */ setMode("edit"); } },
+    });
+  };
+
+  const buy = (item: RoomItem) => {
+    if (item.attendanceOnly) {
+      showToast("출석 한정 아이템은 구매할 수 없어요");
+      setBuyItem(null);
+      return;
+    }
+    if (buyBusyRef.current) return;
+    void (async () => {
+      if (await serverJellyActive()) {
+        buyBusyRef.current = true;
+        try {
+          const spent = await jellySpend(`room:${item.id}:${newRequestId("buy")}`);
+          if (!spent.ok) {
+            nyNotify({
+              key: "room-buy-fail",
+              kind: "error",
+              title: spent.insufficient ? "젤리가 부족해요" : "사지 못했어요",
+              sub: spent.insufficient ? "출석·젤리 받기로 더 모아 주세요" : "네트워크를 확인하고 다시 눌러 주세요",
+            });
+            return;
+          }
+          const ops = await loadOpsState();
+          const ownedItemIds = ops.ownedItemIds.includes(item.id)
+            ? ops.ownedItemIds
+            : [...ops.ownedItemIds, item.id];
+          await saveOpsState({
+            ...ops,
+            ownedItemIds,
+            pawBalance: displayJellyBalance(ops.pawBalance),
+          });
+          finishBuy(item, displayJellyBalance(state.points));
+        } finally {
+          buyBusyRef.current = false;
+        }
+        return;
+      }
+      if (state.points < item.price) {
+        nyNotify({
+          key: "room-buy-fail",
+          kind: "error",
+          title: "젤리가 부족해요",
+          sub: "출석·젤리 받기로 더 모아 주세요",
+        });
+        return;
+      }
+      const nextPoints = state.points - item.price;
+      void spendRoomPoints(nextPoints);
+      finishBuy(item, nextPoints);
+    })();
+  };
+
+  const openLockedRoom = async (room: RoomDefinition) => {
+    const rule = economyRooms.find((row) => row.id === room.id)?.unlock;
+    const needCozy = rule?.cozyLevel ?? 0;
+    if (state.cozyLevel < needCozy) {
+      nyNotify({ key: "room-unlock", kind: "info", title: "아늑함이 더 필요해요" });
+      return;
+    }
+    if (!(await serverJellyActive())) {
+      setUnlockRoom(null);
+      return;
+    }
+    const spent = await jellySpend(`roomUnlock:${room.id}:${newRequestId("unlock")}`);
+    if (!spent.ok) {
+      nyNotify({
+        key: "room-unlock",
+        kind: "error",
+        title: spent.insufficient ? "젤리가 부족해요" : "방을 열지 못했어요",
+        sub: spent.insufficient ? "출석·젤리 받기로 더 모아 주세요" : "네트워크를 확인하고 다시 눌러 주세요",
+      });
+      return;
+    }
+    const ops = await loadOpsState();
+    const unlockedRoomIds = ops.unlockedRoomIds.includes(room.id)
+      ? ops.unlockedRoomIds
+      : [...ops.unlockedRoomIds, room.id];
+    await saveOpsState({
+      ...ops,
+      unlockedRoomIds,
+      pawBalance: displayJellyBalance(ops.pawBalance),
+    });
+    persist({
+      ...state,
+      points: displayJellyBalance(state.points),
+      unlocked: state.unlocked.includes(room.id) ? state.unlocked : [...state.unlocked, room.id],
+    });
+    setUnlockRoom(null);
+    nyNotify({
+      key: "room-unlock",
+      kind: "success",
+      title: `${withJosa(room.nameKo, "을를")} 열었어요`,
     });
   };
 
@@ -2560,6 +2659,11 @@ export function RoomScreen({
             unlockRoom && unlockRoom !== "soon" ? unlockFor(unlockRoom.id) : undefined
           }
           onClose={() => setUnlockRoom(null)}
+          onOpen={
+            unlockRoom !== "soon" && unlockFor(unlockRoom.id)?.paw != null
+              ? () => void openLockedRoom(unlockRoom)
+              : undefined
+          }
         />
       ) : null}
 

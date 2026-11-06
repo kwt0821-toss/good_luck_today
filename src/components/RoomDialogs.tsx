@@ -119,10 +119,12 @@ export function RoomUnlockSheet({
   room,
   unlock,
   onClose,
+  onOpen,
 }: {
   room: RoomDefinition | null;
   unlock?: { type?: string; paw?: number; cozyLevel?: number };
   onClose: () => void;
+  onOpen?: () => void;
 }) {
   const title = room ? `${room.nameKo} 열기` : "새 방 열기";
   const paw = unlock?.paw;
@@ -152,8 +154,13 @@ export function RoomUnlockSheet({
         ) : null}
         <p>{body}</p>
         <div className="lucky-modal-actions">
-          <button type="button" className="is-amber" onClick={onClose}>
-            확인
+          {onOpen ? (
+            <button type="button" onClick={onClose}>
+              닫기
+            </button>
+          ) : null}
+          <button type="button" className="is-amber" onClick={onOpen ?? onClose}>
+            {onOpen ? "열기" : "확인"}
           </button>
         </div>
       </div>

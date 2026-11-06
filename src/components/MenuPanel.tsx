@@ -33,6 +33,7 @@ import {
   inspectTossPointGrant,
   postWalletWithdraw,
 } from "../lib/mockWallet";
+import { displayJellyBalance, subscribeJelly } from "../lib/serverJelly";
 import {
   displayNyangBalance,
   getWalletSnapshot,
@@ -149,6 +150,7 @@ export function MenuPanel({
 }: MenuPanelProps) {
   const [model, setModel] = useState<MenuViewModel | null>(null);
   const [shownNyang, setShownNyang] = useState<number | null>(null);
+  const [shownPaw, setShownPaw] = useState<number | null>(null);
   const [closing, setClosing] = useState(false);
   const [sheet, setSheet] = useState<MenuSheetId>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -244,9 +246,13 @@ export function MenuPanel({
     sync();
     const offStatus = subscribeServerWallet(sync);
     const offView = subscribeWalletView(sync);
+    const syncPaw = () => setShownPaw(displayJellyBalance(model.pawBalance));
+    syncPaw();
+    const offJelly = subscribeJelly(syncPaw);
     return () => {
       offStatus();
       offView();
+      offJelly();
     };
   }, [model]);
 
@@ -260,9 +266,13 @@ export function MenuPanel({
       return;
     }
     setClosing(false);
-    void buildMenuViewModel(ops).then(setModel);
     AudioManager.playSfx("sheet-open");
     AudioManager.setScreen("menu");
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    void buildMenuViewModel(ops).then(setModel);
   }, [open, ops]);
 
   useEffect(() => {
@@ -999,7 +1009,7 @@ export function MenuPanel({
                 >
                   <div className="menu-stat-value">
                     <img src={menuAsset("icon-paw-mini.svg")} alt="" />
-                    {model.pawBalance.toLocaleString("ko-KR")}
+                    {(shownPaw ?? model.pawBalance).toLocaleString("ko-KR")}
                   </div>
                   <div className="menu-stat-label">내 젤리</div>
                   {pawTipOpen ? (

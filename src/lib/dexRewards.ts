@@ -7,6 +7,7 @@ import { newCardPaw, nyangCoinForCard } from "./nyangCoinGrade";
 import { saveOpsState } from "./opsStorage";
 import type { OpsConfig, OpsEconomy, OpsState } from "./opsTypes";
 import { grantNyangCoinOnce } from "./mockToss";
+import { displayJellyBalance, jellyEnqueue, serverJellyActive } from "./serverJelly";
 import { serverWalletActive, walletEarn } from "./serverWallet";
 
 /**
@@ -77,6 +78,25 @@ export const FULL_DEX_REWARD_ID = "fullDex";
 
 function isClaimed(state: OpsState, rewardId: string) {
   return state.claimedDexRewardIds.includes(rewardId);
+}
+
+function pawServerRewardId(reward: DexReward): string | null {
+  if (reward.paw <= 0) return null;
+  if (reward.kind === "newCard" && reward.cardId) return `newCardPaw:${reward.cardId}`;
+  if (reward.kind === "breedSet" && reward.breedId) return `setPaw:breed:${reward.breedId}`;
+  if (reward.kind === "typeSet" && reward.typeSet) return `setPaw:${reward.typeSet}`;
+  if (reward.kind === "fullDex") return "fullDexPaw";
+  return null;
+}
+
+async function creditDexPaw(state: OpsState, reward: DexReward): Promise<OpsState> {
+  const rewardId = pawServerRewardId(reward);
+  if (rewardId && (await serverJellyActive())) {
+    await jellyEnqueue({ rewardId, reason: "dex", optimistic: reward.paw });
+    return { ...state, pawBalance: displayJellyBalance(state.pawBalance) };
+  }
+  if (reward.paw <= 0) return state;
+  return { ...state, pawBalance: state.pawBalance + reward.paw };
 }
 
 /** Build all currently claimable (earned, not yet claimed) dex rewards. */
@@ -277,9 +297,9 @@ export async function postDexRewardsClaim(
     for (const reward of free) {
       totalPaw += reward.paw;
       claimedIds.push(reward.id);
+      next = await creditDexPaw(next, reward);
       next = {
         ...next,
-        pawBalance: next.pawBalance + reward.paw,
         claimedDexRewardIds: [...next.claimedDexRewardIds, reward.id],
       };
     }
@@ -301,9 +321,9 @@ export async function postDexRewardsClaim(
           const grantedIds = next.grantedNyangCoinRewardIds.includes(reward.id)
             ? next.grantedNyangCoinRewardIds
             : [...next.grantedNyangCoinRewardIds, reward.id];
+          next = await creditDexPaw(next, reward);
           next = {
             ...next,
-            pawBalance: next.pawBalance + reward.paw,
             claimedDexRewardIds: [...next.claimedDexRewardIds, reward.id],
             grantedNyangCoinRewardIds: grantedIds,
           };
@@ -327,9 +347,9 @@ export async function postDexRewardsClaim(
       totalPaw += reward.paw;
       totalNyang += reward.nyangCoin;
       claimedIds.push(reward.id);
+      next = await creditDexPaw(next, reward);
       next = {
         ...next,
-        pawBalance: next.pawBalance + reward.paw,
         claimedDexRewardIds: [...next.claimedDexRewardIds, reward.id],
       };
       if (reward.nyangCoin > 0) {

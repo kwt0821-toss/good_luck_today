@@ -9,6 +9,7 @@ import type {
   AttendanceReward,
 } from "./attendanceTypes";
 import { grantNyangCoinOnce } from "./mockToss";
+import { displayJellyBalance, jellyEnqueue, serverJellyActive } from "./serverJelly";
 import { serverWalletActive, walletEarn } from "./serverWallet";
 import { loadOpsConfig } from "./opsConfig";
 import type {
@@ -187,6 +188,32 @@ function applyRewards(state: OpsState, rewards: AttendanceReward[], milestoneDay
   };
 }
 
+/** 출석 젤리는 대기열로 보내고, 아이템·이용권만 바로 반영한다. */
+async function parkAttendancePaw(
+  state: OpsState,
+  rewards: AttendanceReward[],
+  rewardId: string | null,
+  extraPaw = 0,
+  withAd = false,
+): Promise<{ state: OpsState; rewards: AttendanceReward[] }> {
+  if (!rewardId || !(await serverJellyActive())) return { state, rewards };
+  const optimistic =
+    extraPaw + rewards.reduce((sum, reward) => sum + (reward.kind === "paw" ? reward.paw : 0), 0);
+  const rest = rewards.filter((reward) => reward.kind !== "paw");
+  if (optimistic > 0) {
+    await jellyEnqueue({
+      rewardId,
+      reason: "attendance",
+      optimistic,
+      ...(withAd ? { withAd: true } : {}),
+    });
+  }
+  return {
+    state: { ...state, pawBalance: displayJellyBalance(state.pawBalance) },
+    rewards: rest,
+  };
+}
+
 /**
  * Server-only attendance claim.
  * Mocked locally with the same response contract as POST /attendance/claim.
@@ -287,7 +314,11 @@ export async function claimAttendanceOnServer(
     return true;
   });
 
-  next = applyRewards(next, filteredRewards, milestoneHit);
+  const cycleDay = upcoming?.cycleDay;
+  const attRewardId =
+    cycleDay && cycleDay >= 1 && cycleDay <= 6 ? `attDay:${cycleDay}:${today}` : null;
+  const parked = await parkAttendancePaw(next, filteredRewards, attRewardId);
+  next = applyRewards(parked.state, parked.rewards, milestoneHit);
   if (milestoneHit.length) {
     const milestone = config.starter.attendance.milestones.find((m) => m.days === n);
     if (milestone) {
@@ -528,7 +559,15 @@ export async function claimAttendanceDay7OnServer(
     lastAttendanceDateKey: today,
   };
 
-  next = applyRewards(next, existingRewards, milestoneHit);
+  const jellyOn = await serverJellyActive();
+  const parkedDay7 = await parkAttendancePaw(
+    next,
+    existingRewards,
+    jellyOn ? `att7Paw:${cycleNo}` : null,
+    jellyOn ? wantPaw : 0,
+    withAd,
+  );
+  next = applyRewards(parkedDay7.state, parkedDay7.rewards, milestoneHit);
 
   // Yearly 냥코인 cap → overflow to P (10P each). Server mode uses the server amount.
   const yearKey = toKstYearKey();
@@ -554,7 +593,7 @@ export async function claimAttendanceDay7OnServer(
 
   next = {
     ...next,
-    pawBalance: next.pawBalance + wantPaw + overflowPaw,
+    pawBalance: jellyOn ? displayJellyBalance(next.pawBalance) : next.pawBalance + wantPaw + overflowPaw,
     rateUpTickets: Math.min(next.rateUpTickets + wantTickets, maxHold),
     attendanceNyangYearKey: yearKey,
     attendanceNyangCoinYear: yearGranted + wantNyang,

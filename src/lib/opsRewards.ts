@@ -16,6 +16,7 @@ import {
 } from "./opsState";
 import { saveOpsState } from "./opsStorage";
 import { markDirtyUrgent } from "./serverSave";
+import { displayJellyBalance, jellyEarnImmediate, serverJellyActive } from "./serverJelly";
 import type { ConfirmDrawResult, DrawReservation, OpsConfig, OpsState } from "./opsTypes";
 
 function delay(ms: number) {
@@ -251,8 +252,9 @@ export async function grantPawAdReward(
     return { error: "오늘 젤리 광고를 모두 봤어요" };
   }
 
+  const weekend = isWeekendDoublePaw(config.economy);
   let gained = config.economy.pawSources.rewardedAd.pawPerAd;
-  if (isWeekendDoublePaw(config.economy)) {
+  if (weekend) {
     gained *= config.economy.events.weekendDoublePaw.multiplier;
   }
 
@@ -262,11 +264,30 @@ export async function grantPawAdReward(
   const grantNyang =
     wantNyang > 0 && (next.adPawNyangToday ?? 0) < dailyMax ? wantNyang : 0;
 
-  next = {
-    ...next,
-    pawAdsUsed: next.pawAdsUsed + 1,
-    pawBalance: next.pawBalance + gained,
-  };
+  if (await serverJellyActive()) {
+    const earned = await jellyEarnImmediate([
+      { rewardId: `adPawJelly:${requestId}`, ...(weekend ? { withWeekend: true } : {}) },
+    ]);
+    if (!earned.ok) {
+      return { error: "연결이 불안정해요. 잠시 후 다시 받아 주세요" };
+    }
+    const row = earned.results.find((item) => item.rewardId === `adPawJelly:${requestId}`);
+    if (row && row.ok === false) {
+      return { error: row.error === "DAILY_CAP" ? "오늘 젤리 광고를 모두 봤어요" : "젤리를 받지 못했어요" };
+    }
+    if (typeof row?.amount === "number") gained = row.amount;
+    next = {
+      ...next,
+      pawAdsUsed: next.pawAdsUsed + 1,
+      pawBalance: displayJellyBalance(next.pawBalance),
+    };
+  } else {
+    next = {
+      ...next,
+      pawAdsUsed: next.pawAdsUsed + 1,
+      pawBalance: next.pawBalance + gained,
+    };
+  }
 
   let adPawNyangCoin = 0;
   if (grantNyang > 0) {

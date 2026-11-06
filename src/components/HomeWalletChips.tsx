@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { shouldReduceMenuMotion } from "../lib/menuSettings";
 import { NCOIN_ICON } from "../lib/ncoinIcon";
+import { displayJellyBalance, subscribeJelly } from "../lib/serverJelly";
 import {
   displayNyangBalance,
   subscribeServerWallet,
@@ -45,6 +46,7 @@ export function HomeWalletChips({
 }: HomeWalletChipsProps) {
   const [reduce, setReduce] = useState(() => shouldReduceMenuMotion());
   const [nyang, setNyang] = useState(() => displayNyangBalance(nyangCoinBalance));
+  const [paw, setPaw] = useState(() => displayJellyBalance(pawBalance));
 
   useEffect(() => {
     const sync = () => setReduce(shouldReduceMenuMotion());
@@ -64,7 +66,12 @@ export function HomeWalletChips({
       offView();
     };
   }, [nyangCoinBalance]);
-  const paw: number | null = pawBalance;
+
+  useEffect(() => {
+    const sync = () => setPaw(displayJellyBalance(pawBalance));
+    sync();
+    return subscribeJelly(sync);
+  }, [pawBalance]);
   const nyangPop = usePop(nyang, reduce);
   const pawPop = usePop(paw, reduce);
 

@@ -1,6 +1,7 @@
 import { cardsOfType, groupBreedRows, loadDexCatalog } from "./dexCatalog";
 import { loadDexOwned } from "./dexCollection";
 import { grantNyangCoinOnce } from "./mockToss";
+import { displayJellyBalance, jellyEnqueue, serverJellyActive } from "./serverJelly";
 import { serverWalletActive, walletEarn } from "./serverWallet";
 import { loadOpsConfig } from "./opsConfig";
 import { saveOpsState } from "./opsStorage";
@@ -8,6 +9,15 @@ import type { OpsState } from "./opsTypes";
 import { loadRoomCatalog, loadRoomGrid, loadRoomsFile } from "./roomCatalog";
 import { applyOpsPrices } from "./roomEconomy";
 import { loadRoomState } from "./roomStore";
+
+async function creditAchvPaw(state: OpsState, id: string, paw: number): Promise<OpsState> {
+  if (paw <= 0) return state;
+  if (await serverJellyActive()) {
+    await jellyEnqueue({ rewardId: `achvPaw:${id}`, reason: "achievement", optimistic: paw });
+    return { ...state, pawBalance: displayJellyBalance(state.pawBalance) };
+  }
+  return { ...state, pawBalance: state.pawBalance + paw };
+}
 
 export type AchvCategory = "수집" | "뽑기" | "출석" | "방꾸미기" | "교환";
 export type AchvTabId = "all" | AchvCategory;
@@ -342,9 +352,9 @@ export async function postAchievementClaim(
     for (const item of free) {
       totalPaw += item.def.reward.paw;
       claimedIds.push(item.def.id);
+      next = await creditAchvPaw(next, item.def.id, item.def.reward.paw);
       next = {
         ...next,
-        pawBalance: next.pawBalance + item.def.reward.paw,
         claimedAchievementIds: [...(next.claimedAchievementIds ?? []), item.def.id],
       };
     }
@@ -369,9 +379,9 @@ export async function postAchievementClaim(
           const grantedIds = next.grantedNyangCoinRewardIds.includes(rewardId)
             ? next.grantedNyangCoinRewardIds
             : [...next.grantedNyangCoinRewardIds, rewardId];
+          next = await creditAchvPaw(next, item.def.id, item.def.reward.paw);
           next = {
             ...next,
-            pawBalance: next.pawBalance + item.def.reward.paw,
             claimedAchievementIds: [...(next.claimedAchievementIds ?? []), item.def.id],
             grantedNyangCoinRewardIds: grantedIds,
           };
@@ -394,9 +404,9 @@ export async function postAchievementClaim(
       totalPaw += item.def.reward.paw;
       totalNyang += item.def.reward.nyangCoin;
       claimedIds.push(item.def.id);
+      next = await creditAchvPaw(next, item.def.id, item.def.reward.paw);
       next = {
         ...next,
-        pawBalance: next.pawBalance + item.def.reward.paw,
         claimedAchievementIds: [...(next.claimedAchievementIds ?? []), item.def.id],
       };
       if (item.def.reward.nyangCoin > 0) {
