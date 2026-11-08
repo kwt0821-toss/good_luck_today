@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { AudioManager } from "../audio/AudioManager";
 import { cardBackUrl, cardLargeUrl, cardThumbUrl, decodeImage } from "../lib/cardArt";
 import { resolveFrame } from "../lib/cardFrames";
+import { BannerAdSlot } from "./BannerAdSlot";
 import { CardFrame } from "./CardFrame";
 import { jellyLabel } from "../lib/jellyLabel";
 import { useLoadingHold } from "../lib/loadingGate";
@@ -330,6 +331,7 @@ export function DexDetailSheet({
         aria-label={cardDisplayName(card)}
         onClick={(event) => event.stopPropagation()}
       >
+        <div className="dex-sheet-scroll">
         <div
           className="dex-sheet-handle"
           onPointerDown={onHandlePointerDown}
@@ -538,6 +540,8 @@ export function DexDetailSheet({
             <span>{ownedCount}</span>
           </p>
         ) : null}
+        </div>
+        <BannerAdSlot placement="dexCard" />
       </div>
     </div>,
     host,

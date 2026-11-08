@@ -20,6 +20,7 @@ import {
   type AchvProgress,
   type AchvTabId,
 } from "../lib/achievements";
+import { BannerAdSlot } from "./BannerAdSlot";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import { nyNotify } from "../lib/nyangNotify";
 import type { OpsState } from "../lib/opsTypes";
@@ -257,6 +258,7 @@ export function AchievementsSheet({
                 </button>
               ))}
             </div>
+            <BannerAdSlot placement="titles" />
           </>
         ) : null}
 

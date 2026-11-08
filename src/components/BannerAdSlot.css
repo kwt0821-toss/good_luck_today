@@ -11,6 +11,7 @@
 
 .banner-ad-slot.is-shown {
   grid-template-rows: 1fr;
+  flex-shrink: 0;
   margin-top: 16px;
   margin-bottom: 16px;
 }
@@ -20,11 +21,49 @@
   margin-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
-.dex-body > .banner-ad-slot,
-.menu-sheet-body .banner-ad-slot {
+.menu-sheet-body .banner-ad-slot,
+.menu-sheet > .banner-ad-slot,
+.dex-screen > .banner-ad-slot,
+.dex-sheet > .banner-ad-slot {
   width: calc(100% + 48px);
   margin-left: -24px;
   margin-right: -24px;
+}
+
+.achv-sheet > .banner-ad-slot {
+  width: calc(100% + 32px);
+  margin-left: -16px;
+  margin-right: -16px;
+}
+
+.dex-screen > .banner-ad-slot {
+  position: relative;
+  z-index: 4;
+}
+
+.dex-screen > .banner-ad-slot.is-shown {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 8px;
+  background: #14132a;
+}
+
+.menu-sheet > .banner-ad-slot.is-shown {
+  margin-top: 12px;
+  margin-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: #18152d;
+}
+
+.dex-sheet > .banner-ad-slot.is-shown {
+  margin-top: 8px;
+  margin-bottom: 0;
+  background: #1a1730;
+}
+
+.achv-sheet > .banner-ad-slot.is-shown {
+  margin-top: 8px;
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--achv-cream, #f7f1e6);
 }
 
 .banner-ad-clip {

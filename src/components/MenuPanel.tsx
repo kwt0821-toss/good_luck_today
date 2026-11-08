@@ -1928,6 +1928,8 @@ export function MenuPanel({
                 ) : null}
               </div>
 
+              {sheet === "missions" ? <BannerAdSlot placement="missions" /> : null}
+
               {sheet === "attendance" ? (
                 <>
                   {isWeeklyDay7Claim ? (

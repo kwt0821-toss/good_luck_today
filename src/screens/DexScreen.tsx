@@ -742,12 +742,13 @@ export function DexScreen({
           />
         ) : null}
         </div>
-        <BannerAdSlot placement="dex" />
       </div>
 
       {scrollLock ? <div className="dex-scroll-lock" aria-hidden="true" /> : null}
 
       <div className="dex-fade" aria-hidden="true" />
+
+      {openCard ? null : <BannerAdSlot placement="dex" />}
 
       {openCard && catalog ? (
         <DexDetailSheet
