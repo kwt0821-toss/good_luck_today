@@ -200,6 +200,9 @@
   overscroll-behavior: contain;
   margin: 18px -24px 0;
   padding: 0 24px 90px;
+}
+
+.dex-tab-panel {
   animation: dex-tab-in 200ms ease-out;
 }
 
@@ -1645,6 +1648,7 @@
   .dex-progress-fill,
   .dex-tab-underline,
   .dex-body,
+  .dex-tab-panel,
   .dex-complete,
   .dex-tag-new,
   .dex-slot-legend.is-owned,

@@ -1,0 +1,47 @@
+.banner-ad-slot {
+  position: relative;
+  z-index: 0;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms ease, margin 280ms ease;
+}
+
+.banner-ad-slot.is-shown {
+  grid-template-rows: 1fr;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.banner-ad-slot.is-shown[data-placement="rewards"] {
+  margin-top: 24px;
+  margin-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.dex-body > .banner-ad-slot,
+.menu-sheet-body .banner-ad-slot {
+  width: calc(100% + 48px);
+  margin-left: -24px;
+  margin-right: -24px;
+}
+
+.banner-ad-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.banner-ad-host {
+  width: 100%;
+}
+
+.banner-ad-slot.is-shown .banner-ad-host {
+  min-height: 102px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner-ad-slot {
+    transition: none;
+  }
+}

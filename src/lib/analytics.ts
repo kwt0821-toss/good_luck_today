@@ -24,7 +24,11 @@ export type AnalyticsEvent =
   | "room_item_buy"
   | "room_cat_tap"
   | "mission_progress"
-  | "mission_claim";
+  | "mission_claim"
+  | "banner_rendered"
+  | "banner_viewable"
+  | "banner_clicked"
+  | "banner_no_fill";
 
 export type AdPlacement =
   | "draw_normal"

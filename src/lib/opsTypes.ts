@@ -244,6 +244,11 @@ export type OpsEconomy = {
     };
     dailyCaps: { drawAds: number; rateUpAds: number; pawAds: number };
     ecpmKRW?: { short: number | null; long: number | null; source?: string };
+    /** WebView list banners. Empty adGroupId falls back to the test id. */
+    banner?: {
+      dex?: { adGroupId?: string };
+      rewards?: { adGroupId?: string };
+    };
   };
   cozy: {
     pointsPerTier: Record<string, number>;

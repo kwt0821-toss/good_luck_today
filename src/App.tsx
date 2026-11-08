@@ -69,6 +69,7 @@ import {
   playTossFullScreenAd,
   preloadTossAds,
 } from "./lib/tossAds";
+import { initTossBanner } from "./lib/tossBanner";
 import type { DexCard } from "./lib/dexTypes";
 import { highlightRatesFromEconomy, rateUpAdSecondsFromEconomy } from "./lib/drawRates";
 import {
@@ -351,6 +352,7 @@ export default function App() {
     preloadLoadingAssets();
     preloadFrameAssets();
     preloadAdFallbackCat();
+    void initTossBanner();
   }, []);
 
   useEffect(() => {

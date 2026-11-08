@@ -8,6 +8,7 @@ import { useBackHandler } from "../hooks/useBackHandler";
 import { useLoadingHold, useOverlayVisible } from "../lib/loadingGate";
 import { jellyLabel } from "../lib/jellyLabel";
 import { ncoinIcon } from "../lib/ncoinIcon";
+import { BannerAdSlot } from "../components/BannerAdSlot";
 import { DexCardSlot } from "../components/DexCardSlot";
 import { DexDetailSheet } from "../components/DexDetailSheet";
 import {
@@ -146,6 +147,7 @@ export function DexScreen({
     character: null,
     legend: null,
   });
+  const dexBodyRef = useRef<HTMLDivElement>(null);
   const [underline, setUnderline] = useState({ left: 0, width: 56 });
   const tutLocked = Boolean(
     focusCardId && tutorialPhase && tutorialPhase !== "ncoin-after" && tutorialPhase !== "toast",
@@ -207,6 +209,11 @@ export function DexScreen({
     if (!el) return;
     setUnderline({ left: el.offsetLeft, width: el.offsetWidth });
   }, [tab, catalog, owned, claimable]);
+
+  useEffect(() => {
+    const body = dexBodyRef.current;
+    if (body) body.scrollTop = 0;
+  }, [tab]);
 
   const onTutorialScrollDoneRef = useRef(onTutorialScrollDone);
   onTutorialScrollDoneRef.current = onTutorialScrollDone;
@@ -624,7 +631,8 @@ export function DexScreen({
         <span className="dex-tab-underline" style={{ left: underline.left, width: underline.width }} />
       </div>
 
-      <div className="dex-body" key={tab}>
+      <div className="dex-body" ref={dexBodyRef}>
+        <div className="dex-tab-panel" key={tab}>
         {tab === "breed" ? (
           <div className="dex-breed-list">
             {fullDexReward ? (
@@ -733,6 +741,8 @@ export function DexScreen({
             onSlot={onSlot}
           />
         ) : null}
+        </div>
+        <BannerAdSlot placement="dex" />
       </div>
 
       {scrollLock ? <div className="dex-scroll-lock" aria-hidden="true" /> : null}

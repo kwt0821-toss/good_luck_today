@@ -66,6 +66,7 @@ import {
 import { haptic } from "../lib/native";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
 import type { HelpTabId } from "../lib/helpConfig";
+import { BannerAdSlot } from "./BannerAdSlot";
 import { HelpEarnSheet } from "./HelpEarnSheet";
 import { NyChip } from "./NyChip";
 import "./MenuPanel.css";
@@ -1598,7 +1599,8 @@ export function MenuPanel({
                 ) : null}
 
                 {sheet === "rewards" ? (
-                  rewardsView === "history" ? (
+                  <>
+                  {rewardsView === "history" ? (
                     ops.walletHistory.length ? (
                       ops.walletHistory.map((item) => (
                         <div key={item.requestId} className="menu-list-row">
@@ -1826,7 +1828,9 @@ export function MenuPanel({
                         {model.menu.sheets.rewards.wallet?.historyTitle ?? "지급 내역"}
                       </button>
                     </>
-                  )
+                  )}
+                  <BannerAdSlot placement="rewards" />
+                  </>
                 ) : null}
 
                 {sheet === "notice" ? (
