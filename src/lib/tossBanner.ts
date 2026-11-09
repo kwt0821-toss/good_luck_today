@@ -1,7 +1,4 @@
-import { TossAds, getOperationalEnvironment } from "@apps-in-toss/web-framework";
-
-/** Official list-banner test id. Dev and sandbox always use this. */
-export const TEST_BANNER_AD_GROUP_ID = "ait-ad-test-banner-id";
+import { TossAds } from "@apps-in-toss/web-framework";
 
 export type BannerPlacement =
   | "dex"
@@ -53,18 +50,8 @@ export function initTossBanner(): Promise<boolean> {
   return initPromise;
 }
 
-function prefersTestBanner(): boolean {
-  if (import.meta.env.DEV) return true;
-  try {
-    return getOperationalEnvironment() !== "toss";
-  } catch {
-    return false;
-  }
-}
-
-/** Live id from economy.json. Empty, dev, and sandbox fall back to the test id. */
+/** Live id from economy.json. Dev builds use the official test id, and that branch is stripped from production. */
 export function bannerAdGroupId(placement: BannerPlacement, ads?: BannerAdsConfig): string {
-  if (prefersTestBanner()) return TEST_BANNER_AD_GROUP_ID;
-  const configured = ads?.banner?.[placement]?.adGroupId?.trim() ?? "";
-  return configured || TEST_BANNER_AD_GROUP_ID;
+  if (import.meta.env.DEV) return "ait-ad-test-banner-id";
+  return ads?.banner?.[placement]?.adGroupId?.trim() ?? "";
 }

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { track } from "../lib/analytics";
 import { loadOpsConfig } from "../lib/opsConfig";
 import {
-  TEST_BANNER_AD_GROUP_ID,
   bannerAdGroupId,
   initTossBanner,
   isTossBannerSupported,
@@ -30,10 +29,15 @@ export function BannerAdSlot({ placement }: { placement: BannerPlacement }) {
     let cancel = false;
     void loadOpsConfig()
       .then((config) => {
-        if (!cancel) setAdGroupId(bannerAdGroupId(placement, config.economy.ads));
+        if (cancel) return;
+        const id = bannerAdGroupId(placement, config.economy.ads);
+        if (!id) setPhase("gone");
+        else setAdGroupId(id);
       })
       .catch(() => {
-        if (!cancel) setAdGroupId(TEST_BANNER_AD_GROUP_ID);
+        if (cancel) return;
+        if (import.meta.env.DEV) setAdGroupId("ait-ad-test-banner-id");
+        else setPhase("gone");
       });
     return () => {
       cancel = true;
