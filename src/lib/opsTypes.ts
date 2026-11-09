@@ -250,6 +250,13 @@ export type OpsEconomy = {
       rewards?: { adGroupId?: string };
       missions?: { adGroupId?: string };
       titles?: { adGroupId?: string };
+      attendance?: { adGroupId?: string };
+      exchange?: { adGroupId?: string };
+      ticketShop?: { adGroupId?: string };
+      rates?: { adGroupId?: string };
+      notice?: { adGroupId?: string };
+      settings?: { adGroupId?: string };
+      help?: { adGroupId?: string };
     };
   };
   cozy: {

@@ -1929,6 +1929,14 @@ export function MenuPanel({
               </div>
 
               {sheet === "missions" ? <BannerAdSlot placement="missions" /> : null}
+              {sheet === "attendance" ||
+              sheet === "rates" ||
+              sheet === "exchange" ||
+              sheet === "ticketShop" ||
+              sheet === "notice" ||
+              sheet === "settings" ? (
+                <BannerAdSlot placement={sheet} />
+              ) : null}
 
               {sheet === "attendance" ? (
                 <>

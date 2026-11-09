@@ -42,13 +42,10 @@
 
 .dex-screen > .banner-ad-slot.is-shown {
   margin-top: 0;
-  /* .dex-screen already pads the bottom by max(22px, safe-area). Pull the
-     ad into that padding and leave only a small gap, or the home-indicator
-     inset when the device actually reports one. */
-  margin-bottom: calc(
-    max(8px, env(safe-area-inset-bottom, 0px)) - max(22px, env(safe-area-inset-bottom, 34px))
-  );
-  padding-top: 8px;
+  /* Cancel the screen's bottom padding so the creative sits on the edge. */
+  margin-bottom: calc(-1 * max(22px, env(safe-area-inset-bottom, 34px)));
+  padding-top: 4px;
+  padding-bottom: 0;
   background: #14132a;
 }
 
@@ -57,9 +54,26 @@
 }
 
 .menu-sheet > .banner-ad-slot.is-shown {
-  margin-top: 12px;
-  margin-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  margin-top: 8px;
+  margin-bottom: 4px;
   background: #18152d;
+}
+
+.menu-sheet > .banner-ad-slot.is-shown:last-child {
+  margin-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+.help-earn-sheet > .banner-ad-slot {
+  width: calc(100% + 36px);
+  margin-left: -18px;
+  margin-right: -18px;
+  flex-shrink: 0;
+}
+
+.help-earn-sheet > .banner-ad-slot.is-shown {
+  margin-top: 8px;
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--help-cream, #fff6e6);
 }
 
 .achv-sheet > .banner-ad-slot.is-shown {

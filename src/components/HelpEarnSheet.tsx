@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { BannerAdSlot } from "./BannerAdSlot";
 import { useLoadingHold } from "../lib/loadingGate";
 import { loadHelpConfig, type HelpConfig, type HelpTabId } from "../lib/helpConfig";
 import { ncoinIcon } from "../lib/ncoinIcon";
@@ -130,6 +131,7 @@ export function HelpEarnSheet({ onClose, initialTab = "ncoin" }: HelpEarnSheetPr
             <p className="help-earn-foot">도움말을 불러오지 못했어요</p>
           </div>
         )}
+        <BannerAdSlot placement="help" />
       </div>
     </div>
   );

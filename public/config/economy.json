@@ -426,7 +426,14 @@
       "dex": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
       "rewards": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
       "missions": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
-      "titles": { "adGroupId": "ait.v2.live.1acc32a6f5004806" }
+      "titles": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
+      "attendance": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
+      "exchange": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
+      "ticketShop": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
+      "rates": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
+      "notice": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
+      "settings": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
+      "help": { "adGroupId": "ait.v2.live.1acc32a6f5004806" }
     }
   },
   "cozy": {
