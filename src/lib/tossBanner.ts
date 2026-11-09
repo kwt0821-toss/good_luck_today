@@ -3,7 +3,7 @@ import { TossAds, getOperationalEnvironment } from "@apps-in-toss/web-framework"
 /** Official list-banner test id. Dev and sandbox always use this. */
 export const TEST_BANNER_AD_GROUP_ID = "ait-ad-test-banner-id";
 
-export type BannerPlacement = "dex" | "rewards" | "missions" | "dexCard" | "titles";
+export type BannerPlacement = "dex" | "rewards" | "missions" | "titles";
 
 export type BannerAdsConfig = {
   banner?: Partial<Record<BannerPlacement, { adGroupId?: string }>>;

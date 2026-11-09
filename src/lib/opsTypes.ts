@@ -249,7 +249,6 @@ export type OpsEconomy = {
       dex?: { adGroupId?: string };
       rewards?: { adGroupId?: string };
       missions?: { adGroupId?: string };
-      dexCard?: { adGroupId?: string };
       titles?: { adGroupId?: string };
     };
   };

@@ -23,8 +23,7 @@
 
 .menu-sheet-body .banner-ad-slot,
 .menu-sheet > .banner-ad-slot,
-.dex-screen > .banner-ad-slot,
-.dex-sheet > .banner-ad-slot {
+.dex-screen > .banner-ad-slot {
   width: calc(100% + 48px);
   margin-left: -24px;
   margin-right: -24px;
@@ -43,21 +42,24 @@
 
 .dex-screen > .banner-ad-slot.is-shown {
   margin-top: 0;
-  margin-bottom: 0;
+  /* .dex-screen already pads the bottom by max(22px, safe-area). Pull the
+     ad into that padding and leave only a small gap, or the home-indicator
+     inset when the device actually reports one. */
+  margin-bottom: calc(
+    max(8px, env(safe-area-inset-bottom, 0px)) - max(22px, env(safe-area-inset-bottom, 34px))
+  );
   padding-top: 8px;
   background: #14132a;
+}
+
+.dex-screen > .banner-ad-slot.is-shown .banner-ad-host {
+  min-height: 0;
 }
 
 .menu-sheet > .banner-ad-slot.is-shown {
   margin-top: 12px;
   margin-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   background: #18152d;
-}
-
-.dex-sheet > .banner-ad-slot.is-shown {
-  margin-top: 8px;
-  margin-bottom: 0;
-  background: #1a1730;
 }
 
 .achv-sheet > .banner-ad-slot.is-shown {

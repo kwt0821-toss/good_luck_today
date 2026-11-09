@@ -4,7 +4,6 @@ import { createPortal } from "react-dom";
 import { AudioManager } from "../audio/AudioManager";
 import { cardBackUrl, cardLargeUrl, cardThumbUrl, decodeImage } from "../lib/cardArt";
 import { resolveFrame } from "../lib/cardFrames";
-import { BannerAdSlot } from "./BannerAdSlot";
 import { CardFrame } from "./CardFrame";
 import { jellyLabel } from "../lib/jellyLabel";
 import { useLoadingHold } from "../lib/loadingGate";
@@ -541,7 +540,6 @@ export function DexDetailSheet({
           </p>
         ) : null}
         </div>
-        <BannerAdSlot placement="dexCard" />
       </div>
     </div>,
     host,
