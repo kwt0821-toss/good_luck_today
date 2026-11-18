@@ -1,0 +1,50 @@
+{
+  "gold": {
+    "id": "gold",
+    "nameKo": "크림 골드",
+    "image": "photo-frames/gold.webp",
+    "size": [
+      720,
+      1140
+    ],
+    "photoBox": [
+      52,
+      52,
+      668,
+      821
+    ],
+    "footerTop": 821
+  },
+  "sakura": {
+    "id": "sakura",
+    "nameKo": "벚꽃",
+    "image": "photo-frames/sakura.webp",
+    "size": [
+      720,
+      1140
+    ],
+    "photoBox": [
+      52,
+      52,
+      668,
+      821
+    ],
+    "footerTop": 821
+  },
+  "stamp": {
+    "id": "stamp",
+    "nameKo": "겨울 우표",
+    "image": "photo-frames/stamp.webp",
+    "size": [
+      720,
+      1140
+    ],
+    "photoBox": [
+      52,
+      52,
+      668,
+      821
+    ],
+    "footerTop": 821
+  }
+}
