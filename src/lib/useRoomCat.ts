@@ -1,6 +1,19 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 
 import { track } from "./analytics";
+import {
+  CAT_HOP_MS,
+  CAT_SEAT_CHANCE,
+  easeHop,
+  listCatSeats,
+  loadCatSeats,
+  pickCatSeat,
+  rollSeatPose,
+  seatHoldMs,
+  type CatSeatDef,
+  type CatSeatPose,
+  type LiveCatSeat,
+} from "./catSeats";
 import { blizzardClock, saberCountedClip } from "./saberBlizzard";
 import {
   CAT_STEP_MS,
@@ -27,7 +40,7 @@ import {
   walkableTiles,
 } from "./roomCat";
 import { loadRoomCats, type RoomCatTapAction } from "./roomCats";
-import type { FloorPlacement, RoomItem, RoomMode } from "./roomTypes";
+import type { FloorPlacement, RoomItem, RoomMode, WallPlacement } from "./roomTypes";
 
 const TAP_ACTION_FPS = 8;
 const TAP_ACTION_HOLD_MS = 500;
@@ -58,6 +71,12 @@ export type RoomCatMotion = {
   fxK: number;
   /** Hide the sprite and its ground shadow. Used while blizzard snow fades in. */
   spriteHidden: boolean;
+  /** Cheese window pose. Empty uses the sprite sheet. */
+  pose: "" | "sit_look";
+  /** Code-drawn Zzz while curled up on a seat. */
+  zzz: boolean;
+  /** Reserved furniture seat, empty when the cat is on the floor. */
+  seatId: string;
 };
 
 export type RoomCatView = {
@@ -76,11 +95,42 @@ export type CatMotionRef = MutableRefObject<RoomCatMotion> & {
   subscribe: (fn: () => void) => () => void;
 };
 
-type WalkPhase = { kind: "walk"; path: CatTile[]; index: number; startedAt: number; dir: CatWalkDir };
+type WalkSeat = {
+  id: string;
+  placeKey: string;
+  footX: number;
+  footY: number;
+  approach: CatTile;
+  pose: CatSeatPose;
+  facing: CatWalkDir | null;
+};
+
+type WalkPhase = {
+  kind: "walk";
+  path: CatTile[];
+  index: number;
+  startedAt: number;
+  dir: CatWalkDir;
+  seat: WalkSeat | null;
+};
+
+type PerchPhase = {
+  kind: "perch";
+  seatId: string;
+  placeKey: string;
+  hop: "up" | "hold" | "down";
+  startedAt: number;
+  until: number;
+  pose: CatSeatPose;
+  anim: CatAnimName;
+  footX: number;
+  footY: number;
+};
 
 type Phase =
   | { kind: "idle"; until: number; anim: CatAnimName }
   | WalkPhase
+  | PerchPhase
   | { kind: "tap"; step: "tapped" | "special" | "happy" | "wait"; until: number; cooldown?: boolean }
   | { kind: "blizzard"; startedAt: number }
   | {
@@ -93,7 +143,7 @@ type Phase =
       walkElapsed: number;
     };
 
-export type CatSpot = { tile: CatTile; goal: CatTile | null };
+export type CatSpot = { tile: CatTile; goal: CatTile | null; seatId: string | null };
 
 export type CatSpotsRef = MutableRefObject<Map<string, CatSpot>>;
 
@@ -101,6 +151,7 @@ type UseRoomCatArgs = {
   roomId: string;
   breedId: string | null;
   floor: FloorPlacement[];
+  walls?: WallPlacement[];
   itemsById: Map<string, RoomItem>;
   mode: RoomMode;
   active: boolean;
@@ -146,6 +197,35 @@ function blockedGoals(spots: Map<string, CatSpot> | undefined, selfId: string): 
     if (spot.goal) blocked.add(tileKey(spot.goal));
   }
   return blocked;
+}
+
+function takenSeatIds(spots: Map<string, CatSpot> | undefined, selfId: string): Set<string> {
+  const taken = new Set<string>();
+  if (!spots) return taken;
+  for (const [id, spot] of spots) {
+    if (id === selfId || !spot.seatId) continue;
+    taken.add(spot.seatId);
+  }
+  return taken;
+}
+
+function animForSeat(pose: CatSeatPose): CatAnimName {
+  if (pose === "sleep") return "sleep";
+  if (pose === "loaf") return "loaf";
+  if (pose === "sit_look") return "sit_look";
+  return "idle_sit";
+}
+
+function walkSeatOf(seat: LiveCatSeat, pose: CatSeatPose): WalkSeat {
+  return {
+    id: seat.id,
+    placeKey: seat.placeKey,
+    footX: seat.footX,
+    footY: seat.footY,
+    approach: seat.approach,
+    pose,
+    facing: seat.facing,
+  };
 }
 
 function frameFor(sheet: CatSpriteSheet, anim: CatAnimName, elapsedMs: number): string {
@@ -228,6 +308,7 @@ export function useRoomCat({
   roomId,
   breedId,
   floor,
+  walls = [],
   itemsById,
   mode,
   active,
@@ -258,6 +339,9 @@ export function useRoomCat({
       fxMs: 0,
       fxK: 0,
       spriteHidden: false,
+      pose: "",
+      zzz: false,
+      seatId: "",
     };
     const ref = {
       current: motion,
@@ -293,7 +377,11 @@ export function useRoomCat({
   const lastTsRef = useRef(0);
   const seededRef = useRef("");
   const floorRef = useRef(floor);
+  const wallsRef = useRef(walls);
   const itemsRef = useRef(itemsById);
+  const seatsDefRef = useRef<CatSeatDef[]>([]);
+  const seatIdRef = useRef<string | null>(null);
+  const lastSeatRef = useRef("");
   const modeRef = useRef(mode);
   const activeRef = useRef(active);
   const reduceRef = useRef(reducedMotion);
@@ -315,7 +403,7 @@ export function useRoomCat({
     const walkableNow = walkableTiles(floor, itemsById);
     if (walkableNow.length) {
       const startNow = seedTile(walkableNow, slot, occupiedTiles(spotsRef.current, catIdRef.current));
-      spotsRef.current.set(catIdRef.current, { tile: startNow, goal: null });
+      spotsRef.current.set(catIdRef.current, { tile: startNow, goal: null, seatId: null });
       tileRef.current = startNow;
       fromRef.current = startNow;
       depthRef.current = { col: startNow.col, row: startNow.row };
@@ -323,6 +411,7 @@ export function useRoomCat({
   }
 
   floorRef.current = floor;
+  wallsRef.current = walls;
   itemsRef.current = itemsById;
   modeRef.current = mode;
   activeRef.current = active;
@@ -367,6 +456,16 @@ export function useRoomCat({
   }, [breedId, catMotion]);
 
   useEffect(() => {
+    let cancelled = false;
+    void loadCatSeats().then((defs) => {
+      if (!cancelled) seatsDefRef.current = defs;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const walkable = walkableTiles(floor, itemsById);
     if (!walkable.length) return;
     const current = tileRef.current;
@@ -386,7 +485,8 @@ export function useRoomCat({
     toRef.current = null;
     progressRef.current = 0;
     depthRef.current = { col: start.col, row: start.row };
-    spotsRef?.current.set(catIdRef.current, { tile: start, goal: null });
+    seatIdRef.current = null;
+    spotsRef?.current.set(catIdRef.current, { tile: start, goal: null, seatId: null });
     placeMotion(catMotion.current, start, sheetRef.current, "idle_sit");
     // Start walking almost immediately so a cold browser load looks alive.
     phaseRef.current = { kind: "idle", until: performance.now() + (needSeed ? 200 : 80), anim: "idle_sit" };
@@ -396,13 +496,19 @@ export function useRoomCat({
 
   useEffect(() => {
     if (mode === "edit") {
-      phaseRef.current = {
-        kind: "idle",
-        until: Number.POSITIVE_INFINITY,
-        anim: phaseRef.current.kind === "idle" ? phaseRef.current.anim : "idle_sit",
-      };
-      toRef.current = null;
-      progressRef.current = 0;
+      const phase = phaseRef.current;
+      if (phase.kind === "perch" && phase.hop === "hold") {
+        phaseRef.current = { ...phase, until: Number.POSITIVE_INFINITY };
+      } else {
+        seatIdRef.current = null;
+        phaseRef.current = {
+          kind: "idle",
+          until: Number.POSITIVE_INFINITY,
+          anim: "idle_sit",
+        };
+        toRef.current = null;
+        progressRef.current = 0;
+      }
       bubbleUntilRef.current = 0;
       catMotion.current.bubbleOn = false;
       catMotion.current.bubbleRoom = false;
@@ -413,7 +519,10 @@ export function useRoomCat({
     }
     catMotion.current.opacity = 1;
     setView((prev) => ({ ...prev, opacity: 1 }));
-    if (phaseRef.current.kind === "idle" && !Number.isFinite(phaseRef.current.until)) {
+    const phase = phaseRef.current;
+    if (phase.kind === "perch" && !Number.isFinite(phase.until)) {
+      phaseRef.current = { ...phase, until: performance.now() + 4000 };
+    } else if (phase.kind === "idle" && !Number.isFinite(phase.until)) {
       phaseRef.current = { kind: "idle", until: performance.now() + 200, anim: "idle_sit" };
     }
     for (const listener of listenersRef.current) listener();
@@ -429,16 +538,21 @@ export function useRoomCat({
     };
 
     const publishSpot = (goal: CatTile | null) => {
-      spotsRef?.current.set(catIdRef.current, { tile: tileRef.current, goal });
+      spotsRef?.current.set(catIdRef.current, {
+        tile: tileRef.current,
+        goal,
+        seatId: seatIdRef.current,
+      });
     };
 
-    const beginWalk = (path: CatTile[], ts: number) => {
+    const beginWalk = (path: CatTile[], ts: number, seat: WalkSeat | null = null) => {
       phaseRef.current = {
         kind: "walk",
         path,
         index: 0,
         startedAt: ts,
         dir: walkDirOf(path[0], path[1]),
+        seat,
       };
       fromRef.current = path[0];
       toRef.current = path[1];
@@ -446,6 +560,64 @@ export function useRoomCat({
       animElapsedRef.current = 0;
       publishSpot(path[path.length - 1] ?? null);
     };
+
+    const seatContext = (from: CatTile | null) => ({
+      defs: seatsDefRef.current,
+      floor: floorRef.current,
+      walls: wallsRef.current,
+      items: itemsRef.current,
+      walkable: walkableTiles(floorRef.current, itemsRef.current),
+      blocked: blockedGoals(spotsRef?.current, catIdRef.current),
+      takenSeatIds: takenSeatIds(spotsRef?.current, catIdRef.current),
+      from,
+    });
+
+    const beginPerch = (seat: WalkSeat, ts: number) => {
+      if (seat.facing) facingRef.current = seat.facing;
+      seatIdRef.current = seat.id;
+      tileRef.current = seat.approach;
+      fromRef.current = seat.approach;
+      toRef.current = null;
+      progressRef.current = 0;
+      phaseRef.current = {
+        kind: "perch",
+        seatId: seat.id,
+        placeKey: seat.placeKey,
+        hop: "up",
+        startedAt: ts,
+        until: 0,
+        pose: seat.pose,
+        anim: "idle_sit",
+        footX: seat.footX,
+        footY: seat.footY,
+      };
+      animElapsedRef.current = 0;
+      publishSpot(null);
+    };
+
+    const dropToFloor = (ts: number, stay: boolean) => {
+      seatIdRef.current = null;
+      const walkableNow = walkableTiles(floorRef.current, itemsRef.current);
+      const occupied = occupiedTiles(spotsRef?.current, catIdRef.current);
+      const here = tileRef.current;
+      const hereOk =
+        walkableNow.some((tile) => tile.col === here.col && tile.row === here.row) && !occupied.has(tileKey(here));
+      const tile = hereOk ? here : (nearestFree(here, walkableNow, occupied) ?? here);
+      tileRef.current = tile;
+      fromRef.current = tile;
+      toRef.current = null;
+      progressRef.current = 0;
+      phaseRef.current = {
+        kind: "idle",
+        until: stay ? Number.POSITIVE_INFINITY : ts + 400,
+        anim: "idle_sit",
+      };
+      animElapsedRef.current = 0;
+      publishSpot(null);
+    };
+
+    const seatStillThere = (seatId: string, placeKey: string) =>
+      listCatSeats(seatContext(null)).some((seat) => seat.id === seatId && seat.placeKey === placeKey);
 
     const loop = (ts: number) => {
       if (!alive) return;
@@ -539,6 +711,7 @@ export function useRoomCat({
           const from = phase.path[phase.index];
           const to = phase.path[phase.index + 1];
           if (!from || !to) {
+            seatIdRef.current = null;
             phaseRef.current = { kind: "idle", until: ts + 200, anim: "idle_sit" };
           } else {
             const t = Math.min(1, (ts - phase.startedAt) / CAT_STEP_MS);
@@ -552,9 +725,15 @@ export function useRoomCat({
               if (nextIndex >= phase.path.length - 1) {
                 toRef.current = null;
                 progressRef.current = 0;
-                const pose = pickIdlePose(sheet, false, facingRef.current);
-                phaseRef.current = { kind: "idle", until: ts + pose.durationMs, anim: pose.anim };
-                animElapsedRef.current = 0;
+                const seat = phase.seat;
+                if (seat && seatStillThere(seat.id, seat.placeKey)) {
+                  beginPerch(seat, ts);
+                } else {
+                  seatIdRef.current = null;
+                  const pose = pickIdlePose(sheet, false, facingRef.current);
+                  phaseRef.current = { kind: "idle", until: ts + pose.durationMs, anim: pose.anim };
+                  animElapsedRef.current = 0;
+                }
               } else {
                 const nextFrom = phase.path[nextIndex];
                 const nextTo = phase.path[nextIndex + 1];
@@ -564,44 +743,95 @@ export function useRoomCat({
                   index: nextIndex,
                   startedAt: ts,
                   dir: walkDirOf(nextFrom, nextTo),
+                  seat: phase.seat,
                 };
                 animElapsedRef.current = 0;
               }
             }
           }
+        } else if (phase.kind === "perch") {
+          if (!seatStillThere(phase.seatId, phase.placeKey)) {
+            dropToFloor(ts, false);
+          } else if (phase.hop === "up") {
+            if (ts - phase.startedAt >= CAT_HOP_MS) {
+              phaseRef.current = {
+                ...phase,
+                hop: "hold",
+                startedAt: ts,
+                until: ts + seatHoldMs(phase.pose, Math.random),
+                anim: animForSeat(phase.pose),
+              };
+              animElapsedRef.current = 0;
+            }
+          } else if (phase.hop === "hold") {
+            if (ts >= phase.until) {
+              phaseRef.current = { ...phase, hop: "down", startedAt: ts, anim: "idle_sit" };
+              animElapsedRef.current = 0;
+            }
+          } else if (ts - phase.startedAt >= CAT_HOP_MS) {
+            lastSeatRef.current = phase.seatId;
+            dropToFloor(ts, false);
+          }
         } else if (phase.kind === "idle" && ts >= phase.until) {
           const blocked = blockedGoals(spotsRef?.current, catIdRef.current);
-          let path = pickWalkPath(tileRef.current, walkable, blocked);
-          if (!path) {
-            // Stranded on a 1-tile island — hop to the main walkable region.
-            const home = seedTile(
-              walkable,
-              slotRef.current,
-              occupiedTiles(spotsRef?.current, catIdRef.current),
+          let claimedSeat = false;
+          if (Math.random() < CAT_SEAT_CHANCE && seatsDefRef.current.length) {
+            const offers = listCatSeats(seatContext(tileRef.current)).filter(
+              (seat) => seat.id !== lastSeatRef.current,
             );
-            if (home.col !== tileRef.current.col || home.row !== tileRef.current.row) {
-              tileRef.current = home;
-              fromRef.current = home;
-              toRef.current = null;
-              progressRef.current = 0;
-              publishSpot(null);
-              placeMotion(catMotion.current, home, sheet, "idle_sit");
-              path = pickWalkPath(home, walkable, blockedGoals(spotsRef?.current, catIdRef.current));
+            const picked = pickCatSeat(offers, Math.random);
+            if (picked) {
+              const pose = rollSeatPose(picked.pose, Math.random);
+              const seat = walkSeatOf(picked, pose);
+              if (tileRef.current.col === seat.approach.col && tileRef.current.row === seat.approach.row) {
+                beginPerch(seat, ts);
+                claimedSeat = true;
+              } else {
+                const path = findPath(tileRef.current, seat.approach, walkable);
+                if (path.length >= 2) {
+                  seatIdRef.current = seat.id;
+                  beginWalk(path, ts, seat);
+                  claimedSeat = true;
+                }
+              }
             }
           }
-          if (path) {
-            beginWalk(path, ts);
-          } else {
-            const pose = pickIdlePose(sheet, false, facingRef.current);
-            phaseRef.current = { kind: "idle", until: ts + pose.durationMs, anim: pose.anim };
-            animElapsedRef.current = 0;
+          if (!claimedSeat) {
+            lastSeatRef.current = "";
+            let path = pickWalkPath(tileRef.current, walkable, blocked);
+            if (!path) {
+              // Stranded on a 1-tile island — hop to the main walkable region.
+              const home = seedTile(
+                walkable,
+                slotRef.current,
+                occupiedTiles(spotsRef?.current, catIdRef.current),
+              );
+              if (home.col !== tileRef.current.col || home.row !== tileRef.current.row) {
+                tileRef.current = home;
+                fromRef.current = home;
+                toRef.current = null;
+                progressRef.current = 0;
+                publishSpot(null);
+                placeMotion(catMotion.current, home, sheet, "idle_sit");
+                path = pickWalkPath(home, walkable, blockedGoals(spotsRef?.current, catIdRef.current));
+              }
+            }
+            if (path) {
+              seatIdRef.current = null;
+              beginWalk(path, ts, null);
+            } else {
+              const pose = pickIdlePose(sheet, false, facingRef.current);
+              phaseRef.current = { kind: "idle", until: ts + pose.durationMs, anim: pose.anim };
+              animElapsedRef.current = 0;
+            }
           }
         }
       } else if (isEdit || reduce) {
-        if (phase.kind !== "idle" || (reduce && phase.anim !== "idle_sit")) {
-          phaseRef.current = { kind: "idle", until: Number.POSITIVE_INFINITY, anim: "idle_sit" };
-          toRef.current = null;
-          progressRef.current = 0;
+        if (phase.kind === "perch" && phase.hop === "hold" && !reduce) {
+          if (!seatStillThere(phase.seatId, phase.placeKey)) dropToFloor(ts, true);
+          else if (Number.isFinite(phase.until)) phaseRef.current = { ...phase, until: Number.POSITIVE_INFINITY };
+        } else if (phase.kind !== "idle" || seatIdRef.current || (reduce && phase.anim !== "idle_sit")) {
+          dropToFloor(ts, true);
         }
       }
 
@@ -666,15 +896,40 @@ export function useRoomCat({
       const progress = to ? progressRef.current : 0;
       const a = tileCentreWorld(from.col, from.row);
       const b = to ? tileCentreWorld(to.col, to.row) : a;
-      const depthTile = to && progress > 0 ? to : tileRef.current;
+      const depthTile =
+        live.kind === "perch" && live.hop !== "down"
+          ? { col: tileRef.current.col + 1, row: tileRef.current.row }
+          : to && progress > 0
+            ? to
+            : tileRef.current;
 
       // Mutate in place so subscribe identity on the ref wrapper stays stable.
       const motion = catMotion.current;
       motion.worldX = a.x + (b.x - a.x) * progress;
       motion.worldY = a.y + (b.y - a.y) * progress;
+      let poseImage: "" | "sit_look" = "";
+      let zzz = false;
+      if (live.kind === "perch") {
+        const ground = tileCentreWorld(tileRef.current.col, tileRef.current.row);
+        const foot = { x: live.footX, y: live.footY };
+        const hopT = live.hop === "hold" ? 1 : Math.min(1, (ts - live.startedAt) / CAT_HOP_MS);
+        const u = live.hop === "hold" ? 1 : easeHop(hopT);
+        if (live.hop === "down") {
+          motion.worldX = foot.x + (ground.x - foot.x) * u;
+          motion.worldY = foot.y + (ground.y - foot.y) * u;
+        } else {
+          motion.worldX = ground.x + (foot.x - ground.x) * u;
+          motion.worldY = ground.y + (foot.y - ground.y) * u;
+        }
+        if (live.hop === "hold" && (live.pose === "sleep" || live.pose === "loaf")) zzz = true;
+        if (live.hop === "hold" && live.pose === "sit_look") poseImage = "sit_look";
+      }
       motion.frameName = frameOverride ?? frameFor(sheet, anim === "tap_action" ? "idle_sit" : anim, animElapsedRef.current);
       motion.anim = anim;
       motion.flip = flip;
+      motion.pose = poseImage;
+      motion.zzz = zzz;
+      motion.seatId = live.kind === "perch" ? live.seatId : seatIdRef.current ?? "";
       motion.opacity = isEdit ? 0.5 : 1;
       const fxName = anim.endsWith("_r") ? anim.slice(0, -2) : anim;
       const fxOn =
@@ -698,7 +953,9 @@ export function useRoomCat({
         const phaseKind =
           live.kind === "walk"
             ? `walk:${live.index}/${live.path.length - 1}`
-            : live.kind === "tap"
+            : live.kind === "perch"
+              ? `perch:${live.hop}:${live.pose}`
+              : live.kind === "tap"
               ? `tap:${live.step}`
               : live.kind === "blizzard"
                 ? "blizzard"
@@ -713,6 +970,9 @@ export function useRoomCat({
           goal:
             live.kind === "walk" ? { ...(live.path[live.path.length - 1] ?? tileRef.current) } : null,
           anim,
+          pose: motion.pose,
+          zzz: motion.zzz,
+          seatId: motion.seatId,
           fx: motion.fx,
           fxMs: Math.round(motion.fxMs),
           fxK: Math.round(motion.fxK * 100) / 100,
@@ -778,6 +1038,11 @@ export function useRoomCat({
   }, [spotsRef, breedId]);
 
   const playTapped = (now: number) => {
+    if (phaseRef.current.kind === "perch" || seatIdRef.current) {
+      seatIdRef.current = null;
+      toRef.current = null;
+      progressRef.current = 0;
+    }
     phaseRef.current = { kind: "tap", step: "tapped", until: now + 600 };
     toRef.current = null;
     progressRef.current = 0;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 
+import { SIT_LOOK_BODY_PX, SIT_LOOK_CHEESE } from "../lib/catSeats";
 import { useHideBrokenImages } from "../lib/hideBrokenImages";
 import { roomAsset } from "../lib/roomCatalog";
 import { AudioManager } from "../audio/AudioManager";
@@ -308,6 +309,8 @@ function RoamingCatBody({
   const auraRef = useRef<HTMLSpanElement>(null);
   const backSnowRef = useRef<HTMLCanvasElement>(null);
   const frontSnowRef = useRef<HTMLCanvasElement>(null);
+  const poseRef = useRef<HTMLImageElement>(null);
+  const zzzRef = useRef<HTMLSpanElement>(null);
   const snowRef = useRef<{ flakes: SnowFlake[]; scale: number; last: number } | null>(null);
   const [bubbleRoot, setBubbleRoot] = useState<HTMLElement | null>(null);
   const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
@@ -340,6 +343,63 @@ function RoamingCatBody({
       btn.dataset.catFx = motion.fx;
       btn.dataset.spriteHidden = motion.spriteHidden ? "1" : "0";
       frameEl.style.opacity = motion.spriteHidden ? "0" : "1";
+      const poseEl = poseRef.current;
+      const cheeseLook =
+        motion.pose === "sit_look" &&
+        (btn.dataset.catId === SIT_LOOK_CHEESE.breedId || btn.dataset.catId === DEFAULT_CAT_BREED_ID);
+      let poseBox: { w: number; h: number; ax: number; ay: number } | null = null;
+      if (poseEl) {
+        if (!cheeseLook) {
+          poseEl.hidden = true;
+        } else {
+          const src = catAsset(SIT_LOOK_CHEESE.src);
+          if (poseEl.dataset.src !== src) {
+            poseEl.dataset.src = src;
+            poseEl.dataset.ready = "";
+            poseEl.dataset.broken = "";
+            poseEl.onload = () => {
+              poseEl.dataset.ready = "1";
+            };
+            poseEl.onerror = () => {
+              poseEl.dataset.broken = "1";
+              poseEl.hidden = true;
+            };
+            poseEl.src = src;
+          }
+          const ready = poseEl.dataset.ready === "1" && poseEl.dataset.broken !== "1";
+          poseEl.hidden = !ready;
+          if (ready) {
+            const scale = SIT_LOOK_BODY_PX / SIT_LOOK_CHEESE.body;
+            const w = SIT_LOOK_CHEESE.w * scale;
+            const h = SIT_LOOK_CHEESE.h * scale;
+            const ax = SIT_LOOK_CHEESE.ax * scale;
+            const ay = SIT_LOOK_CHEESE.ay * scale;
+            poseBox = { w, h, ax, ay };
+            btn.style.left = pctX(motion.worldX - ax);
+            btn.style.top = pctY(motion.worldY - ay);
+            btn.style.width = pctX(w);
+            btn.style.height = pctY(h);
+            frameEl.style.opacity = "0";
+            poseEl.style.transformOrigin = `${(ax / w) * 100}% ${(ay / h) * 100}%`;
+            poseEl.style.transform = motion.flip ? "scaleX(-1)" : "";
+          }
+        }
+      }
+      const zzzEl = zzzRef.current;
+      if (zzzEl) {
+        zzzEl.hidden = !motion.zzz;
+        if (motion.zzz) {
+          const ax = poseBox ? poseBox.ax : sheet.anchor.x;
+          const ay = poseBox ? poseBox.ay : sheet.anchor.y;
+          const bw = poseBox ? poseBox.w : fw;
+          const bh = poseBox ? poseBox.h : fh;
+          zzzEl.style.left = `${(ax / bw) * 100}%`;
+          zzzEl.style.top = `${(Math.max(0, ay - 108) / bh) * 100}%`;
+        }
+      }
+      btn.dataset.seat = motion.seatId;
+      btn.dataset.zzz = motion.zzz ? "1" : "0";
+      btn.dataset.pose = motion.pose;
       const flip = motion.flip ? "scaleX(-1)" : "";
       frameEl.style.transformOrigin = `${(sheet.anchor.x / fw) * 100}% 100%`;
       const cloud = cloudRef.current;
@@ -501,6 +561,10 @@ function RoamingCatBody({
         <span />
       </span>
       <canvas ref={backSnowRef} className="lucky-cat-snow is-back" hidden aria-hidden="true" />
+      <span ref={zzzRef} className="lucky-cat-zzz" hidden>
+        Zzz
+      </span>
+      <img ref={poseRef} className="lucky-cat-pose" alt="" draggable={false} hidden />
       <span
         ref={frameRef}
         className="lucky-roam-frame"
@@ -534,6 +598,7 @@ function RoomCatAgent({
   spotsRef,
   roomId,
   floor,
+  walls,
   itemsById,
   mode,
   active,
@@ -545,6 +610,7 @@ function RoomCatAgent({
   spotsRef: CatSpotsRef;
   roomId: string;
   floor: RoomLayoutState["floor"];
+  walls: RoomLayoutState["walls"];
   itemsById: Map<string, RoomItem>;
   mode: RoomMode;
   active: boolean;
@@ -555,6 +621,7 @@ function RoomCatAgent({
     roomId,
     breedId: catId,
     floor,
+    walls,
     itemsById,
     mode,
     active,
@@ -972,6 +1039,7 @@ export function RoomWorld({
           spotsRef={spotsRef}
           roomId={roomId}
           floor={layout.floor}
+          walls={layout.walls}
           itemsById={itemsById}
           mode={mode}
           active={roamingActive}

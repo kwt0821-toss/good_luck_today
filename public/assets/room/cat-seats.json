@@ -1,0 +1,24 @@
+{
+  "_note": "Seats a room cat may climb. Approach tile, feet, height, and pose live here. Winter cabin pieces (cat_cabinet, knit_chair, wool_rug) can be added as more entries. Lamps, drawers, shelves, tables, desks, fridges, plants, and feeder are not seats.",
+  "seats": [
+    { "itemId": "sofa", "weight": 8, "pose": "sit", "lift": 42, "slots": [{ "c": 0, "r": 0 }, { "c": 1, "r": 0 }] },
+    { "itemId": "catbed", "weight": 8, "pose": "sleep", "lift": 18, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "bed", "weight": 7, "pose": "sleep", "lift": 40, "slots": [{ "c": 0, "r": 0 }, { "c": 0, "r": 1 }] },
+    { "itemId": "cattower", "weight": 8, "pose": "sit", "lift": 88, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "cushions", "weight": 8, "pose": "sleep", "lift": 34, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "archwindow", "weight": 8, "pose": "sit_look", "wall": true, "partner": "catsteps", "fx": 0.5, "fy": 0.7 },
+    { "itemId": "catsteps", "weight": 8, "pose": "sit_look", "wall": true, "partner": "archwindow", "fx": 0.55, "fy": 0.42 },
+    { "itemId": "catchair", "weight": 4, "pose": "sit", "lift": 32, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "beanbag", "weight": 4, "pose": "sleep", "lift": 26, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "tent", "weight": 2, "pose": "sleep", "lift": 18, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "scratcher", "weight": 2, "pose": "sit", "lift": 16, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "window_bench", "weight": 7, "pose": "sit", "lift": 44, "slots": [{ "c": 0, "r": 0 }, { "c": 1, "r": 0 }] },
+    { "itemId": "cup_cattower", "weight": 8, "pose": "sit", "lift": 86, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "bean_sack", "weight": 4, "pose": "sleep", "lift": 18, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "heart_chair", "weight": 4, "pose": "sit", "lift": 32, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "garden_bench", "weight": 5, "pose": "sit", "lift": 36, "slots": [{ "c": 0, "r": 0 }, { "c": 1, "r": 0 }] },
+    { "itemId": "garden_swing", "weight": 6, "pose": "sit", "lift": 72, "center": true },
+    { "itemId": "cat_hammock", "weight": 7, "pose": "sit", "lift": 70, "center": true },
+    { "itemId": "picnic_blanket", "weight": 5, "pose": "sleep", "lift": 8, "slots": [{ "c": 0, "r": 0 }, { "c": 1, "r": 1 }] }
+  ]
+}
