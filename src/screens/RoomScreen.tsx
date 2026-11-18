@@ -33,6 +33,7 @@ import {
   type RoomsFile,
 } from "../lib/roomCatalog";
 import { loadOpsState, saveOpsState } from "../lib/opsStorage";
+import { computeCozyPointsFromOwned } from "../lib/roomCozy";
 import { applyOpsPrices, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import { displayJellyBalance, jellySpend, serverJellyActive, subscribeJelly } from "../lib/serverJelly";
 import { furnitureDepthKey } from "../lib/roomCat";
@@ -85,7 +86,7 @@ import {
   type PlacementPreview,
 } from "../lib/roomPlacement";
 import { paintTargetLabel } from "../lib/roomTiles";
-import type { OpsEconomy, PriceTier } from "../lib/opsTypes";
+import type { OpsEconomy, OpsPrices, PriceTier } from "../lib/opsTypes";
 import type {
   FloorPlacement,
   PaintTarget,
@@ -371,6 +372,9 @@ export function RoomScreen({
   const [previewHudMode, setPreviewHudMode] = useState<"message" | "toolbar">("message");
   const [committing, setCommitting] = useState(false);
   const [placeFxId, setPlaceFxId] = useState<string | null>(null);
+  const [cozyPop, setCozyPop] = useState<{ id: number; gain: number } | null>(null);
+  const cozyPopId = useRef(0);
+  const cozyConfigRef = useRef<{ prices: OpsPrices; economy: OpsEconomy } | null>(null);
   // Treat null phase as pick when tutorial is active (resume / first paint).
   const effectiveTutPhase =
     tutorialActive && tutorialPhase == null ? "pick" : tutorialPhase;
@@ -705,6 +709,7 @@ export function RoomScreen({
           ) as Record<string, PriceTier>,
         );
         setStarterDrawerIds(config.starter.drawer ?? []);
+        cozyConfigRef.current = { prices: config.prices, economy: config.economy };
         const loaded = await loadRoomState(priced, rooms, gridFile);
         const synced = await syncRoomSaveWithOps(loaded);
         setState(synced);
@@ -1093,6 +1098,7 @@ export function RoomScreen({
       base.instanceId,
     );
     const next: PlacementPreview = { ...base, col, row, valid: check.valid, reason: check.reason };
+    if (base.valid && !check.valid) void haptic("softMedium");
     setPreview(next);
     previewRef.current = next;
     syncDragFromPreview(next);
@@ -1124,6 +1130,7 @@ export function RoomScreen({
       valid: check.valid,
       reason: check.reason,
     };
+    if (base.valid && !check.valid) void haptic("softMedium");
     setPreview(next);
     previewRef.current = next;
     syncDragFromPreview(next);
@@ -1528,6 +1535,7 @@ export function RoomScreen({
       valid: check.valid,
       reason: check.reason,
     };
+    if (preview.valid && !check.valid) void haptic("softMedium");
     setPreview(next);
     previewRef.current = next;
     syncDragFromPreview(next);
@@ -1541,7 +1549,7 @@ export function RoomScreen({
 
   const playPlaceFx = (instanceId: string) => {
     AudioManager.playSfx("item-place");
-    void haptic("softMedium");
+    void haptic("success");
     if (reduceMotion) {
       setPlaceFxId(instanceId);
       window.setTimeout(() => setPlaceFxId(null), 120);
@@ -1794,6 +1802,21 @@ export function RoomScreen({
       owned: nextOwned,
     };
     persist(draft);
+    const cfg = cozyConfigRef.current;
+    if (cfg) {
+      const before = computeCozyPointsFromOwned(state.owned, cfg.prices, cfg.economy, itemsById);
+      const after = computeCozyPointsFromOwned(nextOwned, cfg.prices, cfg.economy, itemsById);
+      const gain = after - before;
+      if (gain > 0) {
+        const id = cozyPopId.current + 1;
+        cozyPopId.current = id;
+        setCozyPop({ id, gain });
+        void haptic("success");
+        window.setTimeout(() => {
+          setCozyPop((current) => (current?.id === id ? null : current));
+        }, reduceMotion ? 140 : 1200);
+      }
+    }
     void recalculateRoomCozy(draft).then((withCozy) => {
       persist(withCozy);
     });
@@ -1958,6 +1981,11 @@ export function RoomScreen({
       onPointerUp={onStagePointerUp}
       onPointerCancel={onStagePointerUp}
     >
+      {cozyPop ? (
+        <p key={cozyPop.id} className="lucky-cozy-float" role="status">
+          +{cozyPop.gain} 아늑함
+        </p>
+      ) : null}
       <div className="lucky-stars" aria-hidden="true">
         {stars.map((star) => (
           <span
@@ -2436,11 +2464,7 @@ export function RoomScreen({
                     : undefined
                 }
               >
-                {preview.reason.includes("자리")
-                  ? "방에 자리가 없어요"
-                  : preview.reason.includes("겹쳐")
-                    ? "다른 가구와 겹쳐요"
-                    : preview.reason}
+                {preview.reason.includes("자리") ? "방에 자리가 없어요" : "여기엔 놓을 수 없어요"}
               </NyChip>
             </div>
           ) : null}

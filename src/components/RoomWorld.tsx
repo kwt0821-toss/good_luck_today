@@ -227,6 +227,7 @@ function FloorSprite({
         <span className="lucky-sprite-fallback">{item.nameKo}</span>
       )}
       {placeFx ? <span className="lucky-place-sparkles" aria-hidden="true" /> : null}
+      {placeFx ? <span className="lucky-place-dust" aria-hidden="true" /> : null}
       {frames && thumbs[0] ? (
         <span className={`lucky-frame-art is-${item.id}`} aria-hidden="true">
           <img src={thumbs[0]} alt="" />
@@ -1035,10 +1036,11 @@ export function RoomWorld({
             if (!item) return null;
             const shadow = shadowRect(item, place);
             if (!shadow) return null;
+            const liftedShadow = liftedIds.has(place.instanceId);
             return (
               <img
                 key={`sh-${place.instanceId}`}
-                className="lucky-contact-shadow"
+                className={`lucky-contact-shadow${liftedShadow ? " is-lifted" : ""}`}
                 src={roomAsset(shadow.src)}
                 alt=""
                 draggable={false}
@@ -1065,6 +1067,7 @@ export function RoomWorld({
             lifted={(place.instanceId === selectedId && mode === "edit") || isPreview}
             shaking={place.instanceId === shakeId}
             thumbs={frameThumbs}
+            placeFx={place.instanceId === placeFxId}
             previewGhost={isPreview}
             previewInvalid={isPreview && previewInvalid}
             fit={fit}
@@ -1191,6 +1194,7 @@ function WallSprite({
   lifted,
   shaking,
   thumbs,
+  placeFx = false,
   previewGhost = false,
   previewInvalid = false,
   fit,
@@ -1203,6 +1207,7 @@ function WallSprite({
   lifted: boolean;
   shaking: boolean;
   thumbs: string[];
+  placeFx?: boolean;
   previewGhost?: boolean;
   previewInvalid?: boolean;
   fit: number;
@@ -1217,7 +1222,7 @@ function WallSprite({
   return (
     <button
       type="button"
-      className={`lucky-sprite is-wall is-wall-${place.wall} ${selected ? "is-selected" : ""} ${lifted || previewGhost ? "is-lifted" : ""} ${previewGhost ? "is-preview-ghost" : ""} ${previewInvalid ? "is-preview-invalid" : ""} ${shaking ? "is-shake" : ""}`}
+      className={`lucky-sprite is-wall is-wall-${place.wall} ${selected ? "is-selected" : ""} ${lifted || previewGhost ? "is-lifted" : ""} ${previewGhost ? "is-preview-ghost" : ""} ${previewInvalid ? "is-preview-invalid" : ""} ${shaking ? "is-shake" : ""} ${placeFx ? "is-place-fx" : ""}`}
       style={{
         ...worldBox(rect),
         transform: liftY,
@@ -1227,6 +1232,8 @@ function WallSprite({
       onClick={() => onSelect(place.instanceId)}
     >
       {rect.src ? <img src={roomAsset(rect.src)} alt="" draggable={false} /> : null}
+      {placeFx ? <span className="lucky-place-sparkles" aria-hidden="true" /> : null}
+      {placeFx ? <span className="lucky-place-dust" aria-hidden="true" /> : null}
       {frames && thumbs[0] ? (
         <span className={`lucky-frame-art is-${item.id} is-wall-${place.wall}`} aria-hidden="true">
           <img src={thumbs[0]} alt="" />

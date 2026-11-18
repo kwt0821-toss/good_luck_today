@@ -146,10 +146,10 @@ export function validateFloorPreview(
   const [w, d] = itemSize(item, orientation);
   const used = occupancy(floor, byId, ignoreInstanceId);
   if (col < 0 || row < 0 || col + w > GRID || row + d > GRID) {
-    return { valid: false, reason: "여기는 놓을 수 없어요" };
+    return { valid: false, reason: "여기엔 놓을 수 없어요" };
   }
   if (!isDecal(item) && !canPlace(col, row, w, d, used)) {
-    return { valid: false, reason: "다른 가구와 겹쳐요" };
+    return { valid: false, reason: "여기엔 놓을 수 없어요" };
   }
   return { valid: true, reason: null };
 }
@@ -165,7 +165,7 @@ export function validateWallPreview(
 ): { valid: boolean; reason: string | null } {
   const used = wallOccupancy(walls, byId, ignoreInstanceId);
   if (!canPlaceWall(item, wall, slot, band, used)) {
-    return { valid: false, reason: "여기는 놓을 수 없어요" };
+    return { valid: false, reason: "여기엔 놓을 수 없어요" };
   }
   return { valid: true, reason: null };
 }

@@ -6,6 +6,7 @@ import {
   getAppsInTossGlobals,
 } from "@apps-in-toss/web-framework";
 
+import { loadMenuSettings } from "./menuSettings";
 import { TOSS_NAV_BG } from "./tossTheme";
 
 export function isInTossApp(): boolean {
@@ -35,6 +36,7 @@ export async function configureNavigationBar(options: {
 }
 
 export async function haptic(type: "tap" | "success" | "softMedium" = "tap"): Promise<void> {
+  if (!loadMenuSettings().haptic) return;
   try {
     await Promise.race([
       Device.triggerHaptic({ type }),
