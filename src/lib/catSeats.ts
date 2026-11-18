@@ -26,7 +26,7 @@ export const SIT_LOOK_CHEESE = {
   h: 771,
   ax: 352,
   ay: 762,
-  body: 320,
+  body: 340,
 };
 export const SIT_LOOK_BODY_PX = 125;
 
