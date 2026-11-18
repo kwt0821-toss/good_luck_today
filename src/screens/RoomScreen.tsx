@@ -34,6 +34,7 @@ import {
 } from "../lib/roomCatalog";
 import { loadOpsState, saveOpsState } from "../lib/opsStorage";
 import { computeCozyPointsFromOwned } from "../lib/roomCozy";
+import { claimRoomSetReward, roomSetCue, roomSetFor, roomSetViews, type RoomSetView } from "../lib/roomSets";
 import { applyOpsPrices, grantUnlockRewards, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import { displayJellyBalance, jellySpend, serverJellyActive, subscribeJelly } from "../lib/serverJelly";
 import { furnitureDepthKey } from "../lib/roomCat";
@@ -345,6 +346,12 @@ export function RoomScreen({
   const [state, setState] = useState<RoomSaveState | null>(null);
   const [loadError, setLoadError] = useState<Error | null>(null);
   const [economyRooms, setEconomyRooms] = useState<OpsEconomy["rooms"]>([]);
+  const [economy, setEconomy] = useState<OpsEconomy | null>(null);
+  const [claimedRoomSets, setClaimedRoomSets] = useState<string[]>([]);
+  const [setBanner, setSetBanner] = useState<{ title: string; sub: string; roomId: string } | null>(null);
+  const setBannerPrimed = useRef(false);
+  const setBannerShown = useRef(new Set<string>());
+  const claimingSetRef = useRef(false);
   const [itemTiers, setItemTiers] = useState<Record<string, PriceTier>>({});
   const [starterDrawerIds, setStarterDrawerIds] = useState<string[]>([]);
   const [themeFilter, setThemeFilter] = useState<RoomThemeFilter>("all");
@@ -703,6 +710,7 @@ export function RoomScreen({
         setGrid(gridFile);
         setRoomsFile(rooms);
         setEconomyRooms(config.economy.rooms ?? []);
+        setEconomy(config.economy);
         setItemTiers(
           Object.fromEntries(
             (config.prices.items ?? []).map((row) => [row.id, row.tier]),
@@ -862,6 +870,34 @@ export function RoomScreen({
     }
     onBack();
   });
+  useEffect(() => {
+    void loadOpsState().then((ops) => setClaimedRoomSets(ops.claimedRoomSetIds));
+  }, []);
+
+  useEffect(() => {
+    if (!setBanner) return;
+    const timer = window.setTimeout(() => setSetBanner(null), 3200);
+    return () => window.clearTimeout(timer);
+  }, [setBanner]);
+
+  useEffect(() => {
+    if (!economy || !state) return;
+    const views = roomSetViews(economy, state.owned);
+    if (!setBannerPrimed.current) {
+      setBannerPrimed.current = true;
+      for (const row of views) {
+        if (row.complete) setBannerShown.current.add(row.roomId);
+      }
+      return;
+    }
+    for (const row of views) {
+      if (!row.complete || setBannerShown.current.has(row.roomId)) continue;
+      if (row.roomId !== state.currentRoomId) continue;
+      setBannerShown.current.add(row.roomId);
+      setSetBanner({ title: `${row.nameKo} 세트 완성!`, sub: row.bannerSub, roomId: row.roomId });
+    }
+  }, [economy, state]);
+
   useLoadingHold("room", !state || !roomsFile);
 
   if (loadError) throw loadError;
@@ -878,6 +914,29 @@ export function RoomScreen({
     : (unlockedIds[0] ?? state.currentRoomId);
   const layout = state.rooms[displayRoomId] ?? currentRoom(state);
   const roomDef = roomById(roomsFile.rooms, displayRoomId) ?? roomsFile.rooms[0];
+  const setViews = roomSetViews(economy, state.owned);
+  const activeSet = roomSetFor(setViews, displayRoomId);
+  const setCounts = Object.fromEntries(setViews.map((row) => [row.roomId, { owned: row.owned, total: row.total }]));
+  const claimSet = async (row: RoomSetView) => {
+    if (claimingSetRef.current || claimedRoomSets.includes(row.rewardId)) return;
+    claimingSetRef.current = true;
+    try {
+      const ops = await loadOpsState();
+      const before = ops.pawBalance;
+      const next = await claimRoomSetReward(ops, row.rewardId, row.paw);
+      if (next === ops) return;
+      await saveOpsState(next);
+      setClaimedRoomSets(next.claimedRoomSetIds);
+      const gained = next.pawBalance - before;
+      if (gained > 0) {
+        const saved = { ...state, points: state.points + gained };
+        setState(saved);
+        persist(saved);
+      }
+    } finally {
+      claimingSetRef.current = false;
+    }
+  };
   const lockedRooms = roomsFile.rooms.filter((room) => !state.unlocked.includes(room.id));
   const currentIndex = Math.max(0, unlockedIds.indexOf(displayRoomId));
   // First paint decodes only the room on screen. Neighbors mount once a swipe starts.
@@ -2123,6 +2182,23 @@ export function RoomScreen({
               ›
             </button>
           </div>
+          {activeSet && activeSet.total > 0 ? (
+            <div className={`lucky-set-chip ${activeSet.complete ? "is-done" : ""}`}>
+              <span className="lucky-set-bar" aria-hidden="true">
+                <span
+                  style={{
+                    width: `${Math.min(100, (activeSet.owned / activeSet.total) * 100)}%`,
+                  }}
+                />
+              </span>
+              <span>{activeSet.complete ? "세트 완성" : `세트 ${activeSet.owned}/${activeSet.total}`}</span>
+              {activeSet.complete && !claimedRoomSets.includes(activeSet.rewardId) ? (
+                <button type="button" className="lucky-set-claim" onClick={() => void claimSet(activeSet)}>
+                  {jellyLabel(activeSet.paw)} 받기
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           <div className="lucky-room-pager">
             {roomsFile.switcher.order.map((id) => {
               const unlocked = unlockedIds.includes(id);
@@ -2161,6 +2237,13 @@ export function RoomScreen({
               );
             })}
           </div>
+        </div>
+      ) : null}
+
+      {setBanner && setBanner.roomId === displayRoomId ? (
+        <div className="lucky-set-banner" role="status">
+          <strong>{setBanner.title}</strong>
+          <span>{setBanner.sub}</span>
         </div>
       ) : null}
 
@@ -2255,6 +2338,7 @@ export function RoomScreen({
                       onSelect={onSelect}
                       onItemPointerDown={onItemPointerDown}
                       onFloorPointerDown={onFloorPointerDown}
+                      setBonus={roomId === displayRoomId ? roomSetCue(roomSetFor(setViews, roomId)) : null}
                     />
                   </div>
                 </div>
@@ -2572,6 +2656,7 @@ export function RoomScreen({
               },
             });
           }}
+          setCounts={setCounts}
         />
       )}
 

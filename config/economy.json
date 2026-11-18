@@ -644,6 +644,92 @@
       ]
     }
   ],
+  "roomSets": {
+    "paw": 200,
+    "note": "테마 바닥 가구를 모두 보유하면 완성. 배치는 안 봐요. 연출은 그 테마 방을 보고 있을 때만. 젤리는 세트마다 1번 직접 받아요.",
+    "sets": [
+      {
+        "roomId": "cat_cafe",
+        "rewardId": "roomSet_cat_cafe",
+        "nameKo": "고양이 카페",
+        "bannerSub": "이 방에서만 라떼 향이 피어요",
+        "bubble": "후우, 라떼 향이다냥",
+        "pose": "idle_sit",
+        "effect": "steam",
+        "anchorId": "cafe_table",
+        "itemIds": [
+          "counter_register",
+          "espresso_counter",
+          "cake_showcase",
+          "cafe_table",
+          "heart_chair",
+          "bar_stool",
+          "chalk_stand",
+          "bread_rack",
+          "bean_sack",
+          "olive_tree",
+          "cup_cattower",
+          "window_bench",
+          "mug_cart",
+          "cookie_jar",
+          "catface_lamp",
+          "food_vending"
+        ]
+      },
+      {
+        "roomId": "sakura_greenhouse",
+        "rewardId": "roomSet_sakura_greenhouse",
+        "nameKo": "벚꽃 온실",
+        "bannerSub": "이 방에서만 꽃잎이 내려와요",
+        "bubble": "꽃잎이 내려와요",
+        "pose": "loaf",
+        "effect": "petals",
+        "anchorId": "picnic_blanket",
+        "itemIds": [
+          "sakura_tree",
+          "garden_bench",
+          "koi_pond",
+          "tulip_planter",
+          "tea_table_white",
+          "garden_swing",
+          "watering_can",
+          "stone_lantern",
+          "flower_wheelbarrow",
+          "hydrangea",
+          "bird_bath",
+          "picnic_blanket",
+          "mini_bridge",
+          "flower_arch",
+          "cat_hammock",
+          "succulent_stand"
+        ]
+      },
+      {
+        "roomId": "winter_cabin",
+        "rewardId": "roomSet_winter_cabin",
+        "nameKo": "겨울 오두막",
+        "bannerSub": "이 방에서만 눈이 내려요",
+        "bubble": "따뜻해서 졸려요…",
+        "pose": "sleep",
+        "effect": "snow",
+        "anchorId": "fireplace",
+        "itemIds": [
+          "cabin_tree",
+          "fireplace",
+          "gift_stack",
+          "snowman",
+          "snow_cat",
+          "cocoa_table",
+          "cat_cabinet",
+          "wool_rug",
+          "firewood",
+          "knit_chair",
+          "snow_globe",
+          "candle_table"
+        ]
+      }
+    ]
+  },
   "events": {
     "weekendDoublePaw": {
       "enabled": true,

@@ -51,6 +51,7 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     grantedNyangCoinRewardIds: [],
     grantedSetRewardIds: [],
     claimedDexRewardIds: [],
+    claimedRoomSetIds: [],
     seenDexClaimableIds: [],
     seenDexCardIds: [],
     dexClaimLedger: [],

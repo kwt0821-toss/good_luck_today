@@ -208,6 +208,7 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         return parseStringArray(parsed.grantedTossRewardIds);
       })(),
       grantedSetRewardIds: parseStringArray(parsed.grantedSetRewardIds),
+      claimedRoomSetIds: parseStringArray(parsed.claimedRoomSetIds),
       claimedDexRewardIds: (() => {
         const next = parseStringArray(parsed.claimedDexRewardIds);
         if (next.length) return next;

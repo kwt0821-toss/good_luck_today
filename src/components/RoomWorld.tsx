@@ -47,6 +47,7 @@ import {
   wallStripRect,
   wallStripSrc,
 } from "../lib/roomTiles";
+import type { RoomSetCue } from "../lib/roomSets";
 import type {
   FloorPlacement,
   PaintTarget,
@@ -94,6 +95,8 @@ type RoomWorldProps = {
   previewInvalid?: boolean;
   /** `?debugHit=1` outlines each sprite's real hit box. */
   debugHit?: boolean;
+  /** Plays only for the room whose theme set is complete. */
+  setBonus?: RoomSetCue | null;
   onSelect: (instanceId: string | null, kind: "floor" | "wall") => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, instanceId: string) => void;
   onFloorPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
@@ -615,6 +618,7 @@ function RoomCatAgent({
   mode,
   active,
   reducedTapMotion,
+  setBonus,
   onPublish,
 }: {
   catId: string;
@@ -627,6 +631,7 @@ function RoomCatAgent({
   mode: RoomMode;
   active: boolean;
   reducedTapMotion: boolean;
+  setBonus: RoomSetCue | null;
   onPublish: (catId: string, next: PublishedCat | null) => void;
 }) {
   const { view, motionRef, tap } = useRoomCat({
@@ -641,6 +646,7 @@ function RoomCatAgent({
     reducedTapMotion,
     spotsRef,
     slot,
+    setBonus,
   });
   const tapRef = useRef(tap);
   tapRef.current = tap;
@@ -654,6 +660,27 @@ function RoomCatAgent({
     return () => onPublish(catId, null);
   }, [catId, onPublish]);
   return null;
+}
+
+function RoomSetFx({ effect }: { effect: RoomSetCue["effect"] }) {
+  const count = effect === "steam" ? 16 : 18;
+  return (
+    <div className={`lucky-set-fx is-${effect}`} aria-hidden="true">
+      {Array.from({ length: count }, (_, index) => (
+        <span
+          key={index}
+          className={`lucky-set-bit${effect === "steam" && index >= 8 ? " is-bean" : ""}`}
+          style={{
+            ["--x" as string]: `${36 + ((index * 11) % 28)}%`,
+            ["--y" as string]: `${34 + ((index * 9) % 24)}%`,
+            ["--dur" as string]: `${2.8 + (index % 5) * 0.45}s`,
+            ["--delay" as string]: `${(index * 0.31) % 3.2}s`,
+            ["--drift" as string]: `${(index % 2 === 0 ? -1 : 1) * (8 + (index % 4) * 6)}px`,
+          }}
+        />
+      ))}
+    </div>
+  );
 }
 
 export function RoomWorld({
@@ -678,6 +705,7 @@ export function RoomWorld({
   previewGhost = false,
   previewInvalid = false,
   debugHit = false,
+  setBonus = null,
   onSelect,
   onItemPointerDown,
   onFloorPointerDown,
@@ -1078,6 +1106,7 @@ export function RoomWorld({
       })}
 
       <div className="lucky-tod-wash" aria-hidden="true" />
+      {setBonus ? <RoomSetFx effect={setBonus.effect} /> : null}
       {windows.map((win) => (
         <div key={`sky-${win.key}`} className="lucky-window-sky" style={windowGlassBox(win.rect)} aria-hidden="true" />
       ))}
@@ -1106,6 +1135,7 @@ export function RoomWorld({
           mode={mode}
           active={roamingActive}
           reducedTapMotion={reduceMotion}
+          setBonus={setBonus}
           onPublish={onPublishCat}
         />
       ))}

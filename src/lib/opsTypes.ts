@@ -277,6 +277,25 @@ export type OpsEconomy = {
     grantItems?: string[];
     grantDefaultTiles?: boolean;
   }>;
+  /**
+   * Theme floor-furniture sets. Progress is ownership.
+   * Effects play only while that theme's room is on screen.
+   * Jelly is claimed once per set, by hand.
+   */
+  roomSets?: {
+    paw: number;
+    sets: Array<{
+      roomId: string;
+      rewardId?: string;
+      nameKo?: string;
+      bannerSub?: string;
+      bubble?: string;
+      pose?: string;
+      effect?: string;
+      anchorId?: string;
+      itemIds: string[];
+    }>;
+  };
   events: {
     weekendDoublePaw: {
       enabled: boolean;
@@ -686,6 +705,8 @@ export type OpsState = {
   grantedSetRewardIds: string[];
   /** Dex reward ids claimed once per account (newCard:*, set:breed:*, set:*, fullDex) */
   claimedDexRewardIds: string[];
+  /** Theme room-set jelly claims, once each (`roomSet_cat_cafe` and friends). */
+  claimedRoomSetIds: string[];
   /**
    * Claimable dex reward ids already shown in the rewards sheet.
    * A red dot means a claimable id is missing from this list.

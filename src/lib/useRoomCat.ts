@@ -40,6 +40,8 @@ import {
   walkableTiles,
 } from "./roomCat";
 import { loadRoomCats, type RoomCatTapAction } from "./roomCats";
+import { footprintTiles, itemSize } from "./roomLayout";
+import type { RoomSetCue } from "./roomSets";
 import type { FloorPlacement, RoomItem, RoomMode, WallPlacement } from "./roomTypes";
 
 const TAP_ACTION_FPS = 8;
@@ -162,6 +164,8 @@ type UseRoomCatArgs = {
   spotsRef?: CatSpotsRef;
   /** 0-based order in the room. Picks a different start tile. */
   slot?: number;
+  /** Theme set bonus for the cat in slot 0. Null unless this room's set is complete. */
+  setBonus?: RoomSetCue | null;
 };
 
 const SEED_PREFS: CatTile[] = [
@@ -262,6 +266,51 @@ function seedTile(walkable: CatTile[], slot: number, occupied: Set<string>): Cat
   return region[Math.floor(region.length / 2)] ?? walkable[0] ?? { col: 4, row: 5 };
 }
 
+const SET_HOLD_MS = 7200;
+const SET_BUBBLE_MS = 3400;
+
+/** A walkable tile in front of the anchor furniture, if it is placed. */
+function setApproachTile(
+  anchorId: string,
+  floor: FloorPlacement[],
+  items: Map<string, RoomItem>,
+  walkable: CatTile[],
+  occupied: Set<string>,
+): CatTile | null {
+  if (!anchorId) return null;
+  const place = floor.find((row) => row.id === anchorId);
+  if (!place) return null;
+  const item = items.get(place.id);
+  if (!item) return null;
+  const [w, d] = itemSize(item, place.orientation);
+  const tiles = footprintTiles(place.col, place.row, w, d);
+  const covered = new Set(tiles.map((tile) => tileKey(tile)));
+  const neighbors: CatTile[] = [];
+  const seen = new Set<string>();
+  for (const tile of tiles) {
+    const { col, row } = tile;
+    for (const [dc, dr] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+      [1, 1],
+      [-1, 1],
+      [1, -1],
+      [-1, -1],
+    ] as const) {
+      const next = { col: col + dc, row: row + dr };
+      const nextKey = tileKey(next);
+      if (seen.has(nextKey) || covered.has(nextKey) || occupied.has(nextKey)) continue;
+      if (!walkable.some((tile) => tile.col === next.col && tile.row === next.row)) continue;
+      seen.add(nextKey);
+      neighbors.push(next);
+    }
+  }
+  neighbors.sort((a, b) => b.row + b.col - (a.row + a.col));
+  return neighbors[0] ?? null;
+}
+
 function nearestFree(from: CatTile, walkable: CatTile[], occupied: Set<string>): CatTile | null {
   const free = walkable.filter((tile) => !occupied.has(tileKey(tile)));
   return nearestWalkable(from, free.length ? free : walkable);
@@ -316,6 +365,7 @@ export function useRoomCat({
   reducedTapMotion = false,
   spotsRef,
   slot = 0,
+  setBonus = null,
 }: UseRoomCatArgs): {
   view: RoomCatView;
   motionRef: CatMotionRef;
@@ -398,6 +448,8 @@ export function useRoomCat({
   const opacityRef = useRef(1);
   const slotRef = useRef(slot);
   slotRef.current = slot;
+  const bonusRef = useRef<RoomSetCue | null>(setBonus);
+  bonusRef.current = setBonus;
   catIdRef.current = breedId || "cheese";
   if (spotsRef && !spotsRef.current.has(catIdRef.current)) {
     const walkableNow = walkableTiles(floor, itemsById);
@@ -643,7 +695,30 @@ export function useRoomCat({
       const reduce = reduceRef.current;
       const isEdit = modeRef.current === "edit";
       const isActive = activeRef.current;
+      const bonusNow = slotRef.current === 0 ? bonusRef.current : null;
       const motionEarly = catMotion.current;
+      const startSetPose = (pose: RoomSetCue["pose"], bubble: string) => {
+        phaseRef.current = { kind: "idle", until: ts + SET_HOLD_MS, anim: pose };
+        animElapsedRef.current = 0;
+        seatIdRef.current = null;
+        if (!bubble) return;
+        bubbleUntilRef.current = ts + SET_BUBBLE_MS;
+        motionEarly.bubbleOn = true;
+        motionEarly.bubbleText = bubble;
+        motionEarly.bubbleEmoji = "";
+        motionEarly.bubbleRoom = true;
+      };
+      if (
+        bonusNow &&
+        isActive &&
+        !isEdit &&
+        !reduce &&
+        phase.kind === "idle" &&
+        phase.anim !== bonusNow.pose &&
+        phase.until > ts
+      ) {
+        phase.until = ts;
+      }
       if (bubbleUntilRef.current && ts >= bubbleUntilRef.current) {
         bubbleUntilRef.current = 0;
         motionEarly.bubbleOn = false;
@@ -728,6 +803,8 @@ export function useRoomCat({
                 const seat = phase.seat;
                 if (seat && seatStillThere(seat.id, seat.placeKey)) {
                   beginPerch(seat, ts);
+                } else if (bonusNow) {
+                  startSetPose(bonusNow.pose, bonusNow.bubble);
                 } else {
                   seatIdRef.current = null;
                   const pose = pickIdlePose(sheet, false, facingRef.current);
@@ -771,6 +848,26 @@ export function useRoomCat({
           } else if (ts - phase.startedAt >= CAT_HOP_MS) {
             lastSeatRef.current = phase.seatId;
             dropToFloor(ts, false);
+          }
+        } else if (phase.kind === "idle" && ts >= phase.until && bonusNow) {
+          const goal = setApproachTile(
+            bonusNow.anchorId,
+            floorRef.current,
+            itemsRef.current,
+            walkable,
+            occupiedTiles(spotsRef?.current, catIdRef.current),
+          );
+          const here = tileRef.current;
+          if (goal && (goal.col !== here.col || goal.row !== here.row)) {
+            const path = findPath(here, goal, walkable);
+            if (path.length >= 2) {
+              seatIdRef.current = null;
+              beginWalk(path, ts, null);
+            } else {
+              startSetPose(bonusNow.pose, bonusNow.bubble);
+            }
+          } else {
+            startSetPose(bonusNow.pose, bonusNow.bubble);
           }
         } else if (phase.kind === "idle" && ts >= phase.until) {
           const blocked = blockedGoals(spotsRef?.current, catIdRef.current);
@@ -923,6 +1020,8 @@ export function useRoomCat({
         }
         if (live.hop === "hold" && (live.pose === "sleep" || live.pose === "loaf")) zzz = true;
         if (live.hop === "hold" && live.pose === "sit_look") poseImage = "sit_look";
+      } else if (live.kind === "idle" && (live.anim === "sleep" || live.anim === "sleep_r")) {
+        zzz = true;
       }
       motion.frameName = frameOverride ?? frameFor(sheet, anim === "tap_action" ? "idle_sit" : anim, animElapsedRef.current);
       motion.anim = anim;

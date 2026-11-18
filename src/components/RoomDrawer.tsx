@@ -53,6 +53,8 @@ type RoomDrawerProps = {
   onRequestClose?: () => void;
   roamingCatIds: string[];
   onChangeCats: (ids: string[]) => void;
+  /** Owned / total for theme sets, keyed by room id. */
+  setCounts?: Record<string, { owned: number; total: number }>;
 };
 
 function tileState(
@@ -126,6 +128,7 @@ export function RoomDrawer({
   onRequestClose,
   roamingCatIds,
   onChangeCats,
+  setCounts = {},
 }: RoomDrawerProps) {
   const drawerRef = useRef<HTMLElement | null>(null);
   useHideBrokenImages(drawerRef);
@@ -390,6 +393,9 @@ export function RoomDrawer({
             onClick={() => onThemeFilter(filter.id)}
           >
             {filter.label}
+            {setCounts[filter.id] && setCounts[filter.id].total > 0
+              ? ` ${setCounts[filter.id].owned}/${setCounts[filter.id].total}`
+              : ""}
           </button>
         ))}
       </div>
