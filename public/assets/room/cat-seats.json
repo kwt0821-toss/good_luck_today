@@ -1,5 +1,5 @@
 {
-  "_note": "Seats a room cat may climb. Approach tile, feet, height, and pose live here. Winter cabin pieces (cat_cabinet, knit_chair, wool_rug) can be added as more entries. Lamps, drawers, shelves, tables, desks, fridges, plants, and feeder are not seats.",
+  "_note": "Seats a room cat may climb. Approach tile, feet, height, and pose live here. Lamps, drawers, shelves, tables, desks, fridges, plants, and feeder are not seats.",
   "seats": [
     { "itemId": "sofa", "weight": 8, "pose": "sit", "lift": 42, "slots": [{ "c": 0, "r": 0 }, { "c": 1, "r": 0 }] },
     { "itemId": "catbed", "weight": 8, "pose": "sleep", "lift": 18, "slots": [{ "c": 0, "r": 0 }] },
@@ -19,6 +19,9 @@
     { "itemId": "garden_bench", "weight": 5, "pose": "sit", "lift": 36, "slots": [{ "c": 0, "r": 0 }, { "c": 1, "r": 0 }] },
     { "itemId": "garden_swing", "weight": 6, "pose": "sit", "lift": 72, "center": true },
     { "itemId": "cat_hammock", "weight": 7, "pose": "sit", "lift": 70, "center": true },
-    { "itemId": "picnic_blanket", "weight": 5, "pose": "sleep", "lift": 8, "slots": [{ "c": 0, "r": 0 }, { "c": 1, "r": 1 }] }
+    { "itemId": "picnic_blanket", "weight": 5, "pose": "sleep", "lift": 8, "slots": [{ "c": 0, "r": 0 }, { "c": 1, "r": 1 }] },
+    { "itemId": "cat_cabinet", "weight": 5, "pose": "sit", "lift": 70, "center": true },
+    { "itemId": "knit_chair", "weight": 4, "pose": "sit", "lift": 32, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "wool_rug", "weight": 5, "pose": "sleep", "lift": 8, "slots": [{ "c": 0, "r": 0 }, { "c": 1, "r": 1 }] }
   ]
 }

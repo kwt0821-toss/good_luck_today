@@ -127,7 +127,7 @@ export function layoutFromGrid(grid: RoomGridFile | undefined, roomId = "moon_be
 }
 
 export function layoutFromRoom(def: RoomDefinition, grid?: RoomGridFile): RoomLayoutState {
-  if (def.defaultLayout?.length) {
+  if (def.defaultLayout) {
     return layoutFromEntries(
       def.defaultLayout,
       def.id,

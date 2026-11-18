@@ -138,7 +138,10 @@ export function clearOpsConfigCache() {
 }
 
 export function priceById(prices: OpsPrices, id: string) {
-  return prices.items.find((item) => item.id === id) ?? null;
+  const exact = prices.items.find((item) => item.id === id);
+  if (exact) return exact;
+  // Rooms store tile texture ids (pine_plank). prices.json uses floor_/wall_ ids.
+  return prices.items.find((item) => item.id === `floor_${id}` || item.id === `wall_${id}`) ?? null;
 }
 
 export function cozyLevelFromPoints(economy: OpsEconomy, cozyPoints: number): number {

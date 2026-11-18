@@ -113,19 +113,28 @@ export function computeCozyPointsFromOwned(
   catalogById?: Map<string, RoomItem>,
 ): number {
   const byId = new Map(prices.items.map((item) => [item.id, item]));
-  let total = 0;
-
+  // Texture id and floor_/wall_ price id are the same tile. Score it once.
+  const counted = new Map<string, { priced: PriceItem; count: number }>();
   for (const [id, rawCount] of Object.entries(owned)) {
     const count = Math.max(0, Math.floor(Number(rawCount) || 0));
     if (count < 1) continue;
-    const priced = byId.get(id);
+    const priced = byId.get(id) ?? byId.get(`floor_${id}`) ?? byId.get(`wall_${id}`);
     if (!priced?.tier) continue;
+    const prev = counted.get(priced.id);
+    if (!prev || count > prev.count) counted.set(priced.id, { priced, count });
+  }
+
+  let total = 0;
+  for (const { priced, count } of counted.values()) {
     const tier = priced.tier;
+    if (!tier) continue;
     const base = economy.cozy.pointsPerTier[tier] ?? priced.cozy ?? 0;
     if (base <= 0) continue;
 
     const dup = duplicatePointsForTier(economy, tier);
-    const cap = effectiveOwnCap(catalogById?.get(id), priced, tier);
+    const catalogItem =
+      catalogById?.get(priced.id) ?? catalogById?.get(priced.id.replace(/^(floor_|wall_)/, ""));
+    const cap = effectiveOwnCap(catalogItem, priced, tier);
     const effective = Math.min(count, Number.isFinite(cap) ? cap : 1);
 
     if (dup == null || effective <= 1) {

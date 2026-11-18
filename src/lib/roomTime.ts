@@ -6,7 +6,7 @@ import { trustedNow } from "./tossClock";
 export type RoomPeriod = "morning" | "day" | "sunset" | "night";
 
 /**
- * Furniture that casts a warm glow. `fireplace` can be added here later.
+ * Furniture that casts a warm glow.
  * `moonmobile` and `xmastree` stay out of this pass.
  */
 export const LIGHT_ITEM_IDS = [
@@ -20,6 +20,7 @@ export const LIGHT_ITEM_IDS = [
   "pendant_lamps",
   "cup_neon",
   "stone_lantern",
+  "fireplace",
 ] as const;
 
 const LIGHT_IDS = new Set<string>(LIGHT_ITEM_IDS);

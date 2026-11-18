@@ -2,6 +2,8 @@ import { loadOpsConfig, priceById } from "./opsConfig";
 import { loadOpsState, saveOpsState } from "./opsStorage";
 import { displayJellyBalance, serverJellyActive } from "./serverJelly";
 import { resolveCozyStatus } from "./roomCozy";
+import { loadRoomsFile } from "./roomCatalog";
+import type { OpsEconomy } from "./opsTypes";
 import type { RoomItem, RoomSaveState } from "./roomTypes";
 
 /** Overlay prices/cozy from prices.json onto catalog items. */
@@ -87,25 +89,101 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
     .filter((id) => Boolean(state.rooms[id]));
 
   const nextUnlocked = unlocked.length ? unlocked : state.unlocked;
+  const newlyUnlocked = nextUnlocked.filter((id) => !ops.unlockedRoomIds.includes(id));
+  const ownedWithGifts = await grantUnlockRewards(ownedCounts, newlyUnlocked, config.economy.rooms);
+  const cozyAfter = newlyUnlocked.length
+    ? resolveCozyStatus(ownedWithGifts, config.prices, config.economy, {
+        forceLevel: ops.devForceCozyLevel,
+      })
+    : cozy;
   const currentRoomId = nextUnlocked.includes(state.currentRoomId)
     ? state.currentRoomId
     : (nextUnlocked[0] ?? state.currentRoomId);
+  const ownedItemIds = [
+    ...new Set([
+      ...mergedOwned,
+      ...Object.keys(ownedWithGifts).filter(
+        (id) => (ownedWithGifts[id] ?? 0) > 0 && (ownedCounts[id] ?? 0) <= 0,
+      ),
+    ]),
+  ];
 
+  const latest = await loadOpsState();
+  const savedOwned = [
+    ...new Set([
+      ...latest.ownedItemIds,
+      ...ownedItemIds,
+    ]),
+  ];
+  const savedUnlocked = [
+    ...new Set([...(unlocked.length ? unlocked : ops.unlockedRoomIds), ...latest.unlockedRoomIds]),
+  ];
   await saveOpsState({
     ...ops,
     pawBalance: points,
-    ownedItemIds: mergedOwned,
-    unlockedRoomIds: unlocked.length ? unlocked : ops.unlockedRoomIds,
+    ownedItemIds: savedOwned,
+    unlockedRoomIds: savedUnlocked,
   });
 
   return {
     ...state,
     points,
-    cozyLevel: cozy.level,
+    cozyLevel: cozyAfter.level,
     unlocked: nextUnlocked,
     currentRoomId,
-    owned: ownedCounts,
+    owned: ownedWithGifts,
   };
+}
+
+/** Default floor and wall texture ids that ship with a room. */
+function defaultTileIds(def: {
+  defaultFloor: string;
+  defaultWall: { L: string; R: string };
+  floorTiles?: string[][];
+  wallTiles?: { L: string[]; R: string[] };
+}): string[] {
+  const ids: string[] = [];
+  const add = (id: string | undefined) => {
+    if (id && !ids.includes(id)) ids.push(id);
+  };
+  if (def.floorTiles?.length) {
+    for (const row of def.floorTiles) for (const id of row) add(id);
+  } else {
+    add(def.defaultFloor);
+  }
+  if (def.wallTiles) {
+    for (const id of def.wallTiles.L) add(id);
+    for (const id of def.wallTiles.R) add(id);
+  } else {
+    add(def.defaultWall.L);
+    add(def.defaultWall.R);
+  }
+  return ids;
+}
+
+/** Grant a room's unlock gifts once. Counts come from economy.json, not from code. */
+export async function grantUnlockRewards(
+  owned: Record<string, number>,
+  roomIds: string[],
+  economyRooms: OpsEconomy["rooms"],
+): Promise<Record<string, number>> {
+  if (!roomIds.length) return owned;
+  const roomsFile = await loadRoomsFile();
+  const next = { ...owned };
+  for (const roomId of roomIds) {
+    const spec = economyRooms.find((row) => row.id === roomId);
+    if (!spec) continue;
+    for (const id of spec.grantItems ?? []) {
+      next[id] = Math.max(next[id] ?? 0, 1);
+    }
+    if (!spec.grantDefaultTiles) continue;
+    const def = roomsFile.rooms.find((room) => room.id === roomId);
+    if (!def) continue;
+    for (const id of defaultTileIds(def)) {
+      next[id] = Math.max(next[id] ?? 0, 1);
+    }
+  }
+  return next;
 }
 
 /** Recalculate cozy after buy/sell (economy 2.2). Returns updated room save. */

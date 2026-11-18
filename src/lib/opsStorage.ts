@@ -391,11 +391,12 @@ export async function loadOpsState(): Promise<OpsState> {
   ) {
     next = { ...next, notifyAttendance };
   }
-  // Keep the post-reset test grant; otherwise top up local DEV to a generous balance.
+  if (next !== parsed) await saveOpsState(next);
+  // Dev top-up stays in memory until the next real save. Writing it here raced
+  // with room unlock and dropped gifts that had just been stored.
   if (isDevBuild && next.pawBalance !== DEV_PAW_BALANCE && next.pawBalance !== RESET_BONUS_PAW) {
     next = { ...next, pawBalance: DEV_PAW_BALANCE };
   }
-  if (next !== parsed) await saveOpsState(next);
   return next;
 }
 

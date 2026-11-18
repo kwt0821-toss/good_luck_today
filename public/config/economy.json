@@ -617,6 +617,21 @@
       "grantDefaultTiles": true
     },
     {
+      "id": "winter_cabin",
+      "nameKo": "눈오는 겨울 오두막",
+      "unlock": {
+        "paw": 5000,
+        "cozyLevel": 10
+      },
+      "grantItems": [
+        "cocoa_table",
+        "wreath",
+        "stockings",
+        "gift_stack"
+      ],
+      "grantDefaultTiles": true
+    },
+    {
       "id": "_future",
       "unlock": {
         "paw": 5000,

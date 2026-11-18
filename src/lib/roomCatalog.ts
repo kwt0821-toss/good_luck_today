@@ -140,6 +140,7 @@ export const ROOM_HINTS: Record<string, { lead?: string; rest: string }> = {
   moon_bedroom: { lead: "쉿,", rest: " 냥이가 자는 동안 방을 꾸며 봐요" },
   cat_cafe: { rest: "오늘도 라떼는 냥이 몫이에요" },
   sakura_greenhouse: { rest: "벚꽃잎 사이로 냥이가 낮잠 중이에요" },
+  winter_cabin: { rest: "창밖에 눈이 내려요" },
 };
 
 export const ROOM_THEME_FILTERS: { id: RoomThemeFilter; label: string }[] = [
@@ -147,9 +148,10 @@ export const ROOM_THEME_FILTERS: { id: RoomThemeFilter; label: string }[] = [
   { id: "moon_bedroom", label: "달밤" },
   { id: "cat_cafe", label: "카페" },
   { id: "sakura_greenhouse", label: "온실" },
+  { id: "winter_cabin", label: "오두막" },
 ];
 
-const DEFAULT_ROOM_ORDER = ["moon_bedroom", "cat_cafe", "sakura_greenhouse"];
+const DEFAULT_ROOM_ORDER = ["moon_bedroom", "cat_cafe", "sakura_greenhouse", "winter_cabin"];
 
 let catalogPromise: Promise<RoomCatalog> | null = null;
 let gridPromise: Promise<RoomGridFile> | null = null;

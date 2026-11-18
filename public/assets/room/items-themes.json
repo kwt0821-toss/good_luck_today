@@ -1,5 +1,5 @@
 {
- "_version": "themes-v1 — 고양이 카페 + 벚꽃 온실 정원 (adds to room-assets-v5 / v5-tiles; v5 ids unchanged)",
+ "_version": "themes-v1 — 고양이 카페 + 벚꽃 온실 정원 + 눈오는 겨울 오두막 (adds to room-assets-v5 / v5-tiles; v5 ids unchanged)",
  "_placeholders": "price, ownedDefault, nameKo, unlock rules, COZY Lv and hint copy are PLACEHOLDERS",
  "categories": [
   "가구",
@@ -12,7 +12,8 @@
  "themes": {
   "moon_bedroom": "달밤 침실 (v5 items)",
   "cat_cafe": "고양이 카페",
-  "sakura_greenhouse": "벚꽃 온실 정원"
+  "sakura_greenhouse": "벚꽃 온실 정원",
+  "winter_cabin": "눈오는 겨울 오두막"
  },
  "crossThemeRule": "every item/tile may be placed in ANY room; theme is only a shop/drawer filter tag",
  "rules": {
@@ -3521,6 +3522,1006 @@
     "themes/sakura_greenhouse/wall/R/white_lattice_5.png",
     "themes/sakura_greenhouse/wall/R/white_lattice_6.png",
     "themes/sakura_greenhouse/wall/R/white_lattice_7.png"
+   ]
+  },
+  {
+   "id": "cabin_tree",
+   "nameKo": "오두막 크리스마스 트리",
+   "category": "가구",
+   "theme": "winter_cabin",
+   "placement": "floor",
+   "footprint": [
+    2,
+    2
+   ],
+   "price": 800,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/cabin_tree.webp",
+   "thumb": "themes/winter_cabin/thumbs/cabin_tree.webp",
+   "imageSizePx": [
+    250,
+    371
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/winter_cabin/items/cabin_tree.webp",
+     "footprint": [
+      2,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      125,
+      304.2
+     ],
+     "anchorBackCornerPx": [
+      125,
+      226.2
+     ],
+     "size": [
+      250,
+      371
+     ]
+    },
+    "mirrored": {
+     "image": "themes/winter_cabin/items/cabin_tree.webp",
+     "footprint": [
+      2,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      125,
+      304.2
+     ],
+     "anchorBackCornerPx": [
+      125,
+      226.2
+     ],
+     "size": [
+      250,
+      371
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-2x2.png",
+   "shadowScale": 1
+  },
+  {
+   "id": "fireplace",
+   "nameKo": "장작 벽난로",
+   "category": "가구",
+   "theme": "winter_cabin",
+   "placement": "floor",
+   "footprint": [
+    2,
+    2
+   ],
+   "price": 700,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/fireplace.webp",
+   "thumb": "themes/winter_cabin/thumbs/fireplace.webp",
+   "imageSizePx": [
+    250,
+    325
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/winter_cabin/items/fireplace.webp",
+     "footprint": [
+      2,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      125,
+      266.5
+     ],
+     "anchorBackCornerPx": [
+      125,
+      188.5
+     ],
+     "size": [
+      250,
+      325
+     ]
+    },
+    "mirrored": {
+     "image": "themes/winter_cabin/items/fireplace.webp",
+     "footprint": [
+      2,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      125,
+      266.5
+     ],
+     "anchorBackCornerPx": [
+      125,
+      188.5
+     ],
+     "size": [
+      250,
+      325
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-2x2.png",
+   "shadowScale": 1
+  },
+  {
+   "id": "gift_stack",
+   "nameKo": "선물 상자 더미",
+   "category": "가구",
+   "theme": "winter_cabin",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 240,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/gift_stack.webp",
+   "thumb": "themes/winter_cabin/thumbs/gift_stack.webp",
+   "imageSizePx": [
+    125,
+    162
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/winter_cabin/items/gift_stack.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      132.8
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      93.8
+     ],
+     "size": [
+      125,
+      162
+     ]
+    },
+    "mirrored": {
+     "image": "themes/winter_cabin/items/gift_stack.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      132.8
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      93.8
+     ],
+     "size": [
+      125,
+      162
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png",
+   "shadowScale": 1
+  },
+  {
+   "id": "snowman",
+   "nameKo": "목도리 눈사람",
+   "category": "가구",
+   "theme": "winter_cabin",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 280,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/snowman.webp",
+   "thumb": "themes/winter_cabin/thumbs/snowman.webp",
+   "imageSizePx": [
+    125,
+    193
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/winter_cabin/items/snowman.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      158.3
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      119.3
+     ],
+     "size": [
+      125,
+      193
+     ]
+    },
+    "mirrored": {
+     "image": "themes/winter_cabin/items/snowman.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      158.3
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      119.3
+     ],
+     "size": [
+      125,
+      193
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png",
+   "shadowScale": 1
+  },
+  {
+   "id": "snow_cat",
+   "nameKo": "목도리 눈고양이",
+   "category": "소품",
+   "theme": "winter_cabin",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 150,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/snow_cat.webp",
+   "thumb": "themes/winter_cabin/thumbs/snow_cat.webp",
+   "imageSizePx": [
+    125,
+    171
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/winter_cabin/items/snow_cat.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      140.2
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      101.2
+     ],
+     "size": [
+      125,
+      171
+     ]
+    },
+    "mirrored": {
+     "image": "themes/winter_cabin/items/snow_cat.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      140.2
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      101.2
+     ],
+     "size": [
+      125,
+      171
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png",
+   "shadowScale": 1
+  },
+  {
+   "id": "cocoa_table",
+   "nameKo": "코코아 테이블",
+   "category": "가구",
+   "theme": "winter_cabin",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 240,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/cocoa_table.webp",
+   "thumb": "themes/winter_cabin/thumbs/cocoa_table.webp",
+   "imageSizePx": [
+    125,
+    125
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/winter_cabin/items/cocoa_table.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      102.5
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      63.5
+     ],
+     "size": [
+      125,
+      125
+     ]
+    },
+    "mirrored": {
+     "image": "themes/winter_cabin/items/cocoa_table.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      102.5
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      63.5
+     ],
+     "size": [
+      125,
+      125
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png",
+   "shadowScale": 1
+  },
+  {
+   "id": "cat_cabinet",
+   "nameKo": "냥이 캐비닛",
+   "category": "가구",
+   "theme": "winter_cabin",
+   "placement": "floor",
+   "footprint": [
+    2,
+    1
+   ],
+   "price": 550,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/cat_cabinet.webp",
+   "thumb": "themes/winter_cabin/thumbs/cat_cabinet.webp",
+   "imageSizePx": [
+    187,
+    178
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/winter_cabin/items/cat_cabinet.webp",
+     "footprint": [
+      2,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      93.5,
+      146
+     ],
+     "anchorBackCornerPx": [
+      93.5,
+      87.5
+     ],
+     "size": [
+      187,
+      178
+     ]
+    },
+    "mirrored": {
+     "image": "themes/winter_cabin/items/cat_cabinet.webp",
+     "footprint": [
+      1,
+      2
+     ],
+     "anchorFootprintCenterPx": [
+      93.5,
+      146
+     ],
+     "anchorBackCornerPx": [
+      93.5,
+      87.5
+     ],
+     "size": [
+      187,
+      178
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png",
+   "shadowScale": 1
+  },
+  {
+   "id": "wool_rug",
+   "nameKo": "눈꽃 모포 러그",
+   "category": "소품",
+   "theme": "winter_cabin",
+   "placement": "floor-decal",
+   "footprint": [
+    2,
+    2
+   ],
+   "price": 300,
+   "ownedDefault": false,
+   "decal": true,
+   "image": "themes/winter_cabin/items/wool_rug.webp",
+   "thumb": "themes/winter_cabin/thumbs/wool_rug.webp",
+   "imageSizePx": [
+    300,
+    150
+   ],
+   "shadow": null
+  },
+  {
+   "id": "wreath",
+   "nameKo": "베리 리스",
+   "category": "벽 꾸미기",
+   "theme": "winter_cabin",
+   "placement": "wall",
+   "footprint": null,
+   "price": 120,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/wreath.webp",
+   "thumb": "themes/winter_cabin/thumbs/wreath.webp",
+   "imageSizePx": [
+    143,
+    167
+   ],
+   "displayWidthTiles": 0.8,
+   "wallSpanTiles": 0.8,
+   "orientations": {
+    "front": "themes/winter_cabin/items/wreath.webp",
+    "leftWall": "themes/winter_cabin/items/wreath.webp",
+    "rightWall": "themes/winter_cabin/items/wreath.webp"
+   }
+  },
+  {
+   "id": "stockings",
+   "nameKo": "발바닥 양말 걸이",
+   "category": "벽 꾸미기",
+   "theme": "winter_cabin",
+   "placement": "wall",
+   "footprint": null,
+   "price": 180,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/stockings.webp",
+   "thumb": "themes/winter_cabin/thumbs/stockings.webp",
+   "imageSizePx": [
+    145,
+    140
+   ],
+   "displayWidthTiles": 0.8,
+   "wallSpanTiles": 0.8,
+   "orientations": {
+    "front": "themes/winter_cabin/items/stockings.webp",
+    "leftWall": "themes/winter_cabin/items/stockings.webp",
+    "rightWall": "themes/winter_cabin/items/stockings.webp"
+   }
+  },
+  {
+   "id": "snow_window",
+   "nameKo": "눈 내리는 창문",
+   "category": "벽 꾸미기",
+   "theme": "winter_cabin",
+   "placement": "wall",
+   "footprint": null,
+   "price": 250,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/snow_window.webp",
+   "thumb": "themes/winter_cabin/thumbs/snow_window.webp",
+   "imageSizePx": [
+    174,
+    168
+   ],
+   "displayWidthTiles": 1,
+   "wallSpanTiles": 1,
+   "orientations": {
+    "front": "themes/winter_cabin/items/snow_window.webp",
+    "leftWall": "themes/winter_cabin/items/snow_window.webp",
+    "rightWall": "themes/winter_cabin/items/snow_window.webp"
+   }
+  },
+  {
+   "id": "pine_garland",
+   "nameKo": "솔가지 가랜드",
+   "category": "벽 꾸미기",
+   "theme": "winter_cabin",
+   "placement": "wallTop",
+   "footprint": null,
+   "price": 120,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/pine_garland.webp",
+   "thumb": "themes/winter_cabin/thumbs/pine_garland.webp",
+   "imageSizePx": [
+    268,
+    66
+   ],
+   "displayWidthTiles": 1.5,
+   "wallSpanTiles": 1.5,
+   "orientations": {
+    "front": "themes/winter_cabin/items/pine_garland.webp",
+    "leftWall": "themes/winter_cabin/items/pine_garland.webp",
+    "rightWall": "themes/winter_cabin/items/pine_garland.webp"
+   }
+  },
+  {
+   "id": "firewood",
+   "nameKo": "장작 상자",
+   "category": "소품",
+   "theme": "winter_cabin",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 120,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/firewood.webp",
+   "thumb": "themes/winter_cabin/thumbs/firewood.webp",
+   "imageSizePx": [
+    125,
+    129
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/winter_cabin/items/firewood.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      105.8
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      66.8
+     ],
+     "size": [
+      125,
+      129
+     ]
+    },
+    "mirrored": {
+     "image": "themes/winter_cabin/items/firewood.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      105.8
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      66.8
+     ],
+     "size": [
+      125,
+      129
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png",
+   "shadowScale": 1
+  },
+  {
+   "id": "knit_chair",
+   "nameKo": "니트 담요 의자",
+   "category": "가구",
+   "theme": "winter_cabin",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 320,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/knit_chair.webp",
+   "thumb": "themes/winter_cabin/thumbs/knit_chair.webp",
+   "imageSizePx": [
+    125,
+    136
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/winter_cabin/items/knit_chair.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      111.5
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      72.5
+     ],
+     "size": [
+      125,
+      136
+     ]
+    },
+    "mirrored": {
+     "image": "themes/winter_cabin/items/knit_chair.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      111.5
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      72.5
+     ],
+     "size": [
+      125,
+      136
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png",
+   "shadowScale": 1
+  },
+  {
+   "id": "snow_globe",
+   "nameKo": "냥이 스노우글로브",
+   "category": "소품",
+   "theme": "winter_cabin",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 140,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/snow_globe.webp",
+   "thumb": "themes/winter_cabin/thumbs/snow_globe.webp",
+   "imageSizePx": [
+    125,
+    160
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/winter_cabin/items/snow_globe.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      131.2
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      92.2
+     ],
+     "size": [
+      125,
+      160
+     ]
+    },
+    "mirrored": {
+     "image": "themes/winter_cabin/items/snow_globe.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      131.2
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      92.2
+     ],
+     "size": [
+      125,
+      160
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png",
+   "shadowScale": 1
+  },
+  {
+   "id": "candle_table",
+   "nameKo": "캔들 사이드 테이블",
+   "category": "가구",
+   "theme": "winter_cabin",
+   "placement": "floor",
+   "footprint": [
+    1,
+    1
+   ],
+   "price": 220,
+   "ownedDefault": false,
+   "image": "themes/winter_cabin/items/candle_table.webp",
+   "thumb": "themes/winter_cabin/thumbs/candle_table.webp",
+   "imageSizePx": [
+    125,
+    181
+   ],
+   "orientations": {
+    "default": {
+     "image": "themes/winter_cabin/items/candle_table.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      148.4
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      109.4
+     ],
+     "size": [
+      125,
+      181
+     ]
+    },
+    "mirrored": {
+     "image": "themes/winter_cabin/items/candle_table.webp",
+     "footprint": [
+      1,
+      1
+     ],
+     "anchorFootprintCenterPx": [
+      62.5,
+      148.4
+     ],
+     "anchorBackCornerPx": [
+      62.5,
+      109.4
+     ],
+     "size": [
+      125,
+      181
+     ]
+    }
+   },
+   "shadow": "shadows/shadow-1x1.png",
+   "shadowScale": 1
+  },
+  {
+   "id": "floor_pine_plank",
+   "textureId": "pine_plank",
+   "nameKo": "소나무 마루",
+   "category": "바닥",
+   "theme": "winter_cabin",
+   "placement": "floorTile",
+   "price": 0,
+   "ownedDefault": true,
+   "isDefault": true,
+   "texture": "themes/winter_cabin/floor/flat/pine_plank.webp",
+   "thumb": "themes/winter_cabin/floor/thumb/pine_plank.webp",
+   "drawerThumb": "themes/winter_cabin/floor/drawer/pine_plank.webp",
+   "isoTiles": {
+    "10": "themes/winter_cabin/floor/iso/pine_plank_10.webp",
+    "11": "themes/winter_cabin/floor/iso/pine_plank_11.webp",
+    "00": "themes/winter_cabin/floor/iso/pine_plank_00.webp",
+    "01": "themes/winter_cabin/floor/iso/pine_plank_01.webp"
+   },
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_red_check",
+   "textureId": "red_check",
+   "nameKo": "빨간 체크 마루",
+   "category": "바닥",
+   "theme": "winter_cabin",
+   "placement": "floorTile",
+   "price": 260,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/winter_cabin/floor/flat/red_check.webp",
+   "thumb": "themes/winter_cabin/floor/thumb/red_check.webp",
+   "drawerThumb": "themes/winter_cabin/floor/drawer/red_check.webp",
+   "isoTiles": {
+    "10": "themes/winter_cabin/floor/iso/red_check_10.webp",
+    "11": "themes/winter_cabin/floor/iso/red_check_11.webp",
+    "00": "themes/winter_cabin/floor/iso/red_check_00.webp",
+    "01": "themes/winter_cabin/floor/iso/red_check_01.webp"
+   },
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_snow_knit",
+   "textureId": "snow_knit",
+   "nameKo": "눈꽃 니트 바닥",
+   "category": "바닥",
+   "theme": "winter_cabin",
+   "placement": "floorTile",
+   "price": 280,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/winter_cabin/floor/flat/snow_knit.webp",
+   "thumb": "themes/winter_cabin/floor/thumb/snow_knit.webp",
+   "drawerThumb": "themes/winter_cabin/floor/drawer/snow_knit.webp",
+   "isoTiles": {
+    "10": "themes/winter_cabin/floor/iso/snow_knit_10.webp",
+    "11": "themes/winter_cabin/floor/iso/snow_knit_11.webp",
+    "00": "themes/winter_cabin/floor/iso/snow_knit_00.webp",
+    "01": "themes/winter_cabin/floor/iso/snow_knit_01.webp"
+   },
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "floor_cream_wool",
+   "textureId": "cream_wool",
+   "nameKo": "크림 울 바닥",
+   "category": "바닥",
+   "theme": "winter_cabin",
+   "placement": "floorTile",
+   "price": 300,
+   "ownedDefault": false,
+   "isDefault": false,
+   "texture": "themes/winter_cabin/floor/flat/cream_wool.webp",
+   "thumb": "themes/winter_cabin/floor/thumb/cream_wool.webp",
+   "drawerThumb": "themes/winter_cabin/floor/drawer/cream_wool.webp",
+   "isoTiles": {
+    "10": "themes/winter_cabin/floor/iso/cream_wool_10.webp",
+    "11": "themes/winter_cabin/floor/iso/cream_wool_11.webp",
+    "00": "themes/winter_cabin/floor/iso/cream_wool_00.webp",
+    "01": "themes/winter_cabin/floor/iso/cream_wool_01.webp"
+   },
+   "sampling": "isoTiles[f\"{col%2}{row%2}\"]"
+  },
+  {
+   "id": "wall_log_cabin",
+   "textureId": "log_cabin",
+   "nameKo": "통나무 벽",
+   "category": "벽지",
+   "theme": "winter_cabin",
+   "placement": "wallColumn",
+   "price": 0,
+   "ownedDefault": true,
+   "isDefault": true,
+   "thumb": "themes/winter_cabin/wall/thumb/log_cabin.webp",
+   "drawerThumb": "themes/winter_cabin/wall/drawer/log_cabin.webp",
+   "columnsL": [
+    "themes/winter_cabin/wall/L/log_cabin_0.webp",
+    "themes/winter_cabin/wall/L/log_cabin_1.webp",
+    "themes/winter_cabin/wall/L/log_cabin_2.webp",
+    "themes/winter_cabin/wall/L/log_cabin_3.webp",
+    "themes/winter_cabin/wall/L/log_cabin_4.webp",
+    "themes/winter_cabin/wall/L/log_cabin_5.webp",
+    "themes/winter_cabin/wall/L/log_cabin_6.webp",
+    "themes/winter_cabin/wall/L/log_cabin_7.webp"
+   ],
+   "columnsR": [
+    "themes/winter_cabin/wall/R/log_cabin_0.webp",
+    "themes/winter_cabin/wall/R/log_cabin_1.webp",
+    "themes/winter_cabin/wall/R/log_cabin_2.webp",
+    "themes/winter_cabin/wall/R/log_cabin_3.webp",
+    "themes/winter_cabin/wall/R/log_cabin_4.webp",
+    "themes/winter_cabin/wall/R/log_cabin_5.webp",
+    "themes/winter_cabin/wall/R/log_cabin_6.webp",
+    "themes/winter_cabin/wall/R/log_cabin_7.webp"
+   ]
+  },
+  {
+   "id": "wall_cream_plaster",
+   "textureId": "cream_plaster",
+   "nameKo": "크림 회벽",
+   "category": "벽지",
+   "theme": "winter_cabin",
+   "placement": "wallColumn",
+   "price": 0,
+   "ownedDefault": true,
+   "isDefault": true,
+   "thumb": "themes/winter_cabin/wall/thumb/cream_plaster.webp",
+   "drawerThumb": "themes/winter_cabin/wall/drawer/cream_plaster.webp",
+   "columnsL": [
+    "themes/winter_cabin/wall/L/cream_plaster_0.webp",
+    "themes/winter_cabin/wall/L/cream_plaster_1.webp",
+    "themes/winter_cabin/wall/L/cream_plaster_2.webp",
+    "themes/winter_cabin/wall/L/cream_plaster_3.webp",
+    "themes/winter_cabin/wall/L/cream_plaster_4.webp",
+    "themes/winter_cabin/wall/L/cream_plaster_5.webp",
+    "themes/winter_cabin/wall/L/cream_plaster_6.webp",
+    "themes/winter_cabin/wall/L/cream_plaster_7.webp"
+   ],
+   "columnsR": [
+    "themes/winter_cabin/wall/R/cream_plaster_0.webp",
+    "themes/winter_cabin/wall/R/cream_plaster_1.webp",
+    "themes/winter_cabin/wall/R/cream_plaster_2.webp",
+    "themes/winter_cabin/wall/R/cream_plaster_3.webp",
+    "themes/winter_cabin/wall/R/cream_plaster_4.webp",
+    "themes/winter_cabin/wall/R/cream_plaster_5.webp",
+    "themes/winter_cabin/wall/R/cream_plaster_6.webp",
+    "themes/winter_cabin/wall/R/cream_plaster_7.webp"
+   ]
+  },
+  {
+   "id": "wall_snowflake",
+   "textureId": "snowflake",
+   "nameKo": "눈꽃 벽지",
+   "category": "벽지",
+   "theme": "winter_cabin",
+   "placement": "wallColumn",
+   "price": 260,
+   "ownedDefault": false,
+   "isDefault": false,
+   "thumb": "themes/winter_cabin/wall/thumb/snowflake.webp",
+   "drawerThumb": "themes/winter_cabin/wall/drawer/snowflake.webp",
+   "columnsL": [
+    "themes/winter_cabin/wall/L/snowflake_0.webp",
+    "themes/winter_cabin/wall/L/snowflake_1.webp",
+    "themes/winter_cabin/wall/L/snowflake_2.webp",
+    "themes/winter_cabin/wall/L/snowflake_3.webp",
+    "themes/winter_cabin/wall/L/snowflake_4.webp",
+    "themes/winter_cabin/wall/L/snowflake_5.webp",
+    "themes/winter_cabin/wall/L/snowflake_6.webp",
+    "themes/winter_cabin/wall/L/snowflake_7.webp"
+   ],
+   "columnsR": [
+    "themes/winter_cabin/wall/R/snowflake_0.webp",
+    "themes/winter_cabin/wall/R/snowflake_1.webp",
+    "themes/winter_cabin/wall/R/snowflake_2.webp",
+    "themes/winter_cabin/wall/R/snowflake_3.webp",
+    "themes/winter_cabin/wall/R/snowflake_4.webp",
+    "themes/winter_cabin/wall/R/snowflake_5.webp",
+    "themes/winter_cabin/wall/R/snowflake_6.webp",
+    "themes/winter_cabin/wall/R/snowflake_7.webp"
+   ]
+  },
+  {
+   "id": "wall_gingham_red",
+   "textureId": "gingham_red",
+   "nameKo": "빨간 깅엄 벽지",
+   "category": "벽지",
+   "theme": "winter_cabin",
+   "placement": "wallColumn",
+   "price": 280,
+   "ownedDefault": false,
+   "isDefault": false,
+   "thumb": "themes/winter_cabin/wall/thumb/gingham_red.webp",
+   "drawerThumb": "themes/winter_cabin/wall/drawer/gingham_red.webp",
+   "columnsL": [
+    "themes/winter_cabin/wall/L/gingham_red_0.webp",
+    "themes/winter_cabin/wall/L/gingham_red_1.webp",
+    "themes/winter_cabin/wall/L/gingham_red_2.webp",
+    "themes/winter_cabin/wall/L/gingham_red_3.webp",
+    "themes/winter_cabin/wall/L/gingham_red_4.webp",
+    "themes/winter_cabin/wall/L/gingham_red_5.webp",
+    "themes/winter_cabin/wall/L/gingham_red_6.webp",
+    "themes/winter_cabin/wall/L/gingham_red_7.webp"
+   ],
+   "columnsR": [
+    "themes/winter_cabin/wall/R/gingham_red_0.webp",
+    "themes/winter_cabin/wall/R/gingham_red_1.webp",
+    "themes/winter_cabin/wall/R/gingham_red_2.webp",
+    "themes/winter_cabin/wall/R/gingham_red_3.webp",
+    "themes/winter_cabin/wall/R/gingham_red_4.webp",
+    "themes/winter_cabin/wall/R/gingham_red_5.webp",
+    "themes/winter_cabin/wall/R/gingham_red_6.webp",
+    "themes/winter_cabin/wall/R/gingham_red_7.webp"
    ]
   }
  ]

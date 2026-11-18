@@ -4,7 +4,7 @@ export type RoomMode = "view" | "edit";
 /** Drawer tabs — `보유` lists owned items (NEW/unplaced first). */
 export type RoomTab = RoomCategory | "보유" | "고양이 친구";
 export type RoomOrientation = "default" | "mirrored";
-export type RoomThemeId = "moon_bedroom" | "cat_cafe" | "sakura_greenhouse";
+export type RoomThemeId = "moon_bedroom" | "cat_cafe" | "sakura_greenhouse" | "winter_cabin";
 export type RoomThemeFilter = "all" | RoomThemeId;
 
 export type FurnitureOrientation = {

@@ -34,7 +34,7 @@ import {
 } from "../lib/roomCatalog";
 import { loadOpsState, saveOpsState } from "../lib/opsStorage";
 import { computeCozyPointsFromOwned } from "../lib/roomCozy";
-import { applyOpsPrices, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
+import { applyOpsPrices, grantUnlockRewards, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import { displayJellyBalance, jellySpend, serverJellyActive, subscribeJelly } from "../lib/serverJelly";
 import { furnitureDepthKey } from "../lib/roomCat";
 import { useRoomPeriod } from "../lib/roomTime";
@@ -717,7 +717,8 @@ export function RoomScreen({
           synced.currentRoomId !== loaded.currentRoomId ||
           synced.unlocked.join() !== loaded.unlocked.join() ||
           synced.points !== loaded.points ||
-          synced.cozyLevel !== loaded.cozyLevel
+          synced.cozyLevel !== loaded.cozyLevel ||
+          Object.keys(synced.owned).length !== Object.keys(loaded.owned).length
         ) {
           void saveRoomState(synced);
         }
@@ -1903,16 +1904,21 @@ export function RoomScreen({
       return;
     }
     const ops = await loadOpsState();
-    const unlockedRoomIds = ops.unlockedRoomIds.includes(room.id)
-      ? ops.unlockedRoomIds
-      : [...ops.unlockedRoomIds, room.id];
+    const already = ops.unlockedRoomIds.includes(room.id);
+    const unlockedRoomIds = already ? ops.unlockedRoomIds : [...ops.unlockedRoomIds, room.id];
+    const owned = already
+      ? state.owned
+      : await grantUnlockRewards(state.owned, [room.id], economyRooms);
+    const added = Object.keys(owned).filter((id) => (owned[id] ?? 0) > 0 && (state.owned[id] ?? 0) <= 0);
     await saveOpsState({
       ...ops,
       unlockedRoomIds,
+      ownedItemIds: [...new Set([...ops.ownedItemIds, ...added])],
       pawBalance: displayJellyBalance(ops.pawBalance),
     });
     persist({
       ...state,
+      owned,
       points: displayJellyBalance(state.points),
       unlocked: state.unlocked.includes(room.id) ? state.unlocked : [...state.unlocked, room.id],
     });

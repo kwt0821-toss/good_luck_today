@@ -7,7 +7,8 @@
   "order": [
    "moon_bedroom",
    "cat_cafe",
-   "sakura_greenhouse"
+   "sakura_greenhouse",
+   "winter_cabin"
   ]
  },
  "catRoaming": {
@@ -1280,6 +1281,21 @@
     "white_lattice"
    ],
    "mockup": "mockups/room-greenhouse-a.png",
+   "roamingCatId": "cheese"
+  },
+  {
+   "id": "winter_cabin",
+   "nameKo": "눈오는 겨울 오두막",
+   "isDefault": false,
+   "unlock": {
+    "type": "economy"
+   },
+   "defaultFloor": "pine_plank",
+   "defaultWall": {
+    "L": "log_cabin",
+    "R": "cream_plaster"
+   },
+   "defaultLayout": [],
    "roamingCatId": "cheese"
   }
  ]
