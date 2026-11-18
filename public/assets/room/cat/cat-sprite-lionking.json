@@ -1,7 +1,7 @@
 {
  "_version": "cat-roam 1.1 (2026-10-22)",
  "breed": "lionking (진짜 킹냥이, chubby golden-orange fluffy cat with small gold crown, red ermine-trimmed cape, 망곰 chibi)",
- "image": "cat-sprite-lionking.png",
+ "image": "cat-sprite-lionking.webp",
  "frameSize": [
   276,
   190
@@ -17,7 +17,7 @@
  },
  "units": "world px (3x of 1280x720 world); cat body ≈125 px ≈0.8 tile wide",
  "shadow": {
-  "image": "cat-shadow.png",
+  "image": "cat-shadow.webp",
   "size": [
    120,
    44

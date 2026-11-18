@@ -340,7 +340,7 @@ function normalizeHero(raw: RawHero): RoomItem {
     price: 0,
     ownedDefault: true,
     placedDefault: true,
-    image: raw.image ?? "items/hero/catbed_cat.png",
+    image: raw.image ?? "items/hero/catbed_cat.webp",
     imageSizePx: [307, 251],
     tileImage: raw.tileImage ?? "tiles/catbed_cat.png",
     displayWidthTiles: raw.displayWidthTiles ?? 0.83,

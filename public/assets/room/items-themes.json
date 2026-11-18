@@ -166,7 +166,7 @@
    "price": 340,
    "ownedDefault": false,
    "image": "themes/cat_cafe/items/cake_showcase.png",
-   "thumb": "themes/cat_cafe/thumbs/cake_showcase.png",
+   "thumb": "themes/cat_cafe/thumbs/cake_showcase.webp",
    "imageSizePx": [
     131,
     136
@@ -775,7 +775,7 @@
    ],
    "price": 420,
    "ownedDefault": false,
-   "image": "themes/cat_cafe/items/window_bench.png",
+   "image": "themes/cat_cafe/items/window_bench.webp",
    "thumb": "themes/cat_cafe/thumbs/window_bench.png",
    "imageSizePx": [
     185,
@@ -783,7 +783,7 @@
    ],
    "orientations": {
     "default": {
-     "image": "themes/cat_cafe/items/window_bench.png",
+     "image": "themes/cat_cafe/items/window_bench.webp",
      "footprint": [
       2,
       1
@@ -802,7 +802,7 @@
      ]
     },
     "mirrored": {
-     "image": "themes/cat_cafe/items/window_bench_m.png",
+     "image": "themes/cat_cafe/items/window_bench_m.webp",
      "footprint": [
       1,
       2
@@ -1095,7 +1095,7 @@
    ],
    "price": 520,
    "ownedDefault": false,
-   "image": "themes/sakura_greenhouse/items/sakura_tree.png",
+   "image": "themes/sakura_greenhouse/items/sakura_tree.webp",
    "thumb": "themes/sakura_greenhouse/thumbs/sakura_tree.png",
    "imageSizePx": [
     218,
@@ -1103,7 +1103,7 @@
    ],
    "orientations": {
     "default": {
-     "image": "themes/sakura_greenhouse/items/sakura_tree.png",
+     "image": "themes/sakura_greenhouse/items/sakura_tree.webp",
      "footprint": [
       2,
       2
@@ -1122,7 +1122,7 @@
      ]
     },
     "mirrored": {
-     "image": "themes/sakura_greenhouse/items/sakura_tree_m.png",
+     "image": "themes/sakura_greenhouse/items/sakura_tree_m.webp",
      "footprint": [
       2,
       2
@@ -1157,7 +1157,7 @@
    ],
    "price": 300,
    "ownedDefault": false,
-   "image": "themes/sakura_greenhouse/items/garden_bench.png",
+   "image": "themes/sakura_greenhouse/items/garden_bench.webp",
    "thumb": "themes/sakura_greenhouse/thumbs/garden_bench.png",
    "imageSizePx": [
     185,
@@ -1165,7 +1165,7 @@
    ],
    "orientations": {
     "default": {
-     "image": "themes/sakura_greenhouse/items/garden_bench.png",
+     "image": "themes/sakura_greenhouse/items/garden_bench.webp",
      "footprint": [
       2,
       1
@@ -1184,7 +1184,7 @@
      ]
     },
     "mirrored": {
-     "image": "themes/sakura_greenhouse/items/garden_bench_m.png",
+     "image": "themes/sakura_greenhouse/items/garden_bench_m.webp",
      "footprint": [
       1,
       2
@@ -1242,7 +1242,7 @@
    ],
    "price": 480,
    "ownedDefault": false,
-   "image": "themes/sakura_greenhouse/items/koi_pond.png",
+   "image": "themes/sakura_greenhouse/items/koi_pond.webp",
    "thumb": "themes/sakura_greenhouse/thumbs/koi_pond.png",
    "imageSizePx": [
     242,
@@ -1250,7 +1250,7 @@
    ],
    "orientations": {
     "default": {
-     "image": "themes/sakura_greenhouse/items/koi_pond.png",
+     "image": "themes/sakura_greenhouse/items/koi_pond.webp",
      "footprint": [
       2,
       2
@@ -1269,7 +1269,7 @@
      ]
     },
     "mirrored": {
-     "image": "themes/sakura_greenhouse/items/koi_pond_m.png",
+     "image": "themes/sakura_greenhouse/items/koi_pond_m.webp",
      "footprint": [
       2,
       2
@@ -1306,7 +1306,7 @@
    "price": 110,
    "ownedDefault": false,
    "image": "themes/sakura_greenhouse/items/tulip_planter.png",
-   "thumb": "themes/sakura_greenhouse/thumbs/tulip_planter.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/tulip_planter.webp",
    "imageSizePx": [
     121,
     126
@@ -1432,7 +1432,7 @@
    ],
    "price": 460,
    "ownedDefault": false,
-   "image": "themes/sakura_greenhouse/items/garden_swing.png",
+   "image": "themes/sakura_greenhouse/items/garden_swing.webp",
    "thumb": "themes/sakura_greenhouse/thumbs/garden_swing.png",
    "imageSizePx": [
     185,
@@ -1440,7 +1440,7 @@
    ],
    "orientations": {
     "default": {
-     "image": "themes/sakura_greenhouse/items/garden_swing.png",
+     "image": "themes/sakura_greenhouse/items/garden_swing.webp",
      "footprint": [
       2,
       1
@@ -1459,7 +1459,7 @@
      ]
     },
     "mirrored": {
-     "image": "themes/sakura_greenhouse/items/garden_swing_m.png",
+     "image": "themes/sakura_greenhouse/items/garden_swing_m.webp",
      "footprint": [
       1,
       2
@@ -1814,7 +1814,7 @@
    ],
    "price": 240,
    "ownedDefault": false,
-   "image": "themes/sakura_greenhouse/items/picnic_blanket.png",
+   "image": "themes/sakura_greenhouse/items/picnic_blanket.webp",
    "thumb": "themes/sakura_greenhouse/thumbs/picnic_blanket.png",
    "imageSizePx": [
     293,
@@ -1822,7 +1822,7 @@
    ],
    "orientations": {
     "default": {
-     "image": "themes/sakura_greenhouse/items/picnic_blanket.png",
+     "image": "themes/sakura_greenhouse/items/picnic_blanket.webp",
      "footprint": [
       2,
       2
@@ -1841,7 +1841,7 @@
      ]
     },
     "mirrored": {
-     "image": "themes/sakura_greenhouse/items/picnic_blanket_m.png",
+     "image": "themes/sakura_greenhouse/items/picnic_blanket_m.webp",
      "footprint": [
       2,
       2
@@ -1881,7 +1881,7 @@
    ],
    "price": 280,
    "ownedDefault": false,
-   "image": "themes/sakura_greenhouse/items/mini_bridge.png",
+   "image": "themes/sakura_greenhouse/items/mini_bridge.webp",
    "thumb": "themes/sakura_greenhouse/thumbs/mini_bridge.png",
    "imageSizePx": [
     177,
@@ -1889,7 +1889,7 @@
    ],
    "orientations": {
     "default": {
-     "image": "themes/sakura_greenhouse/items/mini_bridge.png",
+     "image": "themes/sakura_greenhouse/items/mini_bridge.webp",
      "footprint": [
       2,
       1
@@ -1908,7 +1908,7 @@
      ]
     },
     "mirrored": {
-     "image": "themes/sakura_greenhouse/items/mini_bridge_m.png",
+     "image": "themes/sakura_greenhouse/items/mini_bridge_m.webp",
      "footprint": [
       1,
       2
@@ -2485,7 +2485,7 @@
    "price": 260,
    "ownedDefault": false,
    "image": "themes/sakura_greenhouse/items/greenhouse_window.png",
-   "thumb": "themes/sakura_greenhouse/thumbs/greenhouse_window.png",
+   "thumb": "themes/sakura_greenhouse/thumbs/greenhouse_window.webp",
    "imageSizePx": [
     158,
     157
@@ -2495,8 +2495,8 @@
    "imageScale": "1 image px = 1 world px (already at display size; do NOT rescale)",
    "orientations": {
     "front": "themes/sakura_greenhouse/items/greenhouse_window.png",
-    "leftWall": "themes/sakura_greenhouse/items/greenhouse_window_L.png",
-    "rightWall": "themes/sakura_greenhouse/items/greenhouse_window_R.png"
+    "leftWall": "themes/sakura_greenhouse/items/greenhouse_window_L.webp",
+    "rightWall": "themes/sakura_greenhouse/items/greenhouse_window_R.webp"
    },
    "orientationSizes": {
     "front": [
@@ -2845,8 +2845,8 @@
    "price": 220,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "themes/cat_cafe/floor/flat/terracotta_hex.png",
-   "thumb": "themes/cat_cafe/floor/thumb/terracotta_hex.png",
+   "texture": "themes/cat_cafe/floor/flat/terracotta_hex.webp",
+   "thumb": "themes/cat_cafe/floor/thumb/terracotta_hex.webp",
    "drawerThumb": "themes/cat_cafe/floor/drawer/terracotta_hex.png",
    "isoTiles": {
     "00": "themes/cat_cafe/floor/iso/terracotta_hex_00.png",
@@ -2873,8 +2873,8 @@
    "price": 200,
    "ownedDefault": true,
    "isDefault": false,
-   "texture": "themes/cat_cafe/floor/flat/cream_terrazzo.png",
-   "thumb": "themes/cat_cafe/floor/thumb/cream_terrazzo.png",
+   "texture": "themes/cat_cafe/floor/flat/cream_terrazzo.webp",
+   "thumb": "themes/cat_cafe/floor/thumb/cream_terrazzo.webp",
    "drawerThumb": "themes/cat_cafe/floor/drawer/cream_terrazzo.png",
    "isoTiles": {
     "00": "themes/cat_cafe/floor/iso/cream_terrazzo_00.png",
@@ -2901,7 +2901,7 @@
    "price": 200,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "themes/cat_cafe/floor/flat/mint_tile.png",
+   "texture": "themes/cat_cafe/floor/flat/mint_tile.webp",
    "thumb": "themes/cat_cafe/floor/thumb/mint_tile.png",
    "drawerThumb": "themes/cat_cafe/floor/drawer/mint_tile.png",
    "isoTiles": {
@@ -2957,7 +2957,7 @@
    "price": 0,
    "ownedDefault": true,
    "isDefault": true,
-   "texture": "themes/cat_cafe/wall/flat/pink_brick.png",
+   "texture": "themes/cat_cafe/wall/flat/pink_brick.webp",
    "thumb": "themes/cat_cafe/wall/thumb/pink_brick.png",
    "drawerThumb": "themes/cat_cafe/wall/drawer/pink_brick.png",
    "columnsL": [
@@ -3161,7 +3161,7 @@
    "price": 0,
    "ownedDefault": true,
    "isDefault": true,
-   "texture": "themes/sakura_greenhouse/floor/flat/grass.png",
+   "texture": "themes/sakura_greenhouse/floor/flat/grass.webp",
    "thumb": "themes/sakura_greenhouse/floor/thumb/grass.png",
    "drawerThumb": "themes/sakura_greenhouse/floor/drawer/grass.png",
    "isoTiles": {
@@ -3189,7 +3189,7 @@
    "price": 200,
    "ownedDefault": true,
    "isDefault": false,
-   "texture": "themes/sakura_greenhouse/floor/flat/stone_path.png",
+   "texture": "themes/sakura_greenhouse/floor/flat/stone_path.webp",
    "thumb": "themes/sakura_greenhouse/floor/thumb/stone_path.png",
    "drawerThumb": "themes/sakura_greenhouse/floor/drawer/stone_path.png",
    "isoTiles": {
@@ -3217,7 +3217,7 @@
    "price": 220,
    "ownedDefault": true,
    "isDefault": false,
-   "texture": "themes/sakura_greenhouse/floor/flat/light_deck.png",
+   "texture": "themes/sakura_greenhouse/floor/flat/light_deck.webp",
    "thumb": "themes/sakura_greenhouse/floor/thumb/light_deck.png",
    "drawerThumb": "themes/sakura_greenhouse/floor/drawer/light_deck.png",
    "isoTiles": {
@@ -3245,8 +3245,8 @@
    "price": 240,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "themes/sakura_greenhouse/floor/flat/petal_grass.png",
-   "thumb": "themes/sakura_greenhouse/floor/thumb/petal_grass.png",
+   "texture": "themes/sakura_greenhouse/floor/flat/petal_grass.webp",
+   "thumb": "themes/sakura_greenhouse/floor/thumb/petal_grass.webp",
    "drawerThumb": "themes/sakura_greenhouse/floor/drawer/petal_grass.png",
    "isoTiles": {
     "00": "themes/sakura_greenhouse/floor/iso/petal_grass_00.png",
@@ -3273,9 +3273,9 @@
    "price": 260,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "themes/sakura_greenhouse/floor/flat/pebble_mosaic.png",
-   "thumb": "themes/sakura_greenhouse/floor/thumb/pebble_mosaic.png",
-   "drawerThumb": "themes/sakura_greenhouse/floor/drawer/pebble_mosaic.png",
+   "texture": "themes/sakura_greenhouse/floor/flat/pebble_mosaic.webp",
+   "thumb": "themes/sakura_greenhouse/floor/thumb/pebble_mosaic.webp",
+   "drawerThumb": "themes/sakura_greenhouse/floor/drawer/pebble_mosaic.webp",
    "isoTiles": {
     "00": "themes/sakura_greenhouse/floor/iso/pebble_mosaic_00.png",
     "01": "themes/sakura_greenhouse/floor/iso/pebble_mosaic_01.png",
@@ -3301,8 +3301,8 @@
    "price": 240,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "themes/sakura_greenhouse/floor/flat/moss_tile.png",
-   "thumb": "themes/sakura_greenhouse/floor/thumb/moss_tile.png",
+   "texture": "themes/sakura_greenhouse/floor/flat/moss_tile.webp",
+   "thumb": "themes/sakura_greenhouse/floor/thumb/moss_tile.webp",
    "drawerThumb": "themes/sakura_greenhouse/floor/drawer/moss_tile.png",
    "isoTiles": {
     "00": "themes/sakura_greenhouse/floor/iso/moss_tile_00.png",
@@ -3397,7 +3397,7 @@
    "price": 220,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "themes/sakura_greenhouse/wall/flat/ivy_trellis.png",
+   "texture": "themes/sakura_greenhouse/wall/flat/ivy_trellis.webp",
    "thumb": "themes/sakura_greenhouse/wall/thumb/ivy_trellis.png",
    "drawerThumb": "themes/sakura_greenhouse/wall/drawer/ivy_trellis.png",
    "columnsL": [

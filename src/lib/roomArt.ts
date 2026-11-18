@@ -21,10 +21,22 @@ export const CUSTOM_FLOOR_IDS = new Set([
   "floor_puzzle",
 ]);
 
+/** Room-art PNGs at or under 50KB stay PNG. Larger files are WebP. */
+const ROOM_ART_PNG = new Set([
+  "decor_duck",
+  "decor_green_bottle",
+  "decor_lime",
+  "decor_milk",
+  "decor_sugar",
+  "furn_cafe_stool_l",
+  "furn_cafe_stool_r",
+]);
+
 export function customArtUrl(item: Pick<ShopItem, "id" | "category">): string {
-  if (item.category === "wallpaper") return `/room-art/walls/${item.id}.png`;
-  if (item.category === "floor") return `/room-art/floors/${item.id}.png`;
-  return `/room-art/items/${item.id}.png`;
+  const ext = item.category === "wallpaper" || item.category === "floor" || !ROOM_ART_PNG.has(item.id) ? "webp" : "png";
+  if (item.category === "wallpaper") return `/room-art/walls/${item.id}.${ext}`;
+  if (item.category === "floor") return `/room-art/floors/${item.id}.${ext}`;
+  return `/room-art/items/${item.id}.${ext}`;
 }
 
 export function hasCustomSurfaceArt(id: string, category: ItemCategory): boolean {

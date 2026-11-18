@@ -13,7 +13,7 @@
  "heroCat": {
   "id": "catbed_cat",
   "nameKo": "잠자는 냥이",
-  "image": "items/hero/catbed_cat.png",
+  "image": "items/hero/catbed_cat.webp",
   "tileImage": "tiles/catbed_cat.png",
   "footprint": [
    1,
@@ -124,7 +124,7 @@
      ]
     },
     "mirrored": {
-     "image": "items/furniture/catbed_m.png",
+     "image": "items/furniture/catbed_m.webp",
      "footprint": [
       1,
       1
@@ -304,7 +304,7 @@
    "price": 300,
    "ownedDefault": true,
    "placedDefault": true,
-   "image": "items/furniture/sofa.png",
+   "image": "items/furniture/sofa.webp",
    "imageSizePx": [
     224,
     235
@@ -312,7 +312,7 @@
    "tileImage": "tiles/sofa.png",
    "orientations": {
     "default": {
-     "image": "items/furniture/sofa.png",
+     "image": "items/furniture/sofa.webp",
      "footprint": [
       2,
       1
@@ -331,7 +331,7 @@
      ]
     },
     "mirrored": {
-     "image": "items/furniture/sofa_m.png",
+     "image": "items/furniture/sofa_m.webp",
      "footprint": [
       1,
       2
@@ -917,7 +917,7 @@
    "price": 300,
    "ownedDefault": true,
    "placedDefault": true,
-   "image": "items/furniture/bed.png",
+   "image": "items/furniture/bed.webp",
    "imageSizePx": [
     269,
     225
@@ -925,7 +925,7 @@
    "tileImage": "tiles/bed.png",
    "orientations": {
     "default": {
-     "image": "items/furniture/bed.png",
+     "image": "items/furniture/bed.webp",
      "footprint": [
       1,
       2
@@ -944,7 +944,7 @@
      ]
     },
     "mirrored": {
-     "image": "items/furniture/bed_m.png",
+     "image": "items/furniture/bed_m.webp",
      "footprint": [
       2,
       1
@@ -1973,8 +1973,8 @@
    "wallSpanTiles": 0.95,
    "orientations": {
     "front": "items/wall/corkboard.png",
-    "leftWall": "items/wall/corkboard_L.png",
-    "rightWall": "items/wall/corkboard_R.png"
+    "leftWall": "items/wall/corkboard_L.webp",
+    "rightWall": "items/wall/corkboard_R.webp"
    },
    "angleFixV6": {
     "frontDeskewDeg": -4.48,
@@ -2221,7 +2221,7 @@
    "price": 260,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "floor/flat/marble_cream.png",
+   "texture": "floor/flat/marble_cream.webp",
    "thumb": "floor/thumb/marble_cream.png",
    "isoTiles": {
     "00": "floor/iso/marble_cream_00.png",
@@ -2273,7 +2273,7 @@
    "price": 280,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "floor/flat/star_navy.png",
+   "texture": "floor/flat/star_navy.webp",
    "thumb": "floor/thumb/star_navy.png",
    "isoTiles": {
     "00": "floor/iso/star_navy_00.png",
@@ -2299,8 +2299,8 @@
    "price": 240,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "floor/flat/carpet_pink.png",
-   "thumb": "floor/thumb/carpet_pink.png",
+   "texture": "floor/flat/carpet_pink.webp",
+   "thumb": "floor/thumb/carpet_pink.webp",
    "isoTiles": {
     "00": "floor/iso/carpet_pink_00.png",
     "01": "floor/iso/carpet_pink_01.png",
@@ -2325,7 +2325,7 @@
    "price": 220,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "floor/flat/meadow.png",
+   "texture": "floor/flat/meadow.webp",
    "thumb": "floor/thumb/meadow.png",
    "isoTiles": {
     "00": "floor/iso/meadow_00.png",
@@ -2377,8 +2377,8 @@
    "price": 240,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "floor/flat/terrazzo.png",
-   "thumb": "floor/thumb/terrazzo.png",
+   "texture": "floor/flat/terrazzo.webp",
+   "thumb": "floor/thumb/terrazzo.webp",
    "isoTiles": {
     "00": "floor/iso/terrazzo_00.png",
     "01": "floor/iso/terrazzo_01.png",
@@ -2723,7 +2723,7 @@
    "price": 220,
    "ownedDefault": false,
    "isDefault": false,
-   "texture": "wall/flat/sage_leaf.png",
+   "texture": "wall/flat/sage_leaf.webp",
    "thumb": "wall/thumb/sage_leaf.png",
    "columnsL": [
     "wall/L/sage_leaf_0.png",

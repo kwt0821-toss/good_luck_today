@@ -1,7 +1,7 @@
 {
  "_version": "cat-roam 1.1 (2026-10-22)",
  "breed": "tiger (호랑이와 하룻강아지, chubby baby tiger with a small sandy-cream puppy on its head, 망곰 chibi)",
- "image": "cat-sprite-tiger.png",
+ "image": "cat-sprite-tiger.webp",
  "frameSize": [
   190,
   174
@@ -17,7 +17,7 @@
  },
  "units": "world px (3x of 1280x720 world); cat body ≈125 px ≈0.8 tile wide",
  "shadow": {
-  "image": "cat-shadow.png",
+  "image": "cat-shadow.webp",
   "size": [
    120,
    44

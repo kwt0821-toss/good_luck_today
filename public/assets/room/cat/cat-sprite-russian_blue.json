@@ -1,7 +1,7 @@
 {
  "_version": "cat-roam 1.1 (2026-10-22)",
  "breed": "russian_blue (slate-grey short fur, silver tips, green eyes, chibi)",
- "image": "cat-sprite-russian_blue.png",
+ "image": "cat-sprite-russian_blue.webp",
  "frameSize": [
   208,
   146
@@ -17,7 +17,7 @@
  },
  "units": "world px (3x of 1280x720 world); cat body ≈125 px ≈0.8 tile wide",
  "shadow": {
-  "image": "cat-shadow.png",
+  "image": "cat-shadow.webp",
   "size": [
    120,
    44

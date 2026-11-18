@@ -9,7 +9,7 @@
       "default": true,
       "unlockRule": null,
       "status": "available",
-      "sprite": "cat-sprite.png",
+      "sprite": "cat-sprite.webp",
       "icon": "cat-friends/cheese.webp"
     },
     {
@@ -31,7 +31,7 @@
         "breedId": "bengal"
       },
       "status": "available",
-      "sprite": "cat-sprite-bengal.png",
+      "sprite": "cat-sprite-bengal.webp",
       "icon": "cat-friends/bengal.webp"
     },
     {
@@ -42,7 +42,7 @@
         "breedId": "british_shorthair"
       },
       "status": "available",
-      "sprite": "cat-sprite-british_shorthair.png",
+      "sprite": "cat-sprite-british_shorthair.webp",
       "icon": "cat-friends/british_shorthair.webp"
     },
     {
@@ -53,7 +53,7 @@
         "breedId": "cornish_rex"
       },
       "status": "available",
-      "sprite": "cat-sprite-cornish_rex.png",
+      "sprite": "cat-sprite-cornish_rex.webp",
       "icon": "cat-friends/cornish_rex.webp"
     },
     {
@@ -64,7 +64,7 @@
         "breedId": "korean_shorthair"
       },
       "status": "available",
-      "sprite": "cat-sprite-korean_shorthair.png",
+      "sprite": "cat-sprite-korean_shorthair.webp",
       "icon": "cat-friends/korean_shorthair.webp",
       "tapAction": {
         "id": "nyang",
@@ -83,7 +83,7 @@
         "breedId": "lykoi"
       },
       "status": "available",
-      "sprite": "cat-sprite-lykoi.png",
+      "sprite": "cat-sprite-lykoi.webp",
       "icon": "cat-friends/lykoi.webp"
     },
     {
@@ -94,7 +94,7 @@
         "breedId": "maine_coon"
       },
       "status": "available",
-      "sprite": "cat-sprite-maine_coon.png",
+      "sprite": "cat-sprite-maine_coon.webp",
       "icon": "cat-friends/maine_coon.webp"
     },
     {
@@ -105,7 +105,7 @@
         "breedId": "minskin"
       },
       "status": "available",
-      "sprite": "cat-sprite-minskin.png",
+      "sprite": "cat-sprite-minskin.webp",
       "icon": "cat-friends/minskin.webp"
     },
     {
@@ -116,7 +116,7 @@
         "breedId": "munchkin"
       },
       "status": "available",
-      "sprite": "cat-sprite-munchkin.png",
+      "sprite": "cat-sprite-munchkin.webp",
       "icon": "cat-friends/munchkin.webp"
     },
     {
@@ -127,7 +127,7 @@
         "breedId": "norwegian_forest"
       },
       "status": "available",
-      "sprite": "cat-sprite-norwegian_forest.png",
+      "sprite": "cat-sprite-norwegian_forest.webp",
       "icon": "cat-friends/norwegian_forest.webp"
     },
     {
@@ -138,7 +138,7 @@
         "breedId": "persian"
       },
       "status": "available",
-      "sprite": "cat-sprite-persian.png",
+      "sprite": "cat-sprite-persian.webp",
       "icon": "cat-friends/persian.webp"
     },
     {
@@ -149,7 +149,7 @@
         "breedId": "peterbald"
       },
       "status": "available",
-      "sprite": "cat-sprite-peterbald.png",
+      "sprite": "cat-sprite-peterbald.webp",
       "icon": "cat-friends/peterbald.webp"
     },
     {
@@ -160,7 +160,7 @@
         "breedId": "ragdoll"
       },
       "status": "available",
-      "sprite": "cat-sprite-ragdoll.png",
+      "sprite": "cat-sprite-ragdoll.webp",
       "icon": "cat-friends/ragdoll.webp"
     },
     {
@@ -171,7 +171,7 @@
         "breedId": "russian_blue"
       },
       "status": "available",
-      "sprite": "cat-sprite-russian_blue.png",
+      "sprite": "cat-sprite-russian_blue.webp",
       "icon": "cat-friends/russian_blue.webp"
     },
     {
@@ -182,7 +182,7 @@
         "breedId": "scottish_fold"
       },
       "status": "available",
-      "sprite": "cat-sprite-scottish_fold.png",
+      "sprite": "cat-sprite-scottish_fold.webp",
       "icon": "cat-friends/scottish_fold.webp"
     },
     {
@@ -193,7 +193,7 @@
         "breedId": "siamese"
       },
       "status": "available",
-      "sprite": "cat-sprite-siamese.png",
+      "sprite": "cat-sprite-siamese.webp",
       "icon": "cat-friends/siamese.webp"
     },
     {
@@ -204,7 +204,7 @@
         "breedId": "sokoke"
       },
       "status": "available",
-      "sprite": "cat-sprite-sokoke.png",
+      "sprite": "cat-sprite-sokoke.webp",
       "icon": "cat-friends/sokoke.webp"
     },
     {
@@ -215,7 +215,7 @@
         "breedId": "sphynx"
       },
       "status": "available",
-      "sprite": "cat-sprite-sphynx.png",
+      "sprite": "cat-sprite-sphynx.webp",
       "icon": "cat-friends/sphynx.webp"
     },
     {
@@ -226,7 +226,7 @@
         "legendCardId": "sabertooth"
       },
       "status": "available",
-      "sprite": "cat-sprite-sabertooth.png",
+      "sprite": "cat-sprite-sabertooth.webp",
       "icon": "cat-friends/sabertooth.webp"
     },
     {
@@ -237,7 +237,7 @@
         "legendCardId": "lionking"
       },
       "status": "available",
-      "sprite": "cat-sprite-lionking.png",
+      "sprite": "cat-sprite-lionking.webp",
       "icon": "cat-friends/lionking.webp"
     },
     {
@@ -248,7 +248,7 @@
         "legendCardId": "tiger"
       },
       "status": "available",
-      "sprite": "cat-sprite-tiger.png",
+      "sprite": "cat-sprite-tiger.webp",
       "icon": "cat-friends/tiger.webp"
     },
     {
@@ -259,7 +259,7 @@
         "legendCardId": "baekho"
       },
       "status": "available",
-      "sprite": "cat-sprite-baekho.png",
+      "sprite": "cat-sprite-baekho.webp",
       "icon": "cat-friends/baekho.webp"
     }
   ]

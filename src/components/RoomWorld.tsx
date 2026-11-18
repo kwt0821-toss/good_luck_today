@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 
+import { useHideBrokenImages } from "../lib/hideBrokenImages";
 import { roomAsset } from "../lib/roomCatalog";
 import { AudioManager } from "../audio/AudioManager";
 import {
@@ -602,6 +603,8 @@ export function RoomWorld({
   onItemPointerDown,
   onFloorPointerDown,
 }: RoomWorldProps) {
+  const worldRef = useRef<HTMLDivElement>(null);
+  useHideBrokenImages(worldRef);
   const fit = screenOf(mode).scale;
   const paintSkin = paintPreview ? paintSkinType(paintPreview.itemId) : null;
   const isPaintFloorCell = (col: number, row: number) => {
@@ -759,6 +762,7 @@ export function RoomWorld({
 
   return (
     <div
+      ref={worldRef}
       className={`lucky-world ${painting ? "is-painting" : ""} ${mode === "view" ? "is-view" : ""} ${debugHit ? "is-debug-hit" : ""}`}
       style={{ ["--room-fit" as string]: fit }}
       onPointerDown={onFloorPointerDown}

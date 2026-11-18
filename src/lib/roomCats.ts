@@ -22,7 +22,7 @@ export type RoomCatEntry = {
   default?: boolean;
   unlockRule: RoomCatUnlockRule;
   status: RoomCatStatus;
-  /** Sprite sheet, relative to /assets/room/cat/ (same layout as cat-sprite.png/json). null = not drawn yet. */
+  /** Sprite sheet, relative to /assets/room/cat/ (same layout as cat-sprite.webp/json). null = not drawn yet. */
   sprite: string | null;
   /** Drawer icon, relative to /assets/room/. null = use the shared silhouette. */
   icon: string | null;
@@ -41,7 +41,7 @@ const FALLBACK: RoomCatEntry[] = [
     default: true,
     unlockRule: null,
     status: "available",
-    sprite: "cat-sprite.png",
+    sprite: "cat-sprite.webp",
     icon: "cat-friends/cheese.webp",
   },
 ];

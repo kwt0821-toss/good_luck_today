@@ -9,6 +9,7 @@ import {
   ROOM_TABS,
   ROOM_THEME_FILTERS,
 } from "../lib/roomCatalog";
+import { useHideBrokenImages } from "../lib/hideBrokenImages";
 import { jellyLabel } from "../lib/jellyLabel";
 import type { RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib/roomTypes";
 import { RoomCatsTab } from "./RoomCatsTab";
@@ -126,6 +127,8 @@ export function RoomDrawer({
   roamingCatIds,
   onChangeCats,
 }: RoomDrawerProps) {
+  const drawerRef = useRef<HTMLElement | null>(null);
+  useHideBrokenImages(drawerRef);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const scrollLocked = useRef(false);
   const [expanded, setExpanded] = useState(false);
@@ -314,6 +317,7 @@ export function RoomDrawer({
 
   return (
     <section
+      ref={drawerRef}
       className={`lucky-drawer ${paintTab ? "is-paint" : ""} ${catsTab ? "is-cats" : ""} ${tutorialLockId ? "is-tutorial" : ""} ${expanded ? "is-expanded" : ""} ${sheetDragging ? "is-dragging" : ""}`}
       aria-label="꾸미기 서랍"
       style={{ height: sheetHeight }}

@@ -1,7 +1,7 @@
 {
  "_version": "cat-roam 1.1 (2026-10-22)",
  "breed": "scottish_fold (cream tabby, folded ears, round face, chibi)",
- "image": "cat-sprite-scottish_fold.png",
+ "image": "cat-sprite-scottish_fold.webp",
  "frameSize": [
   194,
   140
@@ -17,7 +17,7 @@
  },
  "units": "world px (3x of 1280x720 world); cat body ≈125 px ≈0.8 tile wide",
  "shadow": {
-  "image": "cat-shadow.png",
+  "image": "cat-shadow.webp",
   "size": [
    120,
    44

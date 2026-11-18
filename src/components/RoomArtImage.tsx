@@ -17,10 +17,14 @@ function preferredSrc(item: RoomArtImageProps["item"]): string {
 export function RoomArtImage({ item, className, alt = "" }: RoomArtImageProps) {
   const custom = preferredSrc(item);
   const [src, setSrc] = useState(custom);
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
     setSrc(custom);
+    setHidden(false);
   }, [custom, item.imageUrl]);
+
+  if (hidden) return null;
 
   return (
     <img
@@ -29,7 +33,8 @@ export function RoomArtImage({ item, className, alt = "" }: RoomArtImageProps) {
       alt={alt}
       draggable={false}
       onError={() => {
-        if (src !== item.imageUrl) setSrc(item.imageUrl);
+        if (item.imageUrl && src !== item.imageUrl) setSrc(item.imageUrl);
+        else setHidden(true);
       }}
     />
   );

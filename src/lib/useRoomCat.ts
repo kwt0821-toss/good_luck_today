@@ -124,7 +124,7 @@ const SEED_PREFS: CatTile[] = [
 
 function spriteFileForBreed(catId: string): string | undefined {
   if (!catId || catId === DEFAULT_CAT_BREED_ID) return undefined;
-  return `cat-sprite-${catId}.png`;
+  return `cat-sprite-${catId}.webp`;
 }
 
 function occupiedTiles(spots: Map<string, CatSpot> | undefined, selfId: string): Set<string> {

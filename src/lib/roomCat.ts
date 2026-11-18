@@ -72,8 +72,8 @@ export const CAT_BREEDS: CatBreed[] = [
   {
     id: "cheese",
     nameKo: "치즈 고양이",
-    spriteSheet: "cat-sprite.png",
-    shadow: "cat-shadow.png",
+    spriteSheet: "cat-sprite.webp",
+    shadow: "cat-shadow.webp",
     palette: null,
     patternOverlay: null,
   },
@@ -84,11 +84,11 @@ export function getCatBreed(id: string | null | undefined): CatBreed {
 }
 
 const FALLBACK_SHEET: CatSpriteSheet = {
-  image: "cat-sprite.png",
+  image: "cat-sprite.webp",
   frameSize: [174, 137],
   sheetSize: [1392, 411],
   anchor: { x: 87, y: 132 },
-  shadow: { image: "cat-shadow.png", size: [120, 44], anchor: [60, 22] },
+  shadow: { image: "cat-shadow.webp", size: [120, 44], anchor: [60, 22] },
   frames: {
     walk_dl_0: { x: 0, y: 0, w: 174, h: 137 },
     walk_dl_1: { x: 174, y: 0, w: 174, h: 137 },
@@ -131,7 +131,7 @@ const FALLBACK_SHEET: CatSpriteSheet = {
   },
 };
 
-const DEFAULT_SPRITE_FILE = "cat-sprite.png";
+const DEFAULT_SPRITE_FILE = "cat-sprite.webp";
 const sheetCache = new Map<string, Promise<CatSpriteSheet>>();
 
 function sheetSizeFromFrames(frames: Record<string, CatFrameRect>): [number, number] {
@@ -207,7 +207,7 @@ function parseSheet(raw: unknown, imageFallback: string): CatSpriteSheet | null 
       y: typeof anchorRaw.y === "number" ? anchorRaw.y : FALLBACK_SHEET.anchor.y,
     },
     shadow: {
-      image: "cat-shadow.png",
+      image: typeof shadowRaw.image === "string" ? shadowRaw.image : "cat-shadow.webp",
       size: Array.isArray(shadowRaw.size) ? (shadowRaw.size as [number, number]) : FALLBACK_SHEET.shadow.size,
       anchor: Array.isArray(shadowRaw.anchor)
         ? (shadowRaw.anchor as [number, number])
@@ -231,7 +231,7 @@ function loadDefaultSheet(): Promise<CatSpriteSheet> {
   return promise;
 }
 
-/** `spriteFile` is a filename under /assets/room/cat/ (e.g. cat-sprite-korean_shorthair.png). */
+/** `spriteFile` is a filename under /assets/room/cat/ (e.g. cat-sprite-korean_shorthair.webp). */
 export function loadCatSpriteSheet(spriteFile?: string): Promise<CatSpriteSheet> {
   const file = spriteFile?.trim();
   if (!file || isDefaultSprite(file)) return loadDefaultSheet();
