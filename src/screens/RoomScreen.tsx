@@ -12,11 +12,12 @@ import { jellyLabel } from "../lib/jellyLabel";
 import { withJosa } from "../lib/josa";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
 import { RoomDrawer, type DrawerItemMeta } from "../components/RoomDrawer";
+import { RoomPhotoSheet } from "../components/RoomPhotoSheet";
 import { RoomWorld } from "../components/RoomWorld";
 import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
 import { loadDexOwned } from "../lib/dexCollection";
 import { AudioManager } from "../audio/AudioManager";
-import { haptic } from "../lib/native";
+import { haptic, savePhotoBase64, shareRoomCard } from "../lib/native";
 import { loadOpsConfig } from "../lib/opsConfig";
 import {
   isPaintItem,
@@ -34,6 +35,15 @@ import {
 } from "../lib/roomCatalog";
 import { loadOpsState, saveOpsState } from "../lib/opsStorage";
 import { computeCozyPointsFromOwned } from "../lib/roomCozy";
+import {
+  captureRoomIsland,
+  composeRoomCard,
+  loadPhotoFrames,
+  roomPhotoDate,
+  roomPhotoFileName,
+  roomSkyColor,
+  type PhotoFrame,
+} from "../lib/roomPhoto";
 import { claimRoomSetReward, roomSetCue, roomSetFor, roomSetViews, type RoomSetView } from "../lib/roomSets";
 import { applyOpsPrices, grantUnlockRewards, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import { displayJellyBalance, jellySpend, serverJellyActive, subscribeJelly } from "../lib/serverJelly";
@@ -403,6 +413,14 @@ export function RoomScreen({
   const previewItemTap = useRef<{ instanceId: string; x: number; y: number } | null>(null);
   const previewKeyRef = useRef<string | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const islandRef = useRef<HTMLDivElement | null>(null);
+  const islandShotRef = useRef<HTMLCanvasElement | null>(null);
+  const photoCardRef = useRef<{ png: string; base64: string; blob: Blob } | null>(null);
+  const [photoOpen, setPhotoOpen] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoFrames, setPhotoFrames] = useState<PhotoFrame[]>([]);
+  const [photoFrameId, setPhotoFrameId] = useState("gold");
+  const [photoUrl, setPhotoUrl] = useState("");
   const toolbarRef = useRef<HTMLDivElement>(null);
   const chipRef = useRef<HTMLDivElement>(null);
   const placementGeomRef = useRef<PlacementGeom | null>(null);
@@ -897,6 +915,27 @@ export function RoomScreen({
       setSetBanner({ title: `${row.nameKo} 세트 완성!`, sub: row.bannerSub, roomId: row.roomId });
     }
   }, [economy, state]);
+
+  useEffect(() => {
+    const shot = islandShotRef.current;
+    if (!photoOpen || !shot || !photoFrames.length || !state) return;
+    const frame = photoFrames.find((item) => item.id === photoFrameId) ?? photoFrames[0];
+    let cancelled = false;
+    void composeRoomCard({
+      island: shot,
+      frame,
+      cozyLevel: state.cozyLevel,
+      dateLabel: roomPhotoDate(),
+      sky: roomSkyColor(stageRef.current),
+    }).then((card) => {
+      if (cancelled) return;
+      photoCardRef.current = card;
+      setPhotoUrl(card.png);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [photoOpen, photoFrameId, photoFrames, state]);
 
   useLoadingHold("room", !state || !roomsFile);
 
@@ -2038,6 +2077,58 @@ export function RoomScreen({
         }
       : null;
 
+  const openPhoto = async () => {
+    const island = islandRef.current;
+    if (!island) return;
+    islandShotRef.current = null;
+    photoCardRef.current = null;
+    setPhotoUrl("");
+    setPhotoOpen(true);
+    setPhotoBusy(true);
+    try {
+      const frames = photoFrames.length ? photoFrames : await loadPhotoFrames();
+      if (!photoFrames.length) setPhotoFrames(frames);
+      const shot = await captureRoomIsland(island);
+      islandShotRef.current = shot;
+      const frame = frames.find((item) => item.id === photoFrameId) ?? frames[0];
+      const card = await composeRoomCard({
+        island: shot,
+        frame,
+        cozyLevel: state.cozyLevel,
+        dateLabel: roomPhotoDate(),
+        sky: roomSkyColor(stageRef.current),
+      });
+      photoCardRef.current = card;
+      setPhotoUrl(card.png);
+    } catch {
+      nyNotify({ key: "room-photo", kind: "error", title: "사진을 만들지 못했어요" });
+      setPhotoOpen(false);
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const savePhoto = async () => {
+    const card = photoCardRef.current;
+    if (!card || photoBusy) return;
+    const result = await savePhotoBase64(card.base64, roomPhotoFileName(), card.blob);
+    nyNotify({
+      key: "room-photo-save",
+      kind: "info",
+      title: result === "sheet" ? "기기에 저장하는 창이 열려요" : "사진을 내려받았어요",
+    });
+  };
+
+  const sharePhoto = async () => {
+    const card = photoCardRef.current;
+    if (!card || photoBusy) return;
+    const file = new File([card.blob], roomPhotoFileName(), { type: "image/png" });
+    const result = await shareRoomCard(file, "나의 행운냥 방을 봐 주세요");
+    if (result === "copied") {
+      nyNotify({ key: "room-photo-copy", kind: "info", title: "자랑 문구를 복사했어요" });
+    }
+  };
+
   return (
     <div
       className={`lucky-room is-${mode} is-tod-${period}`}
@@ -2272,6 +2363,9 @@ export function RoomScreen({
                 style={{ left: mode === "view" ? index * viewW : 0, width: viewW }}
               >
                 <div
+                  ref={(node) => {
+                    if (active) islandRef.current = node;
+                  }}
                   className={`lucky-island ${mode === "view" ? "is-float" : ""}`}
                   style={{
                     left: screen.left,
@@ -2567,6 +2661,14 @@ export function RoomScreen({
             {ROOM_HINTS[roomDef.id]?.lead ? <span>{ROOM_HINTS[roomDef.id].lead}</span> : null}
             {ROOM_HINTS[roomDef.id]?.rest ?? roomDef.hint}
           </p>
+          <button
+            type="button"
+            className="lucky-photo-btn"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => void openPhoto()}
+          >
+            사진 찍기
+          </button>
           <div className="lucky-bar">
             <div className="lucky-bar-points">
               <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />
@@ -2659,6 +2761,19 @@ export function RoomScreen({
           setCounts={setCounts}
         />
       )}
+
+      {photoOpen ? (
+        <RoomPhotoSheet
+          frames={photoFrames}
+          frameId={photoFrameId}
+          previewUrl={photoUrl}
+          busy={photoBusy}
+          onFrame={setPhotoFrameId}
+          onClose={() => setPhotoOpen(false)}
+          onSave={() => void savePhoto()}
+          onShare={() => void sharePhoto()}
+        />
+      ) : null}
 
       {buyItem ? (
         <RoomBuySheet
