@@ -57,6 +57,7 @@ import type {
   SpriteRect,
   WallPlacement,
 } from "../lib/roomTypes";
+import { emitsLight, NEON_ITEM_IDS, WINDOW_ITEM_IDS } from "../lib/roomTime";
 import { useRoomCat, type CatMotionRef, type CatSpot, type CatSpotsRef, type RoomCatView } from "../lib/useRoomCat";
 
 type RoomWorldProps = {
@@ -113,6 +114,16 @@ function worldBox(rect: { x: number; y: number; w: number; h: number }): CSSProp
     top: pctY(rect.y),
     width: pctX(rect.w),
     height: pctY(rect.h),
+  };
+}
+
+/** Glass pane, inset so the curtains stay the painted color. */
+function windowGlassBox(rect: { x: number; y: number; w: number; h: number }): CSSProperties {
+  return {
+    left: pctX(rect.x + rect.w * 0.3),
+    top: pctY(rect.y + rect.h * 0.16),
+    width: pctX(rect.w * 0.4),
+    height: pctY(rect.h * 0.5),
   };
 }
 
@@ -793,6 +804,38 @@ export function RoomWorld({
     ...furniture.filter((place) => liftedIds.has(place.instanceId)),
   ];
 
+  const lightGlows: { key: string; x: number; y: number; neon: boolean }[] = [];
+  for (const place of shownFloor) {
+    if (!emitsLight(place.id)) continue;
+    const item = itemsById.get(place.id);
+    if (!item) continue;
+    const rect = spriteRect(item, place, shownFloor, itemsById);
+    lightGlows.push({
+      key: place.instanceId,
+      x: rect.x + rect.w / 2,
+      y: rect.y + rect.h * 0.28,
+      neon: NEON_ITEM_IDS.has(place.id),
+    });
+  }
+  for (const place of shownWalls) {
+    if (!emitsLight(place.id)) continue;
+    const item = itemsById.get(place.id);
+    if (!item) continue;
+    const rect = wallSpriteRect(item, place);
+    lightGlows.push({
+      key: place.instanceId,
+      x: rect.x + rect.w / 2,
+      y: rect.y + rect.h * 0.4,
+      neon: NEON_ITEM_IDS.has(place.id),
+    });
+  }
+  const windows = shownWalls.flatMap((place) => {
+    if (!WINDOW_ITEM_IDS.has(place.id)) return [];
+    const item = itemsById.get(place.id);
+    if (!item) return [];
+    return [{ key: place.instanceId, wall: place.wall, rect: wallSpriteRect(item, place) }];
+  });
+
   const lamp = shownFloor.find((place) => place.id === "floorlamp");
   const lampItem = itemsById.get("floorlamp");
   const lampRect =
@@ -835,6 +878,7 @@ export function RoomWorld({
       onPointerDown={onFloorPointerDown}
     >
       <Layer src="world/base-bg.webp" />
+      <div className="lucky-tod-sky" aria-hidden="true" />
       <div className="lucky-world-layer lucky-floor-tiles" aria-hidden="true">
         {layout.floorTiles.map((row, r) =>
           row.map((id, c) => {
@@ -878,6 +922,7 @@ export function RoomWorld({
         )}
       </div>
       <Layer src={mode === "edit" ? "world/room-frame-edit.svg" : "world/room-frame-view.svg"} className="is-frame" />
+      <Layer src="world/string-lights.webp" className="is-lights" />
 
       {mode === "edit" ? (
         <svg className="lucky-world-layer lucky-tile-layer" viewBox={`0 0 ${WORLD_W} ${WORLD_H}`}>
@@ -1029,7 +1074,21 @@ export function RoomWorld({
         );
       })}
 
-      {/* string lights are baked into world/room-frame-* */}
+      <div className="lucky-tod-wash" aria-hidden="true" />
+      {windows.map((win) => (
+        <div key={`sky-${win.key}`} className="lucky-window-sky" style={windowGlassBox(win.rect)} aria-hidden="true" />
+      ))}
+      {windows.map((win) => (
+        <div
+          key={`beam-${win.key}`}
+          className={`lucky-sunbeam is-${win.wall}`}
+          style={{
+            left: pctX(win.rect.x + win.rect.w * 0.35),
+            top: pctY(win.rect.y + win.rect.h * 0.22),
+          }}
+          aria-hidden="true"
+        />
+      ))}
 
       {roomCatIds.map((catId, slot) => (
         <RoomCatAgent
@@ -1100,6 +1159,14 @@ export function RoomWorld({
           draggable={false}
         />
       ) : null}
+      {lightGlows.map((glow) => (
+        <span
+          key={`glow-${glow.key}`}
+          className={`lucky-item-glow ${glow.neon ? "is-neon" : ""}`}
+          style={{ left: pctX(glow.x), top: pctY(glow.y) }}
+          aria-hidden="true"
+        />
+      ))}
 
       <Layer src={mode === "edit" ? "world/front-puffs-edit.svg" : "world/front-puffs-view.svg"} className="is-puffs" />
     </div>

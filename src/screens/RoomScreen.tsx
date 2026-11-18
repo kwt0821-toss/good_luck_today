@@ -36,6 +36,7 @@ import { loadOpsState, saveOpsState } from "../lib/opsStorage";
 import { applyOpsPrices, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import { displayJellyBalance, jellySpend, serverJellyActive, subscribeJelly } from "../lib/serverJelly";
 import { furnitureDepthKey } from "../lib/roomCat";
+import { useRoomPeriod } from "../lib/roomTime";
 import {
   cloneLayout,
   hitTestPaint,
@@ -354,6 +355,7 @@ export function RoomScreen({
   const [mode, setMode] = useState<RoomMode>(() =>
     new URLSearchParams(window.location.search).get("edit") || tutorialActive ? "edit" : "view",
   );
+  const period = useRoomPeriod();
   const [tab, setTab] = useState<RoomTab>(tutorialActive ? "보유" : "가구");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<RoomLayoutState | null>(null);
@@ -1950,7 +1952,7 @@ export function RoomScreen({
 
   return (
     <div
-      className={`lucky-room is-${mode}`}
+      className={`lucky-room is-${mode} is-tod-${period}`}
       ref={stageRef}
       onPointerMove={onStagePointerMove}
       onPointerUp={onStagePointerUp}

@@ -11,6 +11,23 @@
   color: var(--cream);
   font-family: "Noto Sans KR", "Toss Product Sans", sans-serif;
   background: var(--page);
+  transition: background 1.4s ease;
+}
+
+.lucky-room.is-tod-morning {
+  background: linear-gradient(180deg, #f6c3d0 0%, #e4c4f2 48%, #f8dcc6 100%);
+}
+
+.lucky-room.is-tod-day {
+  background: linear-gradient(180deg, #7ec8f6 0%, #c5e7ff 58%, #eef8ff 100%);
+}
+
+.lucky-room.is-tod-sunset {
+  background: linear-gradient(180deg, #f09458 0%, #d46aa6 46%, #5c457e 100%);
+}
+
+.lucky-room.is-tod-night {
+  background: linear-gradient(180deg, #1a1228 0%, #24182c 62%, #2c1d3c 100%);
 }
 
 .lucky-room.is-loading {
@@ -113,6 +130,31 @@
   inset: 0;
   pointer-events: none;
   z-index: 1;
+  transition: opacity 1.4s ease;
+}
+
+.lucky-room.is-tod-morning .lucky-stars {
+  opacity: 0.22;
+}
+
+.lucky-room.is-tod-day .lucky-stars {
+  opacity: 0;
+}
+
+.lucky-room.is-tod-sunset .lucky-stars {
+  opacity: 0.4;
+}
+
+.lucky-warm-glow {
+  transition: opacity 1.4s ease;
+}
+
+.lucky-room.is-tod-morning .lucky-warm-glow {
+  opacity: 0.55;
+}
+
+.lucky-room.is-tod-day .lucky-warm-glow {
+  opacity: 0.15;
 }
 
 .lucky-star {
@@ -466,7 +508,9 @@
 
 .lucky-world-layer.is-lights {
   z-index: 4;
+  opacity: 0.9;
   animation: lucky-lights 2.8s ease-in-out infinite;
+  transition: opacity 1.4s ease;
 }
 
 .lucky-world-layer.is-puffs {
@@ -633,9 +677,186 @@
 }
 
 .lucky-lamp-glow {
-  z-index: 6;
+  z-index: 7;
   mix-blend-mode: screen;
+  opacity: 0.92;
   animation: lucky-lamp 3.2s ease-in-out infinite;
+  transition: opacity 1.4s ease;
+}
+
+/* Sky behind the cloud island. Screen leaves white clouds, ears, and cards. */
+.lucky-tod-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.4s ease, background 1.4s ease;
+}
+
+.lucky-room.is-tod-morning .lucky-tod-sky {
+  opacity: 0.88;
+  background: linear-gradient(180deg, #f7c5d2 0%, #e6c6f4 46%, #f8dcc4 100%);
+  mix-blend-mode: screen;
+}
+
+.lucky-room.is-tod-day .lucky-tod-sky {
+  opacity: 0.94;
+  background: linear-gradient(180deg, #8ecfff 0%, #d4efff 70%, #f4fbff 100%);
+  mix-blend-mode: screen;
+}
+
+.lucky-room.is-tod-sunset .lucky-tod-sky {
+  opacity: 0.9;
+  background: linear-gradient(180deg, #ff9a55 0%, #e07ab8 48%, #6a4d92 100%);
+  mix-blend-mode: screen;
+}
+
+/* Room interior. Clipped to the walls and floor so the cloud stays put. */
+.lucky-tod-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  clip-path: polygon(50% 20.8%, 33.7% 35.3%, 33.7% 56.1%, 50% 70.6%, 66.3% 56.1%, 66.3% 35.3%);
+  transition: background 1.4s ease;
+}
+
+.lucky-room.is-tod-morning .lucky-tod-wash {
+  background: linear-gradient(180deg, rgba(255, 214, 186, 0.72), rgba(244, 186, 214, 0.4));
+  mix-blend-mode: soft-light;
+}
+
+.lucky-room.is-tod-day .lucky-tod-wash {
+  background: rgba(255, 252, 246, 0.5);
+  mix-blend-mode: soft-light;
+}
+
+.lucky-room.is-tod-sunset .lucky-tod-wash {
+  background: linear-gradient(180deg, rgba(255, 168, 104, 0.62), rgba(190, 120, 196, 0.36));
+  mix-blend-mode: soft-light;
+}
+
+.lucky-room.is-tod-night .lucky-tod-wash {
+  background: rgba(16, 8, 28, 0.32);
+  mix-blend-mode: multiply;
+}
+
+.lucky-window-sky {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+  border-radius: 46%;
+  opacity: 0;
+  transition: opacity 1.4s ease, background 1.4s ease;
+}
+
+.lucky-room.is-tod-morning .lucky-window-sky {
+  opacity: 0.82;
+  background: linear-gradient(165deg, #ffd0c0, #efc6f4);
+}
+
+.lucky-room.is-tod-day .lucky-window-sky {
+  opacity: 0.78;
+  background: linear-gradient(180deg, #8fd0ff, #e4f5ff);
+}
+
+.lucky-room.is-tod-sunset .lucky-window-sky {
+  opacity: 0.8;
+  background: linear-gradient(165deg, #ffb07a, #e08ad0 72%, #7a5aaa);
+}
+
+.lucky-sunbeam {
+  position: absolute;
+  z-index: 6;
+  width: 22%;
+  height: 42%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+  background: linear-gradient(180deg, rgba(255, 236, 196, 0.7), transparent 74%);
+  clip-path: polygon(36% 0, 64% 0, 100% 100%, 0 100%);
+  transform-origin: top center;
+  transition: opacity 1.4s ease;
+}
+
+.lucky-sunbeam.is-L {
+  transform: translate(-8%, 0) rotate(16deg);
+}
+
+.lucky-sunbeam.is-R {
+  transform: translate(-78%, 0) rotate(-16deg);
+}
+
+.lucky-room.is-tod-morning .lucky-sunbeam {
+  opacity: 0.9;
+}
+
+.lucky-room.is-tod-sunset .lucky-sunbeam {
+  opacity: 0.85;
+  background: linear-gradient(180deg, rgba(255, 168, 96, 0.72), transparent 76%);
+}
+
+.lucky-item-glow {
+  position: absolute;
+  z-index: 7;
+  width: 9%;
+  height: 14%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  border-radius: 50%;
+  transform: translate(-50%, -40%);
+  background: radial-gradient(circle, rgba(255, 220, 160, 0.9) 0%, rgba(255, 176, 96, 0.32) 46%, transparent 72%);
+  opacity: 0.92;
+  animation: lucky-lamp 3.2s ease-in-out infinite;
+  transition: opacity 1.4s ease;
+}
+
+.lucky-item-glow.is-neon {
+  background: radial-gradient(circle, rgba(255, 150, 196, 0.9) 0%, rgba(255, 90, 160, 0.34) 48%, transparent 72%);
+  filter: sepia(0.35) hue-rotate(-20deg) saturate(2.4);
+}
+
+.lucky-room.is-tod-morning .lucky-lamp-glow,
+.lucky-room.is-tod-day .lucky-lamp-glow,
+.lucky-room.is-tod-morning .lucky-item-glow,
+.lucky-room.is-tod-day .lucky-item-glow {
+  animation: none;
+  opacity: 0.18;
+}
+
+.lucky-room.is-tod-sunset .lucky-lamp-glow,
+.lucky-room.is-tod-sunset .lucky-item-glow {
+  opacity: 0.68;
+  animation: lucky-lamp-dusk 3.2s ease-in-out infinite;
+}
+
+@keyframes lucky-lamp-dusk {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  40% {
+    opacity: 0.78;
+  }
+  70% {
+    opacity: 0.64;
+  }
+}
+
+.lucky-room.is-tod-morning .lucky-world-layer.is-lights,
+.lucky-room.is-tod-day .lucky-world-layer.is-lights {
+  opacity: 0.22;
+  animation: lucky-lights-dim 2.8s ease-in-out infinite;
+}
+
+.lucky-room.is-edit .lucky-lamp-glow,
+.lucky-room.is-edit .lucky-item-glow:not(.is-neon) {
+  filter: brightness(0.8);
+}
+
+.lucky-room.is-edit .lucky-item-glow.is-neon {
+  filter: brightness(0.8) sepia(0.35) hue-rotate(-20deg) saturate(2.4);
 }
 
 .lucky-tile-layer,
@@ -2447,6 +2668,16 @@ button.lucky-roam-cat:active,
   }
 }
 
+@keyframes lucky-lights-dim {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
 @keyframes lucky-shake {
   0%,
   100% {
@@ -2495,6 +2726,7 @@ button.lucky-roam-cat:active,
   .lucky-island-slider,
   .lucky-star,
   .lucky-lamp-glow,
+  .lucky-item-glow,
   .lucky-world-layer.is-lights,
   .lucky-sprite.is-catbed img,
   .lucky-roam-cat.is-sleeping .lucky-roam-frame,
