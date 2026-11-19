@@ -67,6 +67,17 @@ function useFitPlateName(label: string, active: boolean) {
   return { plateRef, textRef };
 }
 
+/** Finished season card. The webp already includes the pattern, name, and caption. */
+export const SeasonCardFace = forwardRef<HTMLDivElement, { src: string; className?: string }>(
+  function SeasonCardFace({ src, className }, ref) {
+    return (
+      <div ref={ref} className={["season-card-plain", className].filter(Boolean).join(" ")}>
+        <img src={src} alt="" draggable={false} />
+      </div>
+    );
+  },
+);
+
 export const CardFrame = forwardRef<HTMLDivElement, CardFrameProps>(function CardFrame(
   { card, artId = "", catSrc, thumbSrc = "", name = "", dexNo = "", variant = "full", className },
   ref,

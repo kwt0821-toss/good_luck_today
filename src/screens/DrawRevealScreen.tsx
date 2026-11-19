@@ -11,7 +11,7 @@ import { ncoinIcon } from "../lib/ncoinIcon";
 import type { DrawReservation } from "../lib/opsTypes";
 import { cardFortune, cardKoreanName, formatCardDexNo } from "../lib/dexCatalog";
 import { boxStyle, resolveFrame, type FrameSubject } from "../lib/cardFrames";
-import { CardFrame } from "../components/CardFrame";
+import { CardFrame, SeasonCardFace } from "../components/CardFrame";
 import { CardSpotlight } from "../components/CardSpotlight";
 import { CardFlipStack, CardViewer } from "../components/CardViewer";
 import "./DrawRevealScreen.css";
@@ -729,14 +729,18 @@ export function DrawRevealScreen({
               <CardFlipStack
                 showingBack={manualFlip}
                 front={
-                  <CardFrame
-                    card={frameCard}
-                    artId={reservation.cardId}
-                    catSrc={frontSrc}
-                    thumbSrc={reservation.thumbUrl}
-                    name={frameName}
-                    dexNo={dexNo}
-                  />
+                  frameCard.type === "season" ? (
+                    <SeasonCardFace src={frontSrc} />
+                  ) : (
+                    <CardFrame
+                      card={frameCard}
+                      artId={reservation.cardId}
+                      catSrc={frontSrc}
+                      thumbSrc={reservation.thumbUrl}
+                      name={frameName}
+                      dexNo={dexNo}
+                    />
+                  )
                 }
                 back={<img src={reservation.backUrl || FACEDOWN} alt="" draggable={false} />}
               />
@@ -761,21 +765,32 @@ export function DrawRevealScreen({
             </div>
             <div ref={innerRef} className="draw-reveal-inner" id="inner">
               <div className="draw-reveal-face" id="reveal-card">
-                <CardFrame
-                  ref={frontRef}
-                  card={frameCard}
-                  artId={reservation.cardId}
-                  catSrc={frontSrc}
-                  thumbSrc={reservation.thumbUrl}
-                  name={frameName}
-                  dexNo={dexNo}
+                {frameCard.type === "season" ? (
+                  <SeasonCardFace ref={frontRef} src={frontSrc} />
+                ) : (
+                  <CardFrame
+                    ref={frontRef}
+                    card={frameCard}
+                    artId={reservation.cardId}
+                    catSrc={frontSrc}
+                    thumbSrc={reservation.thumbUrl}
+                    name={frameName}
+                    dexNo={dexNo}
+                  />
+                )}
+                {frameCard.type === "season" ? null : (
+                  <div className="draw-reveal-spark" style={boxStyle(resolveFrame(frameCard).tier.win)} aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                  </div>
+                )}
+                <div
+                  ref={holoRef}
+                  className="draw-reveal-holo"
+                  id="holo"
+                  hidden={frameCard.type === "season"}
                 />
-                <div className="draw-reveal-spark" style={boxStyle(resolveFrame(frameCard).tier.win)} aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                </div>
-                <div ref={holoRef} className="draw-reveal-holo" id="holo" />
               </div>
               <div className="draw-reveal-face is-rear">
                 <img ref={rearRef} alt="" draggable={false} />

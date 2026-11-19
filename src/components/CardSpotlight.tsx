@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useBackHandler } from "../hooks/useBackHandler";
 import { decodeImage } from "../lib/cardArt";
 import { frameAssetUrls, type FrameSubject } from "../lib/cardFrames";
-import { CardFrame } from "./CardFrame";
+import { CardFrame, SeasonCardFace } from "./CardFrame";
 import "./CardSpotlight.css";
 
 export type CardSpotlightCard = {
@@ -104,14 +104,18 @@ export function CardSpotlight({ card, line, onDone }: CardSpotlightProps) {
       <div className="card-spotlight-stars" aria-hidden="true" />
       <div className="card-spotlight-stage">
         <div className="card-spotlight-card">
-          <CardFrame
-            card={card.subject}
-            artId={card.artId}
-            catSrc={card.src}
-            thumbSrc={card.thumbSrc}
-            name={card.name}
-            dexNo={card.dexNo}
-          />
+          {card.subject.type === "season" ? (
+            <SeasonCardFace src={card.src} />
+          ) : (
+            <CardFrame
+              card={card.subject}
+              artId={card.artId}
+              catSrc={card.src}
+              thumbSrc={card.thumbSrc}
+              name={card.name}
+              dexNo={card.dexNo}
+            />
+          )}
         </div>
       </div>
       <div className="card-spotlight-copy">

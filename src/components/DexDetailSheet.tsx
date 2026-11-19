@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { AudioManager } from "../audio/AudioManager";
 import { cardBackUrl, cardLargeUrl, cardThumbUrl, decodeImage } from "../lib/cardArt";
 import { resolveFrame } from "../lib/cardFrames";
-import { CardFrame } from "./CardFrame";
+import { CardFrame, SeasonCardFace } from "./CardFrame";
 import { jellyLabel } from "../lib/jellyLabel";
 import { useLoadingHold } from "../lib/loadingGate";
 import { CardFlipStack, CardViewer } from "./CardViewer";
@@ -365,14 +365,18 @@ export function DexDetailSheet({
             <CardFlipStack
               showingBack={showingBack}
               front={
-                <CardFrame
-                  card={card}
-                  artId={card.id}
-                  catSrc={cardLargeUrl(card)}
-                  thumbSrc={cardThumbUrl(card)}
-                  name={cardKoreanName(card) || cardDisplayName(card)}
-                  dexNo={formatCardDexNo(card.id)}
-                />
+                card.type === "season" ? (
+                  <SeasonCardFace src={cardLargeUrl(card)} />
+                ) : (
+                  <CardFrame
+                    card={card}
+                    artId={card.id}
+                    catSrc={cardLargeUrl(card)}
+                    thumbSrc={cardThumbUrl(card)}
+                    name={cardKoreanName(card) || cardDisplayName(card)}
+                    dexNo={formatCardDexNo(card.id)}
+                  />
+                )
               }
               back={<img src={cardBackUrl(card)} alt="" draggable={false} />}
             />
@@ -397,14 +401,18 @@ export function DexDetailSheet({
               <div ref={shadowRef} className="dex-card-depth" aria-hidden="true" />
               <div ref={innerRef} className="card-inner dex-card-inner">
                 <div ref={frontFaceRef} className="face front dex-face">
-                  <CardFrame
-                    card={card}
-                    artId={card.id}
-                    catSrc={cardLargeUrl(card)}
-                  thumbSrc={cardThumbUrl(card)}
-                    name={cardKoreanName(card) || cardDisplayName(card)}
-                    dexNo={formatCardDexNo(card.id)}
-                  />
+                  {card.type === "season" ? (
+                    <SeasonCardFace src={cardLargeUrl(card)} />
+                  ) : (
+                    <CardFrame
+                      card={card}
+                      artId={card.id}
+                      catSrc={cardLargeUrl(card)}
+                      thumbSrc={cardThumbUrl(card)}
+                      name={cardKoreanName(card) || cardDisplayName(card)}
+                      dexNo={formatCardDexNo(card.id)}
+                    />
+                  )}
                 </div>
                 <div ref={backFaceRef} className="face back dex-face">
                   <img src={cardBackUrl(card)} alt={`${cardDisplayName(card)} 뒷면`} draggable={false} />

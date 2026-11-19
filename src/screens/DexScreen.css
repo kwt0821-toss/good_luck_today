@@ -307,7 +307,8 @@
 }
 
 .dex-grid-special,
-.dex-grid-character {
+.dex-grid-character,
+.dex-grid-season {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   column-gap: clamp(8px, 3vw, 12px);
   row-gap: 18px;
@@ -395,6 +396,7 @@
 
 .dex-slot-special,
 .dex-slot-character,
+.dex-slot-season,
 .dex-slot-soon {
   width: min(106px, 100%);
   height: auto;
@@ -415,6 +417,11 @@
 .dex-slot-breed.is-locked {
   background: linear-gradient(160deg, rgba(243, 233, 215, 0.07), rgba(243, 233, 215, 0.025));
   border: 1px solid rgba(243, 233, 215, 0.13);
+}
+
+.dex-slot-season.is-locked {
+  background: linear-gradient(160deg, rgba(243, 233, 215, 0.08), rgba(243, 233, 215, 0.03));
+  border: 1px solid rgba(243, 233, 215, 0.22);
 }
 
 .dex-slot-special.is-locked {

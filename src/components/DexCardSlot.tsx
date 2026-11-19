@@ -3,7 +3,7 @@ import { cardKoreanName, dexAsset } from "../lib/dexCatalog";
 import { formatDupBadge } from "../lib/dupExchange";
 import type { DexCard, DexOwnedRecord } from "../lib/dexTypes";
 import { ncoinIcon } from "../lib/ncoinIcon";
-import { CardFrame } from "./CardFrame";
+import { CardFrame, SeasonCardFace } from "./CardFrame";
 
 type SlotKind = "breed" | "special" | "character" | "legend" | "season" | "soon";
 
@@ -31,6 +31,9 @@ function starsLabel(count: number): string {
 }
 
 function DexThumb({ card }: { card: DexCard }) {
+  if (card.type === "season") {
+    return <SeasonCardFace className="dex-slot-img" src={cardThumbUrl(card)} />;
+  }
   return (
     <CardFrame
       className="dex-slot-img"

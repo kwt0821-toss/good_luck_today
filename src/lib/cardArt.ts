@@ -37,7 +37,12 @@ function artEntry(id: string): ArtEntry | undefined {
 }
 
 /** Large transparent cat for CardViewer and the draw reveal. */
+function isFinishedSeasonCard(id: string): boolean {
+  return id.startsWith("season_");
+}
+
 export function cardLargeUrl(card: Pick<DexCard, "id" | "front">): string {
+  if (isFinishedSeasonCard(card.id)) return withAssetVersion(dexAsset(card.front));
   const art = artEntry(card.id)?.art;
   if (art) return withAssetVersion(`${ART_BASE}/${art}`);
   return withAssetVersion(dexAsset(card.front));
@@ -45,6 +50,7 @@ export function cardLargeUrl(card: Pick<DexCard, "id" | "front">): string {
 
 /** Grid thumb of the same transparent cat. */
 export function cardThumbUrl(card: Pick<DexCard, "id" | "thumb">): string {
+  if (isFinishedSeasonCard(card.id)) return withAssetVersion(dexAsset(card.thumb));
   const thumb = artEntry(card.id)?.thumb;
   if (thumb) return withAssetVersion(`${ART_BASE}/${thumb}`);
   return withAssetVersion(dexAsset(card.thumb));
