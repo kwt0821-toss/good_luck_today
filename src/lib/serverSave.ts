@@ -1,6 +1,7 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
 import { mergeAffectionStates, parseAffection } from "./affection";
+import { mergeCatLetters, parseCatLetters } from "./catLetters";
 import { toKstDateKey } from "./date";
 import { isInTossApp } from "./native";
 import { isTossApp } from "./tossEnv";
@@ -343,7 +344,15 @@ function mergeTodayMissions(localRaw: string | null, serverRaw: string): string 
   const localSeen = typeof local.updateNotesSeenId === "string" ? local.updateNotesSeenId : "";
   const serverSeen = typeof server.updateNotesSeenId === "string" ? server.updateNotesSeenId : "";
   if (!serverSeen && localSeen) server.updateNotesSeenId = localSeen;
-  return JSON.stringify(mergeAffection(local, server));
+  return JSON.stringify(mergeLetters(local, mergeAffection(local, server)));
+}
+
+function mergeLetters(local: Record<string, unknown>, server: Record<string, unknown>): Record<string, unknown> {
+  const localOpen = typeof local.lastOpenDateKST === "string" ? local.lastOpenDateKST : "";
+  const serverOpen = typeof server.lastOpenDateKST === "string" ? server.lastOpenDateKST : "";
+  server.lastOpenDateKST = localOpen > serverOpen ? localOpen : serverOpen;
+  server.catLetters = mergeCatLetters(parseCatLetters(local.catLetters), parseCatLetters(server.catLetters));
+  return server;
 }
 
 function mergeAffection(local: Record<string, unknown>, server: Record<string, unknown>): Record<string, unknown> {

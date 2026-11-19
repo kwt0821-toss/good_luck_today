@@ -37,6 +37,7 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     installDateKey: today,
     attendanceDays: 0,
     lastAttendDateKST: "",
+    lastOpenDateKST: "",
     attendanceClaimed: 0,
     lastAttendanceDateKey: "",
     rateUpTickets: 0,

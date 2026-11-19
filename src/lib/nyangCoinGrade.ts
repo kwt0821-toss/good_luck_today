@@ -16,6 +16,7 @@ const FALLBACK = {
 export function nyangCoinForCard(economy: OpsEconomy, card: DexCard): number {
   const first = economy.pawSources.newCardFirstGet;
   const table = first.nyangCoinByGrade ?? FALLBACK;
+  if (card.type === "season") return ("season" in table ? table.season : undefined) ?? 5;
   if (card.type === "special") return table.special;
   if (card.type === "character") return table.character;
   if (card.type === "legend") return table.legend;
@@ -27,6 +28,9 @@ export function nyangCoinForCard(economy: OpsEconomy, card: DexCard): number {
   return table.b1;
 }
 
-export function newCardPaw(economy: OpsEconomy): number {
+export function newCardPaw(economy: OpsEconomy, card?: DexCard): number {
+  if (card?.type === "season") {
+    return economy.pawSources.newCardFirstGet.pawByGrade?.season ?? economy.pawSources.newCardFirstGet.paw;
+  }
   return economy.pawSources.newCardFirstGet.paw;
 }

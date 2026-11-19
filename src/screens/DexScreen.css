@@ -135,10 +135,12 @@
   position: relative;
   display: flex;
   align-items: flex-end;
-  gap: 17px;
+  gap: 12px;
   margin: 18px 0 0;
   padding: 0 0 10px;
   border-bottom: 1px solid rgba(243, 233, 215, 0.12);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .dex-tab {
@@ -342,6 +344,14 @@
   font-weight: 600;
   letter-spacing: 2px;
   color: rgba(243, 233, 215, 0.35);
+}
+
+.dex-cell-name.is-season-wait {
+  font-size: 10px;
+  letter-spacing: 0;
+  color: rgba(243, 233, 215, 0.55);
+  white-space: normal;
+  text-overflow: unset;
 }
 
 .dex-cell-name.is-soon {

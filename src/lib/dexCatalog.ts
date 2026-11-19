@@ -4,9 +4,15 @@ import type { DexCard, DexCardType, DexCatalog, DexOwnedMap, DexTab } from "./de
 
 const FORTUNE_LINES = linesJson as Record<string, string>;
 
-const CARD_INDEX = new Map<string, number>(
-  cardsJson.cards.map((card, index) => [card.id, index + 1]),
-);
+const CARD_INDEX = new Map<string, number>();
+{
+  let number = 0;
+  for (const card of cardsJson.cards) {
+    if (card.type === "season") continue;
+    number += 1;
+    CARD_INDEX.set(card.id, number);
+  }
+}
 
 /** 오늘의 한 줄 — under the card, outside the frame. */
 export function cardFortune(cardId: string | null | undefined): string {
@@ -50,7 +56,7 @@ export function loadDexCatalog(): Promise<DexCatalog> {
       .catch(() => ({
         version: 1,
         total: 0,
-        counts: { breed: 0, special: 0, character: 0, legend: 0 },
+        counts: { breed: 0, special: 0, character: 0, legend: 0, season: 0 },
         cards: [],
       }));
   }
@@ -148,7 +154,7 @@ export function formatMetDate(dateKey: string): { day: string; year: string } {
 
 /** Special, character, and legend swipe in the same order as the dex grid. */
 export function dexGroupLoops(type: DexCard["type"]): boolean {
-  return type === "special" || type === "character" || type === "legend";
+  return type === "special" || type === "character" || type === "legend" || type === "season";
 }
 
 /** Next or previous owned card. Looping groups wrap the ends. */
@@ -180,6 +186,7 @@ export function groupForCard(catalog: DexCatalog, card: DexCard): DexCard[] {
 export const TAB_META: { id: DexTab; label: string }[] = [
   { id: "breed", label: "고양이" },
   { id: "special", label: "스페셜" },
+  { id: "season", label: "시즌" },
   { id: "character", label: "캐릭터" },
   { id: "legend", label: "레전드" },
 ];
@@ -192,6 +199,11 @@ export const TAB_COPY: Record<
     en: "Special",
     ko: "스페셜 카드",
     note: "특별한 고양이 카드를 모아요",
+  },
+  season: {
+    en: "Season",
+    ko: "시즌 카드",
+    note: "이 시즌에만 만날 수 있어요",
   },
   character: {
     en: "Character",

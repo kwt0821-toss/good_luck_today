@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 
 import { HomeWalletChips } from "../components/HomeWalletChips";
+import { SeasonBanner } from "../components/SeasonBanner";
 import { TitleRibbon } from "../components/TitleRibbon";
 import { formatCountdownHms, formatLuckyCatalogDate, msUntilNextKstMidnight } from "../lib/date";
 import { MENU_SETTINGS_EVENT, shouldReduceMenuMotion } from "../lib/menuSettings";
@@ -329,6 +330,8 @@ export function HomeScreen({
             locked={walletChipsLocked}
           />
         </div>
+
+        {walletChipsLocked ? null : <SeasonBanner />}
 
         {missionNudge && !walletChipsLocked && onOpenMissions ? (
           <button type="button" className="main-mission-nudge" onClick={onOpenMissions}>

@@ -37,6 +37,7 @@ import {
   type DexReward,
 } from "../lib/dexRewards";
 import { unseenDexRewardIds } from "../lib/dexSeen";
+import { seasonActive } from "../lib/season";
 import { track } from "../lib/analytics";
 import { haptic } from "../lib/native";
 import { nyNotify } from "../lib/nyangNotify";
@@ -146,6 +147,7 @@ export function DexScreen({
     special: null,
     character: null,
     legend: null,
+    season: null,
   });
   const dexBodyRef = useRef<HTMLDivElement>(null);
   const [underline, setUnderline] = useState({ left: 0, width: 56 });
@@ -427,7 +429,8 @@ export function DexScreen({
     }
   };
 
-  const totals = catalog?.counts ?? { breed: 0, special: 0, character: 0, legend: 0 };
+  const totals = catalog?.counts ?? { breed: 0, special: 0, character: 0, legend: 0, season: 0 };
+  const seasonOn = Boolean(economy && seasonActive(economy));
   const totalCards = catalog?.total ?? 107;
   const breedCards = useMemo(() => (catalog ? cardsOfType(catalog, "breed") : []), [catalog]);
   const specialCards = useMemo(
@@ -442,6 +445,10 @@ export function DexScreen({
     () => (catalog ? shuffleCards(cardsOfType(catalog, "legend"), "legend") : []),
     [catalog],
   );
+  const seasonCardList = useMemo(
+    () => (catalog ? cardsOfType(catalog, "season") : []),
+    [catalog],
+  );
   const breedRows = useMemo(() => shuffleBreedRows(groupBreedRows(breedCards)), [breedCards]);
 
   const tabCounts: Record<DexTab, { owned: number; total: number }> = {
@@ -449,6 +456,7 @@ export function DexScreen({
     special: { owned: ownedCount(specialCards, owned), total: totals.special },
     character: { owned: ownedCount(characterCards, owned), total: totals.character },
     legend: { owned: ownedCount(legendCards, owned), total: totals.legend },
+    season: { owned: ownedCount(seasonCardList, owned), total: totals.season },
   };
   const ownedTotal =
     tabCounts.breed.owned + tabCounts.special.owned + tabCounts.character.owned + tabCounts.legend.owned;
@@ -481,7 +489,10 @@ export function DexScreen({
     }
     void haptic("softMedium");
     window.clearTimeout(slotChipTimer.current);
-    setSlotChip({ cardId: card.id, text: "아직 못 만난 고양이예요" });
+    setSlotChip({
+      cardId: card.id,
+      text: card.type === "season" && !seasonOn ? "다음 시즌에 다시" : "아직 못 만난 고양이예요",
+    });
     slotChipTimer.current = window.setTimeout(() => setSlotChip(null), 1800);
   };
 
@@ -722,15 +733,30 @@ export function DexScreen({
           </div>
         ) : null}
 
-        {tab === "special" || tab === "character" || tab === "legend" ? (
+        {tab === "special" || tab === "character" || tab === "legend" || tab === "season" ? (
           <GridTab
             tab={tab}
-            cards={tab === "special" ? specialCards : tab === "character" ? characterCards : legendCards}
+            cards={
+              tab === "special"
+                ? specialCards
+                : tab === "character"
+                  ? characterCards
+                  : tab === "season"
+                    ? seasonCardList
+                    : legendCards
+            }
             owned={owned}
             count={tabCounts[tab]}
             claimable={claimable}
             claimBusy={claimBusy}
-            typeReward={tutLocked ? null : claimableTypeSet(claimable, tab)}
+            seasonClosed={tab === "season" && !seasonOn}
+            typeReward={
+              tutLocked
+                ? null
+                : tab === "season"
+                  ? (claimable.find((item) => item.kind === "seasonSet") ?? null)
+                  : claimableTypeSet(claimable, tab)
+            }
             pulseSlotId={pulseSlotId}
             focusCardId={focusCardId}
             claimGate={tutorialPhase === "claim"}
@@ -889,6 +915,7 @@ function GridTab({
   claimable,
   claimBusy,
   typeReward,
+  seasonClosed = false,
   pulseSlotId,
   focusCardId,
   claimGate,
@@ -905,6 +932,7 @@ function GridTab({
   claimable: DexReward[];
   claimBusy: boolean;
   typeReward: DexReward | null;
+  seasonClosed?: boolean;
   pulseSlotId: string | null;
   focusCardId: string | null;
   claimGate: boolean;
@@ -966,8 +994,8 @@ function GridTab({
                 unseen={(owned[card.id]?.count ?? 0) > 0 && !seenIds.includes(card.id)}
                 onClick={() => onSlot(card)}
               />
-              <p className={`dex-cell-name ${owned[card.id] ? "" : "is-locked"}`}>
-                {owned[card.id] ? card.name?.ko : "???"}
+              <p className={`dex-cell-name ${owned[card.id] ? "" : seasonClosed ? "is-season-wait" : "is-locked"}`}>
+                {owned[card.id] ? card.name?.ko : seasonClosed ? "다음 시즌에 다시" : "???"}
               </p>
             </div>
           );

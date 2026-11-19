@@ -1,4 +1,4 @@
-export type DexCardType = "breed" | "special" | "character" | "legend";
+export type DexCardType = "breed" | "special" | "character" | "legend" | "season";
 
 export type DexBreed = {
   id: string;

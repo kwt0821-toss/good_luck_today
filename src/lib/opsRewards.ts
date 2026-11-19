@@ -1,5 +1,6 @@
 import { bumpMission } from "./dailyMissions";
 import { cardMatchesFavorite, grantAffection, publishAffection } from "./affection";
+import { noteCatLetterFlag } from "./catLetters";
 import { toKstDateKey } from "./date";
 import { loadDexCatalog } from "./dexCatalog";
 import { readDexOwnedForUpdate, saveDexOwned } from "./dexCollection";
@@ -188,6 +189,7 @@ export async function confirmDrawAfterAd(
   next = bumpMission({ ...next, pendingDraw: confirmed }, "draw_1", 1, today, config.economy);
   if (cardMatchesFavorite(card, next.affection?.catId)) {
     next = grantAffection(next, config.economy, "sameDraw", today);
+    next = noteCatLetterFlag(next, "sameDraw");
   }
   await saveOpsState(next);
   publishAffection(next);

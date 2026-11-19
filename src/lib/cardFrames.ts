@@ -114,7 +114,7 @@ export function frameAssetUrls(card: FrameSubject): string[] {
 export function frameKeyFor(card: FrameSubject): FrameKey {
   if (card.type === "legend") return "legend";
   if (card.type === "character") return "character";
-  if (card.type === "special") return "meme";
+  if (card.type === "special" || card.type === "season") return "meme";
   const stars = card.stars ?? 1;
   if (stars <= 1) return "basic-1";
   if (stars === 2) return "basic-2";

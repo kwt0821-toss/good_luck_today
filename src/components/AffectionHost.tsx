@@ -13,7 +13,11 @@ import {
   QUESTION_CAT,
   todayAffectionXp,
 } from "../lib/affection";
+import { CatLetterInbox, CatLetterPaper } from "./CatLetterSheet";
+import { loadCatLetters, markCatLetterRead, type CatLetterFile } from "../lib/catLetters";
 import { loadDexOwned } from "../lib/dexCollection";
+import { seasonEvent } from "../lib/season";
+import type { CatLetterEntry } from "../lib/opsTypes";
 import { syncHeartBed } from "../lib/heartBed";
 import { saveOpsState } from "../lib/opsStorage";
 import type { AffectionConfig, OpsEconomy, OpsState } from "../lib/opsTypes";
@@ -29,16 +33,20 @@ type AffectionHostProps = {
   ops: OpsState;
   economy: OpsEconomy;
   onOps: (next: OpsState) => void;
+  onOpenRoom?: () => void;
 };
 
 type PickerCat = RoomCatEntry & { owned: boolean };
 
-export function AffectionHost({ ops, economy, onOps }: AffectionHostProps) {
+export function AffectionHost({ ops, economy, onOps, onOpenRoom }: AffectionHostProps) {
   const config = affectionConfig(economy);
   const [open, setOpen] = useState<"pick" | "status" | null>(null);
   const [cats, setCats] = useState<PickerCat[]>([]);
   const [picked, setPicked] = useState<string | null>(ops.affection.catId);
   const [favName, setFavName] = useState("최애냥");
+  const [inbox, setInbox] = useState(false);
+  const [reading, setReading] = useState<CatLetterEntry | null>(null);
+  const [letters, setLetters] = useState<CatLetterFile | null>(null);
   const giftLevel = config ? pendingGiftLevel(ops, economy) : null;
 
   useEffect(() => {
@@ -187,6 +195,16 @@ export function AffectionHost({ ops, economy, onOps }: AffectionHostProps) {
                   </ul>
                 </div>
                 <div className="aff-foot">
+                  <button
+                    type="button"
+                    className="aff-mail"
+                    onClick={() => {
+                      void loadCatLetters().then(setLetters);
+                      setInbox(true);
+                    }}
+                  >
+                    편지함
+                  </button>
                   <button type="button" className="aff-go" onClick={() => setOpen("pick")}>
                     최애냥 변경
                   </button>
@@ -211,6 +229,35 @@ export function AffectionHost({ ops, economy, onOps }: AffectionHostProps) {
             </button>
           </div>
         </div>
+      ) : null}
+
+      {inbox && letters ? (
+        <CatLetterInbox
+          file={letters}
+          inbox={ops.catLetters?.inbox ?? []}
+          readIds={ops.catLetters?.readIds ?? []}
+          seasonName={seasonEvent(economy)?.nameKo ?? ""}
+          onClose={() => setInbox(false)}
+          onOpen={(entry) => {
+            setReading(entry);
+            const next = markCatLetterRead(ops, entry.id);
+            if (next !== ops) void save(next);
+          }}
+        />
+      ) : null}
+      {reading && letters ? (
+        <CatLetterPaper
+          file={letters}
+          entry={reading}
+          seasonName={seasonEvent(economy)?.nameKo ?? ""}
+          onClose={() => setReading(null)}
+          onPet={() => {
+            setReading(null);
+            setInbox(false);
+            setOpen(null);
+            onOpenRoom?.();
+          }}
+        />
       ) : null}
     </>
   );

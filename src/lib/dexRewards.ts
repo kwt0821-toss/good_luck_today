@@ -4,6 +4,7 @@ import type { DexCard, DexOwnedMap, DexTab } from "./dexTypes";
 import { pruneSeenDexClaimable } from "./dexSeen";
 import { loadOpsConfig } from "./opsConfig";
 import { newCardPaw, nyangCoinForCard } from "./nyangCoinGrade";
+import { seasonEvent } from "./season";
 import { saveOpsState } from "./opsStorage";
 import type { OpsConfig, OpsEconomy, OpsState } from "./opsTypes";
 import { grantNyangCoinOnce } from "./mockToss";
@@ -15,7 +16,7 @@ import { serverWalletActive, walletEarn } from "./serverWallet";
  * POST /dex/rewards/claim — idempotent on tossUserKey + requestId.
  */
 
-export type DexRewardKind = "newCard" | "breedSet" | "typeSet" | "fullDex";
+export type DexRewardKind = "newCard" | "breedSet" | "typeSet" | "seasonSet" | "fullDex";
 
 export type DexReward = {
   id: string;
@@ -25,7 +26,7 @@ export type DexReward = {
   nyangCoin: number;
   cardId?: string;
   breedId?: string;
-  typeSet?: "special" | "character" | "legend";
+  typeSet?: "special" | "character" | "legend" | "season";
   tab: DexTab;
 };
 
@@ -74,6 +75,10 @@ export function typeSetRewardId(type: "special" | "character" | "legend") {
   return `set:${type}`;
 }
 
+export function seasonSetRewardId(eventId: string) {
+  return `set:season:${eventId}`;
+}
+
 export const FULL_DEX_REWARD_ID = "fullDex";
 
 function isClaimed(state: OpsState, rewardId: string) {
@@ -84,6 +89,8 @@ function pawServerRewardId(reward: DexReward): string | null {
   if (reward.paw <= 0) return null;
   if (reward.kind === "newCard" && reward.cardId) return `newCardPaw:${reward.cardId}`;
   if (reward.kind === "breedSet" && reward.breedId) return `setPaw:breed:${reward.breedId}`;
+  if (reward.kind === "typeSet" && reward.typeSet === "season") return null;
+  if (reward.kind === "seasonSet") return `setPaw:season:${reward.id.slice("set:season:".length)}`;
   if (reward.kind === "typeSet" && reward.typeSet) return `setPaw:${reward.typeSet}`;
   if (reward.kind === "fullDex") return "fullDexPaw";
   return null;
@@ -115,14 +122,13 @@ export async function listClaimableDexRewards(
     if ((map[card.id]?.count ?? 0) <= 0) continue;
     const id = newCardRewardId(card.id);
     if (isClaimed(state, id)) continue;
-    const tab: DexTab =
-      card.type === "breed" ? "breed" : card.type === "special" ? "special" : card.type === "character" ? "character" : "legend";
+    const tab: DexTab = card.type;
     out.push({
       id,
       kind: "newCard",
       cardId: card.id,
       tab,
-      paw: newCardPaw(economy),
+      paw: newCardPaw(economy, card),
       nyangCoin: nyangCoinForCard(economy, card),
       label: `${card.name?.ko ?? card.breed?.ko ?? card.id} 첫 획득`,
     });
@@ -163,8 +169,29 @@ export async function listClaimableDexRewards(
     });
   }
 
-  const full =
-    catalog.cards.length > 0 && catalog.cards.every((card) => (map[card.id]?.count ?? 0) > 0);
+  const event = seasonEvent(economy);
+  if (event) {
+    const cards = event.cardIds
+      .map((id) => catalog.cards.find((card) => card.id === id))
+      .filter((card): card is DexCard => Boolean(card));
+    const complete = cards.length > 0 && cards.every((card) => (map[card.id]?.count ?? 0) > 0);
+    const id = seasonSetRewardId(event.id);
+    if (complete && !isClaimed(state, id)) {
+      const pack = economy.pawSources.setComplete.season ?? event.rewards.setComplete;
+      out.push({
+        id,
+        kind: "seasonSet",
+        typeSet: "season",
+        tab: "season",
+        paw: pack.paw,
+        nyangCoin: pack.nyangCoin,
+        label: `${event.nameKo} 세트 완성`,
+      });
+    }
+  }
+
+  const core = catalog.cards.filter((card) => card.type !== "season");
+  const full = core.length > 0 && core.every((card) => (map[card.id]?.count ?? 0) > 0);
   if (full && !isClaimed(state, FULL_DEX_REWARD_ID)) {
     out.push({
       id: FULL_DEX_REWARD_ID,
@@ -215,6 +242,9 @@ export function buildDexClaimRequestId(): string {
 }
 
 export function newCardRevealCopy(card: DexCard): { title: string; sub: string } {
+  if (card.type === "season") {
+    return { title: "시즌 고양이를 만났어요", sub: "도감에서 보상을 받아 보세요" };
+  }
   if (card.type === "legend") {
     return { title: "전설의 고양이를 만났어요", sub: "도감에서 보상을 받아 보세요" };
   }

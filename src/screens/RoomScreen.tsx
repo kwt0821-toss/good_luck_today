@@ -15,6 +15,7 @@ import {
   grantAffection,
   publishAffection,
 } from "../lib/affection";
+import { noteCatLetterFlag } from "../lib/catLetters";
 import { track } from "../lib/analytics";
 import { isDebugHitRequest } from "../lib/debugSaveQuery";
 import { jellyLabel } from "../lib/jellyLabel";
@@ -765,7 +766,7 @@ export function RoomScreen({
   const petFavorite = () => {
     void (async () => {
       const [ops, config] = await Promise.all([loadOpsState(), loadOpsConfig()]);
-      const next = grantAffection(ops, config.economy, "pet");
+      const next = noteCatLetterFlag(grantAffection(ops, config.economy, "pet"), "petted");
       if (next === ops) return;
       await saveOpsState(next);
       publishAffection(next);

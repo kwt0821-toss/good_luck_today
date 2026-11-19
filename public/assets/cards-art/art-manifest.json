@@ -1212,6 +1212,36 @@
    "thumbH": 183,
    "source": "card-parts/art-legend-baekho.png",
    "notes": []
+  },
+  "season_winter_santanyan": {
+   "group": "season",
+   "art": "cards/season/season_winter_santanyan_art.webp",
+   "thumb": "thumbs/season/season_winter_santanyan_art_thumb.webp",
+   "w": 720, "h": 960, "thumbW": 200, "thumbH": 266
+  },
+  "season_winter_snowpal": {
+   "group": "season",
+   "art": "cards/season/season_winter_snowpal_art.webp",
+   "thumb": "thumbs/season/season_winter_snowpal_art_thumb.webp",
+   "w": 720, "h": 960, "thumbW": 200, "thumbH": 266
+  },
+  "season_winter_cocoa": {
+   "group": "season",
+   "art": "cards/season/season_winter_cocoa_art.webp",
+   "thumb": "thumbs/season/season_winter_cocoa_art_thumb.webp",
+   "w": 720, "h": 960, "thumbW": 200, "thumbH": 266
+  },
+  "season_winter_tree": {
+   "group": "season",
+   "art": "cards/season/season_winter_tree_art.webp",
+   "thumb": "thumbs/season/season_winter_tree_art_thumb.webp",
+   "w": 720, "h": 960, "thumbW": 200, "thumbH": 266
+  },
+  "season_winter_stroll": {
+   "group": "season",
+   "art": "cards/season/season_winter_stroll_art.webp",
+   "thumb": "thumbs/season/season_winter_stroll_art_thumb.webp",
+   "w": 720, "h": 960, "thumbW": 200, "thumbH": 266
   }
  }
 }

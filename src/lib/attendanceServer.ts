@@ -10,6 +10,9 @@ import type {
 } from "./attendanceTypes";
 import { grantNyangCoinOnce } from "./mockToss";
 import { displayJellyBalance, jellyEnqueue, serverJellyActive } from "./serverJelly";
+import { loadDexCatalog } from "./dexCatalog";
+import { readDexOwnedForUpdate, saveDexOwned } from "./dexCollection";
+import { seasonActive, unownedSeasonCard } from "./season";
 import { serverWalletActive, walletEarn } from "./serverWallet";
 import { loadOpsConfig } from "./opsConfig";
 import type {
@@ -559,6 +562,9 @@ export async function claimAttendanceDay7OnServer(
     lastAttendanceDateKey: today,
   };
 
+  const seasonGift = await grantSeasonAttendanceGift(next, config.economy, cycle.cycleNo, today);
+  next = seasonGift.state;
+
   const jellyOn = await serverJellyActive();
   const parkedDay7 = await parkAttendancePaw(
     next,
@@ -653,6 +659,7 @@ export async function claimAttendanceDay7OnServer(
   if (wantNyang > 0) bonusRewards.push({ kind: "nyangCoin", nyangCoin: wantNyang });
   if (wantPaw + overflowPaw > 0) bonusRewards.push({ kind: "paw", paw: wantPaw + overflowPaw });
   if (wantTickets > 0) bonusRewards.push({ kind: "rateUpTicket", count: wantTickets });
+  if (seasonGift.reward) bonusRewards.push(seasonGift.reward);
 
   const entry = {
     requestId,
@@ -689,8 +696,56 @@ export async function claimAttendanceDay7OnServer(
         rateUpTickets: next.rateUpTickets,
       },
       overflowPaw: overflowPaw || undefined,
+      seasonCardName: seasonGift.seasonCardName,
+      seasonPaw: seasonGift.seasonPaw,
       attendanceDays: n,
     },
+  };
+}
+
+async function grantSeasonAttendanceGift(
+  state: OpsState,
+  economy: OpsConfig["economy"],
+  cycleNo: number,
+  today: string,
+): Promise<{ state: OpsState; reward: AttendanceReward | null; seasonCardName?: string; seasonPaw?: number }> {
+  const event = seasonActive(economy);
+  const fallback = event?.attend7Gift?.fallbackPaw ?? 0;
+  if (!event || fallback <= 0) return { state, reward: null };
+  const [catalog, owned] = await Promise.all([loadDexCatalog(), readDexOwnedForUpdate()]);
+  if (!owned) return { state, reward: null };
+  const missing = unownedSeasonCard(event, catalog, owned);
+  if (missing) {
+    const prev = owned[missing.id];
+    await saveDexOwned({
+      ...owned,
+      [missing.id]: {
+        id: missing.id,
+        firstSeen: prev?.firstSeen ?? today,
+        count: (prev?.count ?? 0) > 0 ? prev.count : 1,
+        isNew: (prev?.count ?? 0) <= 0,
+      },
+    });
+    const nameKo = missing.name?.ko ?? "시즌 카드";
+    return {
+      state,
+      seasonCardName: nameKo,
+      reward: { kind: "seasonCard", cardId: missing.id, nameKo },
+    };
+  }
+  const rewardId = `seasonGiftPaw:${event.id}:${cycleNo}`;
+  if (await serverJellyActive()) {
+    await jellyEnqueue({ rewardId, reason: "attendance", optimistic: fallback });
+    return {
+      state: { ...state, pawBalance: displayJellyBalance(state.pawBalance) },
+      seasonPaw: fallback,
+      reward: { kind: "paw", paw: fallback },
+    };
+  }
+  return {
+    state: { ...state, pawBalance: state.pawBalance + fallback },
+    seasonPaw: fallback,
+    reward: { kind: "paw", paw: fallback },
   };
 }
 

@@ -183,7 +183,8 @@ export async function computeAchvMetrics(state: OpsState): Promise<AchvMetrics> 
     room = null;
   }
 
-  const uniqueCards = Object.values(owned).filter((row) => (row?.count ?? 0) > 0).length;
+  const seasonIds = new Set(catalog.cards.filter((card) => card.type === "season").map((card) => card.id));
+  const uniqueCards = Object.values(owned).filter((row) => (row?.count ?? 0) > 0 && !seasonIds.has(row.id)).length;
   let ownedFiveStar = 0;
   let ownedLegend = 0;
   for (const card of catalog.cards) {

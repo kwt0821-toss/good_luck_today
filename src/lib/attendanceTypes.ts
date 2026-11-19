@@ -5,7 +5,8 @@ export type AttendanceReward =
   | { kind: "paw"; paw: number }
   | { kind: "rateUpTicket"; count: number }
   | { kind: "badge"; badgeId: string; labelKo?: string }
-  | { kind: "nyangCoin"; nyangCoin: number };
+  | { kind: "nyangCoin"; nyangCoin: number }
+  | { kind: "seasonCard"; cardId: string; nameKo: string };
 
 export type AttendanceClaimResponse = {
   attendanceDays: number;
@@ -71,6 +72,10 @@ export type AttendanceDay7ClaimOk = {
   };
   /** Overflow 냥코인 converted to P when yearlyCoinCap is on */
   overflowPaw?: number;
+  /** Season day-7 card name, when a missing season card was granted. */
+  seasonCardName?: string;
+  /** Season day-7 jelly when every season card is already owned. */
+  seasonPaw?: number;
   attendanceDays: number;
 };
 

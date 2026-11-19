@@ -65,7 +65,10 @@ export type OpsEconomy = {
         special: number;
         character: number;
         legend: number;
+        season?: number;
       };
+      /** Grade paw that replaces the flat `paw` amount. Season cards use `season`. */
+      pawByGrade?: { season?: number };
       note?: string;
     };
     duplicateConvert: {
@@ -74,6 +77,7 @@ export type OpsEconomy = {
       special: number;
       character: number;
       legend: number;
+      season?: number;
       auto: boolean;
     };
     setComplete: {
@@ -81,6 +85,7 @@ export type OpsEconomy = {
       special: NyangCoinReward;
       character: NyangCoinReward;
       legend: NyangCoinReward;
+      season?: NyangCoinReward;
       fullDex: NyangCoinReward;
     };
     attendance?:
@@ -328,6 +333,53 @@ export type OpsEconomy = {
       paw: number;
     }>;
   };
+  seasonEvents?: SeasonEventsConfig;
+};
+
+export type SeasonEventConfig = {
+  id: string;
+  nameKo: string;
+  startsAtKST: string;
+  endsAtKST: string;
+  cardIds: string[];
+  rates: {
+    normal: number;
+    rateUp: number;
+    takenFrom: string;
+    note?: string;
+  };
+  rewards: {
+    firstGet: { paw: number; nyangCoin: number };
+    duplicateConvert: { paw: number };
+    setComplete: { paw: number; nyangCoin: number };
+  };
+  attend7Gift?: {
+    kind?: string;
+    fallbackPaw: number;
+    note?: string;
+  };
+};
+
+export type SeasonEventsConfig = {
+  activeId: string | null;
+  events: Record<string, SeasonEventConfig>;
+};
+
+export type CatLetterEntry = {
+  /** Content id, or `christmas_day:YYYY` so each year can arrive once. */
+  id: string;
+  receivedOn: string;
+};
+
+export type CatLetterState = {
+  inbox: CatLetterEntry[];
+  readIds: string[];
+  /** Previous lastOpenDateKST that already produced an absence letter. */
+  absenceFrom: string;
+  petted: boolean;
+  sameDraw: boolean;
+  seasonStarts: string[];
+  seasonEnds: string[];
 };
 
 export type AffectionSource = "pet" | "attend" | "sameDraw" | "mission";
@@ -717,6 +769,8 @@ export type OpsState = {
   /** Cumulative attendance days (never resets) */
   attendanceDays: number;
   lastAttendDateKST: string;
+  /** KST date the app was last opened. Separate from attendance. */
+  lastOpenDateKST: string;
   /** @deprecated migrated from attendanceDays */
   attendanceClaimed: number;
   /** @deprecated use lastAttendDateKST */
@@ -831,6 +885,8 @@ export type OpsState = {
   missionClaimedIds: string[];
   /** Favorite cat, affection xp, and today's source counts. */
   affection: AffectionState;
+  /** Favorite-cat letters. Missing on older saves. */
+  catLetters?: CatLetterState;
   /**
    * Attendance notification consent. Missing on older saves — treat as
    * { agreed: false, askCount: 0, askedAt: 0 }.

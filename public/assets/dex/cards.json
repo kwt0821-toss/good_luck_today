@@ -5,7 +5,8 @@
   "breed": 90,
   "special": 9,
   "character": 4,
-  "legend": 4
+  "legend": 4,
+  "season": 5
  },
  "imageSizes": {
   "front/back": "source 660x1027; app large max width 720 webp q82",
@@ -1582,6 +1583,61 @@
    "front": "opt/baekho.webp",
    "back": "cards/legend/baekho_back.webp",
    "thumb": "opt/baekho@thumb.webp"
+  },
+  {
+   "id": "season_winter_santanyan",
+   "type": "season",
+   "breed": null,
+   "name": { "ko": "산타냥" },
+   "nameTemp": false,
+   "stars": null,
+   "front": "opt/season_winter_santanyan.webp",
+   "back": "cards/season/season_winter_santanyan_back.webp",
+   "thumb": "opt/season_winter_santanyan@thumb.webp"
+  },
+  {
+   "id": "season_winter_snowpal",
+   "type": "season",
+   "breed": null,
+   "name": { "ko": "눈사람 친구" },
+   "nameTemp": false,
+   "stars": null,
+   "front": "opt/season_winter_snowpal.webp",
+   "back": "cards/season/season_winter_snowpal_back.webp",
+   "thumb": "opt/season_winter_snowpal@thumb.webp"
+  },
+  {
+   "id": "season_winter_cocoa",
+   "type": "season",
+   "breed": null,
+   "name": { "ko": "코코아냥" },
+   "nameTemp": false,
+   "stars": null,
+   "front": "opt/season_winter_cocoa.webp",
+   "back": "cards/season/season_winter_cocoa_back.webp",
+   "thumb": "opt/season_winter_cocoa@thumb.webp"
+  },
+  {
+   "id": "season_winter_tree",
+   "type": "season",
+   "breed": null,
+   "name": { "ko": "반짝 트리냥" },
+   "nameTemp": false,
+   "stars": null,
+   "front": "opt/season_winter_tree.webp",
+   "back": "cards/season/season_winter_tree_back.webp",
+   "thumb": "opt/season_winter_tree@thumb.webp"
+  },
+  {
+   "id": "season_winter_stroll",
+   "type": "season",
+   "breed": null,
+   "name": { "ko": "눈길 산책" },
+   "nameTemp": false,
+   "stars": null,
+   "front": "opt/season_winter_stroll.webp",
+   "back": "cards/season/season_winter_stroll_back.webp",
+   "thumb": "opt/season_winter_stroll@thumb.webp"
   }
  ]
 }

@@ -31,6 +31,9 @@
     },
     "newCardFirstGet": {
       "paw": 20,
+      "pawByGrade": {
+        "season": 60
+      },
       "nyangCoinByGrade": {
         "b1": 1,
         "b2": 1,
@@ -39,7 +42,8 @@
         "b5": 10,
         "special": 5,
         "character": 7,
-        "legend": 50
+        "legend": 50,
+        "season": 5
       },
       "note": "1–3★ 1 · 4★ 5 · 5★ 10 · 밈(스페셜) 5 · 캐릭터 7 · 레전드 50"
     },
@@ -49,6 +53,7 @@
       "special": 60,
       "character": 60,
       "legend": 150,
+      "season": 60,
       "auto": false,
       "note": "중복 카드는 '젤리로 바꾸기'로 전환 (카드 보유 수량 1 유지)"
     },
@@ -67,6 +72,10 @@
         "nyangCoin": 10
       },
       "legend": {
+        "paw": 300,
+        "nyangCoin": 10
+      },
+      "season": {
         "paw": 300,
         "nyangCoin": 10
       },
@@ -806,6 +815,7 @@
       "newCard": "newCard:{cardId}",
       "breedSet": "set:breed:{breedId}",
       "group": "set:{special|character|legend}",
+      "seasonSet": "set:season:{eventId}",
       "fullDex": "fullDex"
     },
     "amounts": "newCardFirstGet / setComplete.* (nyangCoin + paw)",
@@ -888,5 +898,39 @@
     "seatWeightMul": 4,
     "petLines": ["최애다냥", "여기가 좋아", "더 쓰다듬어 줘", "같이 있자"],
     "greetLines": ["다녀왔어?", "오늘도 보자"]
+  },
+  "seasonEvents": {
+    "activeId": "winter-2026",
+    "events": {
+      "winter-2026": {
+        "id": "winter-2026",
+        "nameKo": "크리스마스 시즌",
+        "startsAtKST": "2026-12-01T00:00:00+09:00",
+        "endsAtKST": "2027-01-01T00:00:00+09:00",
+        "cardIds": [
+          "season_winter_santanyan",
+          "season_winter_snowpal",
+          "season_winter_cocoa",
+          "season_winter_tree",
+          "season_winter_stroll"
+        ],
+        "rates": {
+          "normal": 0.05,
+          "rateUp": 0.09,
+          "takenFrom": "b1",
+          "note": "일반 5.0%(장당 1.0%), 확률업 9.0%(장당 1.8%). 5장 균등. b1에서만 뺌."
+        },
+        "rewards": {
+          "firstGet": { "paw": 60, "nyangCoin": 5 },
+          "duplicateConvert": { "paw": 60 },
+          "setComplete": { "paw": 300, "nyangCoin": 10 }
+        },
+        "attend7Gift": {
+          "kind": "unownedSeasonCard",
+          "fallbackPaw": 60,
+          "note": "시즌 중 출석 7일 선물은 아직 없는 시즌 카드 1장. 5장을 다 모았으면 발바닥 젤리 60."
+        }
+      }
+    }
   }
 }

@@ -8,6 +8,7 @@ import { peekDexOwned } from "./dexCollection";
 import { markDirty } from "./serverSave";
 import { loadOpsConfig } from "./opsConfig";
 import { parseAffection } from "./affection";
+import { parseCatLetters } from "./catLetters";
 import { applyOpsDailyReset, createDefaultOpsState } from "./opsState";
 import type { OpsState } from "./opsTypes";
 
@@ -149,6 +150,8 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
           : typeof parsed.lastAttendanceDateKey === "string"
             ? parsed.lastAttendanceDateKey
             : "",
+      lastOpenDateKST: typeof parsed.lastOpenDateKST === "string" ? parsed.lastOpenDateKST : "",
+      catLetters: parseCatLetters(parsed.catLetters),
       attendanceClaimed:
         typeof parsed.attendanceDays === "number"
           ? Math.min(parsed.attendanceDays, 7)

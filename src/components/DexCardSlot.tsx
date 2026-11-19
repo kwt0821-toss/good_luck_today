@@ -5,7 +5,7 @@ import type { DexCard, DexOwnedRecord } from "../lib/dexTypes";
 import { ncoinIcon } from "../lib/ncoinIcon";
 import { CardFrame } from "./CardFrame";
 
-type SlotKind = "breed" | "special" | "character" | "legend" | "soon";
+type SlotKind = "breed" | "special" | "character" | "legend" | "season" | "soon";
 
 type DexCardSlotProps = {
   kind: SlotKind;
@@ -90,7 +90,7 @@ export function DexCardSlot({
           ) : (
             <img
               className="dex-slot-glyph"
-              src={dexAsset(`locked/glyph-${kind === "breed" ? "breed" : kind}.svg`)}
+              src={dexAsset(`locked/glyph-${kind === "breed" ? "breed" : kind === "season" ? "special" : kind}.svg`)}
               alt=""
             />
           )}
@@ -98,6 +98,7 @@ export function DexCardSlot({
             <span className="dex-slot-stars">{starsLabel(card.stars)}</span>
           ) : null}
           {kind === "special" ? <span className="dex-slot-caption">SPECIAL</span> : null}
+          {kind === "season" ? <span className="dex-slot-caption">SEASON</span> : null}
           {kind === "character" ? <span className="dex-slot-caption">CHARACTER</span> : null}
           {kind === "legend" ? <span className="dex-slot-caption">LEGEND</span> : null}
         </>

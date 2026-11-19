@@ -10,6 +10,7 @@ import {
 } from "../lib/affection";
 import { loadDexCatalog } from "../lib/dexCatalog";
 import { rateRows } from "../lib/drawRates";
+import { adjustedGradeRates } from "../lib/season";
 import { loadOpsConfig } from "../lib/opsConfig";
 import { loadOpsState } from "../lib/opsStorage";
 import type { OpsEconomy, OpsState } from "../lib/opsTypes";
@@ -110,9 +111,9 @@ export function AffectionRateNote({
   if (!bias || !economy || !catalog || !config) {
     return <p>애정도 Lv.{fromLevel}가 되면 최애냥 품종이 같은 등급 안에서 조금 더 잘 나와요.</p>;
   }
-  const table = rateUp ? economy.draws.rates_proposal.rateUp : economy.draws.rates_proposal.normal;
+  const table = adjustedGradeRates(economy, rateUp);
   const tabName = rateUp ? "확률업 뽑기" : "일반 뽑기";
-  const lines = ["b1", "b2", "b3", "b4", "b5"].flatMap((key) => {
+  const lines = (["b1", "b2", "b3", "b4", "b5"] as const).flatMap((key) => {
     const stars = Number(key.slice(1));
     const cards = breedCardsInGrade(catalog, stars);
     const gradeRate = table[key];

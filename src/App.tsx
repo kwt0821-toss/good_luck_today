@@ -137,6 +137,15 @@ import { useExitConfirmOnBack } from "./hooks/useExitConfirmOnBack";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { AffectionHost } from "./components/AffectionHost";
 import { UpdateNotesPopup } from "./components/UpdateNotesPopup";
+import { CatLetterPaper } from "./components/CatLetterSheet";
+import {
+  loadCatLetters,
+  markCatLetterRead,
+  popupCatLetter,
+  syncCatLetters,
+  type CatLetterFile,
+} from "./lib/catLetters";
+import { seasonEvent } from "./lib/season";
 import { HomeFavorite } from "./components/HomeFavorite";
 import { markGreeted, pendingGiftLevel, publishAffection } from "./lib/affection";
 import { loadUpdateNotes, type UpdateNotes } from "./lib/updateNotes";
@@ -344,6 +353,9 @@ export default function App() {
   const [bootError, setBootError] = useState<string | null>(null);
   const [featureIntro, setFeatureIntro] = useState<FeatureIntro | null>(null);
   const [updateNotes, setUpdateNotes] = useState<UpdateNotes | null | undefined>(undefined);
+  const [letterFile, setLetterFile] = useState<CatLetterFile | null>(null);
+  const [letterVisit, setLetterVisit] = useState<string | null>(null);
+  const [letterClosed, setLetterClosed] = useState(false);
   const attendanceDay7AdResolverRef = useRef<((result: AttendanceDay7AdResult) => void) | null>(
     null,
   );
@@ -710,7 +722,7 @@ export default function App() {
 
   const tutorialCardId = reservation?.cardId ?? revealCard?.id ?? null;
   const tutorialVars = useMemo(() => {
-    const paw = config ? newCardPaw(config.economy) : 20;
+    const paw = config ? newCardPaw(config.economy, revealCard ?? undefined) : 20;
     const nyangCoin =
       revealCard && config ? nyangCoinForCard(config.economy, revealCard) : 1;
     return {
@@ -898,10 +910,19 @@ export default function App() {
     void loadUpdateNotes().then((notes) => {
       if (alive) setUpdateNotes(notes);
     });
+    void loadCatLetters().then((file) => {
+      if (alive) setLetterFile(file);
+    });
     return () => {
       alive = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!ops || !config) return;
+    const next = syncCatLetters(ops, config.economy);
+    if (next !== ops) void persistOps(next);
+  }, [ops, config, persistOps]);
 
   const rewardsIntroWaiting = Boolean(
     ops &&
@@ -930,15 +951,48 @@ export default function App() {
       !promoHoldIntros &&
       ops.updateNotesSeenId !== updateNotes.id,
   );
+  const letterPick = ops ? popupCatLetter(ops, config ? pendingGiftLevel(ops, config.economy) : null) : null;
+  const letterTurn = Boolean(
+    letterPick &&
+      !letterClosed &&
+      ops &&
+      ops.tutorialDone &&
+      ops.lastOpenDateKST === today &&
+      tutorialReplayStep == null &&
+      !rewardsIntro &&
+      !rewardsIntroWaiting &&
+      !giftWaiting &&
+      !ad &&
+      !adIntro &&
+      screen.name === "home" &&
+      !menuOpen &&
+      !achvOpen &&
+      !promoGate &&
+      !promoHoldIntros &&
+      !updateNotesGate &&
+      updateNotes !== undefined,
+  );
   const attendanceNotifyBlocked = Boolean(
-    (ops && !ops.tutorialDone) || tutorialReplayStep != null || rewardsIntro || updateNotesGate,
+    (ops && !ops.tutorialDone) ||
+      tutorialReplayStep != null ||
+      rewardsIntro ||
+      updateNotesGate ||
+      letterTurn,
   );
   const attendanceNotifyOffer = useAttendanceNotifyOffer(attendanceNotifyBlocked);
 
   useEffect(() => {
+    if (!letterTurn || !ops || !letterPick || letterVisit) return;
+    setLetterVisit(letterPick.id);
+    const next = markCatLetterRead(ops, letterPick.id);
+    if (next !== ops) void persistOps(next);
+  }, [letterTurn, ops, letterPick, letterVisit, persistOps]);
+
+  useEffect(() => {
     if (!ops || !config || !ops.tutorialDone || featureIntro || rewardsIntro) return;
     if (promoGate || promoHoldIntros) return;
-    if (updateNotes === undefined || giftWaiting || updateNotesGate) return;
+    if (updateNotes === undefined || giftWaiting || updateNotesGate || letterTurn) return;
+    if (ops.lastOpenDateKST !== today) return;
     const day = daysSinceInstall(ops, today);
     const ownedDup = false; // day-5 condition checked lightly; full dup check in dex later
     const candidate = config.tutorial.featureIntros.schedule.find((intro) => {
@@ -959,6 +1013,7 @@ export default function App() {
     updateNotes,
     giftWaiting,
     updateNotesGate,
+    letterTurn,
   ]);
 
   const beginDraw = useCallback(
@@ -2055,7 +2110,12 @@ export default function App() {
       ) : null}
 
       {(screen.name === "home" || screen.name === "room") && tutorialStep == null ? (
-        <AffectionHost ops={ops} economy={config.economy} onOps={setOps} />
+        <AffectionHost
+          ops={ops}
+          economy={config.economy}
+          onOps={setOps}
+          onOpenRoom={() => setScreen({ name: "room" })}
+        />
       ) : null}
 
       <MenuPanel
@@ -2193,7 +2253,20 @@ export default function App() {
         <UpdateNotesPopup note={updateNotes} onDismiss={dismissUpdateNotes} />
       ) : null}
 
-      {featureIntro && !showUpdateNotes ? (
+      {letterVisit && !letterClosed && letterFile && ops && !showUpdateNotes && !exitOpen ? (
+        <CatLetterPaper
+          file={letterFile}
+          entry={{ id: letterVisit, receivedOn: today }}
+          seasonName={seasonEvent(config?.economy)?.nameKo ?? ""}
+          onClose={() => setLetterClosed(true)}
+          onPet={() => {
+            setLetterClosed(true);
+            setScreen({ name: "room" });
+          }}
+        />
+      ) : null}
+
+      {featureIntro && !showUpdateNotes && !(letterVisit && !letterClosed) ? (
         <FeatureIntroBubble
           intro={featureIntro}
           onDismiss={() => {

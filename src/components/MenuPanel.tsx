@@ -55,6 +55,7 @@ import {
 import { buildAttendanceDay7RequestId, readDay7BonusConfig } from "../lib/attendanceServer";
 import { rateBias } from "../lib/affection";
 import { ratesDisclosureNote, ratesDisclosureRows } from "../lib/drawRates";
+import { seasonActive } from "../lib/season";
 import { AffectionRateNote } from "../screens/RatesGuideScreen";
 import { claimMission, listMissions } from "../lib/dailyMissions";
 import { claimAttendanceDay7, claimAttendanceGift } from "../lib/opsRewards";
@@ -605,8 +606,11 @@ export function MenuPanel({
     nyangCoin: number,
     paw: number,
     tickets: number,
+    seasonCardName?: string,
+    seasonPaw?: number,
   ) => {
-    const parts = [`+${nyangCoin} 냥코인`, jellyLabel(paw, true)];
+    const parts = [`+${nyangCoin} 냥코인`, jellyLabel(paw + (seasonPaw ?? 0), true)];
+    if (seasonCardName) parts.push(seasonCardName);
     if (withAd && tickets > 0) parts.push("뽑기권 1장");
     nyNotify({
       key: withAd ? "attend-day7-ad" : "attend-day7-base",
@@ -666,6 +670,8 @@ export function MenuPanel({
           result.response.ok ? result.response.nyangCoin : 0,
           result.response.ok ? result.response.paw : 0,
           result.response.ok ? result.response.tickets : 0,
+          result.response.ok ? result.response.seasonCardName : undefined,
+          result.response.ok ? result.response.seasonPaw : undefined,
         );
       }, 320);
     } finally {
@@ -908,6 +914,26 @@ export function MenuPanel({
   const ratesNote = useMemo(() => {
     if (!model) return "같은 등급 안에서는 카드별 확률이 같아요 · 합계 100%";
     return ratesDisclosureNote(model.config.economy);
+  }, [model]);
+
+  const seasonRateNote = useMemo(() => {
+    if (!model) return "";
+    const event = seasonActive(model.config.economy);
+    if (!event) return "";
+    const count = event.cardIds.length || 1;
+    const per = ((event.rates.normal / count) * 100).toFixed(1);
+    const perUp = ((event.rates.rateUp / count) * 100).toFixed(1);
+    const fmt = (iso: string, shiftMs = 0) => {
+      const key = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(Date.parse(iso) + shiftMs));
+      const [, month, day] = key.split("-");
+      return `${Number(month)}/${Number(day)}`;
+    };
+    return `${event.nameKo} ${fmt(event.startsAtKST)}–${fmt(event.endsAtKST, -60_000)} · 장당 일반 ${per}% · 확률업 ${perUp}%`;
   }, [model]);
 
   const formatDisclosurePct = (pct: number) => {
@@ -1446,6 +1472,13 @@ export function MenuPanel({
                             ? ` · 광고 시 ${day7Bonus.adBonus.nyangCoin}냥코인 + 젤리 ${day7Bonus.adBonus.paw} + 뽑기권`
                             : ""}
                         </p>
+                        {seasonActive(model.config.economy) ? (
+                          <p className="att-day7-bonus-desc">
+                            시즌 중에는 아직 없는 시즌 카드 1장도 받아요. 다섯 장을 다 모았으면{" "}
+                            {jellyLabel(seasonActive(model.config.economy)?.attend7Gift?.fallbackPaw ?? 0)}
+                            이에요.
+                          </p>
+                        ) : null}
                       </div>
                     ) : null}
                   </>
@@ -1509,10 +1542,12 @@ export function MenuPanel({
                       <div className="rates-note">
                         <AffectionRateNote economy={model.config.economy} ops={ops} rateUp={false} />
                         <AffectionRateNote economy={model.config.economy} ops={ops} rateUp />
+                        {seasonRateNote ? <p className="rates-note">{seasonRateNote}</p> : null}
                       </div>
                     ) : (
                       <>
                         <p className="rates-note">{ratesNote}</p>
+                        {seasonRateNote ? <p className="rates-note">{seasonRateNote}</p> : null}
                         <AffectionRateNote economy={model.config.economy} ops={ops} rateUp={false} />
                       </>
                     )}

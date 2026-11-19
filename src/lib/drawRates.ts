@@ -1,5 +1,6 @@
 import { cardBackUrl, cardLargeUrl, cardThumbUrl } from "./cardArt";
 import { cardDisplayName, cardKoreanName } from "./dexCatalog";
+import { adjustedGradeRates, isGradeKey, pickSeasonCard, seasonActive, seasonCards, seasonRate } from "./season";
 import type { DexCard, DexCatalog } from "./dexTypes";
 import type { DrawRarityKey, OpsEconomy } from "./opsTypes";
 
@@ -17,6 +18,7 @@ export function rarityOfCard(card: DexCard): DrawRarityKey {
 
 export function starsLabel(card: DexCard): string {
   if (card.type === "legend") return "LEGEND";
+  if (card.type === "season") return "시즌";
   if (card.type === "special") return "SPECIAL";
   if (card.type === "character") return "CHARACTER";
   const n = card.stars ?? 1;
@@ -48,12 +50,12 @@ const RARITY_KEYS: readonly DrawRarityKey[] = [
 ];
 
 function isRarityKey(key: string): key is DrawRarityKey {
-  return (RARITY_KEYS as readonly string[]).includes(key);
+  return isGradeKey(key);
 }
 
-/** Weighted grade pick from economy.draws.rates_proposal — no client hardcoding. */
+/** Weighted grade pick. While a season is on, its rate is taken from b1 only. */
 export function pickRarity(economy: OpsEconomy, rateUp: boolean, random = Math.random): DrawRarityKey {
-  const table = rateUp ? economy.draws.rates_proposal.rateUp : economy.draws.rates_proposal.normal;
+  const table = adjustedGradeRates(economy, rateUp);
   const entries = Object.entries(table).filter(
     (entry): entry is [DrawRarityKey, number] =>
       isRarityKey(entry[0]) && typeof entry[1] === "number" && entry[1] > 0,
@@ -79,18 +81,52 @@ export type RatesDisclosureRow = {
 };
 
 /** Prefer economy.disclosure.rows; fall back to computing from normal/rateUp + catalog counts. */
+function withSeasonRow(economy: OpsEconomy, rows: RatesDisclosureRow[]): RatesDisclosureRow[] {
+  const event = seasonActive(economy);
+  if (!event) return rows;
+  const from = event.rates.takenFrom;
+  const normal = seasonRate(event, false) * 100;
+  const rateUp = seasonRate(event, true) * 100;
+  const cards = event.cardIds.length || 1;
+  const next = rows.map((row) => {
+    if (row.grade !== from) return row;
+    const normalPct = Math.max(0, Math.round((row.normalPct - normal) * 1000) / 1000);
+    const rateUpPct = Math.max(0, Math.round((row.rateUpPct - rateUp) * 1000) / 1000);
+    return {
+      ...row,
+      normalPct,
+      rateUpPct,
+      normalPerCardPct: Math.round((normalPct / row.cards) * 10000) / 10000,
+      rateUpPerCardPct: Math.round((rateUpPct / row.cards) * 10000) / 10000,
+    };
+  });
+  next.push({
+    grade: "season",
+    nameKo: "시즌",
+    cards,
+    normalPct: Math.round(normal * 1000) / 1000,
+    rateUpPct: Math.round(rateUp * 1000) / 1000,
+    normalPerCardPct: Math.round((normal / cards) * 10000) / 10000,
+    rateUpPerCardPct: Math.round((rateUp / cards) * 10000) / 10000,
+  });
+  return next;
+}
+
 export function ratesDisclosureRows(economy: OpsEconomy): RatesDisclosureRow[] {
   const raw = economy.draws.rates_proposal.disclosure;
   if (raw && typeof raw === "object" && Array.isArray(raw.rows) && raw.rows.length) {
-    return raw.rows.map((row) => ({
-      grade: row.grade,
-      nameKo: row.nameKo,
-      cards: row.cards,
-      normalPct: row.normalPct,
-      rateUpPct: row.rateUpPct,
-      normalPerCardPct: row.normalPerCardPct,
-      rateUpPerCardPct: row.rateUpPerCardPct,
-    }));
+    return withSeasonRow(
+      economy,
+      raw.rows.map((row) => ({
+        grade: row.grade,
+        nameKo: row.nameKo,
+        cards: row.cards,
+        normalPct: row.normalPct,
+        rateUpPct: row.rateUpPct,
+        normalPerCardPct: row.normalPerCardPct,
+        rateUpPerCardPct: row.rateUpPerCardPct,
+      })),
+    );
   }
   const normal = economy.draws.rates_proposal.normal;
   const rateUp = economy.draws.rates_proposal.rateUp;
@@ -114,20 +150,23 @@ export function ratesDisclosureRows(economy: OpsEconomy): RatesDisclosureRow[] {
     character: "캐릭터",
     legend: "레전드",
   };
-  return RARITY_KEYS.map((grade) => {
-    const cards = fallbackCards[grade] ?? 1;
-    const n = normal[grade] ?? 0;
-    const u = rateUp[grade] ?? 0;
-    return {
-      grade,
-      nameKo: labels[grade] ?? grade,
-      cards,
-      normalPct: Math.round(n * 1000) / 10,
-      rateUpPct: Math.round(u * 1000) / 10,
-      normalPerCardPct: Math.round((n / cards) * 1000000) / 10000,
-      rateUpPerCardPct: Math.round((u / cards) * 1000000) / 10000,
-    };
-  });
+  return withSeasonRow(
+    economy,
+    RARITY_KEYS.map((grade) => {
+      const cards = fallbackCards[grade] ?? 1;
+      const n = normal[grade] ?? 0;
+      const u = rateUp[grade] ?? 0;
+      return {
+        grade,
+        nameKo: labels[grade] ?? grade,
+        cards,
+        normalPct: Math.round(n * 1000) / 10,
+        rateUpPct: Math.round(u * 1000) / 10,
+        normalPerCardPct: Math.round((n / cards) * 1000000) / 10000,
+        rateUpPerCardPct: Math.round((u / cards) * 1000000) / 10000,
+      };
+    }),
+  );
 }
 
 export function ratesDisclosureNote(economy: OpsEconomy): string {
@@ -146,9 +185,38 @@ export function pickCardFromCatalog(
   random = Math.random,
   bias?: { breedId: string; weightMul: number } | null,
 ): { card: DexCard; rarity: DrawRarityKey } {
+  const event = seasonActive(economy);
+  if (event) {
+    const seasonWeight = seasonRate(event, rateUp);
+    const grades = adjustedGradeRates(economy, rateUp);
+    const entries = Object.entries(grades).filter(
+      (entry): entry is [DrawRarityKey, number] =>
+        isRarityKey(entry[0]) && typeof entry[1] === "number" && entry[1] > 0,
+    );
+    const total = entries.reduce((sum, [, weight]) => sum + weight, 0) + seasonWeight;
+    let roll = random() * (total > 0 ? total : 1);
+    if (roll < seasonWeight) {
+      const pool = seasonCards(catalog, event);
+      const card = pickSeasonCard(pool, random) ?? catalog.cards[0];
+      return { card, rarity: "special" };
+    }
+    roll -= seasonWeight;
+    let rarity: DrawRarityKey = entries[entries.length - 1]?.[0] ?? "b1";
+    for (const [key, weight] of entries) {
+      roll -= weight;
+      if (roll < 0) {
+        rarity = key;
+        break;
+      }
+    }
+    const pool = poolForRarity(catalog, rarity);
+    const source = pool.length ? pool : catalog.cards.filter((card) => card.type !== "season");
+    const card = pickWeighted(source, rarity, bias, random) ?? catalog.cards[0];
+    return { card, rarity: rarityOfCard(card) };
+  }
   const rarity = pickRarity(economy, rateUp, random);
   const pool = poolForRarity(catalog, rarity);
-  const source = pool.length ? pool : catalog.cards;
+  const source = pool.length ? pool : catalog.cards.filter((card) => card.type !== "season");
   const card = pickWeighted(source, rarity, bias, random) ?? catalog.cards[0];
   return { card, rarity: rarityOfCard(card) };
 }
@@ -191,6 +259,7 @@ export function cardImageUrls(card: DexCard) {
 
 export function dupPawForCard(card: DexCard, economy: OpsEconomy): number {
   const table = economy.pawSources.duplicateConvert;
+  if (card.type === "season") return table.season ?? economy.seasonEvents?.events[economy.seasonEvents.activeId ?? ""]?.rewards.duplicateConvert.paw ?? table.special;
   if (card.type === "legend") return table.legend;
   if (card.type === "special") return table.special;
   if (card.type === "character") return table.character;
@@ -200,7 +269,8 @@ export function dupPawForCard(card: DexCard, economy: OpsEconomy): number {
 }
 
 export function rateRows(economy: OpsEconomy, rateUp: boolean) {
-  const table = rateUp ? economy.draws.rates_proposal.rateUp : economy.draws.rates_proposal.normal;
+  const table = adjustedGradeRates(economy, rateUp);
+  const event = seasonActive(economy);
   const labels: Record<string, string> = {
     b1: "품종 1★",
     b2: "품종 2★",
@@ -211,7 +281,7 @@ export function rateRows(economy: OpsEconomy, rateUp: boolean) {
     character: "캐릭터",
     legend: "레전드",
   };
-  return Object.entries(table)
+  const rows = Object.entries(table)
     .filter(([key]) => key in labels)
     .map(([key, value]) => ({
       key,
@@ -219,6 +289,29 @@ export function rateRows(economy: OpsEconomy, rateUp: boolean) {
       rate: value,
       percent: `${(value * 100).toFixed(1)}%`,
     }));
+  if (!event) return rows;
+  const rate = seasonRate(event, rateUp);
+  const count = event.cardIds.length || 1;
+  const per = rate / count;
+  const short = (iso: string, shiftMs = 0) => {
+    const key = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(Date.parse(iso) + shiftMs));
+    const [, month, day] = key.split("-");
+    return `${Number(month)}/${Number(day)}`;
+  };
+  const start = short(event.startsAtKST);
+  const end = short(event.endsAtKST, -60 * 1000);
+  rows.push({
+    key: "season",
+    label: `시즌 · ${event.nameKo} · ${start}–${end} · 장당 ${(per * 100).toFixed(1)}%`,
+    rate,
+    percent: `${(rate * 100).toFixed(1)}%`,
+  });
+  return rows;
 }
 
 /** 5성↑ 합계에 쓰는 등급 키 — economy rates + menu rates.highlight 와 동일. */

@@ -20,6 +20,17 @@
   opacity: 0.72;
 }
 
+.home-fav-dot {
+  position: absolute;
+  top: 2px;
+  left: 40px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #e5484d;
+  box-shadow: 0 0 0 2px #1a1428;
+}
+
 .home-fav-face {
   display: grid;
   place-items: center;
@@ -198,6 +209,19 @@
 
 .aff-grid small {
   color: #d7c8b4;
+}
+
+.aff-mail {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  min-height: 44px;
+  border: 1px solid #f3b07a;
+  border-radius: 999px;
+  background: transparent;
+  color: #f3b07a;
+  font: inherit;
+  font-weight: 800;
 }
 
 .aff-go {

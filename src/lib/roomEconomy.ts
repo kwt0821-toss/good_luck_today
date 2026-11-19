@@ -1,4 +1,5 @@
 import { mergeAffectionStates } from "./affection";
+import { emptyCatLetters, mergeCatLetters } from "./catLetters";
 import { loadOpsConfig, priceById } from "./opsConfig";
 import { loadOpsState, saveOpsState } from "./opsStorage";
 import { displayJellyBalance, serverJellyActive } from "./serverJelly";
@@ -127,6 +128,11 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
     unlockedRoomIds: savedUnlocked,
     affection,
     updateNotesSeenId: latest.updateNotesSeenId || ops.updateNotesSeenId,
+    lastOpenDateKST:
+      (ops.lastOpenDateKST ?? "") > (latest.lastOpenDateKST ?? "")
+        ? ops.lastOpenDateKST
+        : latest.lastOpenDateKST,
+    catLetters: mergeCatLetters(ops.catLetters ?? emptyCatLetters(), latest.catLetters ?? emptyCatLetters()),
   });
 
   return {

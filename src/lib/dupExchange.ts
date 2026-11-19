@@ -84,7 +84,8 @@ export function formatDupBadge(ownedCount: number): string | null {
   return `x${dups}`;
 }
 
-function jellyGrade(card: DexCard): "common" | "rare" | "special" | "character" | "legend" {
+function jellyGrade(card: DexCard): "common" | "rare" | "special" | "character" | "legend" | "season" {
+  if (card.type === "season") return "season";
   if (card.type === "legend") return "legend";
   if (card.type === "character") return "character";
   if (card.type === "special") return "special";
@@ -93,6 +94,7 @@ function jellyGrade(card: DexCard): "common" | "rare" | "special" | "character" 
 }
 
 function gradeKey(card: DexCard): string {
+  if (card.type === "season") return "season";
   if (card.type === "legend") return "legend";
   if (card.type === "character") return "character";
   if (card.type === "special") return "special";
@@ -100,6 +102,7 @@ function gradeKey(card: DexCard): string {
 }
 
 function gradeLabel(card: DexCard): string {
+  if (card.type === "season") return "시즌";
   if (card.type === "legend") return "레전드";
   if (card.type === "character") return "캐릭터";
   if (card.type === "special") return "스페셜";
@@ -112,6 +115,7 @@ const GRADE_ORDER = [
   "star-3",
   "star-4",
   "star-5",
+  "season",
   "special",
   "character",
   "legend",

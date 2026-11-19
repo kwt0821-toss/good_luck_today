@@ -45,7 +45,7 @@ function isBackFace(angle: number): boolean {
 }
 
 function isRareCard(card: DexCard): boolean {
-  if (card.type === "special" || card.type === "character" || card.type === "legend") return true;
+  if (card.type === "special" || card.type === "character" || card.type === "legend" || card.type === "season") return true;
   return (card.stars ?? 0) >= 5;
 }
 
@@ -120,7 +120,9 @@ export function DexDetailSheet({
         ? "스페셜 카드"
         : card.type === "character"
           ? "캐릭터 카드"
-          : "레전드 카드";
+          : card.type === "season"
+            ? "시즌 카드"
+            : "레전드 카드";
 
   const collectionLabel =
     card.type === "breed"
@@ -129,7 +131,9 @@ export function DexDetailSheet({
         ? "스페셜 컬렉션"
         : card.type === "character"
           ? "캐릭터 컬렉션"
-          : "레전드 컬렉션";
+          : card.type === "season"
+            ? "시즌 컬렉션"
+            : "레전드 컬렉션";
 
   const applyFaceBlur = (blurPx: number) => {
     const blur = blurPx > 0.05 ? `blur(${blurPx}px)` : "none";

@@ -9,6 +9,7 @@ import {
 } from "../lib/affection";
 import { roomAsset } from "../lib/roomCatalog";
 import { loadRoomCats } from "../lib/roomCats";
+import { hasUnreadCatLetter } from "../lib/catLetters";
 import type { OpsEconomy, OpsState } from "../lib/opsTypes";
 import "./AffectionHost.css";
 
@@ -72,6 +73,7 @@ export function HomeFavorite({ ops, economy, locked = false, onGreet }: HomeFavo
       <span className="home-fav-face">
         <img src={icon} alt="" />
       </span>
+      {hasUnreadCatLetter(ops) ? <span className="home-fav-dot" aria-label="안 읽은 편지" /> : null}
       {chosen ? (
         <>
           <span className="home-fav-lv">♥ Lv.{level}</span>
