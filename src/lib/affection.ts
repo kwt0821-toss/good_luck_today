@@ -1,20 +1,51 @@
 import { toKstDateKey } from "./date";
 import type { DexCard, DexCatalog } from "./dexTypes";
-import type { AffectionConfig, AffectionSource, AffectionState, OpsEconomy, OpsState } from "./opsTypes";
+import type {
+  AffectionCatRecord,
+  AffectionConfig,
+  AffectionSource,
+  AffectionState,
+  OpsEconomy,
+  OpsState,
+} from "./opsTypes";
 
 export const AFFECTION_EVENT = "lucky-affection";
 export const QUESTION_CAT = "/assets/affection/question-cat.webp";
 
 const SOURCES: AffectionSource[] = ["pet", "attend", "sameDraw", "mission"];
 
+function emptyToday(): Record<AffectionSource, number> {
+  return { pet: 0, attend: 0, sameDraw: 0, mission: 0 };
+}
+
+function emptyCat(): AffectionCatRecord {
+  return { xp: 0, claimedLevels: [] };
+}
+
+function cleanLevels(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((n): n is number => typeof n === "number" && Number.isFinite(n)))].sort(
+    (a, b) => a - b,
+  );
+}
+
+function cleanRecord(xp: unknown, levels: unknown): AffectionCatRecord {
+  const nextXp = typeof xp === "number" && Number.isFinite(xp) ? Math.max(0, Math.floor(xp)) : 0;
+  return { xp: nextXp, claimedLevels: cleanLevels(levels) };
+}
+
+export function catHasProgress(record: AffectionCatRecord | null | undefined): boolean {
+  return Boolean(record && (record.xp > 0 || record.claimedLevels.length > 0));
+}
+
 export function emptyAffection(today = toKstDateKey()): AffectionState {
   return {
     catId: null,
-    xp: 0,
-    claimedLevels: [],
     dateKey: today,
-    today: { pet: 0, attend: 0, sameDraw: 0, mission: 0 },
+    today: emptyToday(),
     greetedOn: "",
+    cats: {},
+    unassigned: null,
   };
 }
 
@@ -26,13 +57,22 @@ export function affectionConfig(economy: OpsEconomy | null | undefined): Affecti
   return raw;
 }
 
+export function catAffection(state: AffectionState, catId: string | null | undefined): AffectionCatRecord {
+  if (!catId) return emptyCat();
+  return state.cats[catId] ?? emptyCat();
+}
+
+export function favoriteAffection(state: AffectionState): AffectionCatRecord {
+  return catAffection(state, state.catId);
+}
+
 export function readAffection(state: OpsState | null | undefined, today = toKstDateKey()): AffectionState {
   const raw = state?.affection ?? emptyAffection(today);
   if (raw.dateKey === today) return raw;
   return {
     ...raw,
     dateKey: today,
-    today: { pet: 0, attend: 0, sameDraw: 0, mission: 0 },
+    today: emptyToday(),
   };
 }
 
@@ -59,6 +99,17 @@ export function todayAffectionXp(state: AffectionState, config: AffectionConfig)
   return SOURCES.reduce((sum, source) => sum + state.today[source] * config.sources[source].xp, 0);
 }
 
+function allClaimed(state: AffectionState): Set<number> {
+  const claimed = new Set<number>();
+  for (const record of Object.values(state.cats)) {
+    for (const level of record.claimedLevels) claimed.add(level);
+  }
+  if (state.unassigned) {
+    for (const level of state.unassigned.claimedLevels) claimed.add(level);
+  }
+  return claimed;
+}
+
 export function grantAffection(
   state: OpsState,
   economy: OpsEconomy,
@@ -74,18 +125,28 @@ export function grantAffection(
   if (current.today[source] >= rule.perDay) return state;
   const gained = todayAffectionXp(current, config);
   if (gained + rule.xp > config.dailyCap) return state;
+  const record = catAffection(current, current.catId);
   const next: AffectionState = {
     ...current,
-    xp: current.xp + rule.xp,
     today: { ...current.today, [source]: current.today[source] + 1 },
+    cats: {
+      ...current.cats,
+      [current.catId]: { xp: record.xp + rule.xp, claimedLevels: record.claimedLevels },
+    },
   };
   return { ...state, affection: next };
 }
 
 export function chooseFavorite(state: OpsState, catId: string, today = toKstDateKey()): OpsState {
   const current = readAffection(state, today);
-  if (current.catId === catId) return state;
-  return { ...state, affection: { ...current, catId } };
+  let cats = current.cats;
+  let unassigned = current.unassigned;
+  if (unassigned) {
+    if (!catHasProgress(cats[catId])) cats = { ...cats, [catId]: unassigned };
+    unassigned = null;
+  }
+  if (current.catId === catId && cats === current.cats && unassigned === current.unassigned) return state;
+  return { ...state, affection: { ...current, catId, cats, unassigned } };
 }
 
 export function markGreeted(state: OpsState, today = toKstDateKey()): OpsState {
@@ -96,26 +157,42 @@ export function markGreeted(state: OpsState, today = toKstDateKey()): OpsState {
 
 export function pendingGiftLevel(state: OpsState, economy: OpsEconomy): number | null {
   const config = affectionConfig(economy);
-  if (!config || !state.affection?.catId) return null;
-  const level = affectionLevel(state.affection.xp, config);
-  const claimed = new Set(state.affection.claimedLevels);
-  if (level >= config.furnitureLevel && !claimed.has(config.furnitureLevel)) return config.furnitureLevel;
+  const affection = state.affection;
+  if (!config || !affection?.catId) return null;
+  const current = readAffection(state);
+  const level = affectionLevel(favoriteAffection(current).xp, config);
+  const claimed = allClaimed(current);
+  const ownsBed = state.ownedItemIds.includes(config.furnitureId);
+  if (level >= config.furnitureLevel && !claimed.has(config.furnitureLevel) && !ownsBed) {
+    return config.furnitureLevel;
+  }
   if (level >= config.frameLevel && !claimed.has(config.frameLevel)) return config.frameLevel;
   return null;
 }
 
 export function claimAffectionLevel(state: OpsState, economy: OpsEconomy, level: number): OpsState {
   const config = affectionConfig(economy);
-  if (!config) return state;
+  if (!config || !state.affection.catId) return state;
   const current = readAffection(state);
-  if (affectionLevel(current.xp, config) < level) return state;
-  if (current.claimedLevels.includes(level)) return state;
-  const claimedLevels = [...current.claimedLevels, level].sort((a, b) => a - b);
-  let next: OpsState = { ...state, affection: { ...current, claimedLevels } };
-  if (level === config.furnitureLevel && config.furnitureId) {
-    if (!next.ownedItemIds.includes(config.furnitureId)) {
-      next = { ...next, ownedItemIds: [...next.ownedItemIds, config.furnitureId] };
-    }
+  const catId = current.catId;
+  if (!catId) return state;
+  const record = catAffection(current, catId);
+  if (affectionLevel(record.xp, config) < level) return state;
+  const claimed = allClaimed(current);
+  const ownsBed = state.ownedItemIds.includes(config.furnitureId);
+  if (level === config.furnitureLevel && (claimed.has(level) || ownsBed)) return state;
+  if (level === config.frameLevel && claimed.has(level)) return state;
+  if (record.claimedLevels.includes(level)) return state;
+  const claimedLevels = [...record.claimedLevels, level].sort((a, b) => a - b);
+  let next: OpsState = {
+    ...state,
+    affection: {
+      ...current,
+      cats: { ...current.cats, [catId]: { xp: record.xp, claimedLevels } },
+    },
+  };
+  if (level === config.furnitureLevel && config.furnitureId && !ownsBed) {
+    next = { ...next, ownedItemIds: [...next.ownedItemIds, config.furnitureId] };
   }
   return next;
 }
@@ -127,7 +204,8 @@ export function rateBias(
   const config = affectionConfig(economy);
   const affection = state?.affection;
   if (!config || !affection?.catId) return null;
-  if (affectionLevel(affection.xp, config) < config.rateBonus.fromLevel) return null;
+  const xp = favoriteAffection(affection).xp;
+  if (affectionLevel(xp, config) < config.rateBonus.fromLevel) return null;
   const weightMul = config.rateBonus.weightMul;
   if (!(weightMul > 1)) return null;
   return { breedId: affection.catId, weightMul };
@@ -136,7 +214,64 @@ export function rateBias(
 export function frameUnlocked(state: OpsState | null | undefined, economy: OpsEconomy | null | undefined): boolean {
   const config = affectionConfig(economy);
   if (!config || !state?.affection) return false;
-  return state.affection.claimedLevels.includes(config.frameLevel);
+  return allClaimed(state.affection).has(config.frameLevel);
+}
+
+function mergeRecords(
+  left: AffectionCatRecord | null | undefined,
+  right: AffectionCatRecord | null | undefined,
+): AffectionCatRecord | null {
+  if (!left && !right) return null;
+  if (!left) return right ?? null;
+  if (!right) return left;
+  return {
+    xp: Math.max(left.xp, right.xp),
+    claimedLevels: [...new Set([...left.claimedLevels, ...right.claimedLevels])].sort((a, b) => a - b),
+  };
+}
+
+/** Combine two saved affection blobs. `preferred` wins the current favorite. */
+export function mergeAffectionStates(
+  preferred: AffectionState,
+  other: AffectionState,
+  today = toKstDateKey(),
+): AffectionState {
+  const cats: Record<string, AffectionCatRecord> = {};
+  for (const id of new Set([...Object.keys(preferred.cats), ...Object.keys(other.cats)])) {
+    const merged = mergeRecords(preferred.cats[id], other.cats[id]);
+    if (merged) cats[id] = merged;
+  }
+  let unassigned = mergeRecords(preferred.unassigned, other.unassigned);
+  const catId = preferred.catId ?? other.catId;
+  if (unassigned && catId && !catHasProgress(cats[catId])) {
+    cats[catId] = unassigned;
+    unassigned = null;
+  } else if (Object.values(cats).some((record) => catHasProgress(record))) {
+    unassigned = null;
+  }
+  const preferredToday = preferred.dateKey === today;
+  const otherToday = other.dateKey === today;
+  let dateKey = preferred.dateKey || other.dateKey || today;
+  let counts = preferred.today;
+  if (preferredToday && otherToday) {
+    counts = {
+      pet: Math.max(preferred.today.pet, other.today.pet),
+      attend: Math.max(preferred.today.attend, other.today.attend),
+      sameDraw: Math.max(preferred.today.sameDraw, other.today.sameDraw),
+      mission: Math.max(preferred.today.mission, other.today.mission),
+    };
+    dateKey = today;
+  } else if (otherToday) {
+    counts = other.today;
+    dateKey = today;
+  } else if (preferredToday) {
+    dateKey = today;
+  }
+  const greetedOn =
+    preferred.greetedOn === today || other.greetedOn === today
+      ? today
+      : preferred.greetedOn || other.greetedOn;
+  return { catId, dateKey, today: counts, greetedOn, cats, unassigned };
 }
 
 /** Same-grade weights. Grade rate stays put; only the favorite card's share moves. */
@@ -166,29 +301,48 @@ export function publishAffection(state: OpsState) {
   window.dispatchEvent(new CustomEvent(AFFECTION_EVENT, { detail: state }));
 }
 
+function countOf(raw: Record<string, unknown>, key: AffectionSource): number {
+  const n = raw[key];
+  return typeof n === "number" && Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+}
+
 export function parseAffection(value: unknown, today: string): AffectionState {
   const blank = emptyAffection(today);
   if (!value || typeof value !== "object") return blank;
   const raw = value as Record<string, unknown>;
   const todayRaw = raw.today && typeof raw.today === "object" ? (raw.today as Record<string, unknown>) : {};
-  const count = (key: AffectionSource) => {
-    const n = todayRaw[key];
-    return typeof n === "number" && Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
-  };
-  const levels = Array.isArray(raw.claimedLevels)
-    ? raw.claimedLevels.filter((n): n is number => typeof n === "number" && Number.isFinite(n))
-    : [];
+  const catId = typeof raw.catId === "string" && raw.catId ? raw.catId : null;
+  const cats: Record<string, AffectionCatRecord> = {};
+  if (raw.cats && typeof raw.cats === "object") {
+    for (const [id, entry] of Object.entries(raw.cats as Record<string, unknown>)) {
+      if (!id || !entry || typeof entry !== "object") continue;
+      const record = entry as Record<string, unknown>;
+      cats[id] = cleanRecord(record.xp, record.claimedLevels);
+    }
+  }
+  const legacy = cleanRecord(raw.xp, raw.claimedLevels);
+  const hasBucket = Object.keys(cats).length > 0;
+  let unassigned: AffectionCatRecord | null = null;
+  if (catHasProgress(legacy)) {
+    if (catId && !catHasProgress(cats[catId])) cats[catId] = legacy;
+    else if (!catId && !hasBucket) unassigned = legacy;
+  }
+  if (!unassigned && raw.unassigned && typeof raw.unassigned === "object") {
+    const held = raw.unassigned as Record<string, unknown>;
+    const record = cleanRecord(held.xp, held.claimedLevels);
+    if (catHasProgress(record)) unassigned = record;
+  }
   return {
-    catId: typeof raw.catId === "string" && raw.catId ? raw.catId : null,
-    xp: typeof raw.xp === "number" && Number.isFinite(raw.xp) ? Math.max(0, Math.floor(raw.xp)) : 0,
-    claimedLevels: [...new Set(levels)].sort((a, b) => a - b),
+    catId,
     dateKey: typeof raw.dateKey === "string" && raw.dateKey ? raw.dateKey : today,
     today: {
-      pet: count("pet"),
-      attend: count("attend"),
-      sameDraw: count("sameDraw"),
-      mission: count("mission"),
+      pet: countOf(todayRaw, "pet"),
+      attend: countOf(todayRaw, "attend"),
+      sameDraw: countOf(todayRaw, "sameDraw"),
+      mission: countOf(todayRaw, "mission"),
     },
     greetedOn: typeof raw.greetedOn === "string" ? raw.greetedOn : "",
+    cats,
+    unassigned,
   };
 }

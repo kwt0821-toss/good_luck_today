@@ -676,18 +676,24 @@ button.menu-dim:focus-visible {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
   border-radius: 28px 28px 0 0;
   background:
     linear-gradient(#18152d, #18152d),
     url("/assets/menu/panel-bg.webp") center top / cover no-repeat;
   padding: 10px 24px 0;
   color: var(--menu-cream);
-  max-height: min(92dvh, 720px);
+  max-height: 92vh;
+  max-height: min(92dvh, 92vh, 720px);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   transform: translateY(100%);
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.menu-sheet.is-attendance {
+  height: 92vh;
+  height: min(92dvh, 92vh, 720px);
 }
 
 .menu-sheet-root.is-open .menu-sheet {
@@ -745,6 +751,7 @@ button.menu-dim:focus-visible {
 .menu-sheet-body {
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
   margin-top: 16px;
@@ -791,6 +798,103 @@ button.menu-dim:focus-visible {
   text-align: center;
   font-size: 11px;
   color: rgba(243, 233, 215, 0.45);
+}
+
+.menu-sheet-footer {
+  flex: 0 0 auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.menu-sheet.is-attendance {
+  padding-top: 6px;
+}
+
+.menu-sheet.is-attendance .menu-grab {
+  margin-bottom: 6px;
+}
+
+.menu-sheet.is-attendance .menu-sheet-title {
+  margin-top: 2px;
+  font-size: 18px;
+}
+
+.menu-sheet.is-attendance .menu-sheet-desc {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.menu-sheet.is-attendance .menu-sheet-body {
+  margin-top: 6px;
+  padding-bottom: 2px;
+}
+
+.menu-sheet-footer .menu-sheet-cta {
+  height: 46px;
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+.menu-sheet-footer .menu-sheet-note {
+  margin: 0 0 8px;
+}
+
+.menu-sheet.is-attendance .menu-sheet-footer .banner-ad-slot.is-shown {
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+
+.menu-sheet.is-attendance .att-progress {
+  margin: 6px 0 4px;
+}
+
+.menu-sheet.is-attendance .att-grid {
+  gap: 6px;
+}
+
+.menu-sheet.is-attendance .att-cell {
+  min-height: 0;
+  gap: 2px;
+  padding: 4px 3px;
+}
+
+.menu-sheet.is-attendance .att-cell.is-today {
+  padding-bottom: 16px;
+}
+
+.menu-sheet.is-attendance .att-thumb {
+  max-height: 36px;
+}
+
+.menu-sheet.is-attendance .att-cell.is-day7 .att-thumb {
+  width: 44px;
+  height: 44px;
+}
+
+.menu-sheet.is-attendance .att-name,
+.menu-sheet.is-attendance .att-only-tag,
+.menu-sheet.is-attendance .att-day7-note {
+  font-size: 9px;
+}
+
+.menu-sheet.is-attendance .att-cycle-card {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.menu-sheet.is-attendance .att-week-cell {
+  min-height: 72px;
+  gap: 2px;
+  padding: 4px 2px 14px;
+}
+
+.menu-sheet.is-attendance .att-day7-actions {
+  gap: 6px;
+}
+
+.menu-sheet.is-attendance .att-day7-bonus {
+  margin-top: 8px;
+  padding: 8px 10px;
 }
 
 /* attendance grid */

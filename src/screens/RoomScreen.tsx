@@ -10,6 +10,8 @@ import {
   AFFECTION_EVENT,
   affectionConfig,
   affectionLevel,
+  favoriteAffection,
+  frameUnlocked,
   grantAffection,
   publishAffection,
 } from "../lib/affection";
@@ -720,20 +722,20 @@ export function RoomScreen({
       if (!alive) return;
       const cfg = affectionConfig(config.economy);
       const aff = ops.affection;
-      setFavoriteFrameId(cfg && aff.claimedLevels.includes(cfg.frameLevel) ? cfg.frameId : "");
+      setFavoriteFrameId(frameUnlocked(ops, config.economy) && cfg ? cfg.frameId : "");
       if (!cfg || !aff.catId) {
         setFavoritePet(null);
         syncHeartBed(null, "", null);
         return;
       }
       const cat = cats.find((item) => item.id === aff.catId);
-      const level = affectionLevel(aff.xp, cfg);
+      const level = affectionLevel(favoriteAffection(aff).xp, cfg);
       syncHeartBed(aff.catId, cat?.nameKo ?? "최애냥", cat?.icon ? roomAsset(cat.icon) : null);
       setFavoritePet({
         catId: aff.catId,
         lines: level >= 2 ? cfg.petLines : [],
         seatItemId: cfg.furnitureId,
-        seatMul: cfg.seatWeightMul > 0 ? cfg.seatWeightMul : 1,
+        seatMul: level >= cfg.furnitureLevel && cfg.seatWeightMul > 0 ? cfg.seatWeightMul : 1,
       });
     };
     void load();

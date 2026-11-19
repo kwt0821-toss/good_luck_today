@@ -14,18 +14,17 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-width: 44px;
   min-height: 36px;
-  max-width: calc(50% - 4px);
   margin: 0;
-  padding: 0 10px;
+  padding: 0 8px;
   border: 0;
   border-radius: 999px;
   background: #f3ebd7;
   color: #221e3a;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1;
@@ -58,11 +57,8 @@
 
 .home-wallet-chip b {
   display: block;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-weight: 700;
+  white-space: nowrap;
   transform-origin: 50% 60%;
 }
 

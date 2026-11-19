@@ -86,7 +86,9 @@
 
 .main-affection-row .home-wallet-row {
   width: auto;
+  min-width: max-content;
   margin-left: auto;
+  flex: 0 0 auto;
   padding: 6px 0 0;
 }
 
@@ -110,13 +112,45 @@
   position: relative;
   z-index: 1;
   width: min(360px, 100%);
-  max-height: min(78vh, 640px);
+  max-height: 78vh;
+  max-height: min(78dvh, 78vh, 640px);
   overflow: auto;
   padding: 18px 16px 16px;
   border-radius: 22px;
   background: #2a2144;
   color: #f3ebd7;
   box-sizing: border-box;
+}
+
+.aff-card.is-split {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 12px;
+}
+
+.aff-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.aff-foot {
+  flex: 0 0 auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.aff-how {
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #d7c8b4;
+}
+
+.aff-how li + li {
+  margin-top: 2px;
 }
 
 .aff-card h3 {

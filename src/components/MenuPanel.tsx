@@ -1167,7 +1167,7 @@ export function MenuPanel({
               }}
             />
             <div
-              className="menu-sheet"
+              className={`menu-sheet${sheet === "attendance" ? " is-attendance" : ""}`}
               onPointerDown={onSheetPointerDown}
               onPointerUp={onSheetPointerUp}
               style={{
@@ -1175,16 +1175,14 @@ export function MenuPanel({
                   sheet === "missions"
                     ? 480
                     : sheet === "attendance"
-                    ? attState === "weeklyCycle"
-                      ? 520
-                      : 560
-                    : sheet === "rates"
-                      ? 640
-                      : sheet === "ticketShop"
-                        ? 520
-                        : sheet === "settings"
+                      ? undefined
+                      : sheet === "rates"
+                        ? 640
+                        : sheet === "ticketShop"
                           ? 520
-                          : 420,
+                          : sheet === "settings"
+                            ? 520
+                            : 420,
               }}
             >
               <div className="menu-grab" />
@@ -1941,8 +1939,7 @@ export function MenuPanel({
               </div>
 
               {sheet === "missions" ? <BannerAdSlot placement="missions" /> : null}
-              {sheet === "attendance" ||
-              sheet === "rates" ||
+              {sheet === "rates" ||
               sheet === "exchange" ||
               sheet === "ticketShop" ||
               sheet === "notice" ||
@@ -1951,7 +1948,8 @@ export function MenuPanel({
               ) : null}
 
               {sheet === "attendance" ? (
-                <>
+                <div className="menu-sheet-footer">
+                  <BannerAdSlot placement="attendance" />
                   {isWeeklyDay7Claim ? (
                     <div className="att-day7-actions">
                       <button
@@ -2001,7 +1999,7 @@ export function MenuPanel({
                   <p className="menu-sheet-note">
                     {attCopy?.note ?? model.menu.sheets.attendance.note ?? ""}
                   </p>
-                </>
+                </div>
               ) : null}
 
               {sheet === "exchange" && exchangeView === "summary" ? (

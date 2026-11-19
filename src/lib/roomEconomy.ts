@@ -1,3 +1,4 @@
+import { mergeAffectionStates } from "./affection";
 import { loadOpsConfig, priceById } from "./opsConfig";
 import { loadOpsState, saveOpsState } from "./opsStorage";
 import { displayJellyBalance, serverJellyActive } from "./serverJelly";
@@ -118,8 +119,7 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
   const savedUnlocked = [
     ...new Set([...(unlocked.length ? unlocked : ops.unlockedRoomIds), ...latest.unlockedRoomIds]),
   ];
-  const affection =
-    (latest.affection?.xp ?? 0) >= (ops.affection?.xp ?? 0) ? latest.affection : ops.affection;
+  const affection = mergeAffectionStates(latest.affection, ops.affection);
   await saveOpsState({
     ...ops,
     pawBalance: points,

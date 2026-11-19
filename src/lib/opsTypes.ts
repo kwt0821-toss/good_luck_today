@@ -347,14 +347,26 @@ export type AffectionConfig = {
   greetLines: string[];
 };
 
-export type AffectionState = {
-  catId: string | null;
+export type AffectionCatRecord = {
   xp: number;
   claimedLevels: number[];
+};
+
+export type AffectionState = {
+  /** The favorite currently chosen. */
+  catId: string | null;
   dateKey: string;
+  /** Account-wide counts for today. Shared across cats. */
   today: Record<AffectionSource, number>;
   /** KST date the home greeting already played. */
   greetedOn: string;
+  /** Per-breed affection. Key is the room cat id. */
+  cats: Record<string, AffectionCatRecord>;
+  /**
+   * Legacy xp saved before a favorite existed.
+   * Applied once to the first cat the member chooses.
+   */
+  unassigned: AffectionCatRecord | null;
 };
 
 export type PriceTier = "small" | "normal" | "large" | "wall" | "tile" | "legend";

@@ -23,6 +23,7 @@
 
 .menu-sheet-body .banner-ad-slot,
 .menu-sheet > .banner-ad-slot,
+.menu-sheet-footer .banner-ad-slot,
 .dex-screen > .banner-ad-slot {
   width: calc(100% + 48px);
   margin-left: -24px;
@@ -53,7 +54,8 @@
   min-height: 0;
 }
 
-.menu-sheet > .banner-ad-slot.is-shown {
+.menu-sheet > .banner-ad-slot.is-shown,
+.menu-sheet-footer .banner-ad-slot.is-shown {
   margin-top: 8px;
   margin-bottom: 4px;
   background: #18152d;

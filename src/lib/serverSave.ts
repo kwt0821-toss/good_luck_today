@@ -1,5 +1,6 @@
 import { Storage } from "@apps-in-toss/web-framework";
 
+import { mergeAffectionStates, parseAffection } from "./affection";
 import { toKstDateKey } from "./date";
 import { isInTossApp } from "./native";
 import { isTossApp } from "./tossEnv";
@@ -346,32 +347,15 @@ function mergeTodayMissions(localRaw: string | null, serverRaw: string): string 
 }
 
 function mergeAffection(local: Record<string, unknown>, server: Record<string, unknown>): Record<string, unknown> {
+  const today = toKstDateKey();
   const localAff = isRecord(local.affection) ? local.affection : null;
   const serverAff = isRecord(server.affection) ? server.affection : null;
   if (!localAff) return server;
   if (!serverAff) {
-    server.affection = localAff;
+    server.affection = parseAffection(localAff, today);
     return server;
   }
-  const localXp = typeof localAff.xp === "number" ? localAff.xp : 0;
-  const serverXp = typeof serverAff.xp === "number" ? serverAff.xp : 0;
-  const claimed = [
-    ...new Set([
-      ...(Array.isArray(localAff.claimedLevels) ? localAff.claimedLevels : []),
-      ...(Array.isArray(serverAff.claimedLevels) ? serverAff.claimedLevels : []),
-    ]),
-  ];
-  const newer = localXp >= serverXp ? localAff : serverAff;
-  const today = toKstDateKey();
-  const day = typeof newer.dateKey === "string" ? newer.dateKey : "";
-  server.affection = {
-    ...newer,
-    xp: Math.max(localXp, serverXp),
-    claimedLevels: claimed,
-    catId: typeof newer.catId === "string" ? newer.catId : null,
-    today: day === today && isRecord(newer.today) ? newer.today : { pet: 0, attend: 0, sameDraw: 0, mission: 0 },
-    dateKey: day === today ? today : day,
-  };
+  server.affection = mergeAffectionStates(parseAffection(localAff, today), parseAffection(serverAff, today), today);
   return server;
 }
 

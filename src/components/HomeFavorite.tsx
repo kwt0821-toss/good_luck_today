@@ -4,6 +4,7 @@ import {
   affectionConfig,
   affectionLevel,
   affectionProgress,
+  favoriteAffection,
   QUESTION_CAT,
 } from "../lib/affection";
 import { roomAsset } from "../lib/roomCatalog";
@@ -22,8 +23,9 @@ export function HomeFavorite({ ops, economy, locked = false, onGreet }: HomeFavo
   const config = affectionConfig(economy);
   const affection = ops.affection;
   const chosen = Boolean(affection.catId);
-  const level = config ? affectionLevel(affection.xp, config) : 1;
-  const progress = config ? affectionProgress(affection.xp, config) : 0;
+  const xp = favoriteAffection(affection).xp;
+  const level = config ? affectionLevel(xp, config) : 1;
+  const progress = config ? affectionProgress(xp, config) : 0;
   const [icon, setIcon] = useState(QUESTION_CAT);
   const [name, setName] = useState("");
   const [greet, setGreet] = useState("");
