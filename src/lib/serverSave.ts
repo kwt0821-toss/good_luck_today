@@ -339,6 +339,9 @@ function mergeTodayMissions(localRaw: string | null, serverRaw: string): string 
       server.missionClaimedIds = idList(local.missionClaimedIds);
     }
   }
+  const localSeen = typeof local.updateNotesSeenId === "string" ? local.updateNotesSeenId : "";
+  const serverSeen = typeof server.updateNotesSeenId === "string" ? server.updateNotesSeenId : "";
+  if (!serverSeen && localSeen) server.updateNotesSeenId = localSeen;
   return JSON.stringify(mergeAffection(local, server));
 }
 

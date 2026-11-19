@@ -36,5 +36,5 @@ export function useExitConfirmOnBack(isHomeScreen: boolean) {
     />
   );
 
-  return { modal, openExitConfirm: () => setOpen(true) };
+  return { modal, open, openExitConfirm: () => setOpen(true) };
 }

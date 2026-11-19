@@ -290,6 +290,8 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         : fallback.walletHistory,
       lastSeenNoticeId:
         typeof parsed.lastSeenNoticeId === "string" ? parsed.lastSeenNoticeId : "",
+      updateNotesSeenId:
+        typeof parsed.updateNotesSeenId === "string" ? parsed.updateNotesSeenId : "",
       lifetimeDraws:
         typeof parsed.lifetimeDraws === "number" ? parsed.lifetimeDraws : fallback.lifetimeDraws,
       claimedAchievementIds: Array.isArray(parsed.claimedAchievementIds)

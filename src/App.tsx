@@ -136,8 +136,10 @@ import { useBackHandler } from "./hooks/useBackHandler";
 import { useExitConfirmOnBack } from "./hooks/useExitConfirmOnBack";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { AffectionHost } from "./components/AffectionHost";
+import { UpdateNotesPopup } from "./components/UpdateNotesPopup";
 import { HomeFavorite } from "./components/HomeFavorite";
-import { markGreeted, publishAffection } from "./lib/affection";
+import { markGreeted, pendingGiftLevel, publishAffection } from "./lib/affection";
+import { loadUpdateNotes, type UpdateNotes } from "./lib/updateNotes";
 import { HomeScreen } from "./screens/HomeScreen";
 import { RatesGuideScreen } from "./screens/RatesGuideScreen";
 import { RoomErrorBoundary } from "./components/RoomErrorBoundary";
@@ -279,10 +281,6 @@ export default function App() {
   const [revealSpotlight, setRevealSpotlight] = useState(false);
   const [hideRevealToast, setHideRevealToast] = useState(false);
   const [rewardsIntro, setRewardsIntro] = useState<RewardsIntroSession | null>(null);
-  const attendanceNotifyBlocked = Boolean(
-    (ops && !ops.tutorialDone) || tutorialReplayStep != null || rewardsIntro,
-  );
-  const attendanceNotifyOffer = useAttendanceNotifyOffer(attendanceNotifyBlocked);
   const [forceMenuSheet, setForceMenuSheet] = useState<MenuSheetId>(initialForceSheet);
   const [highlightMenuRowId, setHighlightMenuRowId] = useState<string | null>(null);
   const promoTargetRef = useRef<PromoTarget | null>(readPromoTarget());
@@ -345,6 +343,7 @@ export default function App() {
   const [dexFocusCardId, setDexFocusCardId] = useState<string | null>(null);
   const [bootError, setBootError] = useState<string | null>(null);
   const [featureIntro, setFeatureIntro] = useState<FeatureIntro | null>(null);
+  const [updateNotes, setUpdateNotes] = useState<UpdateNotes | null | undefined>(undefined);
   const attendanceDay7AdResolverRef = useRef<((result: AttendanceDay7AdResult) => void) | null>(
     null,
   );
@@ -895,8 +894,51 @@ export default function App() {
   ]);
 
   useEffect(() => {
+    let alive = true;
+    void loadUpdateNotes().then((notes) => {
+      if (alive) setUpdateNotes(notes);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const rewardsIntroWaiting = Boolean(
+    ops &&
+      ops.tutorialDone &&
+      tutorialReplayStep == null &&
+      !rewardsIntro &&
+      ops.tut.rewardsIntro === "unseen" &&
+      ops.nyangCoinBalance >= 10,
+  );
+  const giftWaiting = Boolean(ops && config && pendingGiftLevel(ops, config.economy) != null);
+  const updateNotesGate = Boolean(
+    ops &&
+      config &&
+      updateNotes &&
+      ops.tutorialDone &&
+      tutorialReplayStep == null &&
+      !rewardsIntro &&
+      !rewardsIntroWaiting &&
+      !giftWaiting &&
+      !ad &&
+      !adIntro &&
+      screen.name === "home" &&
+      !menuOpen &&
+      !achvOpen &&
+      !promoGate &&
+      !promoHoldIntros &&
+      ops.updateNotesSeenId !== updateNotes.id,
+  );
+  const attendanceNotifyBlocked = Boolean(
+    (ops && !ops.tutorialDone) || tutorialReplayStep != null || rewardsIntro || updateNotesGate,
+  );
+  const attendanceNotifyOffer = useAttendanceNotifyOffer(attendanceNotifyBlocked);
+
+  useEffect(() => {
     if (!ops || !config || !ops.tutorialDone || featureIntro || rewardsIntro) return;
     if (promoGate || promoHoldIntros) return;
+    if (updateNotes === undefined || giftWaiting || updateNotesGate) return;
     const day = daysSinceInstall(ops, today);
     const ownedDup = false; // day-5 condition checked lightly; full dup check in dex later
     const candidate = config.tutorial.featureIntros.schedule.find((intro) => {
@@ -906,7 +948,18 @@ export default function App() {
       return true;
     });
     if (candidate) setFeatureIntro(candidate);
-  }, [ops, config, today, featureIntro, rewardsIntro, promoGate, promoHoldIntros]);
+  }, [
+    ops,
+    config,
+    today,
+    featureIntro,
+    rewardsIntro,
+    promoGate,
+    promoHoldIntros,
+    updateNotes,
+    giftWaiting,
+    updateNotesGate,
+  ]);
 
   const beginDraw = useCallback(
     async (forceSlot?: "tutorial" | "normal" | "rateUp") => {
@@ -1739,7 +1792,14 @@ export default function App() {
   const adFallbackOpen = Boolean(ad && ad.presentation === "mock");
   const isMainScreen =
     !booting && !bootError && screen.name === "home" && !menuOpen && !adFallbackOpen && !adIntro;
-  const { modal: exitModal } = useExitConfirmOnBack(isMainScreen);
+  const { modal: exitModal, open: exitOpen } = useExitConfirmOnBack(isMainScreen);
+  const showUpdateNotes = updateNotesGate && !attendanceNotifyOffer.open && !exitOpen;
+  const dismissUpdateNotes = () => {
+    if (!ops || !updateNotes) return;
+    if (ops.updateNotesSeenId === updateNotes.id) return;
+    void persistOps({ ...ops, updateNotesSeenId: updateNotes.id });
+  };
+  useBackHandler(showUpdateNotes, dismissUpdateNotes, 40);
   useBackHandler(promoRewardsBack && menuOpen, () => {
     setPromoRewardsBack(false);
     setForceMenuSheet(null);
@@ -2129,7 +2189,11 @@ export default function App() {
         />
       ) : null}
 
-      {featureIntro ? (
+      {showUpdateNotes && updateNotes ? (
+        <UpdateNotesPopup note={updateNotes} onDismiss={dismissUpdateNotes} />
+      ) : null}
+
+      {featureIntro && !showUpdateNotes ? (
         <FeatureIntroBubble
           intro={featureIntro}
           onDismiss={() => {

@@ -773,6 +773,8 @@ export type OpsState = {
   }>;
   walletHistory: WalletHistoryItem[];
   lastSeenNoticeId: string;
+  /** Last update-notes id the member confirmed. Empty until the first popup. */
+  updateNotesSeenId: string;
   /** Lifetime draw count (normal + rateUp + tutorial), never resets daily. */
   lifetimeDraws: number;
   /** Achievement title ids with rewards claimed (once per account). */

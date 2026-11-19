@@ -126,6 +126,7 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
     ownedItemIds: savedOwned,
     unlockedRoomIds: savedUnlocked,
     affection,
+    updateNotesSeenId: latest.updateNotesSeenId || ops.updateNotesSeenId,
   });
 
   return {
