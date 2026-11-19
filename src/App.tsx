@@ -135,6 +135,9 @@ import { useAttendanceNotifyOffer } from "./lib/useAttendanceNotifyOffer";
 import { useBackHandler } from "./hooks/useBackHandler";
 import { useExitConfirmOnBack } from "./hooks/useExitConfirmOnBack";
 import { CollectionScreen } from "./screens/CollectionScreen";
+import { AffectionHost } from "./components/AffectionHost";
+import { HomeFavorite } from "./components/HomeFavorite";
+import { markGreeted, publishAffection } from "./lib/affection";
 import { HomeScreen } from "./screens/HomeScreen";
 import { RatesGuideScreen } from "./screens/RatesGuideScreen";
 import { RoomErrorBoundary } from "./components/RoomErrorBoundary";
@@ -1948,6 +1951,21 @@ export default function App() {
           dexBadge={dexClaimDot}
           pawBalance={ops.pawBalance}
           nyangCoinBalance={ops.nyangCoinBalance}
+          favorite={
+            <HomeFavorite
+              ops={ops}
+              economy={config.economy}
+              locked={tutorialStep != null}
+              onGreet={() => {
+                const next = markGreeted(ops);
+                if (next === ops) return;
+                void saveOpsState(next).then(() => {
+                  publishAffection(next);
+                  setOps(next);
+                });
+              }}
+            />
+          }
           walletChipsLocked={tutorialStep != null}
           titleRibbon={{
             equippedId: ops.equippedTitleId || null,
@@ -1974,6 +1992,10 @@ export default function App() {
             setMenuOpen(true);
           }}
         />
+      ) : null}
+
+      {(screen.name === "home" || screen.name === "room") && tutorialStep == null ? (
+        <AffectionHost ops={ops} economy={config.economy} onOps={setOps} />
       ) : null}
 
       <MenuPanel

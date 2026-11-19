@@ -144,13 +144,41 @@ export function pickCardFromCatalog(
   economy: OpsEconomy,
   rateUp: boolean,
   random = Math.random,
+  bias?: { breedId: string; weightMul: number } | null,
 ): { card: DexCard; rarity: DrawRarityKey } {
   const rarity = pickRarity(economy, rateUp, random);
   const pool = poolForRarity(catalog, rarity);
   const source = pool.length ? pool : catalog.cards;
-  const index = Math.min(source.length - 1, Math.floor(random() * source.length));
-  const card = source[Math.max(0, index)] ?? catalog.cards[0];
+  const card = pickWeighted(source, rarity, bias, random) ?? catalog.cards[0];
   return { card, rarity: rarityOfCard(card) };
+}
+
+/** Breed grades only. Special, character, and legend stay uniform. */
+function pickWeighted(
+  source: DexCard[],
+  rarity: DrawRarityKey,
+  bias: { breedId: string; weightMul: number } | null | undefined,
+  random: () => number,
+): DexCard | undefined {
+  if (!source.length) return undefined;
+  const breedGrade = rarity.startsWith("b");
+  const mul = bias && breedGrade ? bias.weightMul : 1;
+  if (!(mul > 1) || !bias) {
+    const index = Math.min(source.length - 1, Math.floor(random() * source.length));
+    return source[Math.max(0, index)];
+  }
+  let total = 0;
+  const weights = source.map((card) => {
+    const weight = card.type === "breed" && card.breed?.id === bias.breedId ? mul : 1;
+    total += weight;
+    return weight;
+  });
+  let roll = random() * total;
+  for (let i = 0; i < source.length; i++) {
+    roll -= weights[i];
+    if (roll <= 0) return source[i];
+  }
+  return source[source.length - 1];
 }
 
 export function cardImageUrls(card: DexCard) {

@@ -3,6 +3,7 @@
   "seats": [
     { "itemId": "sofa", "weight": 8, "pose": "sit", "lift": 42, "slots": [{ "c": 0, "r": 0 }, { "c": 1, "r": 0 }] },
     { "itemId": "catbed", "weight": 8, "pose": "sleep", "lift": 18, "slots": [{ "c": 0, "r": 0 }] },
+    { "itemId": "heart_cushion_bed", "weight": 8, "pose": "sleep", "lift": 22, "center": true },
     { "itemId": "bed", "weight": 7, "pose": "sleep", "lift": 40, "slots": [{ "c": 0, "r": 0 }, { "c": 0, "r": 1 }] },
     { "itemId": "cattower", "weight": 8, "pose": "sit", "lift": 88, "slots": [{ "c": 0, "r": 0 }] },
     { "itemId": "cushions", "weight": 8, "pose": "sleep", "lift": 34, "slots": [{ "c": 0, "r": 0 }] },

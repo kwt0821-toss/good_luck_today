@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 
 import { HomeWalletChips } from "../components/HomeWalletChips";
 import { TitleRibbon } from "../components/TitleRibbon";
@@ -49,6 +49,7 @@ type HomeScreenProps = {
   dexBadge?: boolean;
   pawBalance: number;
   nyangCoinBalance: number;
+  favorite?: ReactNode;
   /** Tutorial is in progress — currency chips do not navigate. */
   walletChipsLocked?: boolean;
   titleRibbon?: {
@@ -87,6 +88,7 @@ export function HomeScreen({
   dexBadge = false,
   pawBalance,
   nyangCoinBalance,
+  favorite,
   walletChipsLocked = false,
   titleRibbon,
   nextDrawKind,
@@ -319,11 +321,14 @@ export function HomeScreen({
 
         <div className="main-rule" aria-hidden="true" />
 
-        <HomeWalletChips
-          pawBalance={pawBalance}
-          nyangCoinBalance={nyangCoinBalance}
-          locked={walletChipsLocked}
-        />
+        <div className="main-affection-row">
+          {favorite}
+          <HomeWalletChips
+            pawBalance={pawBalance}
+            nyangCoinBalance={nyangCoinBalance}
+            locked={walletChipsLocked}
+          />
+        </div>
 
         {missionNudge && !walletChipsLocked && onOpenMissions ? (
           <button type="button" className="main-mission-nudge" onClick={onOpenMissions}>

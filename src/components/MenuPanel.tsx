@@ -53,7 +53,9 @@ import {
   withDupExchangeTimeout,
 } from "../lib/dupExchange";
 import { buildAttendanceDay7RequestId, readDay7BonusConfig } from "../lib/attendanceServer";
+import { rateBias } from "../lib/affection";
 import { ratesDisclosureNote, ratesDisclosureRows } from "../lib/drawRates";
+import { AffectionRateNote } from "../screens/RatesGuideScreen";
 import { claimMission, listMissions } from "../lib/dailyMissions";
 import { claimAttendanceDay7, claimAttendanceGift } from "../lib/opsRewards";
 import type { OpsState, WalletHistoryItem } from "../lib/opsTypes";
@@ -1505,7 +1507,17 @@ export function MenuPanel({
                         })}
                       </tbody>
                     </table>
-                    <p className="rates-note">{ratesNote}</p>
+                    {rateBias(ops, model.config.economy) ? (
+                      <div className="rates-note">
+                        <AffectionRateNote economy={model.config.economy} ops={ops} rateUp={false} />
+                        <AffectionRateNote economy={model.config.economy} ops={ops} rateUp />
+                      </div>
+                    ) : (
+                      <>
+                        <p className="rates-note">{ratesNote}</p>
+                        <AffectionRateNote economy={model.config.economy} ops={ops} rateUp={false} />
+                      </>
+                    )}
                   </>
                 ) : null}
 

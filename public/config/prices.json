@@ -86,6 +86,19 @@
    ]
   },
   {
+   "id": "heart_cushion_bed",
+   "source": "affection",
+   "room": "moon_bedroom",
+   "nameKo": "하트 쿠션 침대",
+   "category": "가구",
+   "placement": "floor",
+   "tier": "large",
+   "price": 0,
+   "cozy": 25,
+   "tierKo": "큰/테마 대표 가구",
+   "note": "애정도 Lv.7 선물. 상점에서 팔지 않아요."
+  },
+  {
    "id": "floorlamp",
    "source": "room-assets-v6",
    "room": "moon_bedroom",

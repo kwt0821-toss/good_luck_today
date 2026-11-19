@@ -323,22 +323,53 @@ function mergeTodayMissions(localRaw: string | null, serverRaw: string): string 
   }
   const today = toKstDateKey();
   const localDay = typeof local.missionDateKey === "string" ? local.missionDateKey : "";
-  if (localDay !== today) return serverRaw;
-  const serverDay = typeof server.missionDateKey === "string" ? server.missionDateKey : "";
-  if (serverDay === today) {
-    const progress = progressMap(local.missionProgress);
-    for (const [key, value] of Object.entries(progressMap(server.missionProgress))) {
-      progress[key] = Math.max(progress[key] ?? 0, value);
+  if (localDay === today) {
+    const serverDay = typeof server.missionDateKey === "string" ? server.missionDateKey : "";
+    if (serverDay === today) {
+      const progress = progressMap(local.missionProgress);
+      for (const [key, value] of Object.entries(progressMap(server.missionProgress))) {
+        progress[key] = Math.max(progress[key] ?? 0, value);
+      }
+      server.missionDateKey = today;
+      server.missionProgress = progress;
+      server.missionClaimedIds = [...new Set([...idList(local.missionClaimedIds), ...idList(server.missionClaimedIds)])];
+    } else {
+      server.missionDateKey = today;
+      server.missionProgress = progressMap(local.missionProgress);
+      server.missionClaimedIds = idList(local.missionClaimedIds);
     }
-    server.missionDateKey = today;
-    server.missionProgress = progress;
-    server.missionClaimedIds = [...new Set([...idList(local.missionClaimedIds), ...idList(server.missionClaimedIds)])];
-    return JSON.stringify(server);
   }
-  server.missionDateKey = today;
-  server.missionProgress = progressMap(local.missionProgress);
-  server.missionClaimedIds = idList(local.missionClaimedIds);
-  return JSON.stringify(server);
+  return JSON.stringify(mergeAffection(local, server));
+}
+
+function mergeAffection(local: Record<string, unknown>, server: Record<string, unknown>): Record<string, unknown> {
+  const localAff = isRecord(local.affection) ? local.affection : null;
+  const serverAff = isRecord(server.affection) ? server.affection : null;
+  if (!localAff) return server;
+  if (!serverAff) {
+    server.affection = localAff;
+    return server;
+  }
+  const localXp = typeof localAff.xp === "number" ? localAff.xp : 0;
+  const serverXp = typeof serverAff.xp === "number" ? serverAff.xp : 0;
+  const claimed = [
+    ...new Set([
+      ...(Array.isArray(localAff.claimedLevels) ? localAff.claimedLevels : []),
+      ...(Array.isArray(serverAff.claimedLevels) ? serverAff.claimedLevels : []),
+    ]),
+  ];
+  const newer = localXp >= serverXp ? localAff : serverAff;
+  const today = toKstDateKey();
+  const day = typeof newer.dateKey === "string" ? newer.dateKey : "";
+  server.affection = {
+    ...newer,
+    xp: Math.max(localXp, serverXp),
+    claimedLevels: claimed,
+    catId: typeof newer.catId === "string" ? newer.catId : null,
+    today: day === today && isRecord(newer.today) ? newer.today : { pet: 0, attend: 0, sameDraw: 0, mission: 0 },
+    dateKey: day === today ? today : day,
+  };
+  return server;
 }
 
 async function applySnapshotNow(bundle: SaveBundle, version: number, saveToken?: string): Promise<boolean> {

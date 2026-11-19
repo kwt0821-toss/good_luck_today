@@ -17,6 +17,7 @@ import {
 } from "./opsState";
 import { saveOpsState } from "./opsStorage";
 import type { DrawReservation, DrawSlotKind, OpsState } from "./opsTypes";
+import { rateBias } from "./affection";
 import { toKstDateKey } from "./date";
 
 function delay(ms: number) {
@@ -53,7 +54,13 @@ export async function reserveDraw(
   }
 
   const rateUp = slot === "rateUp";
-  const { card, rarity } = pickCardFromCatalog(catalog, config.economy, rateUp);
+  const { card, rarity } = pickCardFromCatalog(
+    catalog,
+    config.economy,
+    rateUp,
+    Math.random,
+    rateBias(next, config.economy),
+  );
   const isNew = (owned[card.id]?.count ?? 0) <= 0;
   const urls = cardImageUrls(card);
   const remainingAfter = Math.max(0, remainingTotalDraws(next, config) - 1);

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProp
 import { createPortal } from "react-dom";
 
 import { SIT_LOOK_BODY_PX, SIT_LOOK_CHEESE } from "../lib/catSeats";
+import { HEART_BED_ID, useHeartBedSrc } from "../lib/heartBed";
 import { useHideBrokenImages } from "../lib/hideBrokenImages";
 import { roomAsset } from "../lib/roomCatalog";
 import { AudioManager } from "../audio/AudioManager";
@@ -97,6 +98,13 @@ type RoomWorldProps = {
   debugHit?: boolean;
   /** Plays only for the room whose theme set is complete. */
   setBonus?: RoomSetCue | null;
+  favorite?: {
+    catId: string;
+    lines: string[];
+    seatItemId: string;
+    seatMul: number;
+    onPet: () => void;
+  } | null;
   onSelect: (instanceId: string | null, kind: "floor" | "wall") => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, instanceId: string) => void;
   onFloorPointerDown: (event: PointerEvent<HTMLDivElement>) => void;
@@ -198,6 +206,7 @@ function FloorSprite({
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, id: string) => void;
 }) {
   const frames = item.id === "cardframe" || item.id === "squareframe";
+  const heartSrc = useHeartBedSrc(item.id === HEART_BED_ID);
   const liftWorld = previewGhost ? -24 : lifted ? -12 : 0;
   const liftY = liftWorld ? `translateY(${liftWorld * fit}px)` : "";
   return (
@@ -224,8 +233,8 @@ function FloorSprite({
       onPointerDown={(event) => onItemPointerDown(event, place.instanceId)}
       onClick={() => onSelect(place.instanceId)}
     >
-      {rect.src ? (
-        <img src={roomAsset(rect.src)} alt="" draggable={false} />
+      {rect.src || heartSrc ? (
+        <img src={heartSrc || roomAsset(rect.src)} alt="" draggable={false} />
       ) : (
         <span className="lucky-sprite-fallback">{item.nameKo}</span>
       )}
@@ -619,6 +628,7 @@ function RoomCatAgent({
   active,
   reducedTapMotion,
   setBonus,
+  favorite,
   onPublish,
 }: {
   catId: string;
@@ -632,6 +642,7 @@ function RoomCatAgent({
   active: boolean;
   reducedTapMotion: boolean;
   setBonus: RoomSetCue | null;
+  favorite: RoomWorldProps["favorite"];
   onPublish: (catId: string, next: PublishedCat | null) => void;
 }) {
   const { view, motionRef, tap } = useRoomCat({
@@ -647,6 +658,12 @@ function RoomCatAgent({
     spotsRef,
     slot,
     setBonus,
+    favoriteLines: favorite && favorite.catId === catId ? favorite.lines : [],
+    seatBias:
+      favorite && favorite.catId === catId
+        ? { itemId: favorite.seatItemId, mul: favorite.seatMul }
+        : null,
+    onPet: favorite && favorite.catId === catId ? favorite.onPet : undefined,
   });
   const tapRef = useRef(tap);
   tapRef.current = tap;
@@ -706,6 +723,7 @@ export function RoomWorld({
   previewInvalid = false,
   debugHit = false,
   setBonus = null,
+  favorite = null,
   onSelect,
   onItemPointerDown,
   onFloorPointerDown,
@@ -1136,6 +1154,7 @@ export function RoomWorld({
           active={roamingActive}
           reducedTapMotion={reduceMotion}
           setBonus={setBonus}
+          favorite={favorite}
           onPublish={onPublishCat}
         />
       ))}

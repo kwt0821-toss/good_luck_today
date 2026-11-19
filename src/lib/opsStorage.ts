@@ -7,6 +7,7 @@ import { hydrateAttendanceNotify, normalizeNotifyAttendance, stampNotifyAttendan
 import { peekDexOwned } from "./dexCollection";
 import { markDirty } from "./serverSave";
 import { loadOpsConfig } from "./opsConfig";
+import { parseAffection } from "./affection";
 import { applyOpsDailyReset, createDefaultOpsState } from "./opsState";
 import type { OpsState } from "./opsTypes";
 
@@ -341,6 +342,7 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
         typeof parsed.missionDateKey === "string" ? parsed.missionDateKey : fallback.missionDateKey,
       missionProgress: parseMissionProgress(parsed.missionProgress),
       missionClaimedIds: parseStringArray(parsed.missionClaimedIds),
+      affection: parseAffection(parsed.affection, fallback.dateKey),
       notifyAttendance: normalizeNotifyAttendance(
         isRecord(parsed.notifyAttendance) ? parsed.notifyAttendance : fallback.notifyAttendance,
       ),

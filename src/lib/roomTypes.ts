@@ -44,6 +44,8 @@ export type RoomItem = {
   hero?: boolean;
   theme?: RoomThemeId | string;
   attendanceOnly?: boolean;
+  /** Granted once from affection. Hidden from the shop until owned. */
+  affectionGift?: boolean;
 };
 
 export type RoomCatalog = {

@@ -311,6 +311,11 @@ export type OpsEconomy = {
       grantOn?: string;
     };
   };
+  /**
+   * Favorite-cat affection. Numbers live here, not in code.
+   * Lv.1 is the moment a cat is chosen (xp 0).
+   */
+  affection?: AffectionConfig;
   /** Daily checklist. Rewards are 발바닥 젤리 only, claimed by hand. */
   dailyMissions?: {
     resetTimeKST?: string;
@@ -323,6 +328,33 @@ export type OpsEconomy = {
       paw: number;
     }>;
   };
+};
+
+export type AffectionSource = "pet" | "attend" | "sameDraw" | "mission";
+
+export type AffectionConfig = {
+  maxLevel: number;
+  dailyCap: number;
+  levels: number[];
+  sources: Record<AffectionSource, { xp: number; perDay: number }>;
+  rateBonus: { fromLevel: number; weightMul: number };
+  furnitureId: string;
+  furnitureLevel: number;
+  frameLevel: number;
+  frameId: string;
+  seatWeightMul: number;
+  petLines: string[];
+  greetLines: string[];
+};
+
+export type AffectionState = {
+  catId: string | null;
+  xp: number;
+  claimedLevels: number[];
+  dateKey: string;
+  today: Record<AffectionSource, number>;
+  /** KST date the home greeting already played. */
+  greetedOn: string;
 };
 
 export type PriceTier = "small" | "normal" | "large" | "wall" | "tile" | "legend";
@@ -783,6 +815,8 @@ export type OpsState = {
   missionProgress: Record<string, number>;
   /** Mission ids whose 발바닥 젤리 was claimed today. */
   missionClaimedIds: string[];
+  /** Favorite cat, affection xp, and today's source counts. */
+  affection: AffectionState;
   /**
    * Attendance notification consent. Missing on older saves — treat as
    * { agreed: false, askCount: 0, askedAt: 0 }.

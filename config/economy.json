@@ -869,5 +869,24 @@
       { "id": "attend_1", "title": "출석 체크", "desc": "오늘 출석 선물 받기", "target": 1, "paw": 10 },
       { "id": "room_1", "title": "방 놀러 가기", "desc": "내 방에 한 번 들어가기", "target": 1, "paw": 5 }
     ]
+  },
+  "affection": {
+    "maxLevel": 10,
+    "dailyCap": 75,
+    "levels": [0, 40, 100, 180, 280, 400, 550, 730, 940, 1200],
+    "sources": {
+      "pet": { "xp": 5, "perDay": 3 },
+      "attend": { "xp": 20, "perDay": 1 },
+      "sameDraw": { "xp": 15, "perDay": 2 },
+      "mission": { "xp": 10, "perDay": 1 }
+    },
+    "rateBonus": { "fromLevel": 5, "weightMul": 1.2 },
+    "furnitureId": "heart_cushion_bed",
+    "furnitureLevel": 7,
+    "frameLevel": 10,
+    "frameId": "favorite",
+    "seatWeightMul": 4,
+    "petLines": ["최애다냥", "여기가 좋아", "더 쓰다듬어 줘", "같이 있자"],
+    "greetLines": ["다녀왔어?", "오늘도 보자"]
   }
 }

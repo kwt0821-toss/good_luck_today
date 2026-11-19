@@ -147,6 +147,36 @@
    "shadow": "shadows/shadow-1x1.png"
   },
   {
+   "id": "heart_cushion_bed",
+   "nameKo": "하트 쿠션 침대",
+   "category": "가구",
+   "placement": "floor",
+   "footprint": [2, 2],
+   "price": 0,
+   "ownedDefault": false,
+   "placedDefault": false,
+   "affectionGift": true,
+   "image": "items/furniture/heart_cushion_bed_peach.webp",
+   "imageSizePx": [360, 285],
+   "tileImage": "items/furniture/thumbs/heart_cushion_bed_peach.webp",
+   "orientations": {
+    "default": {
+     "image": "items/furniture/heart_cushion_bed_peach.webp",
+     "footprint": [2, 2],
+     "anchorFootprintCenterPx": [180, 248],
+     "size": [360, 285]
+    },
+    "mirrored": {
+     "image": "items/furniture/heart_cushion_bed_peach_m.webp",
+     "footprint": [2, 2],
+     "anchorFootprintCenterPx": [180, 248],
+     "size": [360, 285]
+    }
+   },
+   "sheetTileScale": 2,
+   "shadow": "shadows/shadow-2x2.webp"
+  },
+  {
    "id": "floorlamp",
    "nameKo": "플로어 램프",
    "category": "가구",

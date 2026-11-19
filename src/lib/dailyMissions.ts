@@ -1,4 +1,5 @@
 import { track } from "./analytics";
+import { grantAffection, publishAffection } from "./affection";
 import { toKstDateKey } from "./date";
 import { saveOpsState } from "./opsStorage";
 import { displayJellyBalance, jellyEnqueue, serverJellyActive } from "./serverJelly";
@@ -146,12 +147,17 @@ export async function claimMission(
     });
     pawBalance = displayJellyBalance(base.pawBalance);
   }
-  const next: OpsState = {
-    ...base,
-    pawBalance,
-    missionClaimedIds: [...base.missionClaimedIds, missionId],
-  };
+  const next = grantAffection(
+    {
+      ...base,
+      pawBalance,
+      missionClaimedIds: [...base.missionClaimedIds, missionId],
+    },
+    economy,
+    "mission",
+  );
   await saveOpsState(next);
+  publishAffection(next);
   track("mission_claim", { mission: missionId, paw: def.paw });
   return { state: next, gained: def.paw };
 }

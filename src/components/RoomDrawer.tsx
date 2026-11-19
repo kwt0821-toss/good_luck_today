@@ -10,6 +10,7 @@ import {
   ROOM_THEME_FILTERS,
 } from "../lib/roomCatalog";
 import { useHideBrokenImages } from "../lib/hideBrokenImages";
+import { HEART_BED_ID, useHeartBedSrc } from "../lib/heartBed";
 import { jellyLabel } from "../lib/jellyLabel";
 import type { RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib/roomTypes";
 import { RoomCatsTab } from "./RoomCatsTab";
@@ -244,7 +245,8 @@ export function RoomDrawer({
     return (
       itemMatchesTab(item, tab) &&
       itemMatchesTheme(item, themeFilter) &&
-      !(item.attendanceOnly && (owned[item.id] ?? 0) < 1)
+      !(item.attendanceOnly && (owned[item.id] ?? 0) < 1) &&
+      !(item.affectionGift && (owned[item.id] ?? 0) < 1)
     );
   });
 
@@ -517,12 +519,7 @@ export function RoomDrawer({
             >
               <span className="lucky-cell-tile">
                 {item.tileImage || item.id ? (
-                  <img
-                    src={roomAsset(item.tileImage ?? `tiles/${item.id}.png`)}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                  />
+                  <CellArt item={item} />
                 ) : (
                   <span className="lucky-cell-empty" />
                 )}
@@ -572,5 +569,17 @@ export function RoomDrawer({
       )}
       {catsTab ? null : <div className="lucky-drawer-fade" aria-hidden="true" />}
     </section>
+  );
+}
+
+function CellArt({ item }: { item: RoomItem }) {
+  const heart = useHeartBedSrc(item.id === HEART_BED_ID, "thumb");
+  return (
+    <img
+      src={heart || roomAsset(item.tileImage ?? `tiles/${item.id}.png`)}
+      alt=""
+      loading="lazy"
+      decoding="async"
+    />
   );
 }

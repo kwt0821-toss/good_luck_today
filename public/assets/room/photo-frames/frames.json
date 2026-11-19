@@ -46,5 +46,13 @@
       821
     ],
     "footerTop": 821
+  },
+  "favorite": {
+    "id": "favorite",
+    "nameKo": "최애",
+    "image": "photo-frames/favorite.webp",
+    "size": [720, 1140],
+    "photoBox": [52, 52, 668, 821],
+    "footerTop": 821
   }
 }

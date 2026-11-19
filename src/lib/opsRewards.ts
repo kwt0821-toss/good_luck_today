@@ -1,4 +1,5 @@
 import { bumpMission } from "./dailyMissions";
+import { cardMatchesFavorite, grantAffection, publishAffection } from "./affection";
 import { toKstDateKey } from "./date";
 import { loadDexCatalog } from "./dexCatalog";
 import { readDexOwnedForUpdate, saveDexOwned } from "./dexCollection";
@@ -185,7 +186,11 @@ export async function confirmDrawAfterAd(
   }
 
   next = bumpMission({ ...next, pendingDraw: confirmed }, "draw_1", 1, today, config.economy);
+  if (cardMatchesFavorite(card, next.affection?.catId)) {
+    next = grantAffection(next, config.economy, "sameDraw", today);
+  }
   await saveOpsState(next);
+  publishAffection(next);
   markDirtyUrgent();
 
   return {
@@ -368,8 +373,10 @@ export async function claimAttendanceGift(
   }
   const itemId =
     result.response.rewards.find((reward) => reward.kind === "item")?.itemId ?? null;
-  const bumped = bumpMission(result.state, "attend_1");
+  const config = await loadOpsConfig();
+  const bumped = grantAffection(bumpMission(result.state, "attend_1"), config.economy, "attend", today);
   await saveOpsState(bumped);
+  publishAffection(bumped);
   markDirtyUrgent();
   return { state: bumped, itemId, response: result.response };
 }
@@ -392,8 +399,10 @@ export async function claimAttendanceDay7(
   const next = applyOpsDailyReset(state, today);
   const result = await claimAttendanceDay7OnServer(next, body);
   if (!result.response.ok) return result;
-  const bumped = bumpMission(result.state, "attend_1");
+  const config = await loadOpsConfig();
+  const bumped = grantAffection(bumpMission(result.state, "attend_1"), config.economy, "attend", today);
   await saveOpsState(bumped);
+  publishAffection(bumped);
   markDirtyUrgent();
   return { state: bumped, response: result.response };
 }

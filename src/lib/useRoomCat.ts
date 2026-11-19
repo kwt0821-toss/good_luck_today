@@ -166,6 +166,12 @@ type UseRoomCatArgs = {
   slot?: number;
   /** Theme set bonus for the cat in slot 0. Null unless this room's set is complete. */
   setBonus?: RoomSetCue | null;
+  /** Rotating lines when this cat is the favorite and affection is high enough. */
+  favoriteLines?: string[];
+  /** Extra weight for one seat, used so the favorite rests on the heart bed. */
+  seatBias?: { itemId: string; mul: number } | null;
+  /** Fired after a real tap pose, not a cooldown replay. */
+  onPet?: () => void;
 };
 
 const SEED_PREFS: CatTile[] = [
@@ -366,6 +372,9 @@ export function useRoomCat({
   spotsRef,
   slot = 0,
   setBonus = null,
+  favoriteLines = [],
+  seatBias = null,
+  onPet,
 }: UseRoomCatArgs): {
   view: RoomCatView;
   motionRef: CatMotionRef;
@@ -450,6 +459,13 @@ export function useRoomCat({
   slotRef.current = slot;
   const bonusRef = useRef<RoomSetCue | null>(setBonus);
   bonusRef.current = setBonus;
+  const favoriteLinesRef = useRef(favoriteLines);
+  favoriteLinesRef.current = favoriteLines;
+  const seatBiasRef = useRef(seatBias);
+  seatBiasRef.current = seatBias;
+  const onPetRef = useRef(onPet);
+  onPetRef.current = onPet;
+  const petLineRef = useRef(0);
   catIdRef.current = breedId || "cheese";
   if (spotsRef && !spotsRef.current.has(catIdRef.current)) {
     const walkableNow = walkableTiles(floor, itemsById);
@@ -876,7 +892,14 @@ export function useRoomCat({
             const offers = listCatSeats(seatContext(tileRef.current)).filter(
               (seat) => seat.id !== lastSeatRef.current,
             );
-            const picked = pickCatSeat(offers, Math.random);
+            const bias = seatBiasRef.current;
+            const weighted =
+              bias && bias.mul > 1
+                ? offers.map((seat) =>
+                    seat.itemId === bias.itemId ? { ...seat, weight: seat.weight * bias.mul } : seat,
+                  )
+                : offers;
+            const picked = pickCatSeat(weighted, Math.random);
             if (picked) {
               const pose = rollSeatPose(picked.pose, Math.random);
               const seat = walkSeatOf(picked, pose);
@@ -1148,6 +1171,20 @@ export function useRoomCat({
     animElapsedRef.current = 0;
   };
 
+  const notePet = (now: number) => {
+    onPetRef.current?.();
+    const lines = favoriteLinesRef.current;
+    if (!lines.length) return;
+    const line = lines[petLineRef.current % lines.length] ?? "";
+    petLineRef.current += 1;
+    if (!line) return;
+    bubbleUntilRef.current = now + TAP_BUBBLE_MS;
+    catMotion.current.bubbleOn = true;
+    catMotion.current.bubbleText = line;
+    catMotion.current.bubbleEmoji = "";
+    catMotion.current.bubbleRoom = false;
+  };
+
   const tap = () => {
     if (modeRef.current === "edit") return;
     const now = performance.now();
@@ -1179,6 +1216,7 @@ export function useRoomCat({
       } else {
         playTapped(now);
       }
+      notePet(now);
       return;
     }
     if (sheet && specialTap && sheet.animations[specialTap]) {
@@ -1202,6 +1240,7 @@ export function useRoomCat({
         catMotion.current.bubbleRoom = false;
       }
       playTapped(now);
+      if (!cooling) notePet(now);
       return;
     }
     const framesOk = Boolean(action && sheet && action.frames.every((name) => sheet.frames[name]));
@@ -1209,6 +1248,7 @@ export function useRoomCat({
     const cooling = lastActionAtRef.current > 0 && now - lastActionAtRef.current < cooldown;
     if (!action || !framesOk || cooling || !sheet) {
       playTapped(now);
+      if (!cooling) notePet(now);
       return;
     }
     lastActionAtRef.current = now;
@@ -1238,6 +1278,7 @@ export function useRoomCat({
     catMotion.current.bubbleText = text;
     catMotion.current.bubbleEmoji = emoji;
     catMotion.current.bubbleRoom = false;
+    notePet(now);
   };
 
   return { view, motionRef: catMotion, tap };

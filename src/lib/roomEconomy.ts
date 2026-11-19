@@ -118,11 +118,14 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
   const savedUnlocked = [
     ...new Set([...(unlocked.length ? unlocked : ops.unlockedRoomIds), ...latest.unlockedRoomIds]),
   ];
+  const affection =
+    (latest.affection?.xp ?? 0) >= (ops.affection?.xp ?? 0) ? latest.affection : ops.affection;
   await saveOpsState({
     ...ops,
     pawBalance: points,
     ownedItemIds: savedOwned,
     unlockedRoomIds: savedUnlocked,
+    affection,
   });
 
   return {

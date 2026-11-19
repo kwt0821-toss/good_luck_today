@@ -1,3 +1,4 @@
+import { emptyAffection, readAffection } from "./affection";
 import { toKstDateKey, toKstMondayWeekKey } from "./date";
 import { resolveStartPaw } from "./devMode";
 import type { OpsConfig, OpsState } from "./opsTypes";
@@ -71,6 +72,7 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     missionDateKey: today,
     missionProgress: {},
     missionClaimedIds: [],
+    affection: emptyAffection(today),
     notifyAttendance: { agreed: false, askCount: 0, askedAt: 0 },
   };
 }
@@ -98,7 +100,9 @@ export function applyOpsDailyReset(state: OpsState, today = toKstDateKey()): Ops
   const missionPatch = missionsStale
     ? { missionDateKey: today, missionProgress: {}, missionClaimedIds: [] as string[] }
     : null;
-  if (!dayStale) return { ...synced, ...missionPatch };
+  const affection = readAffection(synced, today);
+  const affectionPatch = affection === synced.affection ? null : { affection };
+  if (!dayStale) return { ...synced, ...missionPatch, ...(affectionPatch ?? {}) };
   return {
     ...synced,
     dateKey: today,
@@ -108,6 +112,7 @@ export function applyOpsDailyReset(state: OpsState, today = toKstDateKey()): Ops
     adDrawNyangToday: 0,
     adPawNyangToday: 0,
     pendingDraw: null,
+    affection,
     ...(missionPatch ?? {}),
   };
 }

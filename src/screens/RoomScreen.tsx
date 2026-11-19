@@ -6,6 +6,13 @@ import { useBackHandler } from "../hooks/useBackHandler";
 import { useLoadingHold } from "../lib/loadingGate";
 import { RoomBuySheet, RoomConfirm, RoomUnlockSheet } from "../components/RoomDialogs";
 import { NyChip } from "../components/NyChip";
+import {
+  AFFECTION_EVENT,
+  affectionConfig,
+  affectionLevel,
+  grantAffection,
+  publishAffection,
+} from "../lib/affection";
 import { track } from "../lib/analytics";
 import { isDebugHitRequest } from "../lib/debugSaveQuery";
 import { jellyLabel } from "../lib/jellyLabel";
@@ -34,7 +41,10 @@ import {
   type RoomsFile,
 } from "../lib/roomCatalog";
 import { loadOpsState, saveOpsState } from "../lib/opsStorage";
-import { computeCozyPointsFromOwned } from "../lib/roomCozy";
+import { HEART_BED_ID, syncHeartBed } from "../lib/heartBed";
+import { computeCozyPointsFromOwned, resolveCozyStatus } from "../lib/roomCozy";
+import { loadRoomCats } from "../lib/roomCats";
+import type { OpsState } from "../lib/opsTypes";
 import {
   captureRoomIsland,
   composeRoomCard,
@@ -421,6 +431,13 @@ export function RoomScreen({
   const [photoFrames, setPhotoFrames] = useState<PhotoFrame[]>([]);
   const [photoFrameId, setPhotoFrameId] = useState("gold");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [favoriteFrameId, setFavoriteFrameId] = useState("");
+  const [favoritePet, setFavoritePet] = useState<{
+    catId: string;
+    lines: string[];
+    seatItemId: string;
+    seatMul: number;
+  } | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const chipRef = useRef<HTMLDivElement>(null);
   const placementGeomRef = useRef<PlacementGeom | null>(null);
@@ -695,6 +712,63 @@ export function RoomScreen({
   useEffect(() => {
     previewHudModeRef.current = previewHudMode;
   }, [previewHudMode]);
+
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      const [ops, config, cats] = await Promise.all([loadOpsState(), loadOpsConfig(), loadRoomCats()]);
+      if (!alive) return;
+      const cfg = affectionConfig(config.economy);
+      const aff = ops.affection;
+      setFavoriteFrameId(cfg && aff.claimedLevels.includes(cfg.frameLevel) ? cfg.frameId : "");
+      if (!cfg || !aff.catId) {
+        setFavoritePet(null);
+        syncHeartBed(null, "", null);
+        return;
+      }
+      const cat = cats.find((item) => item.id === aff.catId);
+      const level = affectionLevel(aff.xp, cfg);
+      syncHeartBed(aff.catId, cat?.nameKo ?? "최애냥", cat?.icon ? roomAsset(cat.icon) : null);
+      setFavoritePet({
+        catId: aff.catId,
+        lines: level >= 2 ? cfg.petLines : [],
+        seatItemId: cfg.furnitureId,
+        seatMul: cfg.seatWeightMul > 0 ? cfg.seatWeightMul : 1,
+      });
+    };
+    void load();
+    const onAffection = (event: Event) => {
+      void load();
+      const detail = (event as CustomEvent<OpsState>).detail;
+      if (!detail?.ownedItemIds.includes(HEART_BED_ID)) return;
+      setState((prev) => {
+        if (!prev || (prev.owned[HEART_BED_ID] ?? 0) > 0) return prev;
+        const owned = { ...prev.owned, [HEART_BED_ID]: 1 };
+        const prices = cozyConfigRef.current?.prices;
+        const economyNow = cozyConfigRef.current?.economy;
+        const cozy =
+          prices && economyNow ? resolveCozyStatus(owned, prices, economyNow).level : prev.cozyLevel;
+        const next = { ...prev, owned, cozyLevel: cozy };
+        void saveRoomState(next);
+        return next;
+      });
+    };
+    window.addEventListener(AFFECTION_EVENT, onAffection);
+    return () => {
+      alive = false;
+      window.removeEventListener(AFFECTION_EVENT, onAffection);
+    };
+  }, []);
+
+  const petFavorite = () => {
+    void (async () => {
+      const [ops, config] = await Promise.all([loadOpsState(), loadOpsConfig()]);
+      const next = grantAffection(ops, config.economy, "pet");
+      if (next === ops) return;
+      await saveOpsState(next);
+      publishAffection(next);
+    })();
+  };
 
   useEffect(() => {
     return subscribeJelly(() => {
@@ -1014,7 +1088,7 @@ export function RoomScreen({
           remaining: rem,
           owned: ownedN,
           otherRoomName: otherName,
-          canBuyMore: !item.attendanceOnly && !isPaintItem(item) && ownedN < maxOwn,
+          canBuyMore: !item.attendanceOnly && !item.affectionGift && !isPaintItem(item) && ownedN < maxOwn,
         } satisfies DrawerItemMeta,
       ];
     }),
@@ -1818,6 +1892,10 @@ export function RoomScreen({
         showToast("출석 체크에서만 받을 수 있어요");
         return;
       }
+      if (item.affectionGift) {
+        showToast("애정도 선물로만 받을 수 있어요");
+        return;
+      }
       setBuyMore(false);
       setBuyItem(item);
       if (preview) {
@@ -2433,6 +2511,14 @@ export function RoomScreen({
                       onItemPointerDown={onItemPointerDown}
                       onFloorPointerDown={onFloorPointerDown}
                       setBonus={roomId === displayRoomId ? roomSetCue(roomSetFor(setViews, roomId)) : null}
+                      favorite={
+                        favoritePet
+                          ? {
+                              ...favoritePet,
+                              onPet: petFavorite,
+                            }
+                          : null
+                      }
                     />
                   </div>
                 </div>
@@ -2764,7 +2850,7 @@ export function RoomScreen({
 
       {photoOpen ? (
         <RoomPhotoSheet
-          frames={photoFrames}
+          frames={photoFrames.filter((frame) => favoriteFrameId || frame.id !== "favorite")}
           frameId={photoFrameId}
           previewUrl={photoUrl}
           busy={photoBusy}

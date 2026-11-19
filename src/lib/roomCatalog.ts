@@ -406,6 +406,7 @@ export function loadRoomCatalog(): Promise<RoomCatalog> {
           merged.push({
             ...item,
             attendanceOnly: Boolean((raw as { attendanceOnly?: boolean }).attendanceOnly),
+            affectionGift: Boolean((raw as { affectionGift?: boolean }).affectionGift),
             ownedDefault: (raw as { attendanceOnly?: boolean }).attendanceOnly
               ? false
               : item.ownedDefault,

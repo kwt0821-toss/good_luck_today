@@ -79,3 +79,7 @@
   color: rgba(243, 233, 215, 0.55);
   line-height: 1.45;
 }
+
+.rates-note p {
+  margin: 0 0 8px;
+}
