@@ -157,20 +157,20 @@
    "placedDefault": false,
    "affectionGift": true,
    "image": "items/furniture/heart_cushion_bed_peach.webp",
-   "imageSizePx": [360, 285],
+   "imageSizePx": [320, 277],
    "tileImage": "items/furniture/thumbs/heart_cushion_bed_peach.webp",
    "orientations": {
     "default": {
      "image": "items/furniture/heart_cushion_bed_peach.webp",
      "footprint": [2, 2],
-     "anchorFootprintCenterPx": [180, 248],
-     "size": [360, 285]
+     "anchorFootprintCenterPx": [160, 220],
+     "size": [320, 277]
     },
     "mirrored": {
      "image": "items/furniture/heart_cushion_bed_peach_m.webp",
      "footprint": [2, 2],
-     "anchorFootprintCenterPx": [180, 248],
-     "size": [360, 285]
+     "anchorFootprintCenterPx": [160, 220],
+     "size": [320, 277]
     }
    },
    "sheetTileScale": 2,

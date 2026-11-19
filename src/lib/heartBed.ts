@@ -127,11 +127,11 @@ async function paintBreed(name: string, iconSrc: string): Promise<BedView> {
     px[i + 2] = b;
   }
   ctx.putImageData(frame, 0, 0);
-  const tagX = canvas.width * 0.35;
-  const tagY = canvas.height * 0.78;
-  const tagW = canvas.width * 0.25;
-  const tagH = canvas.height * 0.11;
-  ctx.fillStyle = "#e6c48a";
+  const tagX = canvas.width * (226 / 884);
+  const tagY = canvas.height * (600 / 764);
+  const tagW = canvas.width * (168 / 884);
+  const tagH = canvas.height * (36 / 764);
+  ctx.fillStyle = "#f3d0a4";
   ctx.fillRect(tagX, tagY, tagW, tagH);
   ctx.fillStyle = "#5c3b22";
   ctx.textAlign = "center";
