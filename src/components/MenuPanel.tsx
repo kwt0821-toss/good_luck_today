@@ -1118,8 +1118,13 @@ export function MenuPanel({
                       key={row.id}
                       id={`menu-row-${row.id}`}
                       type="button"
-                      className={`menu-row ${row.id === "points" ? "is-points" : ""} ${row.id === "invite" ? "is-invite" : ""} ${view.enabled ? "" : "is-disabled"} ${highlightRowId === row.id ? (reduce ? "is-highlight-still" : "is-highlight") : ""}`}
+                      className={`menu-row ${row.id === "points" ? "is-points" : ""} ${row.id === "rewards" ? "is-rewards" : ""} ${row.id === "invite" ? "is-invite" : ""} ${view.enabled ? "" : "is-disabled"} ${highlightRowId === row.id ? (reduce ? "is-highlight-still" : "is-highlight") : ""}`}
                       style={{ animationDelay: reduce ? "0ms" : `${index * 30}ms` }}
+                      aria-label={
+                        row.id === "rewards"
+                          ? `${row.label}, ${row.tossHint || "토스로 보내기"}`
+                          : undefined
+                      }
                       onClick={() => onRow(view.open, view.enabled, row.id)}
                     >
                       <span className="menu-row-icon">
@@ -1164,6 +1169,23 @@ export function MenuPanel({
                             ) : (
                               <span className="menu-points-bit">오늘은 다 받았어요</span>
                             )}
+                          </span>
+                        </span>
+                      ) : row.id === "rewards" ? (
+                        <span className="menu-rewards-copy">
+                          <span className="menu-row-label">{row.label}</span>
+                          <span className="menu-toss-hint" aria-hidden="true">
+                            <span className="menu-toss-coin">
+                              <img src={ncoinIcon(18)} alt="" width={18} height={18} />
+                              <i className="menu-toss-spark is-a" />
+                              <i className="menu-toss-spark is-b" />
+                            </span>
+                            <span
+                              className="menu-toss-bubble"
+                              style={{ animationDelay: reduce ? "0ms" : `${index * 30 + 180}ms` }}
+                            >
+                              {row.tossHint || "토스로 보내기"}
+                            </span>
                           </span>
                         </span>
                       ) : (

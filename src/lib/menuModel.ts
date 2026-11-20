@@ -194,6 +194,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
       badge: enabled ? badge : { type: "pill", text: def.disabledPill ?? "준비 중", tone: "muted" },
       open: def.open ?? "",
       chevron: enabled && !rowDisabled,
+      tossHint: def.tossHint,
     };
 
     if (!enabled) {

@@ -18,6 +18,8 @@ export type MenuRowDef = {
   disabledPill?: string;
   enableWhen?: string;
   required?: boolean;
+  /** Always-on hint beside the row label. Rewards uses "토스로 보내기". */
+  tossHint?: string;
   items?: Array<{
     id: string;
     label: string;
@@ -165,6 +167,7 @@ export type MenuRowView = {
   badge: MenuBadge;
   open: string;
   chevron: boolean;
+  tossHint?: string;
 };
 
 export type MenuSheetId =

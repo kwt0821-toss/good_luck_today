@@ -420,6 +420,172 @@ button.menu-dim:focus-visible {
   white-space: nowrap;
 }
 
+/* Rewards row: coin + "토스로 보내기" sit beside the label, never inside it. */
+.menu-row.is-rewards {
+  grid-template-columns: 24px max-content minmax(0, 1fr) 16px;
+}
+
+.menu-rewards-copy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: visible;
+}
+
+.menu-row.is-rewards .menu-row-label {
+  flex: 0 0 auto;
+  overflow: visible;
+  text-overflow: clip;
+  min-width: auto;
+}
+
+.menu-toss-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  position: relative;
+}
+
+.menu-toss-coin {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.menu-toss-coin img {
+  width: 18px;
+  height: 18px;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(255, 196, 120, 0.55));
+}
+
+.menu-toss-spark {
+  position: absolute;
+  pointer-events: none;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+}
+
+.menu-toss-spark.is-a {
+  width: 7px;
+  height: 7px;
+  top: -4px;
+  right: -2px;
+  background: #fff6e6;
+}
+
+.menu-toss-spark.is-b {
+  width: 4px;
+  height: 4px;
+  left: -2px;
+  bottom: -1px;
+  background: #ffd9a0;
+}
+
+.menu-toss-bubble {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1.5px solid var(--menu-amber, #ffc48a);
+  background: #fff6e6;
+  color: #2a2238;
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 15.5px;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(6, 5, 16, 0.36);
+  transform-origin: left center;
+}
+
+.menu-toss-bubble::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  box-sizing: border-box;
+  background: #fff6e6;
+  border-left: 1.5px solid var(--menu-amber, #ffc48a);
+  border-bottom: 1.5px solid var(--menu-amber, #ffc48a);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.menu-root.is-open .menu-toss-coin img {
+  animation: menu-toss-bob 1.4s ease-in-out infinite;
+}
+
+.menu-root.is-open .menu-toss-spark.is-a {
+  animation: menu-toss-spark 1.6s ease-in-out infinite;
+}
+
+.menu-root.is-open .menu-toss-spark.is-b {
+  animation: menu-toss-spark 1.6s ease-in-out 0.5s infinite;
+}
+
+.menu-root.is-open .menu-toss-bubble {
+  animation-name: menu-toss-pop;
+  animation-duration: 240ms;
+  animation-timing-function: ease;
+  animation-fill-mode: both;
+}
+
+.menu-root.is-reduce .menu-toss-coin img,
+.menu-root.is-reduce .menu-toss-spark,
+.menu-root.is-reduce .menu-toss-bubble {
+  animation: none;
+}
+
+@keyframes menu-toss-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2.5px);
+  }
+}
+
+@keyframes menu-toss-spark {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.75);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes menu-toss-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-root.is-open .menu-toss-coin img,
+  .menu-root.is-open .menu-toss-spark,
+  .menu-root.is-open .menu-toss-bubble {
+    animation: none;
+  }
+}
+
 /* Same cream bordered tag as .main-draw-pill-ad on the home draw CTA. */
 .menu-ad-tag {
   display: inline-flex;

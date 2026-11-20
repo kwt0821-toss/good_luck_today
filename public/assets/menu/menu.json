@@ -140,6 +140,7 @@
   },
   "rewards": {
    "label": "보상함",
+   "tossHint": "토스로 보내기",
    "icon": "icon-rewards.svg",
    "enabled": true,
    "open": "sheet:rewards",
