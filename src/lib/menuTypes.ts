@@ -198,6 +198,26 @@ export type RewardsWalletSheet = {
   confirmDesc: string;
   successTitle: string;
   successDesc: string;
+  sendingCta?: string;
+  celebratePill?: string;
+  celebrateTitle?: string;
+  celebrateDesc?: string;
+  celebrateLeft?: string;
+  celebrateLeftDone?: string;
+  celebrateOk?: string;
+  pendingPill?: string;
+  pendingTitle?: string;
+  pendingDesc?: string;
+  pendingNote?: string;
+  pendingHistory?: string;
+  doneSheetTitle?: string;
+  doneSheetDesc?: string;
+  pendingSheetTitle?: string;
+  pendingSheetDesc?: string;
+  failTitle?: string;
+  failSub?: string;
+  dailyLimitTitle?: string;
+  dailyLimitDesc?: string;
   /** 지급 시점·조건·제한과 중단 고지. */
   policy?: string;
   historyTitle: string;

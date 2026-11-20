@@ -72,6 +72,7 @@ import type { HelpTabId } from "../lib/helpConfig";
 import { BannerAdSlot } from "./BannerAdSlot";
 import { HelpEarnSheet } from "./HelpEarnSheet";
 import { NyChip } from "./NyChip";
+import { WithdrawCelebration, walletCopy, withdrawFailSub } from "./WithdrawCelebration";
 import "./MenuPanel.css";
 
 type RewardsView = "inbox" | "confirm" | "success" | "history";
@@ -167,6 +168,11 @@ export function MenuPanel({
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
   const [withdrawBusy, setWithdrawBusy] = useState(false);
+  const [sendDialog, setSendDialog] = useState<
+    | { mode: "done"; coins: number; left: number; allDone: boolean }
+    | { mode: "pending"; coins: number }
+    | null
+  >(null);
   const [grantHold, setGrantHold] = useState<string | null>(null);
   const [attendBusy, setAttendBusy] = useState(false);
   const [day7AdWaiting, setDay7AdWaiting] = useState(false);
@@ -469,51 +475,50 @@ export function MenuPanel({
             }
           : null);
       setLastWithdraw(row);
+      const next = await buildMenuViewModel(result.state);
+      setModel(next);
+      setWithdrawAmount(next.wallet.maxWithdrawable);
+      const wallet = next.menu.sheets.rewards.wallet;
+      const left = next.nyangCoinBalance;
+      const allDone = next.wallet.remainingToday < next.wallet.min;
       if (result.response.ok && result.response.status === "done") {
         setRewardsView("success");
         haptic("success");
-        nyNotify(
-          result.response.testGrant
-            ? {
-                key: "withdraw-test",
-                kind: "success",
-                title: "테스트 지급을 확인했어요",
-                sub: "연습이라 실제로는 받지 않아요",
-              }
-            : {
-                key: "withdraw-done",
-                kind: "success",
-                title: `<b>${shownAmount}원</b>을 받았어요`,
-              },
-        );
+        if (result.response.testGrant) {
+          nyNotify({
+            key: "withdraw-test",
+            kind: "success",
+            title: "테스트 지급을 확인했어요",
+            sub: "연습이라 실제로는 받지 않아요",
+          });
+        } else {
+          setSendDialog({ mode: "done", coins: shownAmount, left, allDone });
+        }
       } else if (result.response.ok && result.response.status === "pending") {
         setLastWithdraw(row);
         setRewardsView("success");
-        nyNotify({
-          key: "withdraw-pending",
-          kind: "info",
-          title: "확인 중이에요",
-          sub: "잠시 후 기록에서 확인해 주세요",
-        });
+        setSendDialog({ mode: "pending", coins: shownAmount });
       } else if (result.response.ok === false && result.response.code === "DAILY_LIMIT") {
         setRewardsView("inbox");
+        nyNotify({
+          key: "withdraw-limit",
+          kind: "info",
+          title: walletCopy(wallet, "dailyLimitTitle", { dailyLimit: next.wallet.dailyLimit }),
+          sub: walletCopy(wallet, "dailyLimitDesc"),
+        });
       } else {
         nyNotify({
           key: "withdraw-fail",
           kind: "error",
-          title: "보내지 못해 냥코인을 돌려드렸어요",
+          title: walletCopy(wallet, "failTitle"),
           sub:
             result.response.ok === false
-              ? result.response.reason
+              ? withdrawFailSub(result.response.reason, walletCopy(wallet, "failSub"))
               : "네트워크를 확인하고 다시 눌러 주세요",
           action: { label: "다시 시도", onClick: () => setRewardsView("inbox") },
         });
         setRewardsView("inbox");
       }
-      void buildMenuViewModel(result.state).then((next) => {
-        setModel(next);
-        setWithdrawAmount(next.wallet.maxWithdrawable);
-      });
     } finally {
       setWithdrawBusy(false);
     }
@@ -1674,19 +1679,23 @@ export function MenuPanel({
                       <h4>
                         {lastWithdraw?.testGrant
                           ? "테스트 지급을 확인했어요"
-                          : lastWithdraw?.status === "pending"
-                            ? "확인 중이에요"
-                            : (model.menu.sheets.rewards.wallet?.successTitle ??
-                              "받았어요")}
+                          : walletCopy(
+                              model.menu.sheets.rewards.wallet,
+                              lastWithdraw?.status === "pending"
+                                ? "pendingSheetTitle"
+                                : "doneSheetTitle",
+                            )}
                       </h4>
                       <p>
-                        {lastWithdraw
-                          ? lastWithdraw.testGrant
-                            ? "연습이라 실제로는 받지 않아요. 냥코인은 그대로예요."
-                            : lastWithdraw.status === "pending"
-                              ? `${lastWithdraw.amount}원 지급을 확인하고 있어요.`
-                              : `${lastWithdraw.amount}원을 받았어요.`
-                          : null}
+                        {lastWithdraw?.testGrant
+                          ? "연습이라 실제로는 받지 않아요. 냥코인은 그대로예요."
+                          : walletCopy(
+                              model.menu.sheets.rewards.wallet,
+                              lastWithdraw?.status === "pending"
+                                ? "pendingSheetDesc"
+                                : "doneSheetDesc",
+                              { coins: lastWithdraw?.amount ?? withdrawAmount },
+                            )}
                       </p>
                     </div>
                   ) : rewardsView === "confirm" ? (
@@ -1729,21 +1738,21 @@ export function MenuPanel({
                           const canPlus = !stepperDisabled && withdrawAmount < maxWithdrawable;
                           const needMore = Math.max(0, min - balance);
                           const leftover = Math.max(0, balance - withdrawAmount);
-                          const walletCopy = model.menu.sheets.rewards.wallet;
+                          const walletSheet = model.menu.sheets.rewards.wallet;
                           const hint = lowBalance
-                            ? (walletCopy?.lowBalanceHint ??
+                            ? (walletSheet?.lowBalanceHint ??
                                 "10 냥코인부터 받을 수 있어요 · {need}개 더 모아요").replace(
                                 "{need}",
                                 String(needMore),
                               )
                             : dailyDone
-                              ? (walletCopy?.dailyDoneHint ??
+                              ? (walletSheet?.dailyDoneHint ??
                                 "오늘은 다 받았어요 · 내일 00:00에 다시 받을 수 있어요")
-                              : (walletCopy?.dailyLimitHint ??
+                              : (walletSheet?.dailyLimitHint ??
                                   "오늘 {remainingToday}원 더 받을 수 있어요 · 하루 최대 {dailyLimit}원")
                                   .replace("{remainingToday}", String(remainingToday))
                                   .replace("{dailyLimit}", String(dailyLimit));
-                          const cta = walletCopy?.withdrawCta ?? "냥코인 받기";
+                          const cta = walletSheet?.withdrawCta ?? "냥코인 받기";
                           return (
                             <>
                               <div
@@ -1807,13 +1816,13 @@ export function MenuPanel({
                               {!stepperDisabled && leftover > 0 ? (
                                 <p className="wallet-remain-hint">
                                   {(
-                                    walletCopy?.remainAfterHint ??
+                                    walletSheet?.remainAfterHint ??
                                     "받고 남는 {remain}냥코인은 그대로 모여요"
                                   ).replace("{remain}", String(leftover))}
                                 </p>
                               ) : null}
                               <p className="wallet-policy">
-                                {walletCopy?.policy ??
+                                {walletSheet?.policy ??
                                   "받으면 바로 지급돼요. 10냥코인부터 10개씩이고, 1냥코인은 1원이에요. 탈퇴하거나 부정하게 참여하면 받을 수 없어요. 이 프로모션은 사전 고지 없이 중단될 수 있어요."}
                               </p>
                               <button
@@ -1839,7 +1848,7 @@ export function MenuPanel({
                                   })();
                                 }}
                               >
-                                {cta}
+                                {withdrawBusy ? (walletSheet?.sendingCta ?? "보내는 중…") : cta}
                               </button>
                             </>
                           );
@@ -2114,7 +2123,9 @@ export function MenuPanel({
                     disabled={withdrawBusy}
                     onClick={() => void doWithdraw()}
                   >
-                    {`받기 · ${withdrawAmount}원`}
+                    {withdrawBusy
+                      ? (model.menu.sheets.rewards.wallet?.sendingCta ?? "보내는 중…")
+                      : `받기 · ${withdrawAmount}원`}
                   </button>
                 ) : model.rewards.dexClaimableCount > 0 ? (
                   <button
@@ -2155,6 +2166,20 @@ export function MenuPanel({
 
       {helpOpen ? (
         <HelpEarnSheet initialTab={helpTab} onClose={() => setHelpOpen(false)} />
+      ) : null}
+      {sendDialog && model ? (
+        <WithdrawCelebration
+          mode={sendDialog.mode}
+          coins={sendDialog.coins}
+          left={sendDialog.mode === "done" ? sendDialog.left : 0}
+          allDone={sendDialog.mode === "done" ? sendDialog.allDone : false}
+          copy={model.menu.sheets.rewards.wallet}
+          onClose={() => setSendDialog(null)}
+          onHistory={() => {
+            setSendDialog(null);
+            setRewardsView("history");
+          }}
+        />
       ) : null}
     </div>
   );
