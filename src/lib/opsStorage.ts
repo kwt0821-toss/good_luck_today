@@ -8,6 +8,7 @@ import { peekDexOwned } from "./dexCollection";
 import { markDirty } from "./serverSave";
 import { loadOpsConfig } from "./opsConfig";
 import { parseAffection } from "./affection";
+import { parseWeeklyBag } from "./weeklyMissions";
 import { parseCatLetters } from "./catLetters";
 import { applyOpsDailyReset, createDefaultOpsState } from "./opsState";
 import type { OpsState } from "./opsTypes";
@@ -61,7 +62,11 @@ async function write(key: string, value: string): Promise<void> {
   try {
     window.localStorage.setItem(key, value);
   } catch {
-    // ignore
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (error) {
+      console.warn("[ops] local save failed", error);
+    }
   }
   markDirty();
 }
@@ -353,6 +358,10 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
       ),
       inviteTicketKeys: parseStringArray(parsed.inviteTicketKeys).slice(-50),
       inviteWelcomeSeen: parsed.inviteWelcomeSeen === true,
+      drawsByDate: parseMissionProgress(parsed.drawsByDate),
+      lastRoomVisitDateKST:
+        typeof parsed.lastRoomVisitDateKST === "string" ? parsed.lastRoomVisitDateKST : "",
+      weekly: parseWeeklyBag(parsed.weekly),
       devForceCozyLevel: null,
     };
   } catch {

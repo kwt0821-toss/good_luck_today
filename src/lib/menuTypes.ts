@@ -179,6 +179,7 @@ export type MenuSheetId =
   | "notice"
   | "settings"
   | "missions"
+  | "weekly"
   | "invite"
   | null;
 

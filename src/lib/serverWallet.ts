@@ -779,6 +779,96 @@ export async function claimInvite(
   };
 }
 
+export type WeeklyProgressInput = {
+  attendDates: string[];
+  draws: number;
+  petsByDate: Record<string, number>;
+  dailyClearDates: string[];
+  roomSaved: boolean;
+  jellyAdsByDate: Record<string, number>;
+  inviteDone: boolean;
+};
+
+export type WeeklyStatusResult = {
+  ok: true;
+  enabled: boolean;
+  weekKey: string;
+  prevWeekKey: string;
+  today: string;
+  resetAt: string;
+  rules: Record<string, unknown> | null;
+  current: unknown;
+  previous: unknown;
+};
+
+export type WeeklyClaimResult = {
+  ok: true;
+  already: boolean;
+  kind: string;
+  weekKey: string;
+  jelly: number;
+  nyangCoin: number;
+  ticketKeys: string[];
+  jellyBalance: number | null;
+  nyangCoinBalance: number | null;
+  week: unknown;
+};
+
+const WEEKLY_RETRY: Retry = { token: false, missing: false };
+
+/** weekly_status. Works before a save exists. */
+export async function fetchWeeklyStatus(): Promise<
+  WeeklyStatusResult | { ok: false; error: string; network?: boolean }
+> {
+  const result = await postWallet("weekly_status", {}, DEFAULT_MS, false, WEEKLY_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const json = result.json;
+  return {
+    ok: true,
+    enabled: json.enabled !== false,
+    weekKey: typeof json.weekKey === "string" ? json.weekKey : "",
+    prevWeekKey: typeof json.prevWeekKey === "string" ? json.prevWeekKey : "",
+    today: typeof json.today === "string" ? json.today : "",
+    resetAt: typeof json.resetAt === "string" ? json.resetAt : "",
+    rules: isRecord(json.rules) ? json.rules : null,
+    current: json.current ?? null,
+    previous: json.previous ?? null,
+  };
+}
+
+/** weekly_sync. The server keeps the larger count and the union of dates. */
+export async function syncWeeklyProgress(
+  weekKey: string,
+  progress: WeeklyProgressInput,
+): Promise<{ ok: true; week: unknown } | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet("weekly_sync", { weekKey, progress }, DEFAULT_MS, true, WEEKLY_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  return { ok: true, week: result.json.week ?? null };
+}
+
+/** weekly_claim. The same chest is granted once. Amounts come back as zero when already claimed. */
+export async function claimWeeklyChest(body: {
+  weekKey: string;
+  kind: "3" | "6" | "9" | "invite";
+  ticketsHeld: number;
+}): Promise<WeeklyClaimResult | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet("weekly_claim", body, DEFAULT_MS, true, WEEKLY_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const json = result.json;
+  return {
+    ok: true,
+    already: json.already === true,
+    kind: typeof json.kind === "string" ? json.kind : body.kind,
+    weekKey: typeof json.weekKey === "string" ? json.weekKey : body.weekKey,
+    jelly: num(json.jelly),
+    nyangCoin: num(json.nyangCoin),
+    ticketKeys: stringList(json.ticketKeys),
+    jellyBalance: typeof json.jellyBalance === "number" ? json.jellyBalance : null,
+    nyangCoinBalance: typeof json.nyangCoinBalance === "number" ? json.nyangCoinBalance : null,
+    week: json.week ?? null,
+  };
+}
+
 export function applyWalletViewToOps(state: OpsState, view: WalletView): OpsState {
   if (!view.migrated) return state;
   const userHash = readStoredGameUserHash() || undefined;

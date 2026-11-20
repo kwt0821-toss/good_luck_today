@@ -1,6 +1,7 @@
 import { track } from "./analytics";
 import { grantAffection, publishAffection } from "./affection";
 import { toKstDateKey } from "./date";
+import { trustedKstDateKey } from "./tossClock";
 import { saveOpsState } from "./opsStorage";
 import { displayJellyBalance, jellyEnqueue, serverJellyActive } from "./serverJelly";
 import type { OpsEconomy, OpsState } from "./opsTypes";
@@ -54,7 +55,7 @@ function missionDefs(economy?: OpsEconomy): MissionDef[] {
 }
 
 /** Reset mission progress when the KST date key has moved on. */
-export function ensureMissionDay(state: OpsState, today = toKstDateKey()): OpsState {
+export function ensureMissionDay(state: OpsState, today = trustedKstDateKey()): OpsState {
   if (state.missionDateKey === today) return state;
   return {
     ...state,
@@ -73,8 +74,9 @@ function raiseToTarget(state: OpsState, id: string, target: number): OpsState {
   };
 }
 
-/** A draw that already counted today: normal, rate-up, or a confirmed reservation. */
+/** A draw that already counted today, including ticket-only and tutorial draws. */
 function drewToday(state: OpsState, today: string): boolean {
+  if ((state.drawsByDate?.[today] ?? 0) > 0) return true;
   if (state.dateKey === today && (state.normalDrawsUsed > 0 || state.rateUpUsed > 0)) return true;
   const pending = state.pendingDraw;
   if (!pending?.confirmed) return false;
@@ -86,7 +88,7 @@ function drewToday(state: OpsState, today: string): boolean {
  * Attendance and draws fill to their target. A claimed mission stays claimed.
  * Room visits are not guessed. Does not save.
  */
-export function reconcileMissions(state: OpsState, economy?: OpsEconomy, today = toKstDateKey()): OpsState {
+export function reconcileMissions(state: OpsState, economy?: OpsEconomy, today = trustedKstDateKey()): OpsState {
   let next = ensureMissionDay(state, today);
   const defs = missionDefs(economy);
   const attended = next.lastAttendDateKST === today || next.lastAttendanceDateKey === today;
@@ -97,6 +99,10 @@ export function reconcileMissions(state: OpsState, economy?: OpsEconomy, today =
   if (drewToday(next, today)) {
     const target = defs.find((item) => item.id === "draw_1")?.target;
     if (target) next = raiseToTarget(next, "draw_1", target);
+  }
+  if (next.lastRoomVisitDateKST === today) {
+    const target = defs.find((item) => item.id === "room_1")?.target;
+    if (target) next = raiseToTarget(next, "room_1", target);
   }
   return next;
 }
@@ -109,7 +115,7 @@ export function bumpMission(
   state: OpsState,
   missionId: string,
   by = 1,
-  today = toKstDateKey(),
+  today = trustedKstDateKey(),
   economy?: OpsEconomy,
 ): OpsState {
   const base = reconcileMissions(state, economy, today);
@@ -137,7 +143,7 @@ export async function claimMission(
   const current = base.missionProgress[missionId] ?? 0;
   if (current < def.target) return { error: "아직이에요" };
   if (def.paw <= 0) return { error: "받을 젤리가 없어요" };
-  const today = base.missionDateKey || toKstDateKey();
+  const today = base.missionDateKey || trustedKstDateKey();
   let pawBalance = base.pawBalance + def.paw;
   if (await serverJellyActive()) {
     await jellyEnqueue({
@@ -162,7 +168,19 @@ export async function claimMission(
   return { state: next, gained: def.paw };
 }
 
-export function listMissions(state: OpsState, economy: OpsEconomy, today = toKstDateKey()): MissionRow[] {
+/** True when every daily mission has reached its target today. */
+export function dailyMissionsCleared(
+  state: OpsState,
+  economy?: OpsEconomy,
+  today = trustedKstDateKey(),
+): boolean {
+  const base = reconcileMissions(state, economy, today);
+  if (base.missionDateKey !== today) return false;
+  const defs = missionDefs(economy);
+  return defs.length > 0 && defs.every((def) => (base.missionProgress[def.id] ?? 0) >= def.target);
+}
+
+export function listMissions(state: OpsState, economy: OpsEconomy, today = trustedKstDateKey()): MissionRow[] {
   const base = reconcileMissions(state, economy, today);
   return missionDefs(economy).map((def) => {
     const current = Math.min(def.target, Math.max(0, base.missionProgress[def.id] ?? 0));

@@ -783,6 +783,12 @@ export type OpsState = {
   inviteTicketKeys?: string[];
   /** Link welcome was shown once. */
   inviteWelcomeSeen?: boolean;
+  /** Successful draws per KST date, including ticket and tutorial draws. */
+  drawsByDate: Record<string, number>;
+  /** KST date of the last successful room visit. Restores today's room mission. */
+  lastRoomVisitDateKST: string;
+  /** Weekly mission log. Previous week stays until its chests are settled. */
+  weekly: import("./weeklyMissions").WeeklyBag | null;
   /** KST Monday date key for shop.tickets week window */
   ticketShopWeekKey: string;
   ticketShopWeekBought: number;

@@ -44,6 +44,8 @@ import {
   type RoomsFile,
 } from "../lib/roomCatalog";
 import { loadOpsState, saveOpsState } from "../lib/opsStorage";
+import { trustedKstDateKey } from "../lib/tossClock";
+import { noteWeeklyRoomSaved, refreshWeekly, saveWeeklyOps } from "../lib/weeklySync";
 import { HEART_BED_ID, syncHeartBed } from "../lib/heartBed";
 import { computeCozyPointsFromOwned, resolveCozyStatus } from "../lib/roomCozy";
 import { loadRoomCats } from "../lib/roomCats";
@@ -766,9 +768,11 @@ export function RoomScreen({
   const petFavorite = () => {
     void (async () => {
       const [ops, config] = await Promise.all([loadOpsState(), loadOpsConfig()]);
-      const next = noteCatLetterFlag(grantAffection(ops, config.economy, "pet"), "petted");
-      if (next === ops) return;
-      await saveOpsState(next);
+      const today = trustedKstDateKey();
+      const granted = grantAffection(ops, config.economy, "pet", today);
+      if (granted === ops) return;
+      const next = refreshWeekly(noteCatLetterFlag(granted, "petted"), config.economy, today);
+      await saveWeeklyOps(next);
       publishAffection(next);
     })();
   };
@@ -1184,13 +1188,24 @@ export function RoomScreen({
 
   const finishEditSaved = () => {
     if (!state) return;
-    if (previewRef.current) {
-      const cleared = cancelPreview(layout);
-      persist(patchCurrentRoom(state, cleared), "urgent");
-    } else {
-      persist(state, "urgent");
-    }
-    leaveEdit(true);
+    const nextState = previewRef.current ? patchCurrentRoom(state, cancelPreview(layout)) : state;
+    setState(nextState);
+    void (async () => {
+      try {
+        await saveRoomState(nextState, { server: "urgent" });
+      } catch {
+        try {
+          await saveRoomState(nextState, { server: "urgent" });
+        } catch {
+          showToast("방을 저장하지 못했어요", "error");
+          return;
+        }
+      }
+      leaveEdit(true);
+      const ops = await loadOpsState();
+      const marked = noteWeeklyRoomSaved(ops);
+      await saveWeeklyOps(marked);
+    })();
   };
 
   const applyEditUndo = () => {

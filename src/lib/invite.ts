@@ -2,6 +2,7 @@ import { Clipboard, Environment, Share, isMinVersionSupported } from "@apps-in-t
 import type { MenuRowView } from "./menuTypes";
 import type { OpsState } from "./opsTypes";
 import { adoptServerJelly } from "./serverJelly";
+import { noteWeeklyInvite, saveWeeklyOps } from "./weeklySync";
 import { saveToServer } from "./serverSave";
 import {
   acceptInvite,
@@ -306,6 +307,12 @@ async function applyClaim(state: OpsState, result: InviteClaimResult, status: In
   if (!host) return;
   if (result.jelly != null) adoptServerJelly(result.jelly);
   const withTickets = commitTickets(state, result.ticketKeys);
+  if (result.asInvitee || result.asInviter) {
+    const marked = noteWeeklyInvite(withTickets);
+    shadowOps = marked;
+    host.commit(marked);
+    void saveWeeklyOps(marked);
+  }
   if (result.asInvitee) {
     host.onInvitee(result.asInvitee.jelly, result.asInvitee.tickets);
   }

@@ -12,6 +12,8 @@ import { AudioManager } from "../audio/AudioManager";
 import { useBackHandler } from "../hooks/useBackHandler";
 import { useLoadingHold } from "../lib/loadingGate";
 import { jellyLabel } from "../lib/jellyLabel";
+import { ticketFractionLabel } from "../lib/weeklyMissions";
+import { WeeklyBoard } from "./WeeklyBoard";
 import { menuAsset } from "../lib/menuConfig";
 import { NCOIN_ICON, ncoinIcon } from "../lib/ncoinIcon";
 import { listClaimableDexRewards } from "../lib/dexRewards";
@@ -1240,14 +1242,14 @@ export function MenuPanel({
               }}
             />
             <div
-              className={`menu-sheet${sheet === "attendance" ? " is-attendance" : ""}${sheet === "invite" ? " is-invite" : ""}${sheet === "rewards" ? " is-rewards" : ""}${sheet === "rates" ? " is-rates" : ""}`}
+              className={`menu-sheet${sheet === "attendance" ? " is-attendance" : ""}${sheet === "invite" ? " is-invite" : ""}${sheet === "rewards" ? " is-rewards" : ""}${sheet === "rates" ? " is-rates" : ""}${sheet === "weekly" ? " is-weekly" : ""}`}
               onPointerDown={onSheetPointerDown}
               onPointerUp={onSheetPointerUp}
               style={{
                 minHeight:
                   sheet === "missions"
                     ? 480
-                    : sheet === "attendance" || sheet === "rewards" || sheet === "rates"
+                    : sheet === "attendance" || sheet === "rewards" || sheet === "rates" || sheet === "weekly"
                       ? undefined
                       : sheet === "ticketShop"
                         ? 520
@@ -1259,7 +1261,9 @@ export function MenuPanel({
               <div className="menu-grab" />
               <div className="menu-sheet-head">
                 <p className="menu-sheet-eye">
-                  {sheet === "invite"
+                  {sheet === "weekly"
+                    ? "WEEK"
+                    : sheet === "invite"
                     ? "INVITE"
                     : sheet === "missions"
                     ? "TODAY"
@@ -1278,7 +1282,9 @@ export function MenuPanel({
                               : "NOTICE"}
                 </p>
                 <h3 className="menu-sheet-title">
-                  {sheet === "invite"
+                  {sheet === "weekly"
+                    ? "주간 미션"
+                    : sheet === "invite"
                     ? "친구 초대"
                     : sheet === "missions"
                     ? "오늘의 미션"
@@ -1297,7 +1303,9 @@ export function MenuPanel({
                               : "공지·이벤트"}
                 </h3>
                 <p className="menu-sheet-desc">
-                  {sheet === "invite"
+                  {sheet === "weekly"
+                    ? "월요일 0시에 도장과 선물이 새로 시작해요"
+                    : sheet === "invite"
                     ? "친구가 행운냥에서 첫 카드를 뽑으면\n나도 친구도 같은 선물을 받아요."
                     : sheet === "missions"
                     ? "매일 밤 12시(한국 시간)에 새로워져요"
@@ -1332,6 +1340,9 @@ export function MenuPanel({
               <div className="menu-sheet-body">
                 {sheet === "invite" && inviteSnap.phase === "ready" ? (
                   <InviteSheet status={inviteSnap.status} lifetimeDraws={ops.lifetimeDraws ?? 0} />
+                ) : null}
+                {sheet === "weekly" && model ? (
+                  <WeeklyBoard ops={ops} economy={model.config.economy} onOpsChange={onOpsChange} />
                 ) : null}
                 {sheet === "missions" && model ? (
                   <ul className="mission-list">
@@ -1677,8 +1688,8 @@ export function MenuPanel({
                       </div>
                       <div className="ticket-shop-limit" role="listitem">
                         <span>보유</span>
-                        <b>
-                          {model.ticketShop.ticketsHeld}/{model.ticketShop.maxHold}
+                        <b className={model.ticketShop.ticketsHeld > model.ticketShop.maxHold ? "is-bonus" : undefined}>
+                          {ticketFractionLabel(model.ticketShop.ticketsHeld, model.ticketShop.maxHold)}
                         </b>
                       </div>
                     </div>

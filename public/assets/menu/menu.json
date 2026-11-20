@@ -53,6 +53,7 @@
    "label": "DAILY",
    "rows": [
     "missions",
+    "weeklyMissions",
     "attendance",
     "points",
     "exchange",
@@ -78,6 +79,12 @@
    "icon": "icon-stamp.svg",
    "enabled": true,
    "open": "sheet:missions"
+  },
+  "weeklyMissions": {
+   "label": "주간 미션",
+   "icon": "icon-weekly.svg",
+   "enabled": true,
+   "open": "sheet:weekly"
   },
   "attendance": {
    "label": "출석 체크",

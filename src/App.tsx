@@ -56,6 +56,15 @@ import { isOffline } from "./lib/network";
 import { useTossSafeArea } from "./lib/useTossSafeArea";
 import { isWeekendDoublePaw, loadOpsConfig } from "./lib/opsConfig";
 import { bumpMission, listMissions, reconcileMissions } from "./lib/dailyMissions";
+import { trustedKstDateKey } from "./lib/tossClock";
+import {
+  bindWeeklyApply,
+  bindWeeklyCelebrate,
+  refreshWeekly,
+  saveWeeklyOps,
+  settleWeeklyOnBoot,
+  type WeeklyCelebrate,
+} from "./lib/weeklySync";
 import { josa } from "./lib/josa";
 import { readDay7BonusConfig } from "./lib/attendanceServer";
 import {
@@ -138,6 +147,7 @@ import { CollectionScreen } from "./screens/CollectionScreen";
 import { AffectionHost } from "./components/AffectionHost";
 import { UpdateNotesPopup } from "./components/UpdateNotesPopup";
 import { InviteHost } from "./components/InviteHost";
+import { WeeklyClaimPop } from "./components/WeeklyClaimPop";
 import { noteInviteDraw } from "./lib/invite";
 import { CatLetterPaper } from "./components/CatLetterSheet";
 import {
@@ -281,6 +291,7 @@ export default function App() {
     setScreenState(next);
   }, []);
   const [menuOpen, setMenuOpen] = useState(initialMenuOpen);
+  const [weeklyCelebrate, setWeeklyCelebrate] = useState<WeeklyCelebrate | null>(null);
   const [menuIconDot, setMenuIconDot] = useState(false);
   const [dexClaimDot, setDexClaimDot] = useState(false);
   const [achvOpen, setAchvOpen] = useState(false);
@@ -412,8 +423,8 @@ export default function App() {
         ]);
         if (isTossApp()) void ensureGameUserHash();
         if (cancelled) return;
-        const nextOps = reconcileMissions(loadedOps, nextConfig.economy);
-        if (nextOps !== loadedOps) await saveOpsState(nextOps);
+        const reconciled = reconcileMissions(loadedOps, nextConfig.economy, trustedKstDateKey());
+        const nextOps = await settleWeeklyOnBoot(reconciled, nextConfig.economy);
         setConfig(nextConfig);
         setOps(nextOps);
         void syncWalletOnBoot();
@@ -586,10 +597,14 @@ export default function App() {
   const onRoomOpened = useCallback(() => {
     setOps((current) => {
       if (!current) return current;
-      const reset = applyOpsDailyReset(current);
-      const next = bumpMission(reset, "room_1");
-      if (next === current) return current;
-      void saveOpsState(next);
+      const today = trustedKstDateKey();
+      const reset = applyOpsDailyReset(current, today);
+      const visited = { ...reset, lastRoomVisitDateKST: today };
+      const next = refreshWeekly(bumpMission(visited, "room_1", 1, today), undefined, today);
+      if (next.lastRoomVisitDateKST === current.lastRoomVisitDateKST && next.missionProgress.room_1 === current.missionProgress.room_1) {
+        return current;
+      }
+      void saveWeeklyOps(next);
       return next;
     });
   }, []);
@@ -612,6 +627,13 @@ export default function App() {
     setOps(next);
     await saveOpsState(next);
   }, []);
+
+  useEffect(() => {
+    bindWeeklyApply((next) => {
+      void persistOps(next);
+    });
+    bindWeeklyCelebrate(setWeeklyCelebrate);
+  }, [persistOps]);
 
   const noteSeenDexCards = useCallback((ids: string[]) => {
     if (ids.length === 0) return;
@@ -2285,6 +2307,10 @@ export default function App() {
 
       {attendanceNotifyOffer.open ? (
         <AttendanceNotifyCard onClose={attendanceNotifyOffer.dismiss} />
+      ) : null}
+
+      {weeklyCelebrate ? (
+        <WeeklyClaimPop view={weeklyCelebrate} onClose={() => setWeeklyCelebrate(null)} />
       ) : null}
 
       {ops && config ? (

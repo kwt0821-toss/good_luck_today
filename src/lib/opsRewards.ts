@@ -1,7 +1,8 @@
 import { bumpMission } from "./dailyMissions";
 import { cardMatchesFavorite, grantAffection, publishAffection } from "./affection";
 import { noteCatLetterFlag } from "./catLetters";
-import { toKstDateKey } from "./date";
+import { trustedKstDateKey } from "./tossClock";
+import { noteWeeklyJellyAd, refreshWeekly, saveWeeklyOps, withTodayDraw } from "./weeklySync";
 import { loadDexCatalog } from "./dexCatalog";
 import { readDexOwnedForUpdate, saveDexOwned } from "./dexCollection";
 import type { DexCard, DexOwnedMap } from "./dexTypes";
@@ -62,7 +63,7 @@ export async function confirmDrawAfterAd(
 ): Promise<ConfirmDrawResult | { error: string }> {
   await delay(60);
   const config = await loadOpsConfig();
-  const today = toKstDateKey();
+  const today = trustedKstDateKey();
   let next = applyOpsDailyReset(state, today);
   const reservation = next.pendingDraw;
   if (!reservation || reservation.drawId !== drawId) {
@@ -186,12 +187,14 @@ export async function confirmDrawAfterAd(
       : duplicateRevealCopy(dupPaw);
   }
 
+  next = withTodayDraw(next, today);
   next = bumpMission({ ...next, pendingDraw: confirmed }, "draw_1", 1, today, config.economy);
+  next = refreshWeekly(next, config.economy, today);
   if (cardMatchesFavorite(card, next.affection?.catId)) {
     next = grantAffection(next, config.economy, "sameDraw", today);
     next = noteCatLetterFlag(next, "sameDraw");
   }
-  await saveOpsState(next);
+  await saveWeeklyOps(next);
   publishAffection(next);
   markDirtyUrgent();
 
@@ -239,7 +242,7 @@ export async function grantPawAdReward(
     return { error: "requestId가 필요해요" };
   }
   const config = await loadOpsConfig();
-  const today = toKstDateKey();
+  const today = trustedKstDateKey();
   let next = applyOpsDailyReset(state, today);
 
   const prior = (next.pawAdLedger ?? []).find((row) => row.requestId === requestId);
@@ -334,7 +337,8 @@ export async function grantPawAdReward(
       },
     ],
   };
-  await saveOpsState(next);
+  next = noteWeeklyJellyAd(next, config.economy, today);
+  await saveWeeklyOps(next);
   return {
     state: next,
     gained,
@@ -367,7 +371,7 @@ export async function claimAttendanceGift(
   state: OpsState,
 ): Promise<{ state: OpsState; itemId: string | null; error?: string; response?: import("./attendanceTypes").AttendanceClaimResponse }> {
   const { claimAttendanceOnServer } = await import("./attendanceServer");
-  const today = toKstDateKey();
+  const today = trustedKstDateKey();
   const next = applyOpsDailyReset(state, today);
   const result = await claimAttendanceOnServer(next);
   if (result.response.error) {
@@ -376,8 +380,12 @@ export async function claimAttendanceGift(
   const itemId =
     result.response.rewards.find((reward) => reward.kind === "item")?.itemId ?? null;
   const config = await loadOpsConfig();
-  const bumped = grantAffection(bumpMission(result.state, "attend_1"), config.economy, "attend", today);
-  await saveOpsState(bumped);
+  const bumped = refreshWeekly(
+    grantAffection(bumpMission(result.state, "attend_1"), config.economy, "attend", today),
+    config.economy,
+    today,
+  );
+  await saveWeeklyOps(bumped);
   publishAffection(bumped);
   markDirtyUrgent();
   return { state: bumped, itemId, response: result.response };
@@ -397,13 +405,17 @@ export async function claimAttendanceDay7(
   response: import("./attendanceTypes").AttendanceDay7ClaimResponse;
 }> {
   const { claimAttendanceDay7OnServer } = await import("./attendanceServer");
-  const today = toKstDateKey();
+  const today = trustedKstDateKey();
   const next = applyOpsDailyReset(state, today);
   const result = await claimAttendanceDay7OnServer(next, body);
   if (!result.response.ok) return result;
   const config = await loadOpsConfig();
-  const bumped = grantAffection(bumpMission(result.state, "attend_1"), config.economy, "attend", today);
-  await saveOpsState(bumped);
+  const bumped = refreshWeekly(
+    grantAffection(bumpMission(result.state, "attend_1"), config.economy, "attend", today),
+    config.economy,
+    today,
+  );
+  await saveWeeklyOps(bumped);
   publishAffection(bumped);
   markDirtyUrgent();
   return { state: bumped, response: result.response };

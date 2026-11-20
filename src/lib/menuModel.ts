@@ -15,6 +15,7 @@ import {
 import { displayNyangBalance, getWalletSnapshot, serverWalletActiveNow } from "./serverWallet";
 import { isWeekendDoublePaw, loadOpsConfig } from "./opsConfig";
 import { getTicketShopStatus } from "./mockTicketShop";
+import { pendingChestKinds, recountWeekly, ticketMenuLabel, weeklyMenuMeta } from "./weeklyMissions";
 import { remainingPawAds } from "./opsState";
 import type { OpsConfig, OpsState } from "./opsTypes";
 import { loadMenuConfig, menuAsset } from "./menuConfig";
@@ -136,6 +137,13 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
       } else {
         meta = `진행 ${reached}/${missions.length}`;
       }
+    } else if (id === "weeklyMissions") {
+      const log = ops.weekly?.current;
+      const stamps = log ? recountWeekly(log).stamps : 0;
+      const claimable = log ? pendingChestKinds(log, ops.weekly?.claimed ?? []).length : 0;
+      const weeklyMeta = weeklyMenuMeta(stamps, claimable);
+      meta = weeklyMeta.meta;
+      if (weeklyMeta.dot) badge = { type: "dot" };
     } else if (id === "attendance") {
       meta = attendance.canClaimToday
         ? `${Math.max(1, attendance.attendanceDays + 1)}일째 · 선물`
@@ -156,7 +164,7 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
       rowDisabled = duplicateCount <= 0;
     } else if (id === "ticketShop") {
       const shop = getTicketShopStatus(ops, config);
-      meta = `보유 ${shop.ticketsHeld}장`;
+      meta = ticketMenuLabel(shop.ticketsHeld);
     } else if (id === "rewards") {
       const shownNyang = displayNyangBalance(ops.nyangCoinBalance);
       meta =
