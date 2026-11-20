@@ -655,6 +655,130 @@ async function runBoot(): Promise<WalletView | null> {
   }
 }
 
+export type InviteFriendRow = {
+  n: number;
+  status: "joined" | "rewarded";
+  claimed: boolean;
+};
+
+export type InviteStatus = {
+  ok: true;
+  enabled: boolean;
+  code: string;
+  rules: { jelly: number; ticketFallbackJelly: number; monthLimit: number; dayLimit: number };
+  monthCount: number;
+  monthRewarded: number;
+  dayCount: number;
+  friends: InviteFriendRow[];
+  pendingInviter: number;
+  invited: boolean;
+  inviteeState: "none" | "joined" | "ready" | "claimed";
+  canEnterCode: boolean;
+  enterUntil: number | null;
+  ticketKeys: string[];
+};
+
+export type InviteGift = { jelly: number; tickets: number };
+
+export type InviteClaimResult = {
+  ok: true;
+  asInvitee: InviteGift | null;
+  asInviter: (InviteGift & { friends: number }) | null;
+  ticketKeys: string[];
+  jelly: number | null;
+};
+
+const INVITE_RETRY: Retry = { token: false, missing: false };
+
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string" && item.length > 0);
+}
+
+function parseInviteStatus(json: Record<string, unknown>): InviteStatus {
+  const rules = isRecord(json.rules) ? json.rules : {};
+  const state = json.inviteeState;
+  const inviteeState =
+    state === "joined" || state === "ready" || state === "claimed" || state === "none" ? state : "none";
+  const friends = Array.isArray(json.friends)
+    ? json.friends.flatMap((item) => {
+        if (!isRecord(item)) return [];
+        const status = item.status === "rewarded" ? "rewarded" : "joined";
+        return [{ n: num(item.n), status, claimed: item.claimed === true } satisfies InviteFriendRow];
+      })
+    : [];
+  return {
+    ok: true,
+    enabled: json.enabled === true,
+    code: typeof json.code === "string" ? json.code : "",
+    rules: {
+      jelly: num(rules.jelly, 150),
+      ticketFallbackJelly: num(rules.ticketFallbackJelly, 200),
+      monthLimit: num(rules.monthLimit, 10),
+      dayLimit: num(rules.dayLimit, 3),
+    },
+    monthCount: num(json.monthCount),
+    monthRewarded: num(json.monthRewarded),
+    dayCount: num(json.dayCount),
+    friends,
+    pendingInviter: num(json.pendingInviter),
+    invited: json.invited === true,
+    inviteeState,
+    canEnterCode: json.canEnterCode === true,
+    enterUntil: typeof json.enterUntil === "number" ? json.enterUntil : null,
+    ticketKeys: stringList(json.ticketKeys),
+  };
+}
+
+function parseGift(value: unknown): InviteGift | null {
+  if (!isRecord(value)) return null;
+  return { jelly: num(value.jelly), tickets: num(value.tickets) };
+}
+
+/** invite_status. Works before a save exists. Does not create one. */
+export async function fetchInviteStatus(): Promise<
+  InviteStatus | { ok: false; error: string; network?: boolean }
+> {
+  const result = await postWallet("invite_status", {}, DEFAULT_MS, false, INVITE_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  return parseInviteStatus(result.json);
+}
+
+/** invite_accept. Creates a save first when the server says it is missing. */
+export async function acceptInvite(
+  code: string,
+  via: "link" | "code",
+): Promise<{ ok: true } | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet("invite_accept", { code, via }, DEFAULT_MS, true, INVITE_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  return { ok: true };
+}
+
+/** invite_claim. The same gift is granted once, no matter how often this is called. */
+export async function claimInvite(
+  ticketsHeld: number,
+): Promise<InviteClaimResult | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet(
+    "invite_claim",
+    { ticketsHeld },
+    DEFAULT_MS,
+    true,
+    INVITE_RETRY,
+  );
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const json = result.json;
+  const invitee = parseGift(json.asInvitee);
+  const inviterGift = parseGift(json.asInviter);
+  const friends = isRecord(json.asInviter) ? num(json.asInviter.friends) : 0;
+  return {
+    ok: true,
+    asInvitee: invitee,
+    asInviter: inviterGift ? { ...inviterGift, friends } : null,
+    ticketKeys: stringList(json.ticketKeys),
+    jelly: typeof json.jelly === "number" ? json.jelly : null,
+  };
+}
+
 export function applyWalletViewToOps(state: OpsState, view: WalletView): OpsState {
   if (!view.migrated) return state;
   const userHash = readStoredGameUserHash() || undefined;

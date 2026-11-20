@@ -41,6 +41,8 @@ export function createDefaultOpsState(config: OpsConfig, today = toKstDateKey())
     attendanceClaimed: 0,
     lastAttendanceDateKey: "",
     rateUpTickets: 0,
+    inviteTicketKeys: [],
+    inviteWelcomeSeen: false,
     ticketShopWeekKey: toKstMondayWeekKey(),
     ticketShopWeekBought: 0,
     ticketShopDayKey: today,

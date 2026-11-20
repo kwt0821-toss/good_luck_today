@@ -190,10 +190,10 @@
   "invite": {
    "label": "친구 초대",
    "icon": "icon-invite.svg",
-   "enabled": false,
+   "enabled": true,
    "open": "sheet:invite",
    "disabledPill": "준비 중",
-   "data": "economy.json → events.friendInvite (enabled=false)",
+   "data": "economy.json → events.friendInvite",
    "enableWhen": "economy.events.friendInvite.enabled == true"
   },
   "settings": {

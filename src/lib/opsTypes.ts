@@ -310,9 +310,12 @@ export type OpsEconomy = {
     };
     friendInvite?: {
       enabled: boolean;
-      inviterPaw?: number;
-      inviteePaw?: number;
+      jelly?: number;
+      ticket?: number;
+      ticketFallbackJelly?: number;
       maxPerMonth?: number;
+      maxPerDay?: number;
+      codeEntryHours?: number;
       grantOn?: string;
     };
   };
@@ -776,6 +779,10 @@ export type OpsState = {
   /** @deprecated use lastAttendDateKST */
   lastAttendanceDateKey: string;
   rateUpTickets: number;
+  /** Invite ticket grants already applied. Newest keys stay, capped at 50. */
+  inviteTicketKeys?: string[];
+  /** Link welcome was shown once. */
+  inviteWelcomeSeen?: boolean;
   /** KST Monday date key for shop.tickets week window */
   ticketShopWeekKey: string;
   ticketShopWeekBought: number;

@@ -137,6 +137,8 @@ import { useExitConfirmOnBack } from "./hooks/useExitConfirmOnBack";
 import { CollectionScreen } from "./screens/CollectionScreen";
 import { AffectionHost } from "./components/AffectionHost";
 import { UpdateNotesPopup } from "./components/UpdateNotesPopup";
+import { InviteHost } from "./components/InviteHost";
+import { noteInviteDraw } from "./lib/invite";
 import { CatLetterPaper } from "./components/CatLetterSheet";
 import {
   loadCatLetters,
@@ -1101,6 +1103,7 @@ export default function App() {
             ? { ...confirmed.state, tutorialStep: Math.max(confirmed.state.tutorialStep, 2) }
             : confirmed.state;
         await persistOps(persisted);
+        void noteInviteDraw(persisted);
         if (slot === "tutorial" && persisted.tutorialStep !== reserved.state.tutorialStep) {
           noteTutorialStep(persisted.tutorialStep);
         }
@@ -1222,6 +1225,7 @@ export default function App() {
       return;
     }
     await persistOps(confirmed.state);
+    void noteInviteDraw(confirmed.state);
     if (takeOnce(trackedAdRewardRef.current, rewardKey)) {
       track("ad_complete", {
         placement: adPlacementOf(session),
@@ -2283,6 +2287,25 @@ export default function App() {
         <AttendanceNotifyCard onClose={attendanceNotifyOffer.dismiss} />
       ) : null}
 
+      {ops && config ? (
+        <InviteHost
+          ops={ops}
+          maxHold={config.economy.tickets?.rateUpTicket.maxHold ?? 3}
+          canShowWelcome={
+            ops.tutorialDone &&
+            !showUpdateNotes &&
+            !featureIntro &&
+            !(letterVisit && !letterClosed)
+          }
+          onOpsChange={(next) => {
+            void persistOps(next);
+          }}
+          onGoDraw={() => {
+            setMenuOpen(false);
+            setScreen({ name: "home" });
+          }}
+        />
+      ) : null}
       <NyangNotifyHost dock={menuOpen && !attendanceNotifyOffer.open ? "bottom" : "top"} />
       <ServerSaveDebug />
       {showDevBack ? <DevBackButton /> : null}

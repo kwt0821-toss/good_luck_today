@@ -769,11 +769,13 @@
       "window": "시즌 기간에만 상점 노출, 보유자는 계속 사용"
     },
     "friendInvite": {
-      "enabled": false,
-      "_proposal": true,
-      "inviterPaw": 100,
-      "inviteePaw": 100,
+      "enabled": true,
+      "jelly": 150,
+      "ticket": 1,
+      "ticketFallbackJelly": 200,
       "maxPerMonth": 10,
+      "maxPerDay": 3,
+      "codeEntryHours": 72,
       "grantOn": "초대받은 친구의 첫 뽑기 완료"
     }
   },

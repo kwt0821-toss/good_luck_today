@@ -73,6 +73,14 @@ import { BannerAdSlot } from "./BannerAdSlot";
 import { HelpEarnSheet } from "./HelpEarnSheet";
 import { NyChip } from "./NyChip";
 import { WithdrawCelebration, walletCopy, withdrawFailSub } from "./WithdrawCelebration";
+import { InviteSheet } from "./InviteSheet";
+import {
+  inviteRowView,
+  markInviteOpened,
+  readInviteSnap,
+  refreshInvite,
+  subscribeInviteSnap,
+} from "../lib/invite";
 import "./MenuPanel.css";
 
 type RewardsView = "inbox" | "confirm" | "success" | "history";
@@ -168,6 +176,7 @@ export function MenuPanel({
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
   const [withdrawBusy, setWithdrawBusy] = useState(false);
+  const [inviteSnap, setInviteSnap] = useState(readInviteSnap);
   const [sendDialog, setSendDialog] = useState<
     | { mode: "done"; coins: number; left: number; allDone: boolean }
     | { mode: "pending"; coins: number }
@@ -331,6 +340,7 @@ export function MenuPanel({
       setExchangeView("summary");
       setExchangeBusy(false);
     }
+    if (id === "invite") markInviteOpened();
     AudioManager.playSfx("sheet-open");
     requestAnimationFrame(() => setSheetOpen(true));
     onSheetOpen?.(id);
@@ -434,6 +444,13 @@ export function MenuPanel({
   };
 
   useBackHandler(open, requestClose, 20);
+
+  useEffect(() => subscribeInviteSnap(setInviteSnap), []);
+
+  useEffect(() => {
+    if (!open) return;
+    void refreshInvite("menu");
+  }, [open]);
 
   useEffect(() => {
     if (sheet !== "rewards") return;
@@ -1094,18 +1111,20 @@ export function MenuPanel({
               {model.sections.map((section) => (
                 <section key={section.id}>
                   <p className="menu-section-label">{section.label}</p>
-                  {section.rows.map((row, index) => (
+                  {section.rows.map((row, index) => {
+                    const view = row.id === "invite" ? inviteRowView(row, inviteSnap) : row;
+                    return (
                     <button
                       key={row.id}
                       id={`menu-row-${row.id}`}
                       type="button"
-                      className={`menu-row ${row.id === "points" ? "is-points" : ""} ${row.enabled ? "" : "is-disabled"} ${highlightRowId === row.id ? (reduce ? "is-highlight-still" : "is-highlight") : ""}`}
+                      className={`menu-row ${row.id === "points" ? "is-points" : ""} ${row.id === "invite" ? "is-invite" : ""} ${view.enabled ? "" : "is-disabled"} ${highlightRowId === row.id ? (reduce ? "is-highlight-still" : "is-highlight") : ""}`}
                       style={{ animationDelay: reduce ? "0ms" : `${index * 30}ms` }}
-                      onClick={() => onRow(row.open, row.enabled, row.id)}
+                      onClick={() => onRow(view.open, view.enabled, row.id)}
                     >
                       <span className="menu-row-icon">
                         <img src={row.icon} alt="" />
-                        {row.badge.type === "dot" ? <span className="menu-dot" /> : null}
+                        {view.badge.type === "dot" ? <span className="menu-dot" /> : null}
                       </span>
                       {row.id === "points" ? (
                         <span className="menu-points-copy">
@@ -1152,23 +1171,24 @@ export function MenuPanel({
                       )}
                       {row.id === "points" ? null : (
                         <span className="menu-row-meta">
-                          {row.badge.type === "pill" || row.badge.type === "pill-new" ? (
+                          {view.badge.type === "pill" || view.badge.type === "pill-new" ? (
                             <span
-                              className={`menu-pill ${row.badge.type === "pill-new" ? "is-new" : ""} ${row.badge.type === "pill" && row.badge.tone === "muted" ? "is-muted" : ""}`}
+                              className={`menu-pill ${view.badge.type === "pill-new" ? "is-new" : ""} ${view.badge.type === "pill" && view.badge.tone === "muted" ? "is-muted" : ""}`}
                             >
-                              {row.badge.text}
+                              {view.badge.text}
                             </span>
                           ) : null}
-                          {row.meta ? <span>{formatMeta(row.meta)}</span> : null}
+                          {view.meta ? <span>{formatMeta(view.meta)}</span> : null}
                         </span>
                       )}
-                      {row.chevron ? (
+                      {view.chevron ? (
                         <img className="menu-chevron" src={menuAsset("icon-chevron.svg")} alt="" />
                       ) : (
                         <span />
                       )}
                     </button>
-                  ))}
+                    );
+                  })}
                 </section>
               ))}
             </div>
@@ -1198,7 +1218,7 @@ export function MenuPanel({
               }}
             />
             <div
-              className={`menu-sheet${sheet === "attendance" ? " is-attendance" : ""}`}
+              className={`menu-sheet${sheet === "attendance" ? " is-attendance" : ""}${sheet === "invite" ? " is-invite" : ""}`}
               onPointerDown={onSheetPointerDown}
               onPointerUp={onSheetPointerUp}
               style={{
@@ -1219,7 +1239,9 @@ export function MenuPanel({
               <div className="menu-grab" />
               <div className="menu-sheet-head">
                 <p className="menu-sheet-eye">
-                  {sheet === "missions"
+                  {sheet === "invite"
+                    ? "INVITE"
+                    : sheet === "missions"
                     ? "TODAY"
                     : sheet === "attendance"
                     ? model.menu.sheets.attendance.eyebrow
@@ -1236,7 +1258,9 @@ export function MenuPanel({
                               : "NOTICE"}
                 </p>
                 <h3 className="menu-sheet-title">
-                  {sheet === "missions"
+                  {sheet === "invite"
+                    ? "친구 초대"
+                    : sheet === "missions"
                     ? "오늘의 미션"
                     : sheet === "attendance"
                     ? model.menu.sheets.attendance.title
@@ -1253,7 +1277,9 @@ export function MenuPanel({
                               : "공지·이벤트"}
                 </h3>
                 <p className="menu-sheet-desc">
-                  {sheet === "missions"
+                  {sheet === "invite"
+                    ? "친구가 행운냥에서 첫 카드를 뽑으면\n나도 친구도 같은 선물을 받아요."
+                    : sheet === "missions"
                     ? "매일 밤 12시(한국 시간)에 새로워져요"
                     : sheet === "attendance"
                     ? (attCopy?.desc ?? model.menu.sheets.attendance.desc ?? "").replace(
@@ -1284,6 +1310,9 @@ export function MenuPanel({
               </div>
 
               <div className="menu-sheet-body">
+                {sheet === "invite" && inviteSnap.phase === "ready" ? (
+                  <InviteSheet status={inviteSnap.status} lifetimeDraws={ops.lifetimeDraws ?? 0} />
+                ) : null}
                 {sheet === "missions" && model ? (
                   <ul className="mission-list">
                     {listMissions(ops, model.config.economy).map((mission) => {

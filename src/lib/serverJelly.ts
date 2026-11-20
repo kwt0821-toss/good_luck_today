@@ -179,6 +179,14 @@ function emit() {
   listeners.forEach((listener) => listener());
 }
 
+/** Use a jelly balance the wallet function just returned. Does not add a reward on top. */
+export function adoptServerJelly(jelly: number) {
+  if (!Number.isFinite(jelly)) return;
+  const value = Math.max(0, Math.floor(jelly));
+  rememberJelly(value);
+  publishSnapshot(value, true);
+}
+
 function publishSnapshot(jelly: number, jellyMigrated: boolean) {
   snapshot = { jelly, jellyMigrated, fetchedAt: Date.now() };
   rememberJelly(jelly);

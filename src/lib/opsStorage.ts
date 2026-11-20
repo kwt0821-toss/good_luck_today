@@ -351,6 +351,8 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
       notifyAttendance: normalizeNotifyAttendance(
         isRecord(parsed.notifyAttendance) ? parsed.notifyAttendance : fallback.notifyAttendance,
       ),
+      inviteTicketKeys: parseStringArray(parsed.inviteTicketKeys).slice(-50),
+      inviteWelcomeSeen: parsed.inviteWelcomeSeen === true,
       devForceCozyLevel: null,
     };
   } catch {
