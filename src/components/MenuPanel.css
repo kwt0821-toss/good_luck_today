@@ -756,22 +756,11 @@ button.menu-dim:focus-visible {
   overflow-y: auto;
   margin-top: 16px;
   padding-bottom: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(243, 233, 215, 0.38) transparent;
+  scrollbar-width: none;
 }
 
 .menu-sheet-body::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.menu-sheet-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.menu-sheet-body::-webkit-scrollbar-thumb {
-  background: rgba(243, 233, 215, 0.38);
-  border-radius: 99px;
+  display: none;
 }
 
 .menu-sheet-cta {
@@ -839,9 +828,14 @@ button.menu-dim:focus-visible {
 }
 
 .menu-sheet-footer .menu-sheet-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   height: 46px;
   margin: 6px 0;
   font-size: 14px;
+  text-align: center;
 }
 
 .menu-sheet-footer .menu-sheet-note {
@@ -1733,8 +1727,82 @@ button.menu-dim:focus-visible {
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin-top: 12px;
+  margin: 8px 0 0;
   text-align: center;
+}
+
+.menu-sheet.is-rewards {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.menu-sheet.is-rewards .menu-sheet-body {
+  margin-top: 10px;
+  padding-bottom: 0;
+}
+
+.menu-sheet.is-rewards .wallet-card {
+  margin: 0 0 10px;
+  padding: 10px 14px;
+}
+
+.menu-sheet.is-rewards .wallet-card-value {
+  margin-top: 4px;
+}
+
+.menu-sheet.is-rewards .withdraw-picker {
+  margin-bottom: 8px;
+}
+
+.menu-sheet.is-rewards .wallet-stepper {
+  margin: 0 0 8px;
+  padding: 4px;
+}
+
+.menu-sheet.is-rewards .wallet-policy {
+  line-height: 1.35;
+}
+
+.menu-sheet.is-rewards .rates-note {
+  margin-top: 6px;
+}
+
+.menu-sheet.is-rewards .wallet-history-link {
+  margin-top: 4px;
+}
+
+.menu-sheet.is-rewards > .menu-sheet-cta {
+  margin-bottom: 12px;
+}
+
+.menu-sheet.is-rates .menu-sheet-title {
+  margin-top: 4px;
+}
+
+.menu-sheet.is-rates .menu-sheet-desc {
+  margin-top: 4px;
+}
+
+.menu-sheet.is-rates .menu-sheet-body {
+  margin-top: 8px;
+  padding-bottom: 2px;
+}
+
+.menu-sheet.is-rates .rates-table th {
+  padding-bottom: 4px;
+}
+
+.menu-sheet.is-rates .rates-table td {
+  height: 28px;
+}
+
+.menu-sheet.is-rates .rates-table-disclosure .rates-row-detail td {
+  height: auto;
+  padding-bottom: 6px;
+}
+
+.menu-sheet.is-rates .menu-sheet-body p {
+  margin-top: 6px;
+  margin-bottom: 0;
 }
 
 .wallet-history-link {

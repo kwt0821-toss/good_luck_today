@@ -1218,22 +1218,20 @@ export function MenuPanel({
               }}
             />
             <div
-              className={`menu-sheet${sheet === "attendance" ? " is-attendance" : ""}${sheet === "invite" ? " is-invite" : ""}`}
+              className={`menu-sheet${sheet === "attendance" ? " is-attendance" : ""}${sheet === "invite" ? " is-invite" : ""}${sheet === "rewards" ? " is-rewards" : ""}${sheet === "rates" ? " is-rates" : ""}`}
               onPointerDown={onSheetPointerDown}
               onPointerUp={onSheetPointerUp}
               style={{
                 minHeight:
                   sheet === "missions"
                     ? 480
-                    : sheet === "attendance"
+                    : sheet === "attendance" || sheet === "rewards" || sheet === "rates"
                       ? undefined
-                      : sheet === "rates"
-                        ? 640
-                        : sheet === "ticketShop"
+                      : sheet === "ticketShop"
+                        ? 520
+                        : sheet === "settings"
                           ? 520
-                          : sheet === "settings"
-                            ? 520
-                            : 420,
+                          : 420,
               }}
             >
               <div className="menu-grab" />
@@ -2022,7 +2020,6 @@ export function MenuPanel({
 
               {sheet === "attendance" ? (
                 <div className="menu-sheet-footer">
-                  <BannerAdSlot placement="attendance" />
                   {isWeeklyDay7Claim ? (
                     <div className="att-day7-actions">
                       <button
@@ -2072,6 +2069,7 @@ export function MenuPanel({
                   <p className="menu-sheet-note">
                     {attCopy?.note ?? model.menu.sheets.attendance.note ?? ""}
                   </p>
+                  <BannerAdSlot placement="attendance" />
                 </div>
               ) : null}
 

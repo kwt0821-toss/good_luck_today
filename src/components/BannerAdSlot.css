@@ -17,8 +17,8 @@
 }
 
 .banner-ad-slot.is-shown[data-placement="rewards"] {
-  margin-top: 24px;
-  margin-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  margin-top: 12px;
+  margin-bottom: 8px;
 }
 
 .menu-sheet-body .banner-ad-slot,
