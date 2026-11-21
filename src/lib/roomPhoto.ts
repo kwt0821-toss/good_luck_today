@@ -1,5 +1,9 @@
 import { toKstDateKey } from "./date";
 import { roomAsset } from "./roomCatalog";
+import { functionEndpoint, readSaveToken, refreshSaveToken } from "./serverSave";
+import { resolveWalletMode } from "./serverWallet";
+import { isTossApp } from "./tossEnv";
+import { ensureGameUserHash } from "./user";
 
 export type PhotoFrame = {
   id: string;
@@ -388,6 +392,96 @@ function drawBit(ctx: CanvasRenderingContext2D, bit: HTMLElement, rootRect: DOMR
   );
   ctx.fill();
   ctx.restore();
+}
+
+/** Small JPEG for the visit list. The data-URL prefix is already removed. */
+export function canvasToJpeg(source: HTMLCanvasElement, maxEdge = 720, quality = 0.72): string {
+  const longest = Math.max(source.width, source.height, 1);
+  const scale = Math.min(1, maxEdge / longest);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(source.width * scale));
+  canvas.height = Math.max(1, Math.round(source.height * scale));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+  ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+  const url = canvas.toDataURL("image/jpeg", quality);
+  const comma = url.indexOf(",");
+  return comma >= 0 ? url.slice(comma + 1) : url;
+}
+
+function bareBase64(value: string): string {
+  const comma = value.indexOf(",");
+  if (value.startsWith("data:") && comma >= 0) return value.slice(comma + 1);
+  return value.trim();
+}
+
+function photoLimited(error: string, status: number): boolean {
+  if (status === 429) return true;
+  return /limit|quota|too_many|daily|photo_cap/i.test(error);
+}
+
+export type RoomPhotoUpload =
+  | { ok: true }
+  | { ok: false; error: string; limit?: boolean; network?: boolean };
+
+/** room-photo upload. One token refresh, then stop. Does not log the image or the hash. */
+export async function uploadRoomPhoto(imageBase64: string): Promise<RoomPhotoUpload> {
+  const image = bareBase64(imageBase64);
+  if (!image) return { ok: false, error: "empty" };
+  if ((await resolveWalletMode()) !== "server") return { ok: false, error: "local" };
+  const target = functionEndpoint("room-photo");
+  if (!target || !isTossApp()) return { ok: false, error: "local" };
+  const identity = await ensureGameUserHash();
+  if (!identity.ok || !identity.hash || identity.hash === "local-dev") {
+    return { ok: false, error: "local" };
+  }
+  const send = async (token: string | null): Promise<RoomPhotoUpload> => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      apikey: target.apikey,
+    };
+    if (token) headers["x-save-token"] = token;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 12_000);
+    try {
+      const response = await fetch(target.url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          action: "upload",
+          hash: identity.hash,
+          mime: "image/jpeg",
+          imageBase64: image,
+        }),
+        signal: controller.signal,
+      });
+      let json: unknown = null;
+      try {
+        json = await response.json();
+      } catch {
+        json = null;
+      }
+      const record = json && typeof json === "object" ? (json as Record<string, unknown>) : null;
+      if (record && record.ok === true) return { ok: true };
+      const error =
+        record && typeof record.error === "string" && record.error ? record.error : `http_${response.status}`;
+      return {
+        ok: false,
+        error,
+        limit: photoLimited(error, response.status),
+        network: response.status === 0,
+      };
+    } catch {
+      return { ok: false, error: "network", network: true };
+    } finally {
+      window.clearTimeout(timer);
+    }
+  };
+  const first = await send(await readSaveToken());
+  if (first.ok || first.error !== "save_token_invalid") return first;
+  const next = await refreshSaveToken();
+  if (!next) return first;
+  return send(next);
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {

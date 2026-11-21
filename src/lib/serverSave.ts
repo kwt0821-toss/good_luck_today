@@ -121,7 +121,9 @@ function reportSaveFailed(code: string) {
   console.info(`[serverSave] ${kind} code=${code}`);
 }
 
-export function functionEndpoint(name: "game-save" | "wallet"): { url: string; apikey: string } | null {
+export function functionEndpoint(
+  name: "game-save" | "wallet" | "room-photo",
+): { url: string; apikey: string } | null {
   const rawUrl = import.meta.env.VITE_SUPABASE_URL;
   const rawKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   const url = typeof rawUrl === "string" ? rawUrl.trim().replace(/\/$/, "") : "";

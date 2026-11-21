@@ -9,6 +9,9 @@ import {
 } from "./serverSave";
 import { isTossApp } from "./tossEnv";
 import { ensureGameUserHash, readStoredGameUserHash } from "./user";
+import type { RoomRecord } from "./roomTypes";
+import { normalizeRoomCatIds } from "./roomStore";
+import { normalizeFloorTiles, normalizeWallTiles } from "./roomTiles";
 
 /**
  * 폰은 요청만 보낸다. 잔액·금액·한도·날짜는 서버 지갑이 정한다.
@@ -1033,6 +1036,199 @@ export async function claimMailboxAll(body: {
     jellyBalance: balanceOrNull(json.jellyBalance),
     nyangCoinBalance: balanceOrNull(json.nyangCoinBalance),
     unclaimedCount: num(json.unclaimedCount),
+  };
+}
+
+const VISIT_RETRY = { token: false, missing: false } as const;
+
+export type VisitStatus = {
+  roomId: string;
+  nickname: string;
+  hasNickname: boolean;
+  isPublic: boolean;
+  photoLive: boolean;
+  hasLayout: boolean;
+  canPublish: boolean;
+  likeJelly: number;
+  photoDays: number;
+  canChangeNickname: boolean;
+};
+
+export type VisitCard = {
+  roomId: string;
+  nickname: string;
+  likes: number;
+  photoUrl: string;
+  likedByMe: boolean;
+};
+
+export type VisitLayout = {
+  currentRoomId: string;
+  cozyLevel: number;
+  shadowsEnabled: boolean;
+  room: RoomRecord;
+};
+
+export type VisitRoom = {
+  roomId: string;
+  nickname: string;
+  likes: number;
+  photoUrl: string;
+  likedByMe: boolean;
+  isMine: boolean;
+  layout: VisitLayout | null;
+};
+
+export type VisitLikeResult = {
+  already: boolean;
+  roomId: string;
+  likes: number;
+  likedByMe: boolean;
+  jellyGranted: boolean;
+  jelly: number;
+  jellyBalance: number | null;
+  likeJelly: number;
+};
+
+type VisitFail = { ok: false; error: string; network?: boolean };
+
+function visitText(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function parseVisitStatus(json: Record<string, unknown>): VisitStatus {
+  const nickname = visitText(json.nickname).trim();
+  return {
+    roomId: visitText(json.roomId),
+    nickname,
+    hasNickname: json.hasNickname === true || nickname.length > 0,
+    isPublic: json.isPublic === true,
+    photoLive: json.photoLive === true,
+    hasLayout: json.hasLayout === true,
+    canPublish: json.canPublish === true,
+    likeJelly: Math.max(0, num(json.likeJelly, 5)),
+    photoDays: Math.max(1, num(json.photoDays, 30)),
+    canChangeNickname: json.canChangeNickname !== false,
+  };
+}
+
+function parseVisitCard(value: unknown): VisitCard | null {
+  if (!isRecord(value)) return null;
+  const roomId = visitText(value.roomId);
+  if (!roomId) return null;
+  const nickname = visitText(value.nickname).trim();
+  return {
+    roomId,
+    nickname,
+    likes: Math.max(0, num(value.likes)),
+    photoUrl: visitText(value.photoUrl),
+    likedByMe: value.likedByMe === true,
+  };
+}
+
+function asObjectList(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function parseVisitLayout(value: unknown): VisitLayout | null {
+  if (!isRecord(value) || !isRecord(value.room)) return null;
+  const room = value.room;
+  return {
+    currentRoomId: visitText(value.currentRoomId) || "cottage",
+    cozyLevel: Math.max(0, num(value.cozyLevel)),
+    shadowsEnabled: value.shadowsEnabled !== false,
+    room: {
+      floor: asObjectList(room.floor) as RoomRecord["floor"],
+      walls: asObjectList(room.walls) as RoomRecord["walls"],
+      wallpaper: visitText(room.wallpaper),
+      floorSkin: visitText(room.floorSkin),
+      floorTiles: normalizeFloorTiles(room.floorTiles),
+      wallTiles: normalizeWallTiles(room.wallTiles),
+      roamingCatIds: normalizeRoomCatIds(room.roamingCatIds),
+    },
+  };
+}
+
+/** visit_status. Works before a save. Does not create one. */
+export async function visitStatus(): Promise<{ ok: true; status: VisitStatus } | VisitFail> {
+  const result = await postWallet("visit_status", {}, DEFAULT_MS, false, VISIT_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  return { ok: true, status: parseVisitStatus(result.json) };
+}
+
+/** visit_set_nickname. The server rejects profanity and a second change on the same KST day. */
+export async function visitSetNickname(
+  nickname: string,
+): Promise<{ ok: true; status: VisitStatus } | VisitFail> {
+  const result = await postWallet("visit_set_nickname", { nickname }, DEFAULT_MS, true, VISIT_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  return { ok: true, status: parseVisitStatus(result.json) };
+}
+
+/** visit_set_public. Turning on requires a nickname, a recent photo, and a saved layout. */
+export async function visitSetPublic(
+  isPublic: boolean,
+): Promise<{ ok: true; status: VisitStatus } | VisitFail> {
+  const result = await postWallet("visit_set_public", { isPublic }, DEFAULT_MS, true, VISIT_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  return { ok: true, status: parseVisitStatus(result.json) };
+}
+
+/** visit_sync_layout. The server re-reads the saved room. The layout is not sent here. */
+export async function visitSyncLayout(): Promise<{ ok: true } | VisitFail> {
+  const result = await postWallet("visit_sync_layout", {}, DEFAULT_MS, false, VISIT_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  return { ok: true };
+}
+
+/** visit_list. Own room is omitted. Browsing does not create a save. */
+export async function visitList(
+  tab: "friends" | "today" | "popular",
+): Promise<{ ok: true; tab: string; items: VisitCard[] } | VisitFail> {
+  const result = await postWallet("visit_list", { tab }, DEFAULT_MS, false, VISIT_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const items = asObjectList(result.json.items)
+    .map(parseVisitCard)
+    .filter((item): item is VisitCard => item != null);
+  return { ok: true, tab: visitText(result.json.tab) || tab, items };
+}
+
+/** visit_get. `layout.room` is what the visit screen draws. */
+export async function visitGet(roomId: string): Promise<{ ok: true; room: VisitRoom } | VisitFail> {
+  const result = await postWallet("visit_get", { roomId }, DEFAULT_MS, false, VISIT_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const json = result.json;
+  return {
+    ok: true,
+    room: {
+      roomId: visitText(json.roomId) || roomId,
+      nickname: visitText(json.nickname).trim(),
+      likes: Math.max(0, num(json.likes)),
+      photoUrl: visitText(json.photoUrl),
+      likedByMe: json.likedByMe === true,
+      isMine: json.isMine === true,
+      layout: parseVisitLayout(json.layout),
+    },
+  };
+}
+
+/** visit_like. A repeat like returns already:true and jelly 0. */
+export async function visitLike(roomId: string): Promise<{ ok: true; like: VisitLikeResult } | VisitFail> {
+  const result = await postWallet("visit_like", { roomId }, DEFAULT_MS, true, VISIT_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const json = result.json;
+  return {
+    ok: true,
+    like: {
+      already: json.already === true,
+      roomId: visitText(json.roomId) || roomId,
+      likes: Math.max(0, num(json.likes)),
+      likedByMe: json.likedByMe !== false,
+      jellyGranted: json.jellyGranted === true,
+      jelly: Math.max(0, num(json.jelly)),
+      jellyBalance: balanceOrNull(json.jellyBalance),
+      likeJelly: Math.max(0, num(json.likeJelly, 5)),
+    },
   };
 }
 

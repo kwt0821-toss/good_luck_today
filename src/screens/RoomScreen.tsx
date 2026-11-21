@@ -23,6 +23,7 @@ import { withJosa } from "../lib/josa";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
 import { RoomDrawer, type DrawerItemMeta } from "../components/RoomDrawer";
 import { RoomPhotoSheet } from "../components/RoomPhotoSheet";
+import { RoomVisitScreen } from "../components/RoomVisitScreen";
 import { RoomWorld } from "../components/RoomWorld";
 import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
 import { loadDexOwned } from "../lib/dexCollection";
@@ -51,6 +52,7 @@ import { computeCozyPointsFromOwned, resolveCozyStatus } from "../lib/roomCozy";
 import { loadRoomCats } from "../lib/roomCats";
 import type { OpsState } from "../lib/opsTypes";
 import {
+  canvasToJpeg,
   captureRoomIsland,
   composeRoomCard,
   loadPhotoFrames,
@@ -62,6 +64,7 @@ import {
 import { claimRoomSetReward, roomSetCue, roomSetFor, roomSetViews, type RoomSetView } from "../lib/roomSets";
 import { applyOpsPrices, grantUnlockRewards, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import { displayJellyBalance, jellySpend, serverJellyActive, subscribeJelly } from "../lib/serverJelly";
+import { refreshVisitStatus, syncVisitLayoutIfPublic } from "../lib/roomVisit";
 import { furnitureDepthKey } from "../lib/roomCat";
 import { useRoomPeriod } from "../lib/roomTime";
 import {
@@ -432,6 +435,7 @@ export function RoomScreen({
   const islandShotRef = useRef<HTMLCanvasElement | null>(null);
   const photoCardRef = useRef<{ png: string; base64: string; blob: Blob } | null>(null);
   const [photoOpen, setPhotoOpen] = useState(false);
+  const [visitOpen, setVisitOpen] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoFrames, setPhotoFrames] = useState<PhotoFrame[]>([]);
   const [photoFrameId, setPhotoFrameId] = useState("gold");
@@ -776,6 +780,14 @@ export function RoomScreen({
       publishAffection(next);
     })();
   };
+
+  useEffect(() => {
+    void refreshVisitStatus();
+  }, []);
+
+  useEffect(() => {
+    if (mode === "edit") setVisitOpen(false);
+  }, [mode]);
 
   useEffect(() => {
     return subscribeJelly(() => {
@@ -1205,6 +1217,7 @@ export function RoomScreen({
       const ops = await loadOpsState();
       const marked = noteWeeklyRoomSaved(ops);
       await saveWeeklyOps(marked);
+      void syncVisitLayoutIfPublic();
     })();
   };
 
@@ -2765,6 +2778,16 @@ export function RoomScreen({
             {ROOM_HINTS[roomDef.id]?.lead ? <span>{ROOM_HINTS[roomDef.id].lead}</span> : null}
             {ROOM_HINTS[roomDef.id]?.rest ?? roomDef.hint}
           </p>
+          {tutorialActive ? null : (
+            <button
+              type="button"
+              className="lucky-visit-btn"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => setVisitOpen(true)}
+            >
+              방 구경 가기
+            </button>
+          )}
           <button
             type="button"
             className="lucky-photo-btn"
@@ -2944,7 +2967,10 @@ export function RoomScreen({
           confirm="확인"
           onCancel={() => setConfirm(null)}
           onConfirm={() => {
-            void saveRoomState(state);
+            void saveRoomState(state).then(
+              () => syncVisitLayoutIfPublic(),
+              () => undefined,
+            );
             setConfirm(null);
             showToast("방을 기억해 두었어요");
           }}
@@ -3000,6 +3026,22 @@ export function RoomScreen({
               ? () => void openLockedRoom(unlockRoom)
               : undefined
           }
+        />
+      ) : null}
+
+      {visitOpen && state ? (
+        <RoomVisitScreen
+          itemsById={itemsById}
+          capturePhoto={async () => {
+            const island = islandRef.current;
+            if (!island) return null;
+            try {
+              return canvasToJpeg(await captureRoomIsland(island));
+            } catch {
+              return null;
+            }
+          }}
+          onClose={() => setVisitOpen(false)}
         />
       ) : null}
 

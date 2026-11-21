@@ -1832,6 +1832,25 @@ button.lucky-roam-cat:active,
   transform: skewY(26deg) scaleX(0.92);
 }
 
+.lucky-visit-btn {
+  position: absolute;
+  right: 108px;
+  bottom: calc(max(18px, env(safe-area-inset-bottom, 18px)) + 96px);
+  z-index: 6;
+  height: 32px;
+  padding: 2px 14px 0;
+  border: 1px solid #ffc48a;
+  border-radius: 999px;
+  background: rgba(28, 18, 36, 0.72);
+  color: #ffc48a;
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 0 1px rgba(255, 196, 138, 0.28), 0 0 16px rgba(255, 196, 138, 0.22);
+}
+
 .lucky-photo-btn {
   position: absolute;
   right: 16px;
@@ -1853,7 +1872,7 @@ button.lucky-roam-cat:active,
 .lucky-hint {
   position: absolute;
   left: 16px;
-  right: 112px;
+  right: 228px;
   bottom: calc(max(18px, env(safe-area-inset-bottom, 18px)) + 96px);
   z-index: 5;
   margin: 0;
