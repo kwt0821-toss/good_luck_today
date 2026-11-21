@@ -1,0 +1,172 @@
+{
+  "canvas1x": {
+    "width": 775,
+    "height": 972
+  },
+  "canvas": {
+    "width": 1550,
+    "height": 1944,
+    "scale": 2
+  },
+  "cssSuggest": {
+    "note": "메인 가운데 영웅 그림의 가로를 약 270 CSS px 로 두면 3배 기기에서도 선명합니다.",
+    "widthPx": 270,
+    "heightPx": 338.6
+  },
+  "eyes1x": [
+    {
+      "cx": 306.39,
+      "cy": 315.23,
+      "x": 278,
+      "y": 280,
+      "w": 58,
+      "h": 64
+    },
+    {
+      "cx": 513.17,
+      "cy": 338.08,
+      "x": 484,
+      "y": 302,
+      "w": 59,
+      "h": 67
+    }
+  ],
+  "eyes": [
+    {
+      "cx": 612.78,
+      "cy": 630.46,
+      "x": 556,
+      "y": 560,
+      "w": 116,
+      "h": 128
+    },
+    {
+      "cx": 1026.34,
+      "cy": 676.16,
+      "x": 968,
+      "y": 604,
+      "w": 118,
+      "h": 134
+    }
+  ],
+  "cardQuad1x": [
+    [
+      252,
+      398
+    ],
+    [
+      450,
+      392
+    ],
+    [
+      458,
+      650
+    ],
+    [
+      258,
+      655
+    ]
+  ],
+  "cardQuad": [
+    [
+      504,
+      796
+    ],
+    [
+      900,
+      784
+    ],
+    [
+      916,
+      1300
+    ],
+    [
+      516,
+      1310
+    ]
+  ],
+  "cardCss": {
+    "note": "기존 /assets/main/card-facedown.png 를 이 비율·위치에 올려 건네기·뒤집기에 쓰세요. 네 점은 캔버스 기준 시계방향(왼위, 오위, 오아래, 왼아래)입니다.",
+    "widthRatio": 0.2567741935483871,
+    "heightRatio": 0.264917695473251,
+    "centerXRatio": 0.45741935483870966,
+    "centerYRatio": 0.5388374485596708
+  },
+  "sparkles1x": [
+    {
+      "id": "outer-left",
+      "cx": 90,
+      "cy": 270,
+      "kind": "gold"
+    },
+    {
+      "id": "outer-right",
+      "cx": 735,
+      "cy": 593,
+      "kind": "gold"
+    },
+    {
+      "id": "moon-left",
+      "cx": 118,
+      "cy": 618,
+      "kind": "white",
+      "paintedInIdle": true
+    },
+    {
+      "id": "moon-lower-left",
+      "cx": 218,
+      "cy": 808,
+      "kind": "white",
+      "paintedInIdle": true
+    },
+    {
+      "id": "moon-lower",
+      "cx": 340,
+      "cy": 858,
+      "kind": "gold",
+      "paintedInIdle": true
+    }
+  ],
+  "files": {
+    "idle": "hero-b-idle.webp",
+    "blink": "hero-b-blink.webp",
+    "blinkOverlay": "hero-b-blink-overlay.webp",
+    "empty": "hero-b-empty.webp",
+    "sparkle": "hero-b-sparkle.webp"
+  },
+  "sparkles": [
+    {
+      "id": "outer-left",
+      "cx": 180,
+      "cy": 540,
+      "kind": "gold"
+    },
+    {
+      "id": "outer-right",
+      "cx": 1470,
+      "cy": 1186,
+      "kind": "gold"
+    },
+    {
+      "id": "moon-left",
+      "cx": 236,
+      "cy": 1236,
+      "kind": "white",
+      "paintedInIdle": true
+    },
+    {
+      "id": "moon-lower-left",
+      "cx": 436,
+      "cy": 1616,
+      "kind": "white",
+      "paintedInIdle": true
+    },
+    {
+      "id": "moon-lower",
+      "cx": 680,
+      "cy": 1716,
+      "kind": "gold",
+      "paintedInIdle": true
+    }
+  ]
+}
