@@ -12,6 +12,10 @@ type CollectionScreenProps = {
   onTutorialScrollDone?: () => void;
   onTutorialClaimed?: () => void;
   onSeenDexCards?: (ids: string[]) => void;
+  dexBadge?: boolean;
+  tabLocked?: boolean;
+  onOpenHome?: () => void;
+  onOpenRoom?: () => void;
 };
 
 export function CollectionScreen({
@@ -25,6 +29,10 @@ export function CollectionScreen({
   onTutorialScrollDone,
   onTutorialClaimed,
   onSeenDexCards,
+  dexBadge,
+  tabLocked,
+  onOpenHome,
+  onOpenRoom,
 }: CollectionScreenProps) {
   return (
     <DexScreen
@@ -38,6 +46,10 @@ export function CollectionScreen({
       onTutorialScrollDone={onTutorialScrollDone}
       onTutorialClaimed={onTutorialClaimed}
       onSeenDexCards={onSeenDexCards}
+      dexBadge={dexBadge}
+      tabLocked={tabLocked}
+      onOpenHome={onOpenHome}
+      onOpenRoom={onOpenRoom}
     />
   );
 }

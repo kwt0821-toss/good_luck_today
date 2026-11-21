@@ -1828,18 +1828,18 @@
   opacity: 0.45;
 }
 
-/* footer — dex · room; margin-top:auto pins to #main bottom */
+/* footer — 도감 · 홈 · 방꾸미기; margin-top:auto pins to #main bottom */
 .main-footer {
   position: relative;
   z-index: 2;
   flex: none;
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: stretch;
   width: 100%;
-  max-width: 390px;
+  max-width: none;
   margin: auto auto 0;
-  padding: 8px 22px calc(8px + var(--sa-bottom, 0px));
+  padding: 0;
   box-sizing: border-box;
 }
 

@@ -1950,6 +1950,13 @@ export default function App() {
           reduceMotion={reduceMotion}
           onTutorialScrollDone={onDexTutorialScrollDone}
           onSeenDexCards={noteSeenDexCards}
+          dexBadge={dexClaimDot}
+          tabLocked={tutorialLive}
+          onOpenHome={leaveDex}
+          onOpenRoom={() => {
+            if (tutorialLive) return;
+            setScreen({ name: "room" });
+          }}
           onTutorialClaimed={() => {
             if (dexTutPhase !== "claim") return;
             setDexTutPhase("toast");
@@ -1990,6 +1997,13 @@ export default function App() {
           }}
           onTutorialComplete={() => {
             if (roomTutPhase === "done" || roomTutPhase === "points") void advanceTutorial();
+          }}
+          dexBadge={dexClaimDot}
+          tabLocked={tutorialLive}
+          onOpenHome={leaveRoom}
+          onOpenCollection={() => {
+            if (tutorialLive) return;
+            setScreen({ name: "collection" });
           }}
         />
         </RoomErrorBoundary>
@@ -2122,6 +2136,7 @@ export default function App() {
           onOpenMenu={() => setMenuOpen(true)}
           onOpenCollection={() => setScreen({ name: "collection" })}
           onOpenRoom={() => setScreen({ name: "room" })}
+          tabLocked={tutorialLive}
           onOpenTitles={() => setAchvOpen(true)}
           showRewardsNudge={showRewardsNudgeBase && remainingNormal <= 0}
           missionNudge={missionNudge}

@@ -1,0 +1,63 @@
+:root {
+  --app-tabbar-height: calc(64px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-tabbar {
+  position: relative;
+  z-index: 5;
+  flex: none;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: var(--app-tabbar-height);
+  min-height: var(--app-tabbar-height);
+  margin: 0;
+  padding: 4px 8px env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
+}
+
+.main-footer.app-tabbar {
+  height: var(--app-tabbar-height);
+  min-height: var(--app-tabbar-height);
+  padding: 4px 8px env(safe-area-inset-bottom, 0px);
+}
+
+.app-tabbar.is-docked {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 8;
+  background: rgba(16, 12, 28, 0.94);
+}
+
+.app-tab.main-nav-btn {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding-top: 0;
+  gap: 2px;
+  color: var(--cream-dim, #c9c0b0);
+}
+
+.app-tab img {
+  width: 28px;
+  height: 28px;
+  opacity: 0.55;
+}
+
+.app-tab.is-current {
+  color: #f3e9d7;
+}
+
+.app-tab.is-current img {
+  opacity: 1;
+}
+
+.app-tab.is-current > span:last-child {
+  box-shadow: inset 0 -2px 0 #ffc48a;
+}
+
+.app-tab[aria-disabled="true"] {
+  cursor: default;
+}

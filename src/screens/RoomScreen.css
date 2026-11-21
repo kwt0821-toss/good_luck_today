@@ -3,6 +3,7 @@
   --amber: #ffc48a;
   --ink: #221d38;
   --page: #24182c;
+  --room-bar-bottom: calc(var(--app-tabbar-height, 72px) + 10px);
   position: relative;
   flex: 1;
   min-height: 0;
@@ -744,7 +745,7 @@
   position: absolute;
   left: 12px;
   right: 12px;
-  bottom: 428px;
+  bottom: calc(428px + var(--app-tabbar-height, 72px));
   z-index: 8;
   display: flex;
   align-items: center;
@@ -759,11 +760,11 @@
 }
 
 .lucky-room:has(.lucky-drawer.is-expanded) .lucky-paint-dock {
-  bottom: 568px;
+  bottom: calc(568px + var(--app-tabbar-height, 72px));
 }
 
 .lucky-room:has(.lucky-drawer.is-tutorial) .lucky-paint-dock {
-  bottom: 308px;
+  bottom: calc(308px + var(--app-tabbar-height, 72px));
 }
 
 .lucky-paint-dock-copy {
@@ -1778,7 +1779,7 @@ button.lucky-roam-cat:active,
   top: auto;
   right: auto;
   left: 20px;
-  bottom: 384px;
+  bottom: calc(384px + var(--app-tabbar-height, 72px));
 }
 
 .lucky-shadow-toggle.is-on {
@@ -1835,7 +1836,7 @@ button.lucky-roam-cat:active,
 .lucky-visit-btn {
   position: absolute;
   right: 108px;
-  bottom: calc(max(18px, env(safe-area-inset-bottom, 18px)) + 96px);
+  bottom: calc(var(--room-bar-bottom) + 96px);
   z-index: 6;
   height: 32px;
   padding: 2px 14px 0;
@@ -1854,7 +1855,7 @@ button.lucky-roam-cat:active,
 .lucky-photo-btn {
   position: absolute;
   right: 16px;
-  bottom: calc(max(18px, env(safe-area-inset-bottom, 18px)) + 96px);
+  bottom: calc(var(--room-bar-bottom) + 96px);
   z-index: 6;
   height: 28px;
   padding: 0 12px;
@@ -1873,7 +1874,7 @@ button.lucky-roam-cat:active,
   position: absolute;
   left: 16px;
   right: 228px;
-  bottom: calc(max(18px, env(safe-area-inset-bottom, 18px)) + 96px);
+  bottom: calc(var(--room-bar-bottom) + 96px);
   z-index: 5;
   margin: 0;
   text-align: center;
@@ -1892,7 +1893,7 @@ button.lucky-roam-cat:active,
   position: absolute;
   left: 24px;
   right: 24px;
-  bottom: max(18px, env(safe-area-inset-bottom, 18px));
+  bottom: var(--room-bar-bottom);
   z-index: 5;
   height: 58px;
   border-radius: 29px;
@@ -2254,7 +2255,7 @@ button.lucky-roam-cat:active,
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: var(--app-tabbar-height, 72px);
   z-index: 6;
   height: 420px;
   border-radius: 28px 28px 0 0;

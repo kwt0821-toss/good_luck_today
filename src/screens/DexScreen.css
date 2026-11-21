@@ -22,7 +22,7 @@
   color: var(--cream);
   font-family: "Noto Sans KR", "Toss Product Sans", sans-serif;
   background: radial-gradient(120% 70% at 70% 30%, #3a2f55 0%, #221d38 45%, #14132a 100%);
-  padding: 20px 24px max(22px, env(safe-area-inset-bottom, 34px));
+  padding: 20px 24px 0;
 }
 
 .dex-bg {
@@ -201,7 +201,7 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   margin: 18px -24px 0;
-  padding: 0 24px 90px;
+  padding: 0 24px var(--app-tabbar-height, 72px);
 }
 
 .dex-tab-panel {
@@ -212,8 +212,8 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
-  height: 90px;
+  bottom: var(--app-tabbar-height, 72px);
+  height: 36px;
   pointer-events: none;
   background: linear-gradient(transparent, #14132a 85%);
   z-index: 2;

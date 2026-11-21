@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Environment, getPlatformOS } from "@apps-in-toss/web-framework";
 
+import { AppTabBar, type AppTabId } from "../components/AppTabBar";
 import { CozySheet } from "../components/CozySheet";
 import { useBackHandler } from "../hooks/useBackHandler";
 import { useLoadingHold } from "../lib/loadingGate";
@@ -149,6 +150,10 @@ type RoomScreenProps = {
   onReady?: () => void;
   /** Fires with room_open, once the room screen is actually up. */
   onRoomOpened?: () => void;
+  dexBadge?: boolean;
+  tabLocked?: boolean;
+  onOpenHome?: () => void;
+  onOpenCollection?: () => void;
 };
 
 function formatPoints(value: number) {
@@ -367,6 +372,10 @@ export function RoomScreen({
   onTutorialComplete,
   onReady,
   onRoomOpened,
+  dexBadge = false,
+  tabLocked = false,
+  onOpenHome,
+  onOpenCollection,
 }: RoomScreenProps) {
   const [items, setItems] = useState<RoomItem[]>([]);
   const [grid, setGrid] = useState<RoomGridFile | null>(null);
@@ -3044,6 +3053,17 @@ export function RoomScreen({
           onClose={() => setVisitOpen(false)}
         />
       ) : null}
+
+      <AppTabBar
+        current="room"
+        dexBadge={dexBadge}
+        locked={tabLocked}
+        docked
+        onSelect={(tab: AppTabId) => {
+          if (tab === "home") onOpenHome?.();
+          if (tab === "collection") onOpenCollection?.();
+        }}
+      />
 
     </div>
   );

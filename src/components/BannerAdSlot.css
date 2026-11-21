@@ -23,8 +23,7 @@
 
 .menu-sheet-body .banner-ad-slot,
 .menu-sheet > .banner-ad-slot,
-.menu-sheet-footer .banner-ad-slot,
-.dex-screen > .banner-ad-slot {
+.menu-sheet-footer .banner-ad-slot {
   width: calc(100% + 48px);
   margin-left: -24px;
   margin-right: -24px;
@@ -36,22 +35,18 @@
   margin-right: -16px;
 }
 
-.dex-screen > .banner-ad-slot {
-  position: relative;
-  z-index: 4;
+.dex-breed-list > .banner-ad-slot,
+.dex-grid > .banner-ad-slot {
+  grid-column: 1 / -1;
+  width: 100%;
 }
 
-.dex-screen > .banner-ad-slot.is-shown {
-  margin-top: 0;
-  /* Cancel the screen's bottom padding so the creative sits on the edge. */
-  margin-bottom: calc(-1 * max(22px, env(safe-area-inset-bottom, 34px)));
-  padding-top: 4px;
-  padding-bottom: 0;
-  background: #14132a;
+.banner-ad-slot.is-lazy:not(.is-shown) {
+  min-height: 1px;
 }
 
-.dex-screen > .banner-ad-slot.is-shown .banner-ad-host {
-  min-height: 0;
+.banner-ad-slot.is-held.is-shown {
+  grid-template-rows: 1fr;
 }
 
 .menu-sheet > .banner-ad-slot.is-shown,

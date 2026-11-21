@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import { AudioManager } from "../audio/AudioManager";
 import { CoinBurst } from "../components/CoinBurst";
@@ -8,7 +8,9 @@ import { useBackHandler } from "../hooks/useBackHandler";
 import { useLoadingHold, useOverlayVisible } from "../lib/loadingGate";
 import { jellyLabel } from "../lib/jellyLabel";
 import { ncoinIcon } from "../lib/ncoinIcon";
+import { AppTabBar, type AppTabId } from "../components/AppTabBar";
 import { BannerAdSlot } from "../components/BannerAdSlot";
+import { chunkDexCards, dexBannerAfter, dexBannerStride } from "../lib/dexBanners";
 import { DexCardSlot } from "../components/DexCardSlot";
 import { DexDetailSheet } from "../components/DexDetailSheet";
 import {
@@ -70,6 +72,10 @@ type DexScreenProps = {
   onTutorialClaimed?: () => void;
   /** Mark these owned card ids as seen. Does not replace the rest of ops. */
   onSeenDexCards?: (ids: string[]) => void;
+  dexBadge?: boolean;
+  tabLocked?: boolean;
+  onOpenHome?: () => void;
+  onOpenRoom?: () => void;
 };
 
 type CelebrateKind = "breedSet" | "typeSet" | "fullDex";
@@ -116,6 +122,10 @@ export function DexScreen({
   onTutorialScrollDone,
   onTutorialClaimed,
   onSeenDexCards,
+  dexBadge = false,
+  tabLocked = false,
+  onOpenHome,
+  onOpenRoom,
 }: DexScreenProps) {
   const [catalog, setCatalog] = useState<DexCatalog | null>(null);
   const [imagesReady, setImagesReady] = useState(false);
@@ -149,7 +159,8 @@ export function DexScreen({
     legend: null,
     season: null,
   });
-  const dexBodyRef = useRef<HTMLDivElement>(null);
+  const dexBodyNode = useRef({ node: null as HTMLDivElement | null });
+  const [dexScrollEl, setDexScrollEl] = useState<HTMLDivElement | null>(null);
   const [underline, setUnderline] = useState({ left: 0, width: 56 });
   const tutLocked = Boolean(
     focusCardId && tutorialPhase && tutorialPhase !== "ncoin-after" && tutorialPhase !== "toast",
@@ -213,7 +224,7 @@ export function DexScreen({
   }, [tab, catalog, owned, claimable]);
 
   useEffect(() => {
-    const body = dexBodyRef.current;
+    const body = dexBodyNode.current.node;
     if (body) body.scrollTop = 0;
   }, [tab]);
 
@@ -642,7 +653,13 @@ export function DexScreen({
         <span className="dex-tab-underline" style={{ left: underline.left, width: underline.width }} />
       </div>
 
-      <div className="dex-body" ref={dexBodyRef}>
+      <div
+        className="dex-body"
+        ref={(node) => {
+          dexBodyNode.current.node = node;
+          setDexScrollEl((prev) => (prev === node ? prev : node));
+        }}
+      >
         <div className="dex-tab-panel" key={tab}>
         {tab === "breed" ? (
           <div className="dex-breed-list">
@@ -664,13 +681,14 @@ export function DexScreen({
                 </button>
               </div>
             ) : null}
-            {breedRows.map((row) => {
+            {breedRows.map((row, index) => {
               const have = row.slots.filter((slot) => (owned[slot.id]?.count ?? 0) > 0).length;
               const complete = have === 5;
               const nameUnlocked = have > 0;
               const setReward = claimableBreedSet(claimable, row.breedId);
               return (
-                <section key={row.breedId} className="dex-breed-row">
+                <Fragment key={row.breedId}>
+                <section className="dex-breed-row">
                   <div className="dex-row-head">
                     <h2 className={nameUnlocked ? "" : "is-locked-name"}>
                       {nameUnlocked ? row.en : "???"}{" "}
@@ -728,6 +746,10 @@ export function DexScreen({
                     })}
                   </div>
                 </section>
+                {dexBannerAfter(index, dexBannerStride("breed")) ? (
+                  <BannerAdSlot placement="dex" scrollRoot={dexScrollEl} />
+                ) : null}
+                </Fragment>
               );
             })}
           </div>
@@ -762,6 +784,7 @@ export function DexScreen({
             claimGate={tutorialPhase === "claim"}
             tutLocked={tutLocked}
             seenIds={ops.seenDexCardIds}
+            scrollRoot={dexScrollEl}
             onClaimCard={(rewardId) => void runClaim([rewardId])}
             onClaimSet={(rewardId) => void runClaim([rewardId], "typeSet")}
             onSlot={onSlot}
@@ -774,7 +797,16 @@ export function DexScreen({
 
       <div className="dex-fade" aria-hidden="true" />
 
-      {openCard ? null : <BannerAdSlot placement="dex" />}
+      <AppTabBar
+        current="collection"
+        dexBadge={dexBadge}
+        locked={tabLocked}
+        docked
+        onSelect={(tab: AppTabId) => {
+          if (tab === "home") onOpenHome?.();
+          if (tab === "room") onOpenRoom?.();
+        }}
+      />
 
       {openCard && catalog ? (
         <DexDetailSheet
@@ -921,6 +953,7 @@ function GridTab({
   claimGate,
   tutLocked,
   seenIds,
+  scrollRoot,
   onClaimCard,
   onClaimSet,
   onSlot,
@@ -938,12 +971,16 @@ function GridTab({
   claimGate: boolean;
   tutLocked: boolean;
   seenIds: readonly string[];
+  scrollRoot: HTMLElement | null;
   onClaimCard: (rewardId: string) => void;
   onClaimSet: (rewardId: string) => void;
   onSlot: (card: DexCard) => void;
 }) {
   const copy = TAB_COPY[tab];
   const comingSoon = tab === "character" ? 2 : 0;
+  const stride = dexBannerStride(tab);
+  const cardChunks = chunkDexCards(cards, stride);
+  const grids = cardChunks.length > 0 ? cardChunks : [[] as DexCard[]];
 
   return (
     <section className={`dex-grid-wrap is-${tab}`}>
@@ -974,39 +1011,48 @@ function GridTab({
           </button>
         </div>
       ) : null}
-      <div className={`dex-grid dex-grid-${tab}`}>
-        {cards.map((card) => {
-          const cardReward = claimableForCard(claimable, card.id);
-          return (
-            <div key={card.id} className="dex-cell">
-              <DexCardSlot
-                kind={tab}
-                card={card}
-                record={owned[card.id]}
-                claimable={Boolean(cardReward)}
-                claimNyang={cardReward?.nyangCoin}
-                claimBusy={claimBusy}
-                pulse={pulseSlotId === card.id}
-                claimEnabled={!tutLocked || (claimGate && focusCardId === card.id)}
-                onClaim={() => {
-                  if (cardReward) onClaimCard(cardReward.id);
-                }}
-                unseen={(owned[card.id]?.count ?? 0) > 0 && !seenIds.includes(card.id)}
-                onClick={() => onSlot(card)}
-              />
-              <p className={`dex-cell-name ${owned[card.id] ? "" : seasonClosed ? "is-season-wait" : "is-locked"}`}>
-                {owned[card.id] ? card.name?.ko : seasonClosed ? "다음 시즌에 다시" : "???"}
-              </p>
-            </div>
-          );
-        })}
-        {Array.from({ length: comingSoon }, (_, index) => (
-          <div key={`soon-${index}`} className="dex-cell">
-            <DexCardSlot kind="soon" />
-            <p className="dex-cell-name is-soon">곧 만나요</p>
+      {grids.map((chunk, chunkIndex) => (
+        <Fragment key={chunk[0]?.id ?? `rest-${chunkIndex}`}>
+          <div className={`dex-grid dex-grid-${tab}`}>
+            {chunk.map((card) => {
+              const cardReward = claimableForCard(claimable, card.id);
+              return (
+                <div key={card.id} className="dex-cell">
+                  <DexCardSlot
+                    kind={tab}
+                    card={card}
+                    record={owned[card.id]}
+                    claimable={Boolean(cardReward)}
+                    claimNyang={cardReward?.nyangCoin}
+                    claimBusy={claimBusy}
+                    pulse={pulseSlotId === card.id}
+                    claimEnabled={!tutLocked || (claimGate && focusCardId === card.id)}
+                    onClaim={() => {
+                      if (cardReward) onClaimCard(cardReward.id);
+                    }}
+                    unseen={(owned[card.id]?.count ?? 0) > 0 && !seenIds.includes(card.id)}
+                    onClick={() => onSlot(card)}
+                  />
+                  <p className={`dex-cell-name ${owned[card.id] ? "" : seasonClosed ? "is-season-wait" : "is-locked"}`}>
+                    {owned[card.id] ? card.name?.ko : seasonClosed ? "다음 시즌에 다시" : "???"}
+                  </p>
+                </div>
+              );
+            })}
+            {chunkIndex === grids.length - 1
+              ? Array.from({ length: comingSoon }, (_, index) => (
+                  <div key={`soon-${index}`} className="dex-cell">
+                    <DexCardSlot kind="soon" />
+                    <p className="dex-cell-name is-soon">곧 만나요</p>
+                  </div>
+                ))
+              : null}
           </div>
-        ))}
-      </div>
+          {chunk.length === stride ? (
+            <BannerAdSlot placement="dex" scrollRoot={scrollRoot} />
+          ) : null}
+        </Fragment>
+      ))}
     </section>
   );
 }

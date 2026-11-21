@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 
+import { AppTabBar } from "../components/AppTabBar";
 import { HomeWalletChips } from "../components/HomeWalletChips";
 import { SeasonBanner } from "../components/SeasonBanner";
 import { TitleRibbon } from "../components/TitleRibbon";
@@ -16,8 +17,6 @@ const ASSETS = {
   moon: "/assets/main/moon-glow.png",
   menu: "/assets/main/icon-menu-paw.svg",
   mail: "/assets/menu/icon-mailbox.svg",
-  dex: "/assets/main/icon-dex-book.svg",
-  room: "/assets/main/icon-room-house.svg",
   rateUp: "/assets/main/icon-rateup-sparkle.svg",
   /** Recolored cheese-cat tail (#FBC895 / #DC884A) — layout-spec §6. */
   tail: "/assets/main/mainscreen-assets/cat-tail.svg",
@@ -69,6 +68,8 @@ type HomeScreenProps = {
   onOpenMenu: () => void;
   onOpenCollection: () => void;
   onOpenRoom: () => void;
+  /** Tutorial keeps the player on this screen, except the dex tab. */
+  tabLocked?: boolean;
   onOpenTitles?: () => void;
   /** Draws are used up and 젤리·냥코인 받기 still has claims left. */
   showRewardsNudge?: boolean;
@@ -102,6 +103,7 @@ export function HomeScreen({
   onOpenMenu,
   onOpenCollection,
   onOpenRoom,
+  tabLocked = false,
   onOpenTitles,
   showRewardsNudge = false,
   missionNudge = false,
@@ -590,30 +592,17 @@ export function HomeScreen({
         ) : null}
       </div>
 
-      <nav className="main-footer">
-        <button
-          type="button"
-          id="icon-dex"
-          className="main-nav-btn"
-          aria-label="도감"
-          onClick={popThen(onOpenCollection)}
-        >
-          <span className="main-menu-icon-wrap">
-            <img src={ASSETS.dex} alt="" width={28} height={28} />
-            {dexBadge ? <span className="main-menu-dot" aria-hidden="true" /> : null}
-          </span>
-          <span>도감</span>
-        </button>
-        <button
-          type="button"
-          className="main-nav-btn"
-          aria-label="방꾸미기"
-          onClick={popThen(onOpenRoom)}
-        >
-          <img src={ASSETS.room} alt="" width={28} height={28} />
-          <span>방꾸미기</span>
-        </button>
-      </nav>
+      <AppTabBar
+        className="main-footer"
+        current="home"
+        dexBadge={dexBadge}
+        locked={tabLocked}
+        allowDex={tabLocked}
+        onSelect={(tab) => {
+          if (tab === "collection") onOpenCollection();
+          if (tab === "room") onOpenRoom();
+        }}
+      />
     </div>
   );
 }
