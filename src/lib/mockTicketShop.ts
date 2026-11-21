@@ -2,7 +2,7 @@ import { toKstDateKey } from "./date";
 import { loadOpsConfig } from "./opsConfig";
 import { syncTicketShopWindows } from "./opsState";
 import { saveOpsState } from "./opsStorage";
-import { displayJellyBalance, jellySpend, serverJellyActive } from "./serverJelly";
+import { displayJellyBalance, jellySpend, jellySpendFailMessage, serverJellyActive } from "./serverJelly";
 import type { OpsConfig, OpsState, TicketShopLedgerItem } from "./opsTypes";
 
 /**
@@ -167,9 +167,8 @@ export async function postShopTicketsBuy(
   if (serverJelly) {
     const spent = await jellySpend(`ticket:${requestId}`);
     if (!spent.ok) {
-      const reason = spent.insufficient
-        ? "젤리가 부족해요"
-        : "연결이 불안정해요. 잠시 후 다시 받아 주세요";
+      const copy = jellySpendFailMessage(spent);
+      const reason = `${copy.title}. ${copy.sub}`;
       return { state: next, response: { ok: false, reason } };
     }
     paw = displayJellyBalance(next.pawBalance);

@@ -64,7 +64,7 @@ import {
 } from "../lib/roomPhoto";
 import { claimRoomSetReward, roomSetCue, roomSetFor, roomSetViews, type RoomSetView } from "../lib/roomSets";
 import { applyOpsPrices, grantUnlockRewards, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
-import { displayJellyBalance, jellySpend, serverJellyActive, subscribeJelly } from "../lib/serverJelly";
+import { displayJellyBalance, jellySpend, jellySpendFailMessage, serverJellyActive, subscribeJelly } from "../lib/serverJelly";
 import { refreshVisitStatus, syncVisitLayoutIfPublic } from "../lib/roomVisit";
 import { furnitureDepthKey } from "../lib/roomCat";
 import { useRoomPeriod } from "../lib/roomTime";
@@ -2060,11 +2060,12 @@ export function RoomScreen({
         try {
           const spent = await jellySpend(`room:${item.id}:${newRequestId("buy")}`);
           if (!spent.ok) {
+            const copy = jellySpendFailMessage(spent);
             nyNotify({
               key: "room-buy-fail",
               kind: "error",
-              title: spent.insufficient ? "젤리가 부족해요" : "사지 못했어요",
-              sub: spent.insufficient ? "출석·젤리 받기로 더 모아 주세요" : "네트워크를 확인하고 다시 눌러 주세요",
+              title: copy.title,
+              sub: copy.sub,
             });
             return;
           }
@@ -2111,11 +2112,13 @@ export function RoomScreen({
     }
     const spent = await jellySpend(`roomUnlock:${room.id}:${newRequestId("unlock")}`);
     if (!spent.ok) {
+      const copy = jellySpendFailMessage(spent);
+      const shortOnJelly = spent.insufficient || spent.error === "INSUFFICIENT";
       nyNotify({
         key: "room-unlock",
         kind: "error",
-        title: spent.insufficient ? "젤리가 부족해요" : "방을 열지 못했어요",
-        sub: spent.insufficient ? "출석·젤리 받기로 더 모아 주세요" : "네트워크를 확인하고 다시 눌러 주세요",
+        title: shortOnJelly ? copy.title : "방을 열지 못했어요",
+        sub: copy.sub,
       });
       return;
     }

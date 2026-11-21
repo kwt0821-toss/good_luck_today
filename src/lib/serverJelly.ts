@@ -53,6 +53,46 @@ export type JellyItemResult = {
 
 export type JellyFail = { ok: false; error: string; insufficient?: boolean; network?: boolean };
 
+const SPEND_PRICE_ERRORS = new Set(["UNKNOWN_REWARD", "reward_id_invalid"]);
+const SPEND_SAVE_ERRORS = new Set(["save_token_invalid", "save_not_found", "save_token_invalid_format"]);
+const SPEND_HASH_ERRORS = new Set(["hash_unverified", "hash_invalid_format", "hash_rejected"]);
+
+/** Copy for a failed jelly_spend. Network wording is only for a real transport failure. */
+export function jellySpendFailMessage(fail: JellyFail): { title: string; sub: string } {
+  if (fail.insufficient || fail.error === "INSUFFICIENT") {
+    return { title: "젤리가 부족해요", sub: "출석·젤리 받기로 더 모아 주세요" };
+  }
+  if (fail.error === "pending") {
+    return { title: "잠시 뒤에 다시 눌러 주세요", sub: "아직 적립 중인 젤리가 있어요" };
+  }
+  if (SPEND_PRICE_ERRORS.has(fail.error)) {
+    return { title: "사지 못했어요", sub: "이 물건의 가격 정보를 찾지 못했어요" };
+  }
+  if (SPEND_SAVE_ERRORS.has(fail.error)) {
+    return { title: "사지 못했어요", sub: "저장이 안 맞아요. 앱을 닫았다가 다시 연 뒤 눌러 주세요" };
+  }
+  if (SPEND_HASH_ERRORS.has(fail.error)) {
+    return { title: "사지 못했어요", sub: "앱을 닫았다가 다시 연 뒤 눌러 주세요" };
+  }
+  if (fail.error === "NOT_MIGRATED") {
+    return { title: "사지 못했어요", sub: "젤리 옮겨 담기가 아직 안 끝났어요. 잠시 후 다시 눌러 주세요" };
+  }
+  if (fail.error === "rate_limited" || fail.error === "http_429") {
+    return { title: "잠시 뒤에 다시 눌러 주세요", sub: "조금 전에 많이 요청해서 잠깐 쉬고 있어요" };
+  }
+  if (
+    fail.network === true ||
+    fail.error === "network" ||
+    fail.error === "timeout" ||
+    fail.error.startsWith("http_5") ||
+    fail.error === "verify_unavailable" ||
+    fail.error === "server_error"
+  ) {
+    return { title: "사지 못했어요", sub: "네트워크를 확인하고 다시 눌러 주세요" };
+  }
+  return { title: "사지 못했어요", sub: "잠시 후 다시 눌러 주세요" };
+}
+
 export type JellyEarnResult =
   | { ok: true; jelly: number; displayJelly: number; results: JellyItemResult[] }
   | JellyFail;
@@ -483,7 +523,8 @@ export async function jellySpend(rewardId: string): Promise<JellySpendResult> {
   if (!(await serverJellyActive())) return { ok: false, error: "local" };
   const flushed = await jellyFlushPending();
   if (!flushed && readQueue().length) {
-    return { ok: false, error: "network", network: true };
+    console.info(`[serverJelly] spend failed rewardId=${rewardId} error=pending`);
+    return { ok: false, error: "pending" };
   }
   const result = await postJelly("jelly_spend", { rewardId }, SPEND_MS);
   if (!result.ok) {
