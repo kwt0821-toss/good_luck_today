@@ -18,17 +18,19 @@ const ASSETS = {
   menu: "/assets/main/icon-menu-paw.svg",
   mail: "/assets/menu/icon-mailbox.svg",
   rateUp: "/assets/main/icon-rateup-sparkle.svg",
-  /** Recolored cheese-cat tail (#FBC895 / #DC884A) — layout-spec §6. */
-  tail: "/assets/main/mainscreen-assets/cat-tail.svg",
   card: "/assets/main/card-facedown.png",
-  /** Head+paws without drool; drool is a separate animated layer. */
-  cat: "/assets/main/mainscreen-assets/cat-sleeping-nodrool.webp",
-  drool: "/assets/main/mainscreen-assets/drool.png",
+  hero: "/assets/main/mainscreen-assets/hero-b-idle.webp",
+  heroBlink: "/assets/main/mainscreen-assets/hero-b-blink-overlay.webp",
+  heroEmpty: "/assets/main/mainscreen-assets/hero-b-empty.webp",
+  sparkle: "/assets/main/mainscreen-assets/hero-b-sparkle.webp",
 } as const;
 
+const OFFER_MS = 220;
 const FLIP_MS = 180;
 const SETTLE_MS = 240;
 const NUDGE_MS = 2600;
+const BLINK_EVERY_MS = 3600;
+const BLINK_MS = 150;
 
 type HomeScreenProps = {
   /** Remaining normal draws today (deck size). */
@@ -112,6 +114,7 @@ export function HomeScreen({
 }: HomeScreenProps) {
   const [waking, setWaking] = useState(false);
   const [flipping, setFlipping] = useState(false);
+  const [blinking, setBlinking] = useState(false);
   const [countdown, setCountdown] = useState(() => formatCountdownHms(msUntilNextKstMidnight()));
   const [nudge, setNudge] = useState(false);
   const wakeTimer = useRef(0);
@@ -136,8 +139,28 @@ export function HomeScreen({
   }, []);
   const drawsDone = remainingNormal <= 0;
   const lowRemaining = remainingNormal === 1 || remainingNormal === 2;
-  const deckCount = drawsDone ? 1 : remainingNormal;
   const showSparkle = firstDrawPending && remainingNormal > 0 && !reduce;
+
+  useEffect(() => {
+    return () => window.clearTimeout(wakeTimer.current);
+  }, []);
+
+  useEffect(() => {
+    if (reduce || drawsDone || waking || flipping) {
+      setBlinking(false);
+      return;
+    }
+    let closed = 0;
+    const id = window.setInterval(() => {
+      setBlinking(true);
+      window.clearTimeout(closed);
+      closed = window.setTimeout(() => setBlinking(false), BLINK_MS);
+    }, BLINK_EVERY_MS);
+    return () => {
+      window.clearInterval(id);
+      window.clearTimeout(closed);
+    };
+  }, [reduce, drawsDone, waking, flipping]);
 
   useEffect(() => {
     if (!drawsDone) return;
@@ -183,16 +206,21 @@ export function HomeScreen({
       return;
     }
     if (waking || flipping) return;
-    setWaking(true);
-    setFlipping(true);
-    window.clearTimeout(wakeTimer.current);
-    const flipDelay = reduce ? 0 : FLIP_MS;
-    const settleDelay = reduce ? 0 : SETTLE_MS;
-    wakeTimer.current = window.setTimeout(() => {
-      setWaking(false);
-      setFlipping(false);
+    if (reduce) {
       onDraw();
-    }, flipDelay + settleDelay + 40);
+      return;
+    }
+    setWaking(true);
+    setBlinking(false);
+    window.clearTimeout(wakeTimer.current);
+    wakeTimer.current = window.setTimeout(() => {
+      setFlipping(true);
+      wakeTimer.current = window.setTimeout(() => {
+        setWaking(false);
+        setFlipping(false);
+        onDraw();
+      }, FLIP_MS + SETTLE_MS);
+    }, OFFER_MS);
   };
 
   const rateUpShopEntry = offerTicketShop && remainingRateUp <= 0 && rateUpTickets <= 0;
@@ -459,73 +487,48 @@ export function HomeScreen({
           </div>
 
           <div
-            className={`main-cat-stage ${waking ? "is-waking" : ""} ${flipping ? "is-flipping" : ""} ${drawsDone ? "is-empty" : ""}`}
+            className={`main-cat-stage ${waking ? "is-waking" : ""} ${flipping ? "is-flipping" : ""} ${drawsDone ? "is-empty" : ""} ${blinking ? "is-blink" : ""}`}
           >
             <img className="main-moon" src={ASSETS.moon} alt="" />
             <div className="main-float">
-              <div className={`main-deck ${drawsDone ? "is-done" : ""}`} aria-hidden="true">
-                {Array.from({ length: deckCount }, (_, index) => {
-                  const fromTop = deckCount - 1 - index;
-                  const isTop = fromTop === 0;
-                  if (isTop) {
-                    return (
-                      <div
-                        key={`deck-top-${remainingNormal}`}
-                        className="deck-top"
-                        style={{ zIndex: index + 1 }}
-                      >
-                        <img className="main-tail" src={ASSETS.tail} alt="" draggable={false} />
-                        <div className={`main-deck-card is-top ${flipping ? "is-flip" : ""}`}>
-                          <img className="main-deck-face" src={ASSETS.card} alt="" />
-                          {showSparkle ? (
-                            <>
-                              <span className="main-deck-dot" />
-                              <span className="main-deck-spark" />
-                            </>
-                          ) : null}
-                        </div>
-                        <div className="main-cat">
-                          <img className="main-cat-body" src={ASSETS.cat} alt="잠자는 고양이" />
-                          <img
-                            className="main-drool"
-                            src={ASSETS.drool}
-                            alt=""
-                            aria-hidden="true"
-                            draggable={false}
-                          />
-                        </div>
-                      </div>
-                    );
+              <div className={`main-hero-b ${drawsDone ? "is-empty" : ""}`}>
+                <img
+                  className="main-hero-b-art"
+                  src={drawsDone ? ASSETS.heroEmpty : ASSETS.hero}
+                  alt=""
+                  draggable={false}
+                />
+                {!drawsDone ? (
+                  <img
+                    className="main-hero-b-blink"
+                    src={ASSETS.heroBlink}
+                    alt=""
+                    aria-hidden="true"
+                    draggable={false}
+                  />
+                ) : null}
+                <img className="main-hero-spark is-left" src={ASSETS.sparkle} alt="" aria-hidden="true" />
+                <img className="main-hero-spark is-right" src={ASSETS.sparkle} alt="" aria-hidden="true" />
+                {showSparkle && !waking ? <span className="main-hero-card-spark" aria-hidden="true" /> : null}
+                {!drawsDone ? (
+                  <div className="main-hero-offer" aria-hidden="true">
+                    <img className="main-hero-offer-face" src={ASSETS.card} alt="" draggable={false} />
+                    {showSparkle ? <span className="main-hero-card-spark" /> : null}
+                  </div>
+                ) : null}
+                <button
+                  type="button"
+                  id="stage-cat"
+                  className="main-cat-hit"
+                  aria-label={
+                    drawsDone && nextDrawKind !== "normal" && nextDrawKind !== "rateUpAd"
+                      ? "오늘은 이미 뽑았어요"
+                      : "톡해서 오늘의 카드 받기"
                   }
-                  return (
-                    <div
-                      key={`deck-${index}-${remainingNormal}`}
-                      className="main-deck-card is-back"
-                      style={{ zIndex: index + 1 }}
-                      data-depth={fromTop}
-                    >
-                      <img className="main-deck-face" src={ASSETS.card} alt="" />
-                    </div>
-                  );
-                })}
+                  onClick={handleDrawTap}
+                />
               </div>
-              {!drawsDone ? (
-                <div className="main-zzz" aria-hidden="true">
-                  <span>z</span>
-                  <span>z</span>
-                  <span>z</span>
-                </div>
-              ) : null}
             </div>
-            <button
-              type="button"
-              id="stage-cat"
-              className="main-cat-hit"
-              aria-label={
-                adCta ? "광고 보고 카드 뽑기" : drawsDone ? "오늘은 이미 뽑았어요" : "고양이 톡해서 오늘의 카드 받기"
-              }
-              onClick={handleDrawTap}
-            />
           </div>
         </div>
       </section>
@@ -541,7 +544,7 @@ export function HomeScreen({
             {adCta}
           </button>
         ) : drawsDone ? (
-          <p className="main-cta main-cta-done">오늘 카드는 다 뽑았어요, 잘 자요</p>
+          <p className="main-cta main-cta-done">오늘 카드는 다 뽑았어요, 내일 또 와요</p>
         ) : lowRemaining ? (
           <button
             type="button"
@@ -557,7 +560,7 @@ export function HomeScreen({
         ) : (
           <div className="main-cta-block">
             <p className="main-cta">
-              <span className="main-cta-accent">톡,</span> 깨워서 오늘의 카드 받기
+              <span className="main-cta-accent">톡,</span> 해서 오늘의 카드 받기
             </p>
             <p className="main-cta-en">TAP THE CAT TO DRAW</p>
           </div>

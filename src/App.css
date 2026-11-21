@@ -1274,14 +1274,11 @@
   overflow: visible;
 }
 
-/* Cat + card only. The tail sticks out to the right of the deck and stays outside. */
+/* Moon, cat, and the card in its paws. */
 .main-cat-hit {
   position: absolute;
-  left: 24.5%;
-  top: 3%;
-  width: 49%;
-  height: 95%;
-  z-index: 4;
+  inset: 0;
+  z-index: 5;
   border: 0;
   padding: 0;
   background: transparent;
@@ -1302,14 +1299,15 @@
 
 .main-moon {
   position: absolute;
-  left: 8.974%; /* 35/390 */
-  top: -11.399%; /* -44/386 */
-  width: 82.051%; /* 320/390 */
+  left: 6%;
+  top: 22%;
+  width: 72%;
   height: auto;
   aspect-ratio: 1;
   margin: 0;
   display: block;
   pointer-events: none;
+  opacity: 0.55;
   will-change: opacity;
   animation: main-moon 4.5s ease-in-out infinite;
 }
@@ -1326,239 +1324,122 @@
   pointer-events: none;
 }
 
-.main-deck {
+.main-hero-b {
   position: absolute;
   left: 50%;
-  top: 39.378%; /* 152/386 */
-  width: 43.077%; /* 168/390 */
-  height: 58.031%; /* 224/386 */
-  margin-left: -21.538%;
-  z-index: 3;
+  top: 52%;
+  z-index: 2;
+  height: min(338px, 90%);
+  width: auto;
+  aspect-ratio: 1550 / 1944;
+  transform: translate(-50%, -50%);
   perspective: 900px;
-  overflow: visible;
   pointer-events: none;
 }
 
-.main-deck.is-done {
-  filter: grayscale(1);
-  opacity: 0.48;
-}
-
-.deck-top {
+.main-hero-b-art,
+.main-hero-b-blink {
   position: absolute;
   inset: 0;
-  transform: rotate(-2deg);
-  transform-origin: 50% 60%;
-  overflow: visible;
-  pointer-events: none;
-}
-
-.main-deck-card {
-  position: absolute;
-  inset: 0;
-  border-radius: 18px;
-  transform-origin: 50% 60%;
-  transition:
-    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 240ms ease,
-    opacity 240ms ease;
-  overflow: visible;
-}
-
-.main-deck-card.is-back {
-  backface-visibility: hidden;
-}
-
-.main-deck-face {
-  position: relative;
-  display: block;
   width: 100%;
   height: 100%;
-  object-fit: fill;
-  border-radius: 18px;
-  box-shadow: 0 14px 22px rgba(10, 8, 24, 0.35);
-  z-index: 1;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }
 
-.main-deck-card.is-back[data-depth="1"] {
-  transform: rotate(6deg) translate(4px, 3px) scale(0.985);
-  filter: brightness(0.62);
+.main-hero-b-blink {
+  opacity: 0;
 }
 
-.main-deck-card.is-back[data-depth="2"] {
-  transform: rotate(-5deg) translate(-5px, 6px) scale(0.97);
-  filter: brightness(0.48);
+.main-cat-stage.is-blink .main-hero-b-blink {
+  opacity: 1;
 }
 
-.deck-top .main-deck-card.is-top {
-  transform: none;
-  filter: none;
-  box-shadow: 0 0 0 1px rgba(255, 196, 138, 0.35);
-  backface-visibility: hidden;
+.main-hero-b.is-empty .main-hero-b-art {
+  opacity: 0.94;
 }
 
-.deck-top .main-deck-card.is-top::after {
-  content: "";
+.main-hero-spark {
   position: absolute;
-  inset: -2px;
-  border-radius: 20px;
-  box-shadow: 0 0 22px rgba(255, 196, 138, 0.55);
+  width: 7.2%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  pointer-events: none;
+  animation: main-hero-spark 2.8s ease-in-out infinite;
+}
+
+.main-hero-spark.is-left {
+  left: 11.61%;
+  top: 27.78%;
+  transform: translate(-50%, -50%);
+}
+
+.main-hero-spark.is-right {
+  left: 94.84%;
+  top: 61.01%;
+  transform: translate(-50%, -50%);
+  animation-duration: 3.3s;
+  animation-delay: 0.7s;
+}
+
+.main-hero-b > .main-hero-card-spark {
+  left: 54%;
+  top: 41%;
+  width: 8%;
+  height: 6.4%;
+}
+
+.main-hero-offer .main-hero-card-spark {
+  left: 64%;
+  top: 0;
+  width: 34%;
+  height: 28%;
+}
+
+.main-hero-card-spark {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 220, 160, 0.95) 0%, rgba(255, 196, 138, 0.2) 55%, transparent 72%);
+  animation: main-hero-spark 1.4s ease-in-out infinite;
   pointer-events: none;
   z-index: 2;
 }
 
-.deck-top .main-deck-card.is-top.is-flip {
-  animation: main-deck-flip 180ms ease-in forwards;
-}
-
-.main-cat-stage.is-flipping .main-deck-card.is-back {
-  transform: rotate(-2deg) translate(0, 0) scale(1);
-  filter: none;
-}
-
-.main-tail {
+.main-hero-offer {
   position: absolute;
-  left: calc(100% - 20px);
-  top: 29.464%; /* 66/224 of deck */
-  width: 47.619%; /* 80/168 of deck */
-  height: auto;
-  aspect-ratio: 80 / 94;
-  z-index: 0;
-  display: block;
-  transform-origin: 12.5% 87%;
-  will-change: transform;
-  animation: main-tail 2.4s ease-in-out infinite;
-  pointer-events: none;
-}
-
-.main-deck-dot {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ff5a5f;
-  box-shadow: 0 0 0 2px #1a1731;
-  z-index: 4;
-}
-
-.main-deck-spark {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 220, 160, 0.9) 0%, rgba(255, 90, 95, 0.15) 55%, transparent 70%);
-  animation: main-deck-spark 1.4s ease-in-out infinite;
-  z-index: 4;
-  pointer-events: none;
-}
-
-.main-cat {
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  margin-bottom: -13.095%; /* ~22/168 of deck width as approx */
-  width: 101.19%; /* 170/168 */
-  height: auto;
-  aspect-ratio: 170 / 144.3;
+  left: 46.5%;
+  top: 55%;
+  width: 28%;
+  height: 28.6%;
   z-index: 3;
+  opacity: 0;
   pointer-events: none;
-  transform: translateX(-50%);
-  transform-origin: 50% 93%;
-  will-change: transform;
-  animation: main-breathe 2.4s ease-in-out infinite;
+  transform: translate(-50%, -50%);
+  transform-style: preserve-3d;
 }
 
-.main-cat-body {
+.main-hero-offer-face {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  pointer-events: none;
+  border-radius: 8px;
+  backface-visibility: hidden;
+  box-shadow: 0 10px 18px rgba(10, 8, 24, 0.35);
 }
 
-.main-drool {
-  position: absolute;
-  left: 49.824%; /* 84.7/170 */
-  top: 57.727%; /* 83.3/144.3 */
-  width: 10.412%; /* 17.7/170 */
-  height: auto;
-  aspect-ratio: 17.7 / 23;
-  display: block;
-  object-fit: contain;
-  pointer-events: none;
-  transform-origin: 50% 0;
-  will-change: transform;
-  animation: main-drool 2.4s ease-in-out infinite;
+.main-cat-stage.is-waking:not(.is-flipping) .main-hero-offer {
+  animation: main-hero-offer 220ms ease-out forwards;
 }
 
-.main-cat-stage.is-flipping .main-drool,
-.main-cat-stage.is-waking .main-drool {
-  opacity: 0;
-  animation: none;
-}
-
-.main-zzz {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  color: #f3ebd7;
-  font-family: "Gamja Flower", Poppins, Georgia, serif;
-  font-style: normal;
-  font-weight: 400;
-  pointer-events: none;
-}
-
-.main-zzz span {
-  position: absolute;
-  display: block;
-  will-change: transform, opacity;
-  animation: main-zzz 2.5s ease-in-out infinite;
-}
-
-.main-zzz span:nth-child(1) {
-  font-size: clamp(18px, 7.179%, 28px);
-  left: 72.308%; /* 282/390 */
-  top: 10.363%; /* 40/386 */
-  opacity: 0.95;
-  animation-delay: 0s;
-}
-
-.main-zzz span:nth-child(2) {
-  font-size: clamp(14px, 5.128%, 20px);
-  left: 76.923%; /* 300/390 */
-  top: 5.699%; /* 22/386 */
-  opacity: 0.7;
-  animation-delay: 0.8s;
-}
-
-.main-zzz span:nth-child(3) {
-  font-size: clamp(11px, 3.59%, 14px);
-  left: 80.256%; /* 313/390 */
-  top: 2.073%; /* 8/386 */
-  opacity: 0.5;
-  animation-delay: 1.6s;
+.main-cat-stage.is-flipping .main-hero-offer {
+  animation: main-hero-flip 180ms ease-in forwards;
 }
 
 .main-cat-stage:active .main-float {
   animation-play-state: paused;
-}
-
-.main-cat-stage:active .main-cat {
-  animation: none;
-  transform: translateX(-50%) scale(0.97);
-}
-
-.main-cat-stage.is-waking .main-cat {
-  animation: none;
-  transform: translateX(-50%) scale(1.05);
-}
-
-.main-cat-stage.is-waking .main-zzz {
-  opacity: 0;
 }
 
 /* actions — CTA + remaining draws */
@@ -1843,37 +1724,6 @@
   box-sizing: border-box;
 }
 
-@keyframes main-breathe {
-  0%,
-  100% {
-    transform: translateX(-50%) scale(1);
-  }
-  50% {
-    transform: translateX(-50%) scale(1.03);
-  }
-}
-
-/* Mouth-anchored pulse; inhale = grow (synced with main-breathe). */
-@keyframes main-drool {
-  0%,
-  100% {
-    transform: scale(0.85);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-
-@keyframes main-tail {
-  0%,
-  100% {
-    transform: rotate(-6deg);
-  }
-  50% {
-    transform: rotate(6deg);
-  }
-}
-
 @keyframes main-moon {
   0%,
   100% {
@@ -1906,40 +1756,35 @@
   }
 }
 
-@keyframes main-zzz {
-  0% {
-    opacity: 0.25;
-    transform: translateY(10px);
-  }
-  40% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-28px);
-  }
-}
-
-/* Flip the face only; parent .deck-top already holds the -2deg tilt. */
-@keyframes main-deck-flip {
-  0% {
-    transform: rotateY(0deg);
-  }
-  100% {
-    transform: rotateY(95deg) scale(0.92);
-    opacity: 0.2;
-  }
-}
-
-@keyframes main-deck-spark {
+@keyframes main-hero-spark {
   0%,
   100% {
-    opacity: 0.35;
-    transform: scale(0.85);
+    opacity: 0.25;
   }
   50% {
     opacity: 1;
-    transform: scale(1.15);
+  }
+}
+
+@keyframes main-hero-offer {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -96%) scale(1.22);
+  }
+}
+
+@keyframes main-hero-flip {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -96%) scale(1.22) rotateY(0deg);
+  }
+  to {
+    opacity: 0.15;
+    transform: translate(-50%, -110%) scale(1.08) rotateY(95deg);
   }
 }
 
@@ -1953,8 +1798,10 @@
   }
 }
 
-.main-screen.is-reduce .main-deck-spark {
+.main-screen.is-reduce .main-hero-spark,
+.main-screen.is-reduce .main-hero-card-spark {
   animation: none;
+  opacity: 0.7;
 }
 
 .main-screen.is-reduce .main-draw-pill.is-nudge {
@@ -1967,33 +1814,23 @@
   transform: translateX(calc(-50% + var(--tip-shift, 0px)));
 }
 
-.main-screen.is-reduce .main-deck-card {
-  transition: none;
-}
-
-.main-screen.is-reduce .main-deck-card.is-top.is-flip {
+.main-screen.is-reduce .main-hero-offer {
   animation: none;
-  opacity: 0.35;
+  opacity: 0;
 }
 
 .main-screen.is-reduce .main-float,
-.main-screen.is-reduce .main-tail,
-.main-screen.is-reduce .main-cat,
-.main-screen.is-reduce .main-drool,
-.main-screen.is-reduce .main-zzz span {
+.main-screen.is-reduce .main-moon,
+.main-screen.is-reduce .main-hero-b-blink {
   animation: none;
 }
 
 .main-screen.is-reduce .main-float {
-  transform: translateY(0);
+  transform: none;
 }
 
-.main-screen.is-reduce .main-cat {
-  transform: translateX(-50%);
-}
-
-.main-screen.is-reduce .main-drool {
-  transform: scale(1);
+.main-screen.is-reduce .main-hero-b-blink {
+  opacity: 0;
 }
 
 /*
