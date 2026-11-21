@@ -962,50 +962,17 @@
 }
 
 .main-mail-btn {
-  width: 40px;
-  height: 50px;
-  border-radius: 12px;
-  background: #f3ebd7;
-  color: #221e3a;
-  gap: 1px;
-  justify-content: center;
-}
-
-.main-mail-icon {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-}
-
-.main-mail-icon img {
-  width: 22px;
-  height: 22px;
-}
-
-.main-mail-badge {
-  position: absolute;
-  top: -8px;
-  right: -10px;
-  min-width: 16px;
-  height: 16px;
-  padding: 2px 4px 0;
-  border-radius: 999px;
-  background: #ff4d4f;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
+  flex: none;
+  width: 44px;
+  min-height: 44px;
+  padding-top: 2px;
+  gap: 2px;
+  justify-content: flex-start;
 }
 
 .main-mail-btn > span:last-child {
-  padding-top: 2px;
-  font-weight: 700;
+  margin-top: -2px;
+  transform: translateY(-3px);
 }
 
 .main-menu-icon-wrap {

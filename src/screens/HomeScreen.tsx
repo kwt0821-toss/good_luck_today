@@ -15,7 +15,7 @@ const ASSETS = {
   bg: "/assets/main/bg-night-base.webp",
   moon: "/assets/main/moon-glow.png",
   menu: "/assets/main/icon-menu-paw.svg",
-  mail: "/assets/mailbox/icon-mailbox-dark.svg",
+  mail: "/assets/menu/icon-mailbox.svg",
   dex: "/assets/main/icon-dex-book.svg",
   room: "/assets/main/icon-room-house.svg",
   rateUp: "/assets/main/icon-rateup-sparkle.svg",
@@ -320,11 +320,9 @@ export function HomeScreen({
               aria-label={mailCount > 0 ? `편지, 안 받은 선물 ${mailCount}통` : "편지"}
               onClick={popThen(() => onOpenMailbox?.())}
             >
-              <span className="main-mail-icon">
-                <img src={ASSETS.mail} alt="" width={22} height={22} />
-                {mailCount > 0 ? (
-                  <span className="main-mail-badge">{mailCount > 99 ? "99+" : mailCount}</span>
-                ) : null}
+              <span className="main-menu-icon-wrap">
+                <img src={ASSETS.mail} alt="" width={28} height={28} />
+                {mailCount > 0 ? <span className="main-menu-dot" aria-hidden="true" /> : null}
               </span>
               <span>편지</span>
             </button>
