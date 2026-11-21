@@ -1374,9 +1374,17 @@
   z-index: 2;
   pointer-events: none;
   user-select: none;
-  will-change: transform;
   transform-origin: 50% 80%;
+}
+
+.lucky-contact-shadow {
+  will-change: transform;
   transition: transform 140ms ease, opacity 140ms ease;
+}
+
+.lucky-roam-shadow {
+  will-change: transform;
+  transition: opacity 140ms ease;
 }
 
 .lucky-contact-shadow.is-lifted {
@@ -1416,13 +1424,23 @@
   }
 }
 
+.lucky-depth {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.lucky-depth .lucky-sprite,
+.lucky-depth .lucky-roam-cat {
+  pointer-events: auto;
+}
+
 .lucky-roam-cat {
   left: 0;
   top: 0;
-  z-index: 5;
   overflow: visible;
   will-change: transform;
-  container-type: size;
 }
 
 button.lucky-roam-cat,
@@ -1573,8 +1591,7 @@ button.lucky-roam-cat:active,
   background: #fff8ee;
   color: #221d38;
   font-family: "Jua", "Noto Sans KR", sans-serif;
-  font-size: 13px;
-  font-size: 42cqh;
+  font-size: 1em;
   line-height: 1.1;
   white-space: nowrap;
   pointer-events: none;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type MutableRefObject } from "react";
 
 import { track } from "./analytics";
 import {
@@ -21,7 +21,9 @@ import {
   DEFAULT_CAT_BREED_ID,
   animDurationMs,
   clipPlayMs,
+  catDepthKey,
   defaultSitFrame,
+  spriteDepthZ,
   type CatAnimName,
   type CatSpriteSheet,
   type CatTile,
@@ -79,6 +81,8 @@ export type RoomCatMotion = {
   zzz: boolean;
   /** Reserved furniture seat, empty when the cat is on the floor. */
   seatId: string;
+  /** Painter order inside the room depth layer. Updated without a React render. */
+  zIndex: number;
 };
 
 export type RoomCatView = {
@@ -401,6 +405,7 @@ export function useRoomCat({
       pose: "",
       zzz: false,
       seatId: "",
+      zIndex: spriteDepthZ(4 + 5, 4 - 5),
     };
     const ref = {
       current: motion,
@@ -452,9 +457,6 @@ export function useRoomCat({
   const saberTapRef = useRef(0);
   const bubbleUntilRef = useRef(0);
   const reduceTapRef = useRef(reducedTapMotion);
-  const depthRef = useRef({ col: 4, row: 5 });
-  const sleepRef = useRef(false);
-  const opacityRef = useRef(1);
   const slotRef = useRef(slot);
   slotRef.current = slot;
   const bonusRef = useRef<RoomSetCue | null>(setBonus);
@@ -474,7 +476,7 @@ export function useRoomCat({
       spotsRef.current.set(catIdRef.current, { tile: startNow, goal: null, seatId: null });
       tileRef.current = startNow;
       fromRef.current = startNow;
-      depthRef.current = { col: startNow.col, row: startNow.row };
+      catMotion.current.zIndex = spriteDepthZ(startNow.col + startNow.row, startNow.col - startNow.row);
     }
   }
 
@@ -488,6 +490,7 @@ export function useRoomCat({
   roomIdRef.current = roomId;
 
   useEffect(() => {
+    if (!active) return;
     let cancelled = false;
     const catId = breedId || "cheese";
     catIdRef.current = catId;
@@ -521,7 +524,7 @@ export function useRoomCat({
     return () => {
       cancelled = true;
     };
-  }, [breedId, catMotion]);
+  }, [active, breedId, catMotion]);
 
   useEffect(() => {
     let cancelled = false;
@@ -552,17 +555,16 @@ export function useRoomCat({
     fromRef.current = start;
     toRef.current = null;
     progressRef.current = 0;
-    depthRef.current = { col: start.col, row: start.row };
     seatIdRef.current = null;
     spotsRef?.current.set(catIdRef.current, { tile: start, goal: null, seatId: null });
     placeMotion(catMotion.current, start, sheetRef.current, "idle_sit");
+    catMotion.current.zIndex = spriteDepthZ(start.col + start.row, start.col - start.row);
     // Start walking almost immediately so a cold browser load looks alive.
     phaseRef.current = { kind: "idle", until: performance.now() + (needSeed ? 200 : 80), anim: "idle_sit" };
-    setView((prev) => ({ ...prev, depthCol: start.col, depthRow: start.row }));
     for (const listener of listenersRef.current) listener();
   }, [floor, itemsById, roomId, catMotion, spotsRef]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (mode === "edit") {
       const phase = phaseRef.current;
       if (phase.kind === "perch" && phase.hop === "hold") {
@@ -581,12 +583,10 @@ export function useRoomCat({
       catMotion.current.bubbleOn = false;
       catMotion.current.bubbleRoom = false;
       catMotion.current.opacity = 0.5;
-      setView((prev) => ({ ...prev, opacity: 0.5 }));
       for (const listener of listenersRef.current) listener();
       return;
     }
     catMotion.current.opacity = 1;
-    setView((prev) => ({ ...prev, opacity: 1 }));
     const phase = phaseRef.current;
     if (phase.kind === "perch" && !Number.isFinite(phase.until)) {
       phaseRef.current = { ...phase, until: performance.now() + 4000 };
@@ -596,13 +596,46 @@ export function useRoomCat({
     for (const listener of listenersRef.current) listener();
   }, [mode, catMotion]);
 
+  const kickRef = useRef<() => void>(() => {});
+
   useEffect(() => {
     let raf = 0;
     let alive = true;
+    let pausedAt = 0;
     const listeners = listenersRef.current;
+    let walkFloor: FloorPlacement[] | null = null;
+    let walkItems: Map<string, RoomItem> | null = null;
+    let walkCache: CatTile[] = [];
+
+    const cachedWalkable = () => {
+      const floorNow = floorRef.current;
+      const itemsNow = itemsRef.current;
+      if (walkFloor !== floorNow || walkItems !== itemsNow) {
+        walkFloor = floorNow;
+        walkItems = itemsNow;
+        walkCache = walkableTiles(floorNow, itemsNow);
+      }
+      return walkCache;
+    };
 
     const notify = () => {
       for (const listener of listeners) listener();
+    };
+
+    const shiftClocks = (gap: number) => {
+      if (gap <= 0) return;
+      const phase = phaseRef.current;
+      if ("startedAt" in phase && typeof phase.startedAt === "number") phase.startedAt += gap;
+      if ("until" in phase && typeof phase.until === "number" && Number.isFinite(phase.until)) phase.until += gap;
+      if (phase.kind === "action" && phase.resume) phase.resume.startedAt += gap;
+      if (bubbleUntilRef.current > 0) bubbleUntilRef.current += gap;
+    };
+
+    const stop = (now: number) => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      lastTsRef.current = 0;
+      if (!pausedAt) pausedAt = now;
     };
 
     const publishSpot = (goal: CatTile | null) => {
@@ -634,7 +667,7 @@ export function useRoomCat({
       floor: floorRef.current,
       walls: wallsRef.current,
       items: itemsRef.current,
-      walkable: walkableTiles(floorRef.current, itemsRef.current),
+      walkable: cachedWalkable(),
       blocked: blockedGoals(spotsRef?.current, catIdRef.current),
       takenSeatIds: takenSeatIds(spotsRef?.current, catIdRef.current),
       from,
@@ -665,7 +698,7 @@ export function useRoomCat({
 
     const dropToFloor = (ts: number, stay: boolean) => {
       seatIdRef.current = null;
-      const walkableNow = walkableTiles(floorRef.current, itemsRef.current);
+      const walkableNow = cachedWalkable();
       const occupied = occupiedTiles(spotsRef?.current, catIdRef.current);
       const here = tileRef.current;
       const hereOk =
@@ -689,6 +722,10 @@ export function useRoomCat({
 
     const loop = (ts: number) => {
       if (!alive) return;
+      if (!activeRef.current || document.hidden) {
+        stop(ts);
+        return;
+      }
       const sheet = sheetRef.current;
       if (!sheet) {
         raf = requestAnimationFrame(loop);
@@ -706,7 +743,7 @@ export function useRoomCat({
         animElapsedRef.current += dt;
       }
 
-      const walkable = walkableTiles(floorRef.current, itemsRef.current);
+      const walkable = cachedWalkable();
       const phase = phaseRef.current;
       const reduce = reduceRef.current;
       const isEdit = modeRef.current === "edit";
@@ -1069,9 +1106,11 @@ export function useRoomCat({
         motion.fxK = 0;
         motion.spriteHidden = false;
       }
+      const depth = catDepthKey(depthTile.col, depthTile.row);
+      motion.zIndex = spriteDepthZ(depth.front, depth.bias);
       notify();
 
-      if (isActive) {
+      if (import.meta.env.DEV && isActive) {
         const phaseKind =
           live.kind === "walk"
             ? `walk:${live.index}/${live.path.length - 1}`
@@ -1102,6 +1141,7 @@ export function useRoomCat({
           saberTap: saberTapRef.current,
           worldX: Math.round(motion.worldX),
           worldY: Math.round(motion.worldY),
+          zIndex: motion.zIndex,
           listeners: listeners.size,
           walkable: walkable.length,
           active: isActive,
@@ -1117,37 +1157,44 @@ export function useRoomCat({
         host.__luckyCat = debug;
       }
 
-      const nextOpacity = isEdit ? 0.5 : 1;
-      const nextSleeping = anim === "sleep" || anim === "sleep_r";
-      if (
-        depthTile.col !== depthRef.current.col ||
-        depthTile.row !== depthRef.current.row ||
-        nextSleeping !== sleepRef.current ||
-        nextOpacity !== opacityRef.current
-      ) {
-        depthRef.current = { col: depthTile.col, row: depthTile.row };
-        sleepRef.current = nextSleeping;
-        opacityRef.current = nextOpacity;
-        setView((prev) => ({
-          ...prev,
-          depthCol: depthTile.col,
-          depthRow: depthTile.row,
-          sleeping: nextSleeping,
-          opacity: nextOpacity,
-        }));
-      }
-
       raf = requestAnimationFrame(loop);
     };
 
-    raf = requestAnimationFrame(loop);
+    const kick = () => {
+      if (!alive) return;
+      if (!activeRef.current || document.hidden) {
+        if (raf) stop(performance.now());
+        return;
+      }
+      if (raf) return;
+      if (pausedAt) {
+        shiftClocks(performance.now() - pausedAt);
+        pausedAt = 0;
+      }
+      lastTsRef.current = 0;
+      raf = requestAnimationFrame(loop);
+    };
+
+    const onVisibility = () => {
+      kick();
+    };
+
+    kickRef.current = kick;
+    document.addEventListener("visibilitychange", onVisibility);
+    kick();
     return () => {
       alive = false;
+      kickRef.current = () => {};
       cancelAnimationFrame(raf);
+      document.removeEventListener("visibilitychange", onVisibility);
       lastTsRef.current = 0;
       listeners.clear();
     };
   }, [catMotion, spotsRef]);
+
+  useEffect(() => {
+    kickRef.current();
+  }, [active]);
 
   useEffect(() => {
     const spots = spotsRef?.current;

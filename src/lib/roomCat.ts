@@ -220,12 +220,33 @@ function parseSheet(raw: unknown, imageFallback: string): CatSpriteSheet | null 
   };
 }
 
+/** Decode before the first frame is shown so a walk step does not hitch on upload. */
+async function decodeSheetImages(sheet: CatSpriteSheet): Promise<CatSpriteSheet> {
+  if (typeof Image === "undefined") return sheet;
+  const sources = [catAsset(sheet.image)];
+  if (sheet.shadow?.image) sources.push(catAsset(sheet.shadow.image));
+  await Promise.all(
+    sources.map(async (src) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = src;
+      try {
+        await img.decode();
+      } catch {
+        /* A failed decode still lets the sheet mount; the frame just stays blank. */
+      }
+    }),
+  );
+  return sheet;
+}
+
 function loadDefaultSheet(): Promise<CatSpriteSheet> {
   const cached = sheetCache.get(DEFAULT_SPRITE_FILE);
   if (cached) return cached;
   const promise = fetch(catAsset("cat-sprite.json"))
     .then((res) => (res.ok ? res.json() : null))
     .then((raw) => parseSheet(raw, FALLBACK_SHEET.image) ?? FALLBACK_SHEET)
+    .then(decodeSheetImages)
     .catch(() => FALLBACK_SHEET);
   sheetCache.set(DEFAULT_SPRITE_FILE, promise);
   return promise;
@@ -239,7 +260,8 @@ export function loadCatSpriteSheet(spriteFile?: string): Promise<CatSpriteSheet>
   if (cached) return cached;
   const promise = fetch(catAsset(spriteJsonName(file)))
     .then((res) => (res.ok ? res.json() : null))
-    .then((raw) => parseSheet(raw, file) ?? loadDefaultSheet())
+    .then((raw) => (raw ? parseSheet(raw, file) : null))
+    .then((sheet) => (sheet ? decodeSheetImages(sheet) : loadDefaultSheet()))
     .catch(() => loadDefaultSheet());
   sheetCache.set(file, promise);
   return promise;
@@ -487,6 +509,14 @@ export function pickIdlePose(
 
 export function catDepthKey(col: number, row: number) {
   return { front: col + row, bias: col - row };
+}
+
+/**
+ * Same order as sorting by front, then bias.
+ * Stride stays wider than the bias range on the 8×8 grid (including a perch step).
+ */
+export function spriteDepthZ(front: number, bias: number) {
+  return 20 + front * 32 + (bias + 16);
 }
 
 /** Depth key while walking uses the destination tile so the cat stays in front of furniture ahead. */

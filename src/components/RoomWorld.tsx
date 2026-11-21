@@ -10,10 +10,10 @@ import {
   DEFAULT_CAT_BREED_ID,
   auraStrength,
   catAsset,
-  catDepthKey,
   clipPlayMs,
   defaultSitFrame,
   furnitureDepthKey,
+  spriteDepthZ,
   meditateFloatPx,
 } from "../lib/roomCat";
 import { createSnowflakes, paintSnow, stepSnow, type SnowFlake } from "../lib/saberBlizzard";
@@ -113,6 +113,29 @@ type RoomWorldProps = {
 };
 
 /** World pixels as a percentage of the on-screen island (not a 3840px layer). */
+function writeStyle(el: HTMLElement, prop: string, value: string) {
+  if (el.style.getPropertyValue(prop) !== value) el.style.setProperty(prop, value);
+}
+
+function setData(el: HTMLElement, key: string, value: string) {
+  if (el.dataset[key] !== value) el.dataset[key] = value;
+}
+
+function roomBox(el: HTMLElement) {
+  const world = el.closest(".lucky-world");
+  if (!(world instanceof HTMLElement)) return null;
+  const w = world.clientWidth;
+  const h = world.clientHeight;
+  if (w < 1 || h < 1) return null;
+  return { w, h };
+}
+
+function worldTranslate(x: number, y: number, box: { w: number; h: number }) {
+  const px = (x / WORLD_W) * box.w;
+  const py = (y / WORLD_H) * box.h;
+  return `translate3d(${px.toFixed(2)}px, ${py.toFixed(2)}px, 0)`;
+}
+
 function pctX(worldPx: number) {
   return `${(worldPx / WORLD_W) * 100}%`;
 }
@@ -200,6 +223,7 @@ function FloorSprite({
   previewGhost = false,
   previewInvalid = false,
   fit,
+  zIndex,
   onSelect,
   onItemPointerDown,
 }: {
@@ -216,6 +240,7 @@ function FloorSprite({
   previewInvalid?: boolean;
   /** Island scale. Lift offsets are world pixels and must shrink with the room. */
   fit: number;
+  zIndex: number;
   onSelect: (id: string) => void;
   onItemPointerDown: (event: PointerEvent<HTMLButtonElement>, id: string) => void;
 }) {
@@ -241,6 +266,7 @@ function FloorSprite({
         .join(" ")}
       style={{
         ...worldBox(rect),
+        zIndex,
         transform: `${flipped ? "scaleX(-1) " : ""}${liftY}`.trim() || undefined,
       }}
       aria-label={item.nameKo}
@@ -271,12 +297,19 @@ function RoamingCatShadow({
   motionRef: CatMotionRef;
 }) {
   const imgRef = useRef<HTMLImageElement>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!view.sheet) return;
     const shadow = view.sheet.shadow;
+    let box = { w: 0, h: 0 };
+    const readBox = () => {
+      const next = imgRef.current ? roomBox(imgRef.current) : null;
+      if (next) box = next;
+    };
     const apply = () => {
       const el = imgRef.current;
       if (!el) return;
+      if (box.w < 1) readBox();
+      if (box.w < 1) return;
       const motion = motionRef.current;
       const loafish =
         motion.anim === "loaf" ||
@@ -286,15 +319,21 @@ function RoamingCatShadow({
       const scale = loafish ? 0.8 : 1;
       const x = motion.worldX - shadow.anchor[0] * scale;
       const y = motion.worldY - shadow.anchor[1] * scale;
-      el.style.left = pctX(x);
-      el.style.top = pctY(y);
-      el.style.width = pctX(shadow.size[0] * scale);
-      el.style.height = pctY(shadow.size[1] * scale);
-      el.style.opacity = motion.spriteHidden ? "0" : String(motion.opacity);
-      el.style.transform = "";
+      writeStyle(el, "width", `${((shadow.size[0] * scale) / WORLD_W) * box.w}px`);
+      writeStyle(el, "height", `${((shadow.size[1] * scale) / WORLD_H) * box.h}px`);
+      writeStyle(el, "transform", worldTranslate(x, y, box));
+      writeStyle(el, "opacity", motion.spriteHidden ? "0" : String(motion.opacity));
     };
+    readBox();
+    const world = imgRef.current?.closest(".lucky-world");
+    const ro = world instanceof HTMLElement ? new ResizeObserver(() => { readBox(); apply(); }) : null;
+    if (world instanceof HTMLElement && ro) ro.observe(world);
     apply();
-    return motionRef.subscribe(apply);
+    const unsub = motionRef.subscribe(apply);
+    return () => {
+      unsub();
+      ro?.disconnect();
+    };
   }, [view.sheet, motionRef]);
   if (!view.sheet || !view.ready) return null;
   return <img ref={imgRef} className="lucky-roam-shadow" src={catAsset(view.sheet.shadow.image)} alt="" draggable={false} />;
@@ -350,37 +389,50 @@ function RoamingCatBody({
   const poseRef = useRef<HTMLImageElement>(null);
   const zzzRef = useRef<HTMLSpanElement>(null);
   const snowRef = useRef<{ flakes: SnowFlake[]; scale: number; last: number } | null>(null);
+  const applyRef = useRef<(() => void) | null>(null);
   const [bubbleRoot, setBubbleRoot] = useState<HTMLElement | null>(null);
   const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
   useLayoutEffect(() => {
     const root = btnRef.current?.closest(".lucky-island-port");
     if (root instanceof HTMLElement) setBubbleRoot(root);
   }, [view.sheet]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!view.sheet) return;
     const sheet = view.sheet;
     const [fw, fh] = sheet.frameSize;
+    const [sw, sh] = sheet.sheetSize;
+    let box = { w: 0, h: 0 };
+    const readBox = () => {
+      const next = btnRef.current ? roomBox(btnRef.current) : null;
+      if (next) box = next;
+    };
+    const placeBox = (el: HTMLElement, x: number, y: number, w: number, h: number) => {
+      if (box.w < 1) return;
+      const width = (w / WORLD_W) * box.w;
+      const height = (h / WORLD_H) * box.h;
+      writeStyle(el, "width", `${width.toFixed(2)}px`);
+      writeStyle(el, "height", `${height.toFixed(2)}px`);
+      writeStyle(el, "transform", worldTranslate(x, y, box));
+      writeStyle(el, "font-size", `${(height * 0.42).toFixed(2)}px`);
+    };
     const apply = () => {
       const btn = btnRef.current;
       const frameEl = frameRef.current;
       if (!btn || !frameEl) return;
+      if (box.w < 1) readBox();
       const motion = motionRef.current;
       const frame = sheet.frames[motion.frameName] ?? sheet.frames[defaultSitFrame(sheet)];
       if (!frame) return;
-      const x = motion.worldX - sheet.anchor.x;
-      const y = motion.worldY - sheet.anchor.y;
-      btn.style.left = pctX(x);
-      btn.style.top = pctY(y);
-      btn.style.width = pctX(fw);
-      btn.style.height = pctY(fh);
-      btn.style.opacity = String(motion.opacity);
-      btn.style.transform = "";
-      btn.classList.toggle("is-sleeping", motion.anim === "sleep" || motion.anim === "sleep_r");
-      btn.dataset.catAnim = motion.anim;
-      btn.dataset.catFlip = motion.flip ? "1" : "0";
-      btn.dataset.catFx = motion.fx;
-      btn.dataset.spriteHidden = motion.spriteHidden ? "1" : "0";
-      frameEl.style.opacity = motion.spriteHidden ? "0" : "1";
+      const sleeping = motion.anim === "sleep" || motion.anim === "sleep_r";
+      if (btn.classList.contains("is-sleeping") !== sleeping) btn.classList.toggle("is-sleeping", sleeping);
+      setData(btn, "catAnim", motion.anim);
+      setData(btn, "catFlip", motion.flip ? "1" : "0");
+      setData(btn, "catFx", motion.fx);
+      setData(btn, "spriteHidden", motion.spriteHidden ? "1" : "0");
+      writeStyle(btn, "opacity", String(motion.opacity));
+      writeStyle(btn, "z-index", String(motion.zIndex));
+      writeStyle(frameEl, "opacity", motion.spriteHidden ? "0" : "1");
+      let placed = false;
       const poseEl = poseRef.current;
       const cheeseLook =
         motion.pose === "sit_look" &&
@@ -413,16 +465,15 @@ function RoamingCatBody({
             const ax = SIT_LOOK_CHEESE.ax * scale;
             const ay = SIT_LOOK_CHEESE.ay * scale;
             poseBox = { w, h, ax, ay };
-            btn.style.left = pctX(motion.worldX - ax);
-            btn.style.top = pctY(motion.worldY - ay);
-            btn.style.width = pctX(w);
-            btn.style.height = pctY(h);
-            frameEl.style.opacity = "0";
-            poseEl.style.transformOrigin = `${(ax / w) * 100}% ${(ay / h) * 100}%`;
-            poseEl.style.transform = motion.flip ? "scaleX(-1)" : "";
+            placeBox(btn, motion.worldX - ax, motion.worldY - ay, w, h);
+            placed = true;
+            writeStyle(frameEl, "opacity", "0");
+            writeStyle(poseEl, "transform-origin", `${(ax / w) * 100}% ${(ay / h) * 100}%`);
+            writeStyle(poseEl, "transform", motion.flip ? "scaleX(-1)" : "");
           }
         }
       }
+      if (!placed) placeBox(btn, motion.worldX - sheet.anchor.x, motion.worldY - sheet.anchor.y, fw, fh);
       const zzzEl = zzzRef.current;
       if (zzzEl) {
         zzzEl.hidden = !motion.zzz;
@@ -435,17 +486,17 @@ function RoamingCatBody({
           zzzEl.style.top = `${(Math.max(0, ay - 108) / bh) * 100}%`;
         }
       }
-      btn.dataset.seat = motion.seatId;
-      btn.dataset.zzz = motion.zzz ? "1" : "0";
-      btn.dataset.pose = motion.pose;
+      setData(btn, "seat", motion.seatId);
+      setData(btn, "zzz", motion.zzz ? "1" : "0");
+      setData(btn, "pose", motion.pose);
       const flip = motion.flip ? "scaleX(-1)" : "";
-      frameEl.style.transformOrigin = `${(sheet.anchor.x / fw) * 100}% 100%`;
+      writeStyle(frameEl, "transform-origin", `${(sheet.anchor.x / fw) * 100}% 100%`);
       const cloud = cloudRef.current;
       const aura = auraRef.current;
       if (motion.fx === "meditate") {
         const playMs = clipPlayMs(sheet.animations[motion.anim] ?? sheet.animations.meditate);
         const floated = meditateFloatPx(motion.fxMs, playMs);
-        frameEl.style.transform = `translateY(-${(floated.lift / fh) * 100}%) ${flip}`.trim();
+        writeStyle(frameEl, "transform", `translateY(-${(floated.lift / fh) * 100}%) ${flip}`.trim());
         if (cloud) {
           cloud.hidden = floated.cloud <= 0.01;
           cloud.style.opacity = String(floated.cloud);
@@ -453,7 +504,7 @@ function RoamingCatBody({
           cloud.style.bottom = `${((fh - sheet.anchor.y) / fh) * 100}%`;
         }
       } else {
-        frameEl.style.transform = flip;
+        writeStyle(frameEl, "transform", flip);
         if (cloud) cloud.hidden = true;
       }
       if (aura) {
@@ -524,25 +575,41 @@ function RoamingCatBody({
           };
           const back = paintSnow(backSnow, snow.flakes, { ...paint, front: false });
           const front = paintSnow(frontSnow, snow.flakes, { ...paint, front: true });
-          btn.dataset.snowBack = String(back.shown);
-          btn.dataset.snowFront = String(front.shown);
-          btn.dataset.snowFace = String(front.faceDimmed);
+          setData(btn, "snowBack", String(back.shown));
+          setData(btn, "snowFront", String(front.shown));
+          setData(btn, "snowFace", String(front.faceDimmed));
         } else if (!backSnow.hidden || !frontSnow.hidden) {
           backSnow.hidden = true;
           frontSnow.hidden = true;
           snowRef.current = null;
-          btn.dataset.snowBack = "0";
-          btn.dataset.snowFront = "0";
-          btn.dataset.snowFace = "0";
+          setData(btn, "snowBack", "0");
+          setData(btn, "snowFront", "0");
+          setData(btn, "snowFace", "0");
         }
       }
-      const [sw, sh] = sheet.sheetSize;
-      frameEl.style.backgroundSize = `${(sw / fw) * 100}% ${(sh / fh) * 100}%`;
-      frameEl.style.backgroundPosition = `${sw === fw ? 0 : (frame.x / (sw - fw)) * 100}% ${sh === fh ? 0 : (frame.y / (sh - fh)) * 100}%`;
+      writeStyle(frameEl, "background-size", `${(sw / fw) * 100}% ${(sh / fh) * 100}%`);
+      writeStyle(
+        frameEl,
+        "background-position",
+        `${sw === fw ? 0 : (frame.x / (sw - fw)) * 100}% ${sh === fh ? 0 : (frame.y / (sh - fh)) * 100}%`,
+      );
     };
+    applyRef.current = apply;
+    readBox();
+    const world = btnRef.current?.closest(".lucky-world");
+    const ro = world instanceof HTMLElement ? new ResizeObserver(() => { readBox(); apply(); }) : null;
+    if (world instanceof HTMLElement && ro) ro.observe(world);
     apply();
-    return motionRef.subscribe(apply);
+    const unsub = motionRef.subscribe(apply);
+    return () => {
+      applyRef.current = null;
+      unsub();
+      ro?.disconnect();
+    };
   }, [view.sheet, motionRef]);
+  useLayoutEffect(() => {
+    applyRef.current?.();
+  });
   if (!view.sheet || !view.ready) return null;
   const [fw, fh] = view.sheet.frameSize;
   const [sw, sh] = view.sheet.sheetSize;
@@ -566,13 +633,11 @@ function RoamingCatBody({
     <button
       ref={btnRef}
       type="button"
-      className={`lucky-sprite lucky-roam-cat ${view.sleeping ? "is-sleeping" : ""}`}
+      className="lucky-sprite lucky-roam-cat"
       tabIndex={-1}
       aria-label="돌아다니는 고양이"
       data-cat-id={view.breedId}
-      data-cat-flip="0"
       data-happy-frames={view.happyFrames >= 2 ? "multi" : "1"}
-      style={{ width: pctX(fw), height: pctY(fh), opacity: view.opacity, left: 0, top: 0 }}
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
       onPointerCancel={() => {
@@ -915,21 +980,38 @@ export function RoomWorld({
       ? { x: lampRect.x - defaultLampRect.x, y: lampRect.y - defaultLampRect.y }
       : { x: 0, y: 0 };
 
-  type DrawEntry =
-    | { kind: "furniture"; place: FloorPlacement; front: number; bias: number }
-    | { kind: "cat"; catId: string; front: number; bias: number };
-  const drawList: DrawEntry[] = furnitureDrawn.map((place) => {
+  const renderFurniture = (place: FloorPlacement) => {
     const item = itemsById.get(place.id);
-    const depth = item ? furnitureDepthKey(place, item) : { front: 0, bias: 0 };
-    return { kind: "furniture" as const, place, front: depth.front, bias: depth.bias };
-  });
-  for (const catId of roomCatIds) {
-    const published = publishedCats[catId];
-    if (!published?.view.ready) continue;
-    const depth = catDepthKey(published.view.depthCol, published.view.depthRow);
-    drawList.push({ kind: "cat", catId, front: depth.front, bias: depth.bias });
-  }
-  drawList.sort((a, b) => (a.front !== b.front ? a.front - b.front : a.bias - b.bias));
+    if (!item) return null;
+    const rect = spriteRect(item, place, shownFloor, itemsById);
+    const isPreview = Boolean(previewGhost && dragging?.instanceId === place.instanceId);
+    const lifted = liftedIds.has(place.instanceId);
+    const depth = furnitureDepthKey(place, item);
+    return (
+      <FloorSprite
+        key={place.instanceId}
+        place={place}
+        item={item}
+        rect={rect}
+        selected={place.instanceId === selectedId}
+        lifted={lifted}
+        shaking={place.instanceId === shakeId}
+        flipped={!item.furniture && place.orientation === "mirrored"}
+        thumbs={frameThumbs}
+        placeFx={place.instanceId === placeFxId}
+        previewGhost={isPreview}
+        previewInvalid={isPreview && previewInvalid}
+        fit={fit}
+        zIndex={isPreview ? 9 : lifted ? 8 : spriteDepthZ(depth.front, depth.bias)}
+        onSelect={(id) => onSelect(id, "floor")}
+        onItemPointerDown={onItemPointerDown}
+      />
+    );
+  };
+  const raisedFurniture = furnitureDrawn.filter(
+    (place) => liftedIds.has(place.instanceId) || Boolean(previewGhost && dragging?.instanceId === place.instanceId),
+  );
+  const depthFurniture = furnitureDrawn.filter((place) => !raisedFurniture.includes(place));
 
   return (
     <div
@@ -1084,6 +1166,7 @@ export function RoomWorld({
             previewGhost={isPreview}
             previewInvalid={isPreview && previewInvalid}
             fit={fit}
+            zIndex={isPreview ? 9 : liftedIds.has(place.instanceId) ? 8 : 1}
             onSelect={(id) => onSelect(id, "floor")}
             onItemPointerDown={onItemPointerDown}
           />
@@ -1173,48 +1256,26 @@ export function RoomWorld({
         />
       ))}
 
-      {drawList.map((entry) => {
-        if (entry.kind === "cat") {
-          const published = publishedCats[entry.catId];
-          if (!published) return null;
+      <div className="lucky-depth">
+        {depthFurniture.map(renderFurniture)}
+        {roomCatIds.map((catId) => {
+          const published = publishedCats[catId];
+          if (!published?.view.ready) return null;
           return (
             <RoamingCatBody
-              key={`roaming-cat-${entry.catId}`}
+              key={`roaming-cat-${catId}`}
               view={published.view}
               motionRef={published.motionRef}
               onTap={() => {
-                AudioManager.playSfx("meow", { catId: entry.catId });
+                AudioManager.playSfx("meow", { catId });
                 published.tap();
               }}
               tapEnabled={mode !== "edit" && !dragging && !previewGhost}
             />
           );
-        }
-        const place = entry.place;
-        const item = itemsById.get(place.id);
-        if (!item) return null;
-        const rect = spriteRect(item, place, shownFloor, itemsById);
-        const isPreview = Boolean(previewGhost && dragging?.instanceId === place.instanceId);
-        return (
-          <FloorSprite
-            key={place.instanceId}
-            place={place}
-            item={item}
-            rect={rect}
-            selected={place.instanceId === selectedId}
-            lifted={liftedIds.has(place.instanceId)}
-            shaking={place.instanceId === shakeId}
-            flipped={!item.furniture && place.orientation === "mirrored"}
-            thumbs={frameThumbs}
-            placeFx={place.instanceId === placeFxId}
-            previewGhost={isPreview}
-            previewInvalid={isPreview && previewInvalid}
-            fit={fit}
-            onSelect={(id) => onSelect(id, "floor")}
-            onItemPointerDown={onItemPointerDown}
-          />
-        );
-      })}
+        })}
+      </div>
+      {raisedFurniture.map(renderFurniture)}
 
       {lamp ? (
         <img
