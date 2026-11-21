@@ -42,9 +42,11 @@ import {
   screenOf,
 } from "../lib/roomLayout";
 import {
+  floorTileClip,
   floorTileRect,
   floorTileSrc,
   paintSkinType,
+  wallStripClip,
   wallStripRect,
   wallStripSrc,
 } from "../lib/roomTiles";
@@ -125,6 +127,18 @@ function worldBox(rect: { x: number; y: number; w: number; h: number }): CSSProp
     top: pctY(rect.y),
     width: pctX(rect.w),
     height: pctY(rect.h),
+  };
+}
+
+const FLOOR_CLIP = floorTileClip();
+const WALL_CLIP = { L: wallStripClip("L"), R: wallStripClip("R") } as const;
+
+function tileClipStyle(rect: { x: number; y: number; w: number; h: number }, clip: string): CSSProperties {
+  return {
+    ...worldBox(rect),
+    ["--tile-clip" as string]: clip,
+    clipPath: clip,
+    WebkitClipPath: clip,
   };
 }
 
@@ -941,7 +955,7 @@ export function RoomWorld({
                 src={roomAsset(floorTileSrc(skin, c, r))}
                 alt=""
                 draggable={false}
-                style={worldBox(rect)}
+                style={tileClipStyle(rect, FLOOR_CLIP)}
               />
             );
           }),
@@ -962,7 +976,7 @@ export function RoomWorld({
                 src={roomAsset(wallStripSrc(skin, wall, index))}
                 alt=""
                 draggable={false}
-                style={worldBox(rect)}
+                style={tileClipStyle(rect, WALL_CLIP[wall])}
               />
             );
           }),

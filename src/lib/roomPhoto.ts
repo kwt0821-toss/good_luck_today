@@ -1,5 +1,6 @@
 import { toKstDateKey } from "./date";
 import { roomAsset } from "./roomCatalog";
+import { floorTileClip, wallStripClip } from "./roomTiles";
 import { functionEndpoint, readSaveToken, refreshSaveToken } from "./serverSave";
 import { resolveWalletMode } from "./serverWallet";
 import { isTossApp } from "./tossEnv";
@@ -301,7 +302,37 @@ function drawElementImage(
   const fitted = contain(box.width, box.height, img.naturalWidth, img.naturalHeight);
   const dx = box.left + (box.width - fitted.w) / 2;
   const dy = box.top + (box.height - fitted.h) / 2;
+  ctx.save();
+  clipTile(ctx, img, box, rootRect);
   drawBoxImage(ctx, img, new DOMRect(dx, dy, fitted.w, fitted.h), rootRect, opacity, flipped(img, root));
+  ctx.restore();
+}
+
+function tileClipCss(img: HTMLImageElement): string | null {
+  if (img.classList.contains("lucky-wall-tile")) {
+    if (img.classList.contains("is-L")) return wallStripClip("L");
+    if (img.classList.contains("is-R")) return wallStripClip("R");
+    return null;
+  }
+  if (img.classList.contains("lucky-floor-tile")) return floorTileClip();
+  return null;
+}
+
+/** Same polygon the screen uses, in canvas pixels of the island. */
+function clipTile(ctx: CanvasRenderingContext2D, img: HTMLImageElement, box: DOMRect, rootRect: DOMRect) {
+  const clip = tileClipCss(img);
+  if (!clip) return;
+  const nums = [...clip.matchAll(/(-?\d*\.?\d+)%\s+(-?\d*\.?\d+)%/g)];
+  if (nums.length < 3) return;
+  ctx.beginPath();
+  nums.forEach((match, index) => {
+    const x = box.left - rootRect.left + (Number(match[1]) / 100) * box.width;
+    const y = box.top - rootRect.top + (Number(match[2]) / 100) * box.height;
+    if (index === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.clip();
 }
 
 function drawBoxImage(

@@ -704,6 +704,8 @@
   pointer-events: none;
   user-select: none;
   display: block;
+  -webkit-clip-path: var(--tile-clip, none);
+  clip-path: var(--tile-clip, none);
 }
 
 .lucky-floor-tile.is-paint-preview,
