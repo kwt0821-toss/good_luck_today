@@ -7,6 +7,7 @@ import { formatCountdownHms, formatLuckyCatalogDate, msUntilNextKstMidnight } fr
 import { MENU_SETTINGS_EVENT, shouldReduceMenuMotion } from "../lib/menuSettings";
 import { josa } from "../lib/josa";
 import { jellyLabel } from "../lib/jellyLabel";
+import { mailboxUnclaimed, subscribeMailbox } from "../lib/mailbox";
 import { nyNotify } from "../lib/nyangNotify";
 import { drawAgainLabel, type NextDrawKind } from "../lib/opsState";
 
@@ -14,6 +15,7 @@ const ASSETS = {
   bg: "/assets/main/bg-night-base.webp",
   moon: "/assets/main/moon-glow.png",
   menu: "/assets/main/icon-menu-paw.svg",
+  mail: "/assets/mailbox/icon-mailbox-dark.svg",
   dex: "/assets/main/icon-dex-book.svg",
   room: "/assets/main/icon-room-house.svg",
   rateUp: "/assets/main/icon-rateup-sparkle.svg",
@@ -73,6 +75,7 @@ type HomeScreenProps = {
   /** A finished mission is waiting to be claimed. */
   missionNudge?: boolean;
   onOpenMissions?: () => void;
+  onOpenMailbox?: () => void;
 };
 
 export function HomeScreen({
@@ -103,6 +106,7 @@ export function HomeScreen({
   showRewardsNudge = false,
   missionNudge = false,
   onOpenMissions,
+  onOpenMailbox,
 }: HomeScreenProps) {
   const [waking, setWaking] = useState(false);
   const [flipping, setFlipping] = useState(false);
@@ -114,7 +118,10 @@ export function HomeScreen({
   const [reduce, setReduce] = useState(() => shouldReduceMenuMotion());
   const tipRef = useRef<HTMLDivElement>(null);
   const [tipShift, setTipShift] = useState(0);
+  const [mailCount, setMailCount] = useState(() => mailboxUnclaimed());
   const dateLabel = formatLuckyCatalogDate();
+
+  useEffect(() => subscribeMailbox((next) => setMailCount(next.unclaimedCount)), []);
 
   useEffect(() => {
     const sync = () => setReduce(shouldReduceMenuMotion());
@@ -305,6 +312,22 @@ export function HomeScreen({
               />
             ) : null}
           </div>
+          <div className="main-nav-cluster">
+            <button
+              type="button"
+              id="btn-mail"
+              className="main-nav-btn main-mail-btn"
+              aria-label={mailCount > 0 ? `편지, 안 받은 선물 ${mailCount}통` : "편지"}
+              onClick={popThen(() => onOpenMailbox?.())}
+            >
+              <span className="main-mail-icon">
+                <img src={ASSETS.mail} alt="" width={22} height={22} />
+                {mailCount > 0 ? (
+                  <span className="main-mail-badge">{mailCount > 99 ? "99+" : mailCount}</span>
+                ) : null}
+              </span>
+              <span>편지</span>
+            </button>
           <button
             type="button"
             id="btn-menu"
@@ -318,6 +341,7 @@ export function HomeScreen({
             </span>
             <span>메뉴</span>
           </button>
+          </div>
         </div>
 
         <div className="main-rule" aria-hidden="true" />

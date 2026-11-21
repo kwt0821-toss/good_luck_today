@@ -52,6 +52,7 @@
    "id": "daily",
    "label": "DAILY",
    "rows": [
+    "mailbox",
     "missions",
     "weeklyMissions",
     "attendance",
@@ -74,6 +75,12 @@
   }
  ],
  "rows": {
+  "mailbox": {
+   "label": "편지함",
+   "icon": "icon-mailbox.svg",
+   "enabled": true,
+   "open": "sheet:mailbox"
+  },
   "missions": {
    "label": "오늘의 미션",
    "icon": "icon-stamp.svg",

@@ -21,15 +21,26 @@ export type WeeklyRules = {
   ticketMaxHold: number;
 };
 
+export type WeeklyChestKind = "3" | "6" | "9" | "invite";
+
+export type MailboxSlot = "none" | "pending" | "claimed" | "expired";
+
+export type WeeklyMailboxMap = Partial<Record<WeeklyChestKind, MailboxSlot>>;
+
+export type WeeklyMailbox = {
+  current: WeeklyMailboxMap;
+  previous: WeeklyMailboxMap;
+};
+
 export type WeeklyBag = {
   current: WeeklyLog;
   previous: WeeklyLog | null;
   claimed: string[];
   previousClaimed: string[];
   rules: WeeklyRules | null;
+  /** Letters the server already moved into the mailbox. */
+  mailbox?: WeeklyMailbox | null;
 };
-
-export type WeeklyChestKind = "3" | "6" | "9" | "invite";
 
 export const WEEKLY_STAMP_MAX = 9;
 export const WEEKLY_TICKET_BONUS_MAX = 4;
@@ -360,6 +371,7 @@ export function rollWeeklyBag(bag: WeeklyBag | null, weekKey: string): WeeklyBag
     claimed: [],
     previousClaimed: ended ? uniqueKinds(bag.claimed) : uniqueKinds(bag.previousClaimed),
     rules: bag.rules,
+    mailbox: bag.mailbox ?? null,
   };
 }
 
@@ -422,7 +434,43 @@ export function parseWeeklyBag(value: unknown): WeeklyBag | null {
     claimed,
     previousClaimed,
     rules: parseWeeklyRules(raw.rules),
+    mailbox: parseWeeklyMailbox(raw.mailbox),
   };
+}
+
+const MAILBOX_SLOTS = new Set<MailboxSlot>(["none", "pending", "claimed", "expired"]);
+
+function parseMailboxSide(value: unknown): WeeklyMailboxMap {
+  const out: WeeklyMailboxMap = {};
+  if (!value || typeof value !== "object") return out;
+  const raw = value as Record<string, unknown>;
+  for (const key of ["3", "6", "9", "invite"] as const) {
+    const slot = raw[key];
+    if (typeof slot === "string" && MAILBOX_SLOTS.has(slot as MailboxSlot)) out[key] = slot as MailboxSlot;
+  }
+  return out;
+}
+
+export function parseWeeklyMailbox(value: unknown): WeeklyMailbox | null {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Record<string, unknown>;
+  return { current: parseMailboxSide(raw.current), previous: parseMailboxSide(raw.previous) };
+}
+
+export function mailboxClaimedKinds(map: WeeklyMailboxMap | undefined): string[] {
+  if (!map) return [];
+  return (["3", "6", "9", "invite"] as const).filter((key) => map[key] === "claimed");
+}
+
+/** Filled chests wait in the mailbox. Already received chests stay checked. */
+export function chestMailboxLabel(
+  ready: boolean,
+  claimed: boolean,
+  slot: MailboxSlot | undefined,
+): { state: "locked" | "sent" | "claimed"; label: string } {
+  if (claimed || slot === "claimed") return { state: "claimed", label: "받음" };
+  if (slot === "pending" || slot === "expired" || ready) return { state: "sent", label: "편지함으로 보냈어요" };
+  return { state: "locked", label: "잠김" };
 }
 
 export function serverWeekToLog(value: unknown): { log: WeeklyLog; claimed: string[] } | null {

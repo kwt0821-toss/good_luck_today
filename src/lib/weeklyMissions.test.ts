@@ -8,6 +8,7 @@ import {
   emptyWeeklyLog,
   mergeWeeklyLogs,
   recountWeekly,
+  chestMailboxLabel,
   ticketFractionLabel,
 } from "./weeklyMissions.ts";
 
@@ -102,5 +103,11 @@ assert.equal(four, "4장 (보너스 1장 포함)");
 assert.equal(three, "3/3");
 assert.equal(four.includes("4/3"), false);
 assert.equal(ticketFractionLabel(2, 3).includes("4/3"), false);
+
+assert.deepEqual(chestMailboxLabel(false, false, "none"), { state: "locked", label: "잠김" });
+assert.deepEqual(chestMailboxLabel(true, false, "none"), { state: "sent", label: "편지함으로 보냈어요" });
+assert.deepEqual(chestMailboxLabel(true, false, "pending"), { state: "sent", label: "편지함으로 보냈어요" });
+assert.deepEqual(chestMailboxLabel(true, true, "claimed"), { state: "claimed", label: "받음" });
+assert.equal(chestMailboxLabel(true, false, "pending").label.includes("받기"), false);
 
 console.log("weeklyMissions.test.ts ok");

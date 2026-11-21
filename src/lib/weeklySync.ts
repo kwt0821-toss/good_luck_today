@@ -3,46 +3,32 @@ import { toKstMondayWeekKey } from "./date";
 import type { OpsEconomy, OpsState } from "./opsTypes";
 import { saveOpsState } from "./opsStorage";
 import { markDirtyUrgent } from "./serverSave";
-import { adoptServerJelly } from "./serverJelly";
-import {
-  claimWeeklyChest,
-  fetchWeeklyStatus,
-  syncWeeklyProgress,
-  walletGet,
-  type WeeklyClaimResult,
-} from "./serverWallet";
-import { trustedKstDateKey, trustedNow } from "./tossClock";
-import {
-  absorbWeeklySources,
-  applyChestGrant,
-  chestReady,
-  emptyWeeklyBag,
-  mergeWeeklyLogs,
-  parseWeeklyRules,
-  pendingChestKinds,
-  rollWeeklyBag,
-  serverWeekToLog,
-  unionKinds,
-  weeklyProgressPayload,
-  type AppliedChest,
-  type WeeklyBag,
-  type WeeklyChestKind,
-} from "./weeklyMissions";
+import { refreshMailbox } from "./mailbox";
 
 export type WeeklyCelebrate = {
   title: string;
   lines: string[];
   past?: boolean;
 };
+import { fetchWeeklyStatus, syncWeeklyProgress } from "./serverWallet";
+import { trustedKstDateKey, trustedNow } from "./tossClock";
+import {
+  absorbWeeklySources,
+  emptyWeeklyBag,
+  mailboxClaimedKinds,
+  mergeWeeklyLogs,
+  parseWeeklyMailbox,
+  parseWeeklyRules,
+  rollWeeklyBag,
+  serverWeekToLog,
+  unionKinds,
+  weeklyProgressPayload,
+  type WeeklyBag,
+} from "./weeklyMissions";
 
-let celebrateListener: (view: WeeklyCelebrate) => void = () => {};
 let applyListener: (state: OpsState) => void = () => {};
 let syncTimer: number | null = null;
 let syncLatest: OpsState | null = null;
-
-export function bindWeeklyCelebrate(listener: (view: WeeklyCelebrate) => void) {
-  celebrateListener = listener;
-}
 
 export function bindWeeklyApply(listener: (state: OpsState) => void) {
   applyListener = listener;
@@ -154,156 +140,26 @@ async function pushWeekly(state: OpsState): Promise<void> {
   const result = await syncWeeklyProgress(bag.current.weekKey, weeklyProgressPayload(bag.current));
   if (!result.ok) return;
   const next = await mergeSyncedWeek(state, result.week, "current");
-  if (next === state) return;
-  await saveWeeklyOps(next, false);
-  applyListener(next);
-}
-
-function claimLines(result: WeeklyClaimResult, beforeKeys: Set<string>): string[] {
-  if (result.already) return [];
-  const lines: string[] = [];
-  if (result.jelly > 0) lines.push(`젤리 ${result.jelly}`);
-  if (result.ticketKeys.some((key) => key.startsWith("weeklyChest:") && !beforeKeys.has(key))) {
-    lines.push("확률업 뽑기권 1장");
+  if (next !== state) {
+    await saveWeeklyOps(next, false);
+    applyListener(next);
   }
-  if (result.nyangCoin > 0) lines.push(`냥코인 ${result.nyangCoin}`);
-  return lines;
+  void refreshMailbox();
 }
 
-function claimMessage(error: string): string {
-  if (error === "local") return "서버가 필요할 때 받을 수 있어요";
-  if (error === "not_ready") return "아직 도장이 모자라요";
-  if (error === "week_invalid") return "지난 주 선물만 받을 수 있어요";
-  if (error === "disabled") return "지금은 준비 중이에요";
-  if (error === "blocked") return "지금은 받을 수 없어요";
-  return "다시 시도해 주세요";
-}
-
-async function claimKinds(
-  state: OpsState,
-  which: "current" | "previous",
-  only?: WeeklyChestKind,
-): Promise<{ state: OpsState; lines: string[]; message: string | null }> {
-  const bag = state.weekly ?? emptyWeeklyBag(weekKeyNow());
-  const log = which === "current" ? bag.current : bag.previous;
-  if (!log) return { state, lines: [], message: null };
-  const claimed = which === "current" ? bag.claimed : bag.previousClaimed;
-  const kinds = (only ? [only] : pendingChestKinds(log, claimed)).filter(
-    (kind) => !claimed.includes(kind) && chestReady(log, kind),
-  );
-  if (kinds.length === 0) return { state, lines: [], message: only ? "아직이에요" : null };
-
-  let next = state.weekly ? state : { ...state, weekly: bag };
-  const lines: string[] = [];
-  let message: string | null = null;
-  let sawNyang = false;
-
-  for (const kind of kinds) {
-    const live = next.weekly;
-    if (!live) break;
-    const beforeKeys = new Set(next.inviteTicketKeys ?? []);
-    const applied: AppliedChest[] = (which === "current" ? live.claimed : live.previousClaimed).map((item) => ({
-      weekKey: log.weekKey,
-      kind: item,
-    }));
-    const result = await claimWeeklyChest({
-      weekKey: log.weekKey,
-      kind,
-      ticketsHeld: next.rateUpTickets,
-    });
-    if (!result.ok) {
-      message = claimMessage(result.error);
-      if (result.error === "week_invalid" && which === "previous") {
-        next = { ...next, weekly: { ...live, previous: null, previousClaimed: [] } };
-      }
-      break;
-    }
-    if (result.jellyBalance != null) {
-      adoptServerJelly(result.jellyBalance);
-      next = { ...next, pawBalance: result.jellyBalance };
-    }
-    if (result.nyangCoinBalance != null) {
-      next = { ...next, nyangCoinBalance: result.nyangCoinBalance };
-      sawNyang = result.nyangCoin > 0 || sawNyang;
-    } else if (result.nyangCoin > 0) {
-      sawNyang = true;
-    }
-    const grant = applyChestGrant(
-      applied,
-      {
-        weekKey: log.weekKey,
-        kind,
-        jelly: result.jelly,
-        nyang: result.nyangCoin,
-        ticketKeys: result.ticketKeys,
-        already: result.already,
-      },
-      { held: next.rateUpTickets, keys: next.inviteTicketKeys ?? [] },
-    );
-    next = {
-      ...next,
-      rateUpTickets: grant.tickets.held,
-      inviteTicketKeys: grant.tickets.keys,
-    };
-    const parsed = serverWeekToLog(result.week);
-    const claimedNow = unionKinds(
-      which === "current" ? next.weekly?.claimed ?? [] : next.weekly?.previousClaimed ?? [],
-      [kind],
-    );
-    const bagNow = next.weekly ?? live;
-    if (which === "current") {
-      const current =
-        parsed && parsed.log.weekKey === bagNow.current.weekKey
-          ? mergeWeeklyLogs(bagNow.current, parsed.log)
-          : bagNow.current;
-      next = { ...next, weekly: { ...bagNow, current, claimed: claimedNow } };
-    } else {
-      const previousLog =
-        parsed && bagNow.previous && parsed.log.weekKey === bagNow.previous.weekKey
-          ? mergeWeeklyLogs(bagNow.previous, parsed.log)
-          : bagNow.previous;
-      const stillWaiting = previousLog ? pendingChestKinds(previousLog, claimedNow).length > 0 : false;
-      next = {
-        ...next,
-        weekly: {
-          ...bagNow,
-          previous: stillWaiting ? previousLog : null,
-          previousClaimed: stillWaiting ? claimedNow : [],
-        },
-      };
-    }
-    lines.push(...claimLines(result, beforeKeys));
-  }
-
-  if (sawNyang) void walletGet();
-  return { state: next, lines, message };
-}
-
-export async function claimWeeklyFromBoard(
-  state: OpsState,
-  kind: WeeklyChestKind,
-  economy?: OpsEconomy,
-): Promise<{ state: OpsState; message: string | null; celebrate: WeeklyCelebrate | null }> {
-  let next = refreshWeekly(state, economy);
-  const synced = await syncWeeklyProgress(
-    next.weekly?.current.weekKey ?? weekKeyNow(),
-    weeklyProgressPayload(next.weekly?.current ?? emptyWeeklyBag(weekKeyNow()).current),
-  );
-  if (synced.ok) next = await mergeSyncedWeek(next, synced.week, "current");
-  if (!synced.ok && synced.error === "local") {
-    return { state: next, message: "서버가 필요할 때 받을 수 있어요", celebrate: null };
-  }
-  const claimed = await claimKinds(next, "current", kind);
-  await saveWeeklyOps(claimed.state, false);
-  const celebrate =
-    claimed.lines.length > 0
-      ? {
-          title: kind === "invite" ? "선택 미션을 끝냈어요" : `${kind}도장 달성`,
-          lines: claimed.lines,
-        }
-      : null;
-  if (celebrate) celebrateListener(celebrate);
-  return { state: claimed.state, message: claimed.lines.length ? null : claimed.message, celebrate };
+function rememberMailbox(state: OpsState, mailbox: unknown): OpsState {
+  const parsed = parseWeeklyMailbox(mailbox);
+  const bag = state.weekly;
+  if (!parsed || !bag) return state;
+  return {
+    ...state,
+    weekly: {
+      ...bag,
+      mailbox: parsed,
+      claimed: unionKinds(bag.claimed, mailboxClaimedKinds(parsed.current)),
+      previousClaimed: unionKinds(bag.previousClaimed, mailboxClaimedKinds(parsed.previous)),
+    },
+  };
 }
 
 export async function settleWeeklyOnBoot(state: OpsState, economy?: OpsEconomy): Promise<OpsState> {
@@ -314,6 +170,7 @@ export async function settleWeeklyOnBoot(state: OpsState, economy?: OpsEconomy):
   if (!next.weekly) next = { ...next, weekly: emptyWeeklyBag(weekKey) };
   if (!status.ok) {
     await saveWeeklyOps(next, false);
+    void refreshMailbox();
     return next;
   }
 
@@ -350,10 +207,8 @@ export async function settleWeeklyOnBoot(state: OpsState, economy?: OpsEconomy):
     }
   }
 
-  const past = await claimKinds(next, "previous");
-  await saveWeeklyOps(past.state, false);
-  if (past.lines.length > 0) {
-    celebrateListener({ title: "지난 주 선물을 받았어요", lines: past.lines, past: true });
-  }
-  return past.state;
+  next = rememberMailbox(next, status.mailbox);
+  await saveWeeklyOps(next, false);
+  void refreshMailbox();
+  return next;
 }

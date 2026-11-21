@@ -799,6 +799,8 @@ export type WeeklyStatusResult = {
   rules: Record<string, unknown> | null;
   current: unknown;
   previous: unknown;
+  /** `{ current, previous }` of chest kind → none | pending | claimed | expired. */
+  mailbox: unknown;
 };
 
 export type WeeklyClaimResult = {
@@ -833,6 +835,7 @@ export async function fetchWeeklyStatus(): Promise<
     rules: isRecord(json.rules) ? json.rules : null,
     current: json.current ?? null,
     previous: json.previous ?? null,
+    mailbox: json.mailbox ?? null,
   };
 }
 
@@ -846,7 +849,10 @@ export async function syncWeeklyProgress(
   return { ok: true, week: result.json.week ?? null };
 }
 
-/** weekly_claim. The same chest is granted once. Amounts come back as zero when already claimed. */
+/**
+ * weekly_claim. Puts a filled chest into the mailbox. The board does not call this
+ * to grant jelly or 냥코인.
+ */
 export async function claimWeeklyChest(body: {
   weekKey: string;
   kind: "3" | "6" | "9" | "invite";
@@ -866,6 +872,167 @@ export async function claimWeeklyChest(body: {
     jellyBalance: typeof json.jellyBalance === "number" ? json.jellyBalance : null,
     nyangCoinBalance: typeof json.nyangCoinBalance === "number" ? json.nyangCoinBalance : null,
     week: json.week ?? null,
+  };
+}
+
+export type MailboxSource = "operator" | "invite" | "weekly";
+export type MailboxStatus = "pending" | "claimed" | "expired";
+
+export type MailboxLetter = {
+  id: string;
+  letterKey: string;
+  source: MailboxSource;
+  title: string;
+  body: string;
+  jelly: number;
+  nyang: number;
+  tickets: number;
+  jellyTotal: number;
+  nyangTotal: number;
+  ticketsTotal: number;
+  ticketCap: number;
+  createdAt: string;
+  expiresAt: string;
+  remainDays: number;
+  status: MailboxStatus;
+  claimedAt: string;
+};
+
+export type MailboxListResult = {
+  ok: true;
+  items: MailboxLetter[];
+  unclaimedCount: number;
+  ttlDays: number;
+  today: string;
+};
+
+export type MailboxClaimResult = {
+  ok: true;
+  already: boolean;
+  letter: MailboxLetter | null;
+  jelly: number;
+  nyangCoin: number;
+  tickets: number;
+  ticketKeys: string[];
+  ticketHeldBack: boolean;
+  ticketsHeldAfter: number | null;
+  jellyBalance: number | null;
+  nyangCoinBalance: number | null;
+  unclaimedCount: number;
+};
+
+export type MailboxClaimAllResult = {
+  ok: true;
+  claimed: number;
+  letters: MailboxLetter[];
+  jelly: number;
+  nyangCoin: number;
+  tickets: number;
+  ticketKeys: string[];
+  ticketHeldBack: boolean;
+  jellyBalance: number | null;
+  nyangCoinBalance: number | null;
+  unclaimedCount: number;
+};
+
+const MAILBOX_RETRY: Retry = { token: false, missing: false };
+const MAIL_SOURCES = new Set<MailboxSource>(["operator", "invite", "weekly"]);
+const MAIL_STATUSES = new Set<MailboxStatus>(["pending", "claimed", "expired"]);
+
+function parseMailboxLetter(value: unknown): MailboxLetter | null {
+  if (!isRecord(value) || typeof value.id !== "string" || !value.id) return null;
+  const source = value.source;
+  if (typeof source !== "string" || !MAIL_SOURCES.has(source as MailboxSource)) return null;
+  const status = value.status;
+  return {
+    id: value.id,
+    letterKey: typeof value.letterKey === "string" ? value.letterKey : "",
+    source: source as MailboxSource,
+    title: typeof value.title === "string" ? value.title : "",
+    body: typeof value.body === "string" ? value.body : "",
+    jelly: num(value.jelly),
+    nyang: num(value.nyang),
+    tickets: num(value.tickets),
+    jellyTotal: num(value.jellyTotal),
+    nyangTotal: num(value.nyangTotal),
+    ticketsTotal: num(value.ticketsTotal),
+    ticketCap: num(value.ticketCap),
+    createdAt: typeof value.createdAt === "string" ? value.createdAt : "",
+    expiresAt: typeof value.expiresAt === "string" ? value.expiresAt : "",
+    remainDays: num(value.remainDays),
+    status: typeof status === "string" && MAIL_STATUSES.has(status as MailboxStatus) ? (status as MailboxStatus) : "pending",
+    claimedAt: typeof value.claimedAt === "string" ? value.claimedAt : "",
+  };
+}
+
+function parseMailboxLetters(value: unknown): MailboxLetter[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(parseMailboxLetter).filter((item): item is MailboxLetter => item != null);
+}
+
+function balanceOrNull(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+/** mailbox_list. Works before a save exists. The server files weekly and invite gifts here. */
+export async function fetchMailboxList(): Promise<
+  MailboxListResult | { ok: false; error: string; network?: boolean }
+> {
+  const result = await postWallet("mailbox_list", {}, DEFAULT_MS, false, MAILBOX_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const json = result.json;
+  return {
+    ok: true,
+    items: parseMailboxLetters(json.items),
+    unclaimedCount: num(json.unclaimedCount),
+    ttlDays: num(json.ttlDays) || 30,
+    today: typeof json.today === "string" ? json.today : "",
+  };
+}
+
+/** mailbox_claim. The same letter pays once. Amounts are zero when already claimed. */
+export async function claimMailboxLetter(body: {
+  letterId: string;
+  ticketsHeld: number;
+}): Promise<MailboxClaimResult | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet("mailbox_claim", body, DEFAULT_MS, true, MAILBOX_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const json = result.json;
+  return {
+    ok: true,
+    already: json.already === true,
+    letter: parseMailboxLetter(json.letter),
+    jelly: num(json.jelly),
+    nyangCoin: num(json.nyangCoin),
+    tickets: num(json.tickets),
+    ticketKeys: stringList(json.ticketKeys),
+    ticketHeldBack: json.ticketHeldBack === true,
+    ticketsHeldAfter: balanceOrNull(json.ticketsHeldAfter),
+    jellyBalance: balanceOrNull(json.jellyBalance),
+    nyangCoinBalance: balanceOrNull(json.nyangCoinBalance),
+    unclaimedCount: num(json.unclaimedCount),
+  };
+}
+
+/** mailbox_claim_all. Claims unexpired letters in order. Later tickets stay when the cap is hit. */
+export async function claimMailboxAll(body: {
+  ticketsHeld: number;
+}): Promise<MailboxClaimAllResult | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet("mailbox_claim_all", body, DEFAULT_MS, true, MAILBOX_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const json = result.json;
+  return {
+    ok: true,
+    claimed: num(json.claimed),
+    letters: parseMailboxLetters(json.letters),
+    jelly: num(json.jelly),
+    nyangCoin: num(json.nyangCoin),
+    tickets: num(json.tickets),
+    ticketKeys: stringList(json.ticketKeys),
+    ticketHeldBack: json.ticketHeldBack === true,
+    jellyBalance: balanceOrNull(json.jellyBalance),
+    nyangCoinBalance: balanceOrNull(json.nyangCoinBalance),
+    unclaimedCount: num(json.unclaimedCount),
   };
 }
 

@@ -13,6 +13,8 @@ import { useBackHandler } from "../hooks/useBackHandler";
 import { useLoadingHold } from "../lib/loadingGate";
 import { jellyLabel } from "../lib/jellyLabel";
 import { ticketFractionLabel } from "../lib/weeklyMissions";
+import { MailboxSheet } from "./MailboxSheet";
+import { mailboxRowView, refreshMailbox, subscribeMailbox } from "../lib/mailbox";
 import { WeeklyBoard } from "./WeeklyBoard";
 import { menuAsset } from "../lib/menuConfig";
 import { NCOIN_ICON, ncoinIcon } from "../lib/ncoinIcon";
@@ -179,6 +181,7 @@ export function MenuPanel({
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
   const [withdrawBusy, setWithdrawBusy] = useState(false);
   const [inviteSnap, setInviteSnap] = useState(readInviteSnap);
+  const [mailCount, setMailCount] = useState(0);
   const [sendDialog, setSendDialog] = useState<
     | { mode: "done"; coins: number; left: number; allDone: boolean }
     | { mode: "pending"; coins: number }
@@ -448,10 +451,12 @@ export function MenuPanel({
   useBackHandler(open, requestClose, 20);
 
   useEffect(() => subscribeInviteSnap(setInviteSnap), []);
+  useEffect(() => subscribeMailbox((next) => setMailCount(next.unclaimedCount)), []);
 
   useEffect(() => {
     if (!open) return;
     void refreshInvite("menu");
+    void refreshMailbox();
   }, [open]);
 
   useEffect(() => {
@@ -1114,7 +1119,7 @@ export function MenuPanel({
                 <section key={section.id}>
                   <p className="menu-section-label">{section.label}</p>
                   {section.rows.map((row, index) => {
-                    const view = row.id === "invite" ? inviteRowView(row, inviteSnap) : row;
+                    const view = row.id === "invite" ? inviteRowView(row, inviteSnap) : row.id === "mailbox" ? mailboxRowView(row, mailCount) : row;
                     return (
                     <button
                       key={row.id}
@@ -1242,14 +1247,14 @@ export function MenuPanel({
               }}
             />
             <div
-              className={`menu-sheet${sheet === "attendance" ? " is-attendance" : ""}${sheet === "invite" ? " is-invite" : ""}${sheet === "rewards" ? " is-rewards" : ""}${sheet === "rates" ? " is-rates" : ""}${sheet === "weekly" ? " is-weekly" : ""}`}
+              className={`menu-sheet${sheet === "attendance" ? " is-attendance" : ""}${sheet === "invite" ? " is-invite" : ""}${sheet === "rewards" ? " is-rewards" : ""}${sheet === "rates" ? " is-rates" : ""}${sheet === "weekly" ? " is-weekly" : ""}${sheet === "mailbox" ? " is-mailbox" : ""}`}
               onPointerDown={onSheetPointerDown}
               onPointerUp={onSheetPointerUp}
               style={{
                 minHeight:
                   sheet === "missions"
                     ? 480
-                    : sheet === "attendance" || sheet === "rewards" || sheet === "rates" || sheet === "weekly"
+                    : sheet === "attendance" || sheet === "rewards" || sheet === "rates" || sheet === "weekly" || sheet === "mailbox"
                       ? undefined
                       : sheet === "ticketShop"
                         ? 520
@@ -1261,7 +1266,9 @@ export function MenuPanel({
               <div className="menu-grab" />
               <div className="menu-sheet-head">
                 <p className="menu-sheet-eye">
-                  {sheet === "weekly"
+                  {sheet === "mailbox"
+                    ? "MAIL"
+                    : sheet === "weekly"
                     ? "WEEK"
                     : sheet === "invite"
                     ? "INVITE"
@@ -1282,7 +1289,9 @@ export function MenuPanel({
                               : "NOTICE"}
                 </p>
                 <h3 className="menu-sheet-title">
-                  {sheet === "weekly"
+                  {sheet === "mailbox"
+                    ? "편지함"
+                    : sheet === "weekly"
                     ? "주간 미션"
                     : sheet === "invite"
                     ? "친구 초대"
@@ -1303,7 +1312,9 @@ export function MenuPanel({
                               : "공지·이벤트"}
                 </h3>
                 <p className="menu-sheet-desc">
-                  {sheet === "weekly"
+                  {sheet === "mailbox"
+                    ? "선물은 30일 동안 보관해요."
+                    : sheet === "weekly"
                     ? "월요일 0시에 도장과 선물이 새로 시작해요"
                     : sheet === "invite"
                     ? "친구가 행운냥에서 첫 카드를 뽑으면\n나도 친구도 같은 선물을 받아요."
@@ -1342,7 +1353,19 @@ export function MenuPanel({
                   <InviteSheet status={inviteSnap.status} lifetimeDraws={ops.lifetimeDraws ?? 0} />
                 ) : null}
                 {sheet === "weekly" && model ? (
-                  <WeeklyBoard ops={ops} economy={model.config.economy} onOpsChange={onOpsChange} />
+                  <WeeklyBoard ops={ops} economy={model.config.economy} />
+                ) : null}
+                {sheet === "mailbox" && model ? (
+                  <MailboxSheet
+                    ops={ops}
+                    economy={model.config.economy}
+                    onOpsChange={onOpsChange}
+                    onOpenRoom={() => {
+                      closeSheet();
+                      onClose();
+                      onOpenRoom();
+                    }}
+                  />
                 ) : null}
                 {sheet === "missions" && model ? (
                   <ul className="mission-list">

@@ -1,27 +1,22 @@
-import { useState } from "react";
-
 import { menuAsset } from "../lib/menuConfig";
-import { nyNotify } from "../lib/nyangNotify";
 import type { OpsEconomy, OpsState } from "../lib/opsTypes";
 import {
   FALLBACK_WEEKLY_RULES,
+  chestMailboxLabel,
   recountWeekly,
   weekRangeLabel,
   weeklyChestViews,
   weeklyMissionRows,
   WEEKLY_STAMP_MAX,
-  type WeeklyChestKind,
 } from "../lib/weeklyMissions";
-import { claimWeeklyFromBoard, refreshWeekly } from "../lib/weeklySync";
+import { refreshWeekly } from "../lib/weeklySync";
 
 type Props = {
   ops: OpsState;
   economy: OpsEconomy;
-  onOpsChange: (next: OpsState) => void;
 };
 
-export function WeeklyBoard({ ops, economy, onOpsChange }: Props) {
-  const [busy, setBusy] = useState<WeeklyChestKind | "invite" | null>(null);
+export function WeeklyBoard({ ops, economy }: Props) {
   const view = refreshWeekly(ops, economy);
   const bag = view.weekly;
   const log = bag?.current;
@@ -30,21 +25,7 @@ export function WeeklyBoard({ ops, economy, onOpsChange }: Props) {
   const progress = recountWeekly(log);
   const chests = weeklyChestViews(log, bag.claimed, rules);
   const missions = weeklyMissionRows(log);
-  const inviteClaimed = bag.claimed.includes("invite");
-
-  const claim = async (kind: WeeklyChestKind) => {
-    if (busy) return;
-    setBusy(kind);
-    try {
-      const result = await claimWeeklyFromBoard(ops, kind, economy);
-      onOpsChange(result.state);
-      if (result.message) {
-        nyNotify({ key: "weekly-claim", kind: "info", title: result.message });
-      }
-    } finally {
-      setBusy(null);
-    }
-  };
+  const invite = chestMailboxLabel(log.inviteDone, bag.claimed.includes("invite"), bag.mailbox?.current?.invite);
 
   return (
     <div className="wm-board">
@@ -58,25 +39,20 @@ export function WeeklyBoard({ ops, economy, onOpsChange }: Props) {
         <p className="wm-reset">월요일 0시에 리셋</p>
       </div>
       <div className="wm-chests">
-        {chests.map((chest) => (
-          <button
-            key={chest.kind}
-            type="button"
-            className={`wm-chest is-${chest.state}`}
-            disabled={chest.state !== "ready" || busy != null}
-            onClick={() => void claim(chest.kind)}
-          >
-            <span className="wm-chest-need">{chest.need}</span>
-            <span className="wm-chest-lines">
-              {chest.lines.map((line) => (
-                <span key={line}>{line}</span>
-              ))}
-            </span>
-            <span className="wm-chest-action">
-              {chest.state === "claimed" ? "받음" : chest.state === "ready" ? "받기" : "잠김"}
-            </span>
-          </button>
-        ))}
+        {chests.map((chest) => {
+          const mail = chestMailboxLabel(chest.state === "ready", chest.state === "claimed", bag.mailbox?.current?.[chest.kind]);
+          return (
+            <div key={chest.kind} className={`wm-chest is-${mail.state}`}>
+              <span className="wm-chest-need">{chest.need}</span>
+              <span className="wm-chest-lines">
+                {chest.lines.map((line) => (
+                  <span key={line}>{line}</span>
+                ))}
+              </span>
+              <span className="wm-chest-action">{mail.label}</span>
+            </div>
+          );
+        })}
       </div>
       <ul className="wm-list">
         {missions.map((mission) => (
@@ -97,15 +73,9 @@ export function WeeklyBoard({ ops, economy, onOpsChange }: Props) {
             <span className="wm-title">친구 초대하기</span>
             <span className="wm-count">{log.inviteDone ? "1/1" : "0/1"}</span>
           </span>
-          {log.inviteDone && !inviteClaimed ? (
-            <button type="button" className="wm-bonus is-ready" disabled={busy != null} onClick={() => void claim("invite")}>
-              받기
-            </button>
-          ) : (
-            <span className={`wm-bonus${inviteClaimed ? " is-done" : ""}`}>
-              {inviteClaimed ? "받음" : `선택 · 젤리 ${rules.inviteJelly}`}
-            </span>
-          )}
+          <span className={`wm-bonus is-${invite.state}`}>
+            {invite.state === "locked" ? `선택 · 젤리 ${rules.inviteJelly}` : invite.label}
+          </span>
         </li>
       </ul>
     </div>

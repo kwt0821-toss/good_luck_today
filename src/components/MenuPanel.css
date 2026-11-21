@@ -300,7 +300,7 @@ button.menu-dim:focus-visible {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  min-height: 34px;
+  min-height: 30px;
   display: grid;
   /* minmax(0, …) keeps meta from blowing past the panel and covering the label. */
   grid-template-columns: 24px minmax(0, 1fr) minmax(0, max-content) 16px;
@@ -310,7 +310,7 @@ button.menu-dim:focus-visible {
   border-bottom: 1px solid rgba(243, 233, 215, 0.08);
   background: transparent;
   color: inherit;
-  padding: 3px 0;
+  padding: 2px 0;
   text-align: left;
   font: inherit;
   cursor: pointer;
@@ -2389,7 +2389,8 @@ button.menu-dim:focus-visible {
   text-align: left;
 }
 
-.wm-chest.is-ready {
+.wm-chest.is-ready,
+.wm-chest.is-sent {
   border-color: rgba(157, 255, 200, 0.7);
 }
 
@@ -2418,10 +2419,19 @@ button.menu-dim:focus-visible {
   color: rgba(243, 233, 215, 0.55);
   font-size: 11px;
   font-weight: 800;
+  white-space: normal;
+  line-height: 1.25;
+  padding-top: 2px;
 }
 
-.wm-chest.is-ready .wm-chest-action {
+.wm-chest.is-ready .wm-chest-action,
+.wm-chest.is-sent .wm-chest-action,
+.wm-chest.is-claimed .wm-chest-action {
   color: #9dffc8;
+}
+
+.wm-chest.is-sent .wm-chest-action {
+  font-size: 10px;
 }
 
 .wm-list {
@@ -2490,9 +2500,19 @@ button.menu-dim:focus-visible {
 }
 
 .wm-stamp.is-done,
-.wm-bonus.is-done {
+.wm-bonus.is-done,
+.wm-bonus.is-claimed {
   background: #9dffc8;
   color: #1c2430;
+}
+
+.wm-bonus.is-sent {
+  height: auto;
+  max-width: 92px;
+  white-space: normal;
+  line-height: 1.25;
+  padding: 3px 8px 1px;
+  color: #9dffc8;
 }
 
 button.wm-bonus.is-ready {

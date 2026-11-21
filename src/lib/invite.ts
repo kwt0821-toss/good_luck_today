@@ -1,22 +1,14 @@
 import { Clipboard, Environment, Share, isMinVersionSupported } from "@apps-in-toss/web-framework";
+import { mailboxUnclaimed, refreshMailbox } from "./mailbox";
 import type { MenuRowView } from "./menuTypes";
+import { nyNotify } from "./nyangNotify";
 import type { OpsState } from "./opsTypes";
-import { adoptServerJelly } from "./serverJelly";
-import { noteWeeklyInvite, saveWeeklyOps } from "./weeklySync";
 import { saveToServer } from "./serverSave";
-import {
-  acceptInvite,
-  claimInvite,
-  fetchInviteStatus,
-  type InviteClaimResult,
-  type InviteStatus,
-} from "./serverWallet";
+import { acceptInvite, fetchInviteStatus, type InviteStatus } from "./serverWallet";
 
 const PENDING_KEY = "lucky-cat.invite-pending.v1";
 const OPENED_KEY = "lucky-cat.invite-opened.v1";
 const WELCOME_KEY = "lucky-cat.invite-welcome.v1";
-const CLAIM_GAP_MS = 30_000;
-const TICKET_MEMORY = 50;
 
 export type InviteSnap =
   | { phase: "loading" }
@@ -46,9 +38,6 @@ let snap: InviteSnap = { phase: "loading" };
 const listeners = new Set<(next: InviteSnap) => void>();
 let host: Host | null = null;
 let welcomeDue = false;
-/** Last ops this module wrote. React may still be on the previous render. */
-let shadowOps: OpsState | null = null;
-let lastClaimAt = 0;
 let claimLock: Promise<void> = Promise.resolve();
 let linkTried = false;
 
@@ -239,43 +228,6 @@ export function captureInviteFromLaunch() {
   if (code) writePending(code);
 }
 
-function applyTicketKeys(state: OpsState, keys: string[], maxHold: number): OpsState {
-  const seen = new Set(state.inviteTicketKeys ?? []);
-  let tickets = state.rateUpTickets;
-  let changed = false;
-  for (const key of keys) {
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    changed = true;
-    if (tickets < maxHold) tickets += 1;
-  }
-  if (!changed) return state;
-  return {
-    ...state,
-    rateUpTickets: tickets,
-    inviteTicketKeys: [...seen].slice(-TICKET_MEMORY),
-  };
-}
-
-function liveOps(fallback: OpsState): OpsState {
-  const live = host?.getOps() ?? fallback;
-  if (!shadowOps) return live;
-  const liveKeys = new Set(live.inviteTicketKeys ?? []);
-  const shadowAhead = (shadowOps.inviteTicketKeys ?? []).some((key) => !liveKeys.has(key));
-  return shadowAhead ? shadowOps : live;
-}
-
-function commitTickets(state: OpsState, keys: string[]): OpsState {
-  if (!host || keys.length === 0) return liveOps(state);
-  const base = liveOps(state);
-  const next = applyTicketKeys(base, keys, host.maxHold());
-  if (next !== base) {
-    shadowOps = next;
-    host.commit(next);
-  }
-  return next;
-}
-
 async function refreshStatus(): Promise<InviteStatus | null> {
   const result = await fetchInviteStatus();
   if (!result.ok) {
@@ -291,42 +243,13 @@ async function refreshStatus(): Promise<InviteStatus | null> {
   return result;
 }
 
-async function runClaim(state: OpsState, status: InviteStatus | null, force = false): Promise<void> {
-  const now = Date.now();
-  if (!force && now - lastClaimAt < CLAIM_GAP_MS) return;
-  lastClaimAt = now;
-  const result = await claimInvite(state.rateUpTickets);
-  if (!result.ok) {
-    if (result.network) lastClaimAt = 0;
-    return;
+/** The server files the invite gift as a letter. The app does not grant it here. */
+async function runClaim(): Promise<void> {
+  const before = mailboxUnclaimed();
+  await refreshMailbox();
+  if (mailboxUnclaimed() > before) {
+    nyNotify({ key: "mailbox-hint", kind: "info", title: "편지함을 확인해 주세요" });
   }
-  await applyClaim(state, result, status);
-}
-
-async function applyClaim(state: OpsState, result: InviteClaimResult, status: InviteStatus | null) {
-  if (!host) return;
-  if (result.jelly != null) adoptServerJelly(result.jelly);
-  const withTickets = commitTickets(state, result.ticketKeys);
-  if (result.asInvitee || result.asInviter) {
-    const marked = noteWeeklyInvite(withTickets);
-    shadowOps = marked;
-    host.commit(marked);
-    void saveWeeklyOps(marked);
-  }
-  if (result.asInvitee) {
-    host.onInvitee(result.asInvitee.jelly, result.asInvitee.tickets);
-  }
-  if (result.asInviter) {
-    const fresh = (await refreshStatus()) ?? status;
-    host.onGift({
-      friends: result.asInviter.friends,
-      jelly: result.asInviter.jelly,
-      tickets: result.asInviter.tickets,
-      monthCount: fresh?.monthCount ?? status?.monthCount ?? result.asInviter.friends,
-      monthLimit: fresh?.rules.monthLimit ?? status?.rules.monthLimit ?? 10,
-    });
-  }
-  void withTickets;
 }
 
 function enqueue<T>(task: () => Promise<T>): Promise<T> {
@@ -343,11 +266,10 @@ export function refreshInvite(reason: "boot" | "menu"): Promise<void> {
     const state = host?.getOps();
     const status = await refreshStatus();
     if (!status || !state || !host) return;
-    const withTickets = commitTickets(state, status.ticketKeys);
     if (reason === "boot") await acceptPendingLink();
-    const current = liveOps(withTickets);
     const again = snap.phase === "ready" ? snap.status : status;
-    if (again.pendingInviter > 0) await runClaim(current, again);
+    if (again.pendingInviter > 0) await runClaim();
+    else await refreshMailbox();
   });
 }
 
@@ -372,10 +294,11 @@ async function acceptPendingLink() {
   if (state && (state.lifetimeDraws ?? 0) > 0) {
     const status = await refreshStatus();
     if (status && status.invited && status.inviteeState !== "claimed" && status.inviteeState !== "none") {
-      await runClaim(liveOps(state), status, true);
+      await runClaim();
     }
   } else {
     await refreshStatus();
+    await refreshMailbox();
   }
 }
 
@@ -389,21 +312,24 @@ export function submitInviteCode(
     const state = host?.getOps();
     const status = await refreshStatus();
     if (state && lifetimeDraws > 0 && status && status.invited && status.inviteeState !== "claimed") {
-      await runClaim(liveOps(state), status, true);
+      await runClaim();
+    } else {
+      await refreshMailbox();
     }
     return { ok: true as const };
   });
 }
 
 export function noteInviteDraw(state: OpsState): Promise<void> {
+  void state;
   return enqueue(async () => {
     await saveToServer();
     const status = await refreshStatus();
     if (!status || !status.invited || status.inviteeState === "none" || status.inviteeState === "claimed") {
+      await refreshMailbox();
       return;
     }
-    const withTickets = commitTickets(state, status.ticketKeys);
-    await runClaim(withTickets, status, true);
+    await runClaim();
   });
 }
 

@@ -57,14 +57,7 @@ import { useTossSafeArea } from "./lib/useTossSafeArea";
 import { isWeekendDoublePaw, loadOpsConfig } from "./lib/opsConfig";
 import { bumpMission, listMissions, reconcileMissions } from "./lib/dailyMissions";
 import { trustedKstDateKey } from "./lib/tossClock";
-import {
-  bindWeeklyApply,
-  bindWeeklyCelebrate,
-  refreshWeekly,
-  saveWeeklyOps,
-  settleWeeklyOnBoot,
-  type WeeklyCelebrate,
-} from "./lib/weeklySync";
+import { bindWeeklyApply, refreshWeekly, saveWeeklyOps, settleWeeklyOnBoot } from "./lib/weeklySync";
 import { josa } from "./lib/josa";
 import { readDay7BonusConfig } from "./lib/attendanceServer";
 import {
@@ -147,7 +140,6 @@ import { CollectionScreen } from "./screens/CollectionScreen";
 import { AffectionHost } from "./components/AffectionHost";
 import { UpdateNotesPopup } from "./components/UpdateNotesPopup";
 import { InviteHost } from "./components/InviteHost";
-import { WeeklyClaimPop } from "./components/WeeklyClaimPop";
 import { noteInviteDraw } from "./lib/invite";
 import { CatLetterPaper } from "./components/CatLetterSheet";
 import {
@@ -291,7 +283,6 @@ export default function App() {
     setScreenState(next);
   }, []);
   const [menuOpen, setMenuOpen] = useState(initialMenuOpen);
-  const [weeklyCelebrate, setWeeklyCelebrate] = useState<WeeklyCelebrate | null>(null);
   const [menuIconDot, setMenuIconDot] = useState(false);
   const [dexClaimDot, setDexClaimDot] = useState(false);
   const [achvOpen, setAchvOpen] = useState(false);
@@ -558,6 +549,11 @@ export default function App() {
       setForceMenuSheet("missions");
       setMenuOpen(true);
     };
+    const openMailbox = () => {
+      setScreen({ name: "home" });
+      setForceMenuSheet("mailbox");
+      setMenuOpen(true);
+    };
     const onNotifyAttendance = (event: Event) => {
       const detail = (event as CustomEvent<NotifyAttendanceState>).detail;
       if (!detail) return;
@@ -582,12 +578,14 @@ export default function App() {
     window.addEventListener("lucky-open-rewards", openRewards);
     window.addEventListener("lucky-open-menu-points", openMenuPoints);
     window.addEventListener("lucky-open-missions", openMissions);
+    window.addEventListener("lucky-open-mailbox", openMailbox);
     window.addEventListener(ATTENDANCE_NOTIFY_STATE_EVENT, onNotifyAttendance);
     return () => {
       window.removeEventListener("lucky-open-dex", openDex);
       window.removeEventListener("lucky-open-rewards", openRewards);
       window.removeEventListener("lucky-open-menu-points", openMenuPoints);
       window.removeEventListener("lucky-open-missions", openMissions);
+      window.removeEventListener("lucky-open-mailbox", openMailbox);
       window.removeEventListener(ATTENDANCE_NOTIFY_STATE_EVENT, onNotifyAttendance);
     };
   }, [setScreen]);
@@ -632,7 +630,6 @@ export default function App() {
     bindWeeklyApply((next) => {
       void persistOps(next);
     });
-    bindWeeklyCelebrate(setWeeklyCelebrate);
   }, [persistOps]);
 
   const noteSeenDexCards = useCallback((ids: string[]) => {
@@ -2132,6 +2129,10 @@ export default function App() {
             setForceMenuSheet("missions");
             setMenuOpen(true);
           }}
+          onOpenMailbox={() => {
+            setForceMenuSheet("mailbox");
+            setMenuOpen(true);
+          }}
         />
       ) : null}
 
@@ -2307,10 +2308,6 @@ export default function App() {
 
       {attendanceNotifyOffer.open ? (
         <AttendanceNotifyCard onClose={attendanceNotifyOffer.dismiss} />
-      ) : null}
-
-      {weeklyCelebrate ? (
-        <WeeklyClaimPop view={weeklyCelebrate} onClose={() => setWeeklyCelebrate(null)} />
       ) : null}
 
       {ops && config ? (

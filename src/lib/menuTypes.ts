@@ -180,6 +180,7 @@ export type MenuSheetId =
   | "settings"
   | "missions"
   | "weekly"
+  | "mailbox"
   | "invite"
   | null;
 
