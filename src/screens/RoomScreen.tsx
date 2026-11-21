@@ -30,7 +30,7 @@ import { dexAsset, loadDexCatalog } from "../lib/dexCatalog";
 import { loadDexOwned } from "../lib/dexCollection";
 import { AudioManager } from "../audio/AudioManager";
 import { haptic, savePhotoBase64, shareRoomCard } from "../lib/native";
-import { loadOpsConfig } from "../lib/opsConfig";
+import { loadOpsConfig, roomSpendItemId } from "../lib/opsConfig";
 import {
   isPaintItem,
   isPlaceableDecor,
@@ -2058,7 +2058,16 @@ export function RoomScreen({
       if (await serverJellyActive()) {
         buyBusyRef.current = true;
         try {
-          const spent = await jellySpend(`room:${item.id}:${newRequestId("buy")}`);
+          let prices = cozyConfigRef.current?.prices ?? null;
+          if (!prices) {
+            try {
+              prices = (await loadOpsConfig()).prices;
+            } catch {
+              prices = null;
+            }
+          }
+          const spendId = prices ? roomSpendItemId(prices, item.id) : item.id;
+          const spent = await jellySpend(`room:${spendId}:${newRequestId("buy")}`);
           if (!spent.ok) {
             const copy = jellySpendFailMessage(spent);
             nyNotify({

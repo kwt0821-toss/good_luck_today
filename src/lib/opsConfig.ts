@@ -144,6 +144,11 @@ export function priceById(prices: OpsPrices, id: string) {
   return prices.items.find((item) => item.id === `floor_${id}` || item.id === `wall_${id}`) ?? null;
 }
 
+/** Server price-table id for a room purchase. Furniture ids already match. */
+export function roomSpendItemId(prices: OpsPrices, itemId: string): string {
+  return priceById(prices, itemId)?.id ?? itemId;
+}
+
 export function cozyLevelFromPoints(economy: OpsEconomy, cozyPoints: number): number {
   const levels = economy.cozy.levels;
   let level = levels[0]?.lv ?? 1;
