@@ -3,7 +3,7 @@
   --amber: #ffc48a;
   --ink: #221d38;
   --page: #24182c;
-  --room-bar-bottom: calc(var(--app-tabbar-height, 72px) + 10px);
+  --room-bar-bottom: calc(var(--app-tabbar-height, 56px) + 10px);
   position: relative;
   flex: 1;
   min-height: 0;
@@ -747,7 +747,7 @@
   position: absolute;
   left: 12px;
   right: 12px;
-  bottom: calc(428px + var(--app-tabbar-height, 72px));
+  bottom: calc(428px + var(--app-tabbar-height, 56px));
   z-index: 8;
   display: flex;
   align-items: center;
@@ -762,11 +762,11 @@
 }
 
 .lucky-room:has(.lucky-drawer.is-expanded) .lucky-paint-dock {
-  bottom: calc(568px + var(--app-tabbar-height, 72px));
+  bottom: calc(568px + var(--app-tabbar-height, 56px));
 }
 
 .lucky-room:has(.lucky-drawer.is-tutorial) .lucky-paint-dock {
-  bottom: calc(308px + var(--app-tabbar-height, 72px));
+  bottom: calc(308px + var(--app-tabbar-height, 56px));
 }
 
 .lucky-paint-dock-copy {
@@ -1781,7 +1781,7 @@ button.lucky-roam-cat:active,
   top: auto;
   right: auto;
   left: 20px;
-  bottom: calc(384px + var(--app-tabbar-height, 72px));
+  bottom: calc(384px + var(--app-tabbar-height, 56px));
 }
 
 .lucky-shadow-toggle.is-on {
@@ -2257,7 +2257,7 @@ button.lucky-roam-cat:active,
   position: absolute;
   left: 0;
   right: 0;
-  bottom: var(--app-tabbar-height, 72px);
+  bottom: var(--app-tabbar-height, 56px);
   z-index: 6;
   height: 420px;
   border-radius: 28px 28px 0 0;

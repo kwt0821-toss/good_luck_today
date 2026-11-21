@@ -1,5 +1,8 @@
 :root {
-  --app-tabbar-height: calc(64px + env(safe-area-inset-bottom, 0px));
+  /* One inset only. --sa-bottom is the Toss inset, and falls back to env(). */
+  --app-tabbar-safe: var(--sa-bottom, env(safe-area-inset-bottom, 0px));
+  /* 4 top + 28 icon + 2 gap + 16 label + 6 bottom + safe */
+  --app-tabbar-height: calc(56px + var(--app-tabbar-safe));
 }
 
 .app-tabbar {
@@ -7,19 +10,19 @@
   z-index: 5;
   flex: none;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   height: var(--app-tabbar-height);
   min-height: var(--app-tabbar-height);
   margin: 0;
-  padding: 4px 8px env(safe-area-inset-bottom, 0px);
+  padding: 4px 8px calc(6px + var(--app-tabbar-safe));
   box-sizing: border-box;
 }
 
 .main-footer.app-tabbar {
   height: var(--app-tabbar-height);
   min-height: var(--app-tabbar-height);
-  padding: 4px 8px env(safe-area-inset-bottom, 0px);
+  padding: 4px 8px calc(6px + var(--app-tabbar-safe));
 }
 
 .app-tabbar.is-docked {
