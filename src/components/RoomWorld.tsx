@@ -618,7 +618,11 @@ function RoamingCatBody({
     event.stopPropagation();
     if (event.button !== 0) return;
     downRef.current = { x: event.clientX, y: event.clientY, t: performance.now() };
-    event.currentTarget.setPointerCapture(event.pointerId);
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Synthetic or already-released pointers have nothing to capture.
+    }
   };
   const onPointerUp = (event: PointerEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -1020,7 +1024,7 @@ export const RoomWorld = memo(function RoomWorld({
       style={{ ["--room-fit" as string]: fit }}
       onPointerDown={onFloorPointerDown}
     >
-      <Layer src="world/base-bg.webp" />
+      <Layer src="world/base-bg.webp" className="is-base" />
       <div className="lucky-tod-sky" aria-hidden="true" />
       <div className="lucky-world-layer lucky-floor-tiles" aria-hidden="true">
         {layout.floorTiles.map((row, r) =>

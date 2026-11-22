@@ -16,9 +16,13 @@ import type { RoomItem, RoomLayoutState, RoomTab, RoomThemeFilter } from "../lib
 import { RoomCatsTab } from "./RoomCatsTab";
 
 const DRAWER_HELP = "중복 고양이 카드를 발바닥 젤리로 바꿀 수 있어요";
-const DRAWER_HEIGHT_COLLAPSED = 420;
-const DRAWER_HEIGHT_EXPANDED = 560;
-const DRAWER_DISMISS_HEIGHT = 280;
+const DRAWER_HEIGHT_COLLAPSED = 206;
+const DRAWER_DISMISS_HEIGHT = 120;
+
+function drawerExpandedHeight() {
+  if (typeof window === "undefined") return 560;
+  return Math.min(560, Math.max(320, window.innerHeight - 64 - 120));
+}
 const LONG_PRESS_MS = 420;
 
 export type DrawerItemMeta = {
@@ -156,7 +160,15 @@ export function RoomDrawer({
     startedExpanded: false,
   });
 
-  const sheetHeight = dragHeight ?? (expanded ? DRAWER_HEIGHT_EXPANDED : DRAWER_HEIGHT_COLLAPSED);
+  const tutorial = Boolean(tutorialLockId);
+  const collapsedH = tutorial ? 300 : DRAWER_HEIGHT_COLLAPSED;
+  const expandedH = tutorial ? 300 : drawerExpandedHeight();
+  const sheetHeight = tutorial ? 300 : (dragHeight ?? (expanded ? expandedH : collapsedH));
+  useEffect(() => {
+    const parent = drawerRef.current?.parentElement;
+    if (!parent) return;
+    parent.style.setProperty("--drawer-h", `${sheetHeight}px`);
+  }, [sheetHeight]);
 
   const onSheetPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (tutorialLockId) return;
@@ -178,13 +190,8 @@ export function RoomDrawer({
   const onSheetPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!sheetDrag.current.active) return;
     const dy = sheetDrag.current.y - event.clientY; // up = positive
-    const minH = sheetDrag.current.startedExpanded
-      ? DRAWER_HEIGHT_COLLAPSED
-      : DRAWER_DISMISS_HEIGHT;
-    const next = Math.min(
-      DRAWER_HEIGHT_EXPANDED,
-      Math.max(minH, sheetDrag.current.startHeight + dy),
-    );
+    const minH = sheetDrag.current.startedExpanded ? collapsedH : DRAWER_DISMISS_HEIGHT;
+    const next = Math.min(expandedH, Math.max(minH, sheetDrag.current.startHeight + dy));
     sheetDrag.current.height = next;
     setDragHeight(next);
   };
@@ -201,7 +208,7 @@ export function RoomDrawer({
       !startedExpanded &&
       !tutorialLockId &&
       onRequestClose &&
-      h <= (DRAWER_HEIGHT_COLLAPSED + DRAWER_DISMISS_HEIGHT) / 2
+      h <= (collapsedH + DRAWER_DISMISS_HEIGHT) / 2
     ) {
       setDragHeight(null);
       setExpanded(false);
@@ -209,7 +216,7 @@ export function RoomDrawer({
       return;
     }
 
-    const mid = (DRAWER_HEIGHT_COLLAPSED + DRAWER_HEIGHT_EXPANDED) / 2;
+    const mid = (collapsedH + expandedH) / 2;
     setExpanded(h >= mid);
     setDragHeight(null);
   };
@@ -315,6 +322,7 @@ export function RoomDrawer({
     if (paint || state.remaining > 0) {
       setInfoItem(null);
       onPick(item);
+      if (!tutorialLockId) setExpanded(false);
       return;
     }
     openInfo(item, false);
@@ -325,14 +333,14 @@ export function RoomDrawer({
       ref={drawerRef}
       className={`lucky-drawer ${paintTab ? "is-paint" : ""} ${catsTab ? "is-cats" : ""} ${tutorialLockId ? "is-tutorial" : ""} ${expanded ? "is-expanded" : ""} ${sheetDragging ? "is-dragging" : ""}`}
       aria-label="꾸미기 서랍"
-      style={{ height: sheetHeight }}
+      style={{ height: sheetHeight, ["--drawer-h" as string]: `${sheetHeight}px` }}
     >
       <div
         className="lucky-drawer-handle"
         role="slider"
         aria-label="아이템창 높이"
         aria-valuemin={DRAWER_DISMISS_HEIGHT}
-        aria-valuemax={DRAWER_HEIGHT_EXPANDED}
+        aria-valuemax={expandedH}
         aria-valuenow={Math.round(sheetHeight)}
         tabIndex={0}
         onPointerDown={onSheetPointerDown}

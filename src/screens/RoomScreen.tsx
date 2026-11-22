@@ -1,5 +1,23 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Environment, getPlatformOS } from "@apps-in-toss/web-framework";
+import {
+  clientToStage,
+  computeFit,
+  contentBox,
+  focusContent,
+  layoutPose,
+  markZoomHintSeen,
+  ROOM_PAN_ZOOM,
+  ROOM_ZOOM_MIN,
+  ROOM_ZOOM_STEP,
+  roomZoomMax,
+  stageToClient,
+  zoomAround,
+  zoomHintSeen,
+  type RoomFrame,
+  type RoomPose,
+  type ViewXf,
+} from "../lib/roomView";
 
 import { AppTabBar, type AppTabId } from "../components/AppTabBar";
 import { CozySheet } from "../components/CozySheet";
@@ -448,6 +466,23 @@ export function RoomScreen({
   const viewWRef = useRef(VIEW_W);
   const unlockedIdsRef = useRef<string[]>([]);
   const stateRef = useRef<RoomSaveState | null>(null);
+  const viewPose = useRef<RoomPose>({ zoom: 1, panX: 0, panY: 0 });
+  const viewFrame = useRef<RoomFrame | null>(null);
+  const viewXf = useRef<ViewXf>({ tx: 0, ty: 0, s: 1 });
+  const viewRef = useRef<HTMLDivElement | null>(null);
+  const hudRef = useRef<HTMLDivElement | null>(null);
+  const zoomLabelRef = useRef<HTMLSpanElement | null>(null);
+  const miniRectRef = useRef<HTMLDivElement | null>(null);
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const pinchRef = useRef<{ dist: number; zoom: number; panX: number; panY: number } | null>(null);
+  const panRef = useRef<{ x: number; y: number; panX: number; panY: number; moved: boolean } | null>(null);
+  const autoPan = useRef({ x: 0, y: 0, raf: 0 });
+  const lastTap = useRef<{ t: number; x: number; y: number } | null>(null);
+  const zoomAnim = useRef(0);
+  const fitAnim = useRef(0);
+  const fitTarget = useRef<number | null>(null);
+  const [zoomUi, setZoomUi] = useState(1);
+  const [zoomHintOn, setZoomHintOn] = useState(false);
   const [frameThumbs, setFrameThumbs] = useState<string[]>([]);
   const [mode, setMode] = useState<RoomMode>(() =>
     new URLSearchParams(window.location.search).get("edit") || tutorialActive ? "edit" : "view",
@@ -594,17 +629,20 @@ export function RoomScreen({
 
     const width = measured.width;
     const height = measured.height;
+    const xf = viewXf.current;
+    const origin = stageToClient(geom.left, geom.top, stageRect, xf);
+    const far = stageToClient(geom.left + geom.width, geom.top + geom.height, stageRect, xf);
     const box: PlacementBox = {
-      left: stageRect.left + geom.left,
-      top: stageRect.top + geom.top,
-      right: stageRect.left + geom.left + geom.width,
-      bottom: stageRect.top + geom.top + geom.height,
+      left: origin.x,
+      top: origin.y,
+      right: far.x,
+      bottom: far.y,
     };
     const centerX = box.left + (box.right - box.left) / 2;
     const centerY = box.top + (box.bottom - box.top) / 2;
     const placed = placeToolbarInView(bounds, box, width, height);
-    const hudX = stageRect.left + geom.left;
-    const hudY = stageRect.top + geom.top;
+    const hudX = box.left;
+    const hudY = box.top;
     let toolbarLeft = px(placed.left - hudX);
     let toolbarTop = px(placed.top - hudY);
     if (hudX + toolbarLeft < bounds.left) toolbarLeft += 1;
@@ -1015,6 +1053,223 @@ export function RoomScreen({
     }
   }, [mode, state, roomsFile, itemsById]);
 
+  const zoomMax = () => {
+    const os = getPlatformOS();
+    const ios = os === "ios" || /iPhone|iPad|iPod/.test(navigator.userAgent);
+    return roomZoomMax(ios, window.devicePixelRatio || 1);
+  };
+
+  const syncZoomLabel = (zoom: number) => {
+    if (zoomLabelRef.current) zoomLabelRef.current.textContent = `${zoom.toFixed(1)}배`;
+  };
+
+  const syncMinimap = (frame: RoomFrame, xf: ViewXf) => {
+    const rect = miniRectRef.current;
+    if (!rect) return;
+    const box = contentBox(frame.mode);
+    const spanX = box.right - box.left || 1;
+    const spanY = box.bottom - box.top || 1;
+    const inv = (vx: number, vy: number) => ({ x: (vx - xf.tx) / xf.s, y: (vy - xf.ty) / xf.s });
+    const a = inv(0, frame.bandTop);
+    const b = inv(frame.viewW, frame.bandBottom);
+    const nx = (a.x - box.left) / spanX;
+    const ny = (a.y - box.top) / spanY;
+    const nw = (b.x - a.x) / spanX;
+    const nh = (b.y - a.y) / spanY;
+    rect.style.left = `${Math.max(0, nx) * 100}%`;
+    rect.style.top = `${Math.max(0, ny) * 100}%`;
+    rect.style.width = `${Math.min(1, nw) * 100}%`;
+    rect.style.height = `${Math.min(1, nh) * 100}%`;
+  };
+
+  const applyView = (opts?: { animate?: boolean; gesturing?: boolean }) => {
+    const frame = viewFrame.current;
+    const stage = stageRef.current;
+    if (!frame || !stage) return;
+    const laid = layoutPose(frame, viewPose.current, zoomMax());
+    viewPose.current = laid.pose;
+    viewXf.current = laid.xf;
+    const idle = layoutPose(frame, { zoom: 1, panX: 0, panY: 0 }, zoomMax()).xf;
+    stage.querySelectorAll<HTMLElement>(".lucky-room-view").forEach((node) => {
+      const active = node.dataset.active === "1";
+      const xf = active ? laid.xf : idle;
+      node.style.transform = `translate3d(${xf.tx}px, ${xf.ty}px, 0) scale(${xf.s})`;
+      node.classList.toggle("is-gesturing", Boolean(opts?.gesturing) && active);
+      if (opts?.animate && active) {
+        node.classList.add("is-animate");
+        const done = (event: Event) => {
+          if (event.target !== node) return;
+          node.classList.remove("is-animate");
+          node.removeEventListener("transitionend", done);
+        };
+        node.addEventListener("transitionend", done);
+      }
+    });
+    const geom = placementGeomRef.current;
+    const hud = hudRef.current;
+    if (hud && geom) {
+      hud.style.left = `${laid.xf.tx + geom.left * laid.xf.s}px`;
+      hud.style.top = `${laid.xf.ty + geom.top * laid.xf.s}px`;
+      hud.style.width = `${geom.width * laid.xf.s}px`;
+      hud.style.height = `${geom.height * laid.xf.s}px`;
+    }
+    stage.classList.toggle("is-zoomed", laid.pose.zoom > ROOM_PAN_ZOOM);
+    syncZoomLabel(laid.pose.zoom);
+    syncMinimap(frame, laid.xf);
+  };
+
+  const resetRoomZoom = () => {
+    viewPose.current = { zoom: 1, panX: 0, panY: 0 };
+    pinchRef.current = null;
+    panRef.current = null;
+    setZoomUi(1);
+    applyView();
+  };
+
+  const animateRoomZoom = (next: RoomPose) => {
+    const frame = viewFrame.current;
+    if (!frame) return;
+    const from = viewPose.current;
+    const to = layoutPose(frame, next, zoomMax()).pose;
+    if (zoomAnim.current) cancelAnimationFrame(zoomAnim.current);
+    const started = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - started) / 250);
+      const ease = 1 - (1 - t) * (1 - t);
+      viewPose.current = {
+        zoom: from.zoom + (to.zoom - from.zoom) * ease,
+        panX: from.panX + (to.panX - from.panX) * ease,
+        panY: from.panY + (to.panY - from.panY) * ease,
+      };
+      applyView({ animate: false, gesturing: t < 1 });
+      if (t < 1) {
+        zoomAnim.current = requestAnimationFrame(step);
+        return;
+      }
+      zoomAnim.current = 0;
+      viewPose.current = to;
+      applyView();
+      setZoomUi(to.zoom);
+    };
+    zoomAnim.current = requestAnimationFrame(step);
+    setZoomUi(Math.max(from.zoom, to.zoom, 1.06));
+  };
+
+  const stopFitAnim = () => {
+    if (fitAnim.current) cancelAnimationFrame(fitAnim.current);
+    fitAnim.current = 0;
+    fitTarget.current = null;
+  };
+
+  const animateFitTo = (to: number) => {
+    const frame = viewFrame.current;
+    if (!frame) return;
+    const from = frame.fit;
+    fitTarget.current = to;
+    if (fitAnim.current) cancelAnimationFrame(fitAnim.current);
+    const started = performance.now();
+    const step = (now: number) => {
+      const live = viewFrame.current;
+      if (!live || fitTarget.current !== to) return;
+      const t = Math.min(1, (now - started) / 300);
+      const ease = 1 - (1 - t) * (1 - t);
+      live.fit = from + (to - from) * ease;
+      applyView({ gesturing: t < 1 });
+      if (t < 1) {
+        fitAnim.current = requestAnimationFrame(step);
+        return;
+      }
+      fitAnim.current = 0;
+      live.fit = to;
+      fitTarget.current = null;
+      applyView();
+    };
+    fitAnim.current = requestAnimationFrame(step);
+  };
+
+  const measureRoomFrame = () => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const rect = stage.getBoundingClientRect();
+    if (rect.width < 8 || rect.height < 8) return;
+    const editBar = stage.querySelector(".lucky-edit-bar");
+    const drawer = stage.querySelector(".lucky-drawer");
+    const switcher = stage.querySelector(".lucky-switcher");
+    const bar = stage.querySelector(".lucky-bar");
+    let bandTop = 118;
+    let bandBottom = rect.height - 150;
+    if (mode === "edit") {
+      bandTop = editBar ? editBar.getBoundingClientRect().bottom - rect.top + 8 : 64;
+      const tutorial = drawer?.classList.contains("is-tutorial");
+      const expanded = drawer?.classList.contains("is-expanded");
+      const drawerH = tutorial ? 300 : expanded ? Math.min(560, rect.height - 64 - 120) : 206;
+      const tabH = parseFloat(getComputedStyle(stage).getPropertyValue("--app-tabbar-height")) || 56;
+      bandBottom = rect.height - tabH - drawerH - 8;
+    } else {
+      if (switcher) bandTop = Math.max(100, switcher.getBoundingClientRect().bottom - rect.top + 6);
+      if (bar) bandBottom = bar.getBoundingClientRect().top - rect.top - 22;
+    }
+    if (bandBottom < bandTop + 40) bandBottom = bandTop + 40;
+    const targetFit = computeFit(mode, rect.width, bandBottom - bandTop);
+    const prev = viewFrame.current;
+    const displayed = prev?.fit ?? targetFit;
+    const fitChanged = Boolean(
+      prev && prev.mode === mode && Math.abs(displayed - targetFit) > 0.012 && !pinchRef.current && !panRef.current,
+    );
+    viewFrame.current = {
+      mode,
+      viewW: rect.width,
+      viewH: rect.height,
+      bandTop,
+      bandBottom,
+      fit: fitChanged ? displayed : targetFit,
+    };
+    if (fitChanged) {
+      animateFitTo(targetFit);
+      return;
+    }
+    stopFitAnim();
+    applyView({ gesturing: Boolean(pinchRef.current || panRef.current) });
+  };
+
+  useLayoutEffect(() => {
+    measureRoomFrame();
+  }, [mode, viewW, Boolean(state && roomsFile)]);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    let drawer: Element | null = null;
+    const mo = new MutationObserver(() => measureRoomFrame());
+    const watch = () => {
+      const next = stage.querySelector(".lucky-drawer");
+      if (next === drawer) return;
+      mo.disconnect();
+      drawer = next;
+      if (drawer) mo.observe(drawer, { attributes: true, attributeFilter: ["class"] });
+    };
+    watch();
+    const ro = new ResizeObserver(() => {
+      watch();
+      measureRoomFrame();
+    });
+    ro.observe(stage);
+    return () => {
+      mo.disconnect();
+      ro.disconnect();
+    };
+  }, [mode, Boolean(state && roomsFile)]);
+
+  useEffect(() => {
+    if (tutorialActive || zoomHintSeen()) return;
+    setZoomHintOn(true);
+    const timer = window.setTimeout(() => {
+      markZoomHintSeen();
+      setZoomHintOn(false);
+    }, 4000);
+    return () => window.clearTimeout(timer);
+  }, [tutorialActive]);
+
   // If unlocks changed (ops sync), snap currentRoomId back onto an unlocked room.
   useEffect(() => {
     if (!state || !roomsFile) return;
@@ -1251,7 +1506,6 @@ export function RoomScreen({
       ];
     }),
   );
-  const placedCount = layout.floor.length + layout.walls.length;
   const selected =
     layout.floor.find((item) => item.instanceId === selectedId) ??
     layout.walls.find((item) => item.instanceId === selectedId);
@@ -1328,6 +1582,7 @@ export function RoomScreen({
       setPreview(null);
     }
     setMode("view");
+    resetRoomZoom();
     setSelectedId(null);
     setDragging(null);
     setPreview(null);
@@ -1398,6 +1653,7 @@ export function RoomScreen({
     const nextId = ids[targetIndex];
     const current = stateRef.current;
     if (!nextId || !current || nextId === current.currentRoomId) return;
+    resetRoomZoom();
     persist({ ...current, currentRoomId: nextId });
     void haptic("tap");
   };
@@ -1446,6 +1702,7 @@ export function RoomScreen({
     const nextId = ids[index];
     const current = stateRef.current;
     if (!nextId || !current || nextId === current.currentRoomId) return;
+    if (viewPose.current.zoom > ROOM_PAN_ZOOM) resetRoomZoom();
     if (Math.abs(index - indexRef.current) !== 1) {
       persist({ ...current, currentRoomId: nextId });
       void haptic("tap");
@@ -1457,6 +1714,7 @@ export function RoomScreen({
 
   const onSwipeDown = (event: PointerEvent<HTMLDivElement>) => {
     if (mode !== "view") return;
+    if (viewPose.current.zoom > ROOM_PAN_ZOOM) return;
     if (slidingRef.current && sliderRef.current) {
       settleGen.current += 1;
       const matrix = new DOMMatrix(getComputedStyle(sliderRef.current).transform);
@@ -1477,7 +1735,11 @@ export function RoomScreen({
       active: true,
       dragging: slidingRef.current,
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // The pointer can already be gone if a second finger cancelled the swipe.
+    }
   };
 
   const onSwipeMove = (event: PointerEvent<HTMLDivElement>) => {
@@ -1538,10 +1800,18 @@ export function RoomScreen({
   };
 
   /** Sample point under the ghost (finger is PREVIEW_GHOST_LIFT_PT below the sprite). */
-  const pointerUnderGhost = (clientX: number, clientY: number, rect: DOMRect) => ({
-    localX: clientX - rect.left,
-    localY: clientY - rect.top - PREVIEW_GHOST_LIFT_PT,
-  });
+  const pointerUnderGhost = (clientX: number, clientY: number) => {
+    const stage = stageRef.current?.getBoundingClientRect();
+    if (!stage) return { localX: clientX, localY: clientY - PREVIEW_GHOST_LIFT_PT };
+    const point = clientToStage(clientX, clientY, stage, viewXf.current);
+    return { localX: point.x, localY: point.y - PREVIEW_GHOST_LIFT_PT };
+  };
+
+  const stageLocal = (clientX: number, clientY: number) => {
+    const stage = stageRef.current?.getBoundingClientRect();
+    if (!stage) return { x: clientX, y: clientY };
+    return clientToStage(clientX, clientY, stage, viewXf.current);
+  };
 
   const moveFloorPreviewTo = (col: number, row: number, base: PlacementPreview & { kind: "floor" }) => {
     const item = itemsById.get(base.itemId);
@@ -1733,11 +2003,11 @@ export function RoomScreen({
 
     // Preview active: tap empty tile moves preview (furniture) or paint target.
     if (preview && !tutLock) {
-      const rect = stageRef.current?.getBoundingClientRect();
-      if (!rect) return;
+      if (!stageRef.current) return;
       // Tap-to-move uses the tapped tile directly; drag uses ghost-offset sampling.
-      const localX = event.clientX - rect.left;
-      const localY = event.clientY - rect.top;
+      const point = stageLocal(event.clientX, event.clientY);
+      const localX = point.x;
+      const localY = point.y;
       if (preview.kind === "floor") {
         const tile = hitTestTile(localX, localY, mode);
         moveFloorPreviewTo(tile.col, tile.row, preview);
@@ -1923,8 +2193,7 @@ export function RoomScreen({
     }
 
     if (!previewMoving.current) return;
-    const rect = stageRef.current.getBoundingClientRect();
-    const { localX, localY } = pointerUnderGhost(event.clientX, event.clientY, rect);
+    const { localX, localY } = pointerUnderGhost(event.clientX, event.clientY);
     if (preview.kind === "floor") {
       const tile = hitTestTile(localX, localY, mode);
       if (tile.col === preview.col && tile.row === preview.row) return;
@@ -1953,6 +2222,33 @@ export function RoomScreen({
       if (!target) return;
       movePaintPreviewTo(target, preview);
     }
+    if (previewMoving.current && viewPose.current.zoom > ROOM_PAN_ZOOM && stageRef.current) {
+      const rect = stageRef.current.getBoundingClientRect();
+      const edge = 40;
+      autoPan.current.x = event.clientX < rect.left + edge ? 5 : event.clientX > rect.right - edge ? -5 : 0;
+      autoPan.current.y = event.clientY < rect.top + edge ? 5 : event.clientY > rect.bottom - edge ? -5 : 0;
+      if ((autoPan.current.x || autoPan.current.y) && !autoPan.current.raf) {
+        const step = () => {
+          const frame = viewFrame.current;
+          if (!frame || !previewMoving.current || (!autoPan.current.x && !autoPan.current.y)) {
+            autoPan.current.raf = 0;
+            return;
+          }
+          viewPose.current = layoutPose(
+            frame,
+            {
+              zoom: viewPose.current.zoom,
+              panX: viewPose.current.panX + autoPan.current.x,
+              panY: viewPose.current.panY + autoPan.current.y,
+            },
+            zoomMax(),
+          ).pose;
+          applyView({ gesturing: true });
+          autoPan.current.raf = requestAnimationFrame(step);
+        };
+        autoPan.current.raf = requestAnimationFrame(step);
+      }
+    }
   };
 
   const onStagePointerUp = () => {
@@ -1970,6 +2266,10 @@ export function RoomScreen({
     }
     previewItemTap.current = null;
     previewMoving.current = false;
+    autoPan.current.x = 0;
+    autoPan.current.y = 0;
+    if (autoPan.current.raf) cancelAnimationFrame(autoPan.current.raf);
+    autoPan.current.raf = 0;
     window.dispatchEvent(new Event("lucky-cat:drawer-scroll-unlock"));
   };
 
@@ -2460,6 +2760,13 @@ export function RoomScreen({
     setPhotoUrl("");
     setPhotoOpen(true);
     setPhotoBusy(true);
+    const posed = viewPose.current;
+    const zoomed = posed.zoom > 1.001 || Math.abs(posed.panX) > 0.5 || Math.abs(posed.panY) > 0.5;
+    if (zoomed) {
+      viewPose.current = { zoom: 1, panX: 0, panY: 0 };
+      applyView();
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }
     try {
       const frames = photoFrames.length ? photoFrames : await loadPhotoFrames();
       if (!photoFrames.length) setPhotoFrames(frames);
@@ -2479,6 +2786,11 @@ export function RoomScreen({
       nyNotify({ key: "room-photo", kind: "error", title: "사진을 만들지 못했어요" });
       setPhotoOpen(false);
     } finally {
+      if (zoomed) {
+        viewPose.current = posed;
+        applyView();
+        setZoomUi(posed.zoom);
+      }
       setPhotoBusy(false);
     }
   };
@@ -2508,13 +2820,170 @@ export function RoomScreen({
   onFloorPointerDownRef.current = onFloorPointerDown;
   onItemPointerDownRef.current = onItemPointerDown;
 
+  const cancelRoomSwipe = () => {
+    settleGen.current += 1;
+    swipe.current.active = false;
+    swipe.current.dragging = false;
+    slidingRef.current = false;
+    dragXRef.current = 0;
+    dragRawRef.current = 0;
+    if (dragRaf.current) cancelAnimationFrame(dragRaf.current);
+    dragRaf.current = 0;
+    const slider = sliderRef.current;
+    if (slider) {
+      slider.style.transition = "none";
+      slider.style.transform = `translate3d(${-indexRef.current * viewWRef.current}px, 0, 0)`;
+      slider.classList.remove("is-dragging", "is-settle");
+    }
+    portRef.current?.classList.remove("is-sliding");
+    setSwipePhase("idle");
+  };
+
+  const onRoomChrome = (target: EventTarget | null) => {
+    if (!(target instanceof Element)) return false;
+    return Boolean(
+      target.closest(
+        "button, a, input, textarea, .lucky-switcher, .lucky-bar, .lucky-drawer, .lucky-edit-bar, .lucky-zoom-tools, .lucky-minimap, .lucky-header, .lucky-shadow-toggle, .lucky-zoom-hint, .lucky-placement-toolbar, .lucky-paint-dock, .lucky-select-hud",
+      ),
+    );
+  };
+
+  const onRoomPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointers.current.size >= 2) {
+      const pts = [...pointers.current.values()];
+      cancelRoomSwipe();
+      pinchRef.current = {
+        dist: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1,
+        zoom: viewPose.current.zoom,
+        panX: viewPose.current.panX,
+        panY: viewPose.current.panY,
+      };
+      panRef.current = null;
+      applyView({ gesturing: true });
+      if (zoomUi <= ROOM_PAN_ZOOM) setZoomUi(ROOM_PAN_ZOOM + 0.01);
+      return;
+    }
+    if (onRoomChrome(event.target)) return;
+    if (viewPose.current.zoom <= ROOM_PAN_ZOOM) return;
+    if (mode === "edit" && previewRef.current) return;
+    panRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      panX: viewPose.current.panX,
+      panY: viewPose.current.panY,
+      moved: false,
+    };
+  };
+
+  const onRoomPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (!pointers.current.has(event.pointerId)) return;
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const frame = viewFrame.current;
+    const stage = stageRef.current;
+    if (!frame || !stage) return;
+    if (pinchRef.current && pointers.current.size >= 2) {
+      const pts = [...pointers.current.values()];
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+      const rect = stage.getBoundingClientRect();
+      viewPose.current = zoomAround(
+        frame,
+        { zoom: pinchRef.current.zoom, panX: pinchRef.current.panX, panY: pinchRef.current.panY },
+        pinchRef.current.zoom * (dist / pinchRef.current.dist),
+        (pts[0].x + pts[1].x) / 2 - rect.left,
+        (pts[0].y + pts[1].y) / 2 - rect.top,
+        zoomMax(),
+      );
+      applyView({ gesturing: true });
+      syncZoomLabel(viewPose.current.zoom);
+      return;
+    }
+    const pan = panRef.current;
+    if (!pan || pinchRef.current) return;
+    const dx = event.clientX - pan.x;
+    const dy = event.clientY - pan.y;
+    if (!pan.moved && Math.hypot(dx, dy) < 8) return;
+    pan.moved = true;
+    viewPose.current = layoutPose(
+      frame,
+      { zoom: viewPose.current.zoom, panX: pan.panX + dx, panY: pan.panY + dy },
+      zoomMax(),
+    ).pose;
+    applyView({ gesturing: true });
+  };
+
+  const onRoomPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    const tracked = pointers.current.has(event.pointerId);
+    pointers.current.delete(event.pointerId);
+    if (!tracked) return;
+    if (pointers.current.size < 2) pinchRef.current = null;
+    if (pointers.current.size > 0) return;
+    const pan = panRef.current;
+    panRef.current = null;
+    applyView();
+    setZoomUi(viewPose.current.zoom);
+    if (pan?.moved || onRoomChrome(event.target) || previewRef.current) return;
+    const now = performance.now();
+    const prev = lastTap.current;
+    const frame = viewFrame.current;
+    const stage = stageRef.current;
+    if (
+      frame &&
+      stage &&
+      prev &&
+      now - prev.t < 300 &&
+      Math.hypot(event.clientX - prev.x, event.clientY - prev.y) < 36
+    ) {
+      lastTap.current = null;
+      const rect = stage.getBoundingClientRect();
+      const nextZoom = viewPose.current.zoom > ROOM_PAN_ZOOM ? 1 : zoomMax();
+      animateRoomZoom(
+        zoomAround(
+          frame,
+          viewPose.current,
+          nextZoom,
+          event.clientX - rect.left,
+          event.clientY - rect.top,
+          zoomMax(),
+        ),
+      );
+      return;
+    }
+    lastTap.current = { t: now, x: event.clientX, y: event.clientY };
+  };
+
+  const nudgeZoom = (delta: number) => {
+    const frame = viewFrame.current;
+    if (!frame) return;
+    const next = viewPose.current.zoom + delta;
+    animateRoomZoom(
+      zoomAround(frame, viewPose.current, next, frame.viewW / 2, (frame.bandTop + frame.bandBottom) / 2, zoomMax()),
+    );
+  };
+
+  const dismissZoomHint = () => {
+    markZoomHintSeen();
+    setZoomHintOn(false);
+  };
+
   return (
     <div
       className={`lucky-room is-${mode} is-tod-${period}`}
       ref={stageRef}
-      onPointerMove={onStagePointerMove}
-      onPointerUp={onStagePointerUp}
-      onPointerCancel={onStagePointerUp}
+      onPointerDown={onRoomPointerDown}
+      onPointerMove={(event) => {
+        onRoomPointerMove(event);
+        onStagePointerMove(event);
+      }}
+      onPointerUp={(event) => {
+        onRoomPointerUp(event);
+        onStagePointerUp();
+      }}
+      onPointerCancel={(event) => {
+        onRoomPointerUp(event);
+        onStagePointerUp();
+      }}
     >
       {cozyPop ? (
         <p key={cozyPop.id} className="lucky-cozy-float" role="status">
@@ -2544,9 +3013,6 @@ export function RoomScreen({
 
       {mode === "view" ? (
         <header className="lucky-header">
-          <div className="lucky-title-row">
-            <p className="lucky-eyebrow">방꾸미기</p>
-          </div>
           <div className="lucky-brand">
             <img className="lucky-logo" src={roomAsset("ui/logo-myroom.svg")} alt="MY ROOM." />
           </div>
@@ -2560,7 +3026,6 @@ export function RoomScreen({
             >
               COZY Lv.{state.cozyLevel}
             </button>
-            <span>ITEMS {String(placedCount).padStart(2, "0")}</span>
           </div>
         </header>
       ) : (
@@ -2637,6 +3102,74 @@ export function RoomScreen({
       >
         그림자 {state.shadowsEnabled ? "켜짐" : "꺼짐"}
       </button>
+
+      {zoomUi > ROOM_PAN_ZOOM ? (
+        <button
+          type="button"
+          className="lucky-minimap"
+          aria-label="보이는 위치"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            const frame = viewFrame.current;
+            if (!frame) return;
+            const rect = event.currentTarget.getBoundingClientRect();
+            const nx = (event.clientX - rect.left) / rect.width;
+            const ny = (event.clientY - rect.top) / rect.height;
+            animateRoomZoom(focusContent(frame, viewPose.current, nx, ny, zoomMax()));
+          }}
+        >
+          <svg viewBox="0 0 92 62" aria-hidden="true">
+            <polygon className="is-wall" points="46,8 14,24 14,38 46,22" />
+            <polygon className="is-wall" points="46,8 78,24 78,38 46,22" />
+            <polygon className="is-floor" points="46,22 78,38 46,56 14,38" />
+          </svg>
+          <span ref={miniRectRef} className="lucky-mini-view" />
+        </button>
+      ) : null}
+
+      {mode === "view" && zoomUi > ROOM_PAN_ZOOM ? (
+        <div className="lucky-zoom-tools is-view">
+          <span className="lucky-zoom-chip">
+            <img src={roomAsset("ui/icon-zoom-hint.svg")} alt="" />
+            <span ref={zoomLabelRef}>{zoomUi.toFixed(1)}배</span>
+          </span>
+          <button type="button" onClick={() => animateRoomZoom({ zoom: 1, panX: 0, panY: 0 })}>
+            <img src={roomAsset("ui/icon-fit.svg")} alt="" />
+            전체 보기
+          </button>
+        </div>
+      ) : null}
+
+      {mode === "edit" ? (
+        <div className="lucky-zoom-tools is-edit">
+          <button type="button" aria-label="확대" disabled={zoomUi >= zoomMax() - 0.01} onClick={() => nudgeZoom(ROOM_ZOOM_STEP)}>
+            <img src={roomAsset("ui/icon-zoom-in.svg")} alt="" />
+          </button>
+          <button
+            type="button"
+            aria-label="축소"
+            disabled={zoomUi <= ROOM_ZOOM_MIN}
+            onClick={() => nudgeZoom(-ROOM_ZOOM_STEP)}
+          >
+            <img src={roomAsset("ui/icon-zoom-out.svg")} alt="" />
+          </button>
+          <button
+            type="button"
+            aria-label="전체 보기"
+            disabled={zoomUi <= ROOM_PAN_ZOOM}
+            onClick={() => animateRoomZoom({ zoom: 1, panX: 0, panY: 0 })}
+          >
+            <img src={roomAsset("ui/icon-fit.svg")} alt="" />
+          </button>
+        </div>
+      ) : null}
+
+      {mode === "view" && zoomHintOn ? (
+        <button type="button" className="lucky-zoom-hint" onClick={dismissZoomHint}>
+          <img src={roomAsset("ui/icon-zoom-hint.svg")} alt="" />
+          <span>두 손가락으로 벌리면 크게 보여요 · 두 번 톡 치면 확대 · 한 번 더 치면 원래대로</span>
+        </button>
+      ) : null}
 
       {mode === "view" ? (
         <div
@@ -2739,6 +3272,7 @@ export function RoomScreen({
                 className="lucky-island-page"
                 style={{ left: mode === "view" ? index * viewW : 0, width: viewW }}
               >
+                <div className="lucky-room-view" data-active={active ? "1" : "0"} ref={active ? viewRef : undefined}>
                 <div
                   ref={(node) => {
                     if (active) islandRef.current = node;
@@ -2820,6 +3354,7 @@ export function RoomScreen({
                       }
                     />
                   </div>
+                </div>
                 </div>
               </div>
             );
@@ -2916,8 +3451,14 @@ export function RoomScreen({
 
       {mode === "edit" && preview && preview.kind !== "paint" && hud && previewItem ? (
         <div
+          ref={hudRef}
           className={`lucky-select-hud lucky-placement-hud ${preview.valid ? "" : "is-invalid"}`}
-          style={{ left: hud.left, top: hud.top, width: hud.width, height: hud.height }}
+          style={{
+            left: viewXf.current.tx + hud.left * viewXf.current.s,
+            top: viewXf.current.ty + hud.top * viewXf.current.s,
+            width: hud.width * viewXf.current.s,
+            height: hud.height * viewXf.current.s,
+          }}
         >
           <div className="lucky-select-box">
             <i />
@@ -3046,24 +3587,6 @@ export function RoomScreen({
             {ROOM_HINTS[roomDef.id]?.lead ? <span>{ROOM_HINTS[roomDef.id].lead}</span> : null}
             {ROOM_HINTS[roomDef.id]?.rest ?? roomDef.hint}
           </p>
-          {tutorialActive ? null : (
-            <button
-              type="button"
-              className="lucky-visit-btn"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={() => setVisitOpen(true)}
-            >
-              방 구경 가기
-            </button>
-          )}
-          <button
-            type="button"
-            className="lucky-photo-btn"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={() => void openPhoto()}
-          >
-            사진 찍기
-          </button>
           <div className="lucky-bar">
             <div className="lucky-bar-points">
               <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />
@@ -3075,6 +3598,26 @@ export function RoomScreen({
             <button type="button" className="lucky-cta" onClick={enterEdit}>
               <img src={roomAsset("ui/icon-brush.svg")} alt="" />
               꾸미기
+            </button>
+            {tutorialActive ? null : (
+              <button
+                type="button"
+                className="lucky-bar-btn is-visit"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={() => setVisitOpen(true)}
+              >
+                <img src={roomAsset("ui/icon-visit.svg")} alt="" />
+                구경
+              </button>
+            )}
+            <button
+              type="button"
+              className="lucky-bar-btn"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => void openPhoto()}
+            >
+              <img src={roomAsset("ui/icon-photo.svg")} alt="" />
+              사진
             </button>
             <button type="button" className="lucky-bar-btn" onClick={() => setConfirm("save-ph")}>
               <img src={roomAsset("ui/icon-save.svg")} alt="" />
@@ -3303,10 +3846,22 @@ export function RoomScreen({
           capturePhoto={async () => {
             const island = islandRef.current;
             if (!island) return null;
+            const posed = viewPose.current;
+            const zoomed = posed.zoom > 1.001;
+            if (zoomed) {
+              viewPose.current = { zoom: 1, panX: 0, panY: 0 };
+              applyView();
+              await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            }
             try {
               return canvasToJpeg(await captureRoomIsland(island));
             } catch {
               return null;
+            } finally {
+              if (zoomed) {
+                viewPose.current = posed;
+                applyView();
+              }
             }
           }}
           onClose={() => setVisitOpen(false)}
