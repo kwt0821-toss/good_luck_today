@@ -1,7 +1,7 @@
 import { isDebugFlagRequest } from "../debugSaveQuery.ts";
 
-/** Matches package.json. A new version retries canvas after a stored failure. */
-export const ROOM_RENDERER_VERSION = "0.1.0";
+/** New on every build, so a stored canvas failure is retried after the next deploy. */
+export const ROOM_RENDERER_VERSION = globalThis.__ROOM_BUILD_ID__ || "0.1.0";
 
 export const ROOM_RENDERER_FAIL_KEY = "lucky-cat.room-renderer-failed";
 
@@ -11,6 +11,8 @@ export type RoomRenderConfig = {
   backdrop?: boolean;
   depth?: boolean;
   fx?: boolean;
+  lite?: boolean;
+  pinchFreeze?: boolean;
 };
 
 export type RoomRenderFlags = {
@@ -19,6 +21,8 @@ export type RoomRenderFlags = {
   backdrop: boolean;
   depth: boolean;
   fx: boolean;
+  lite: boolean;
+  pinchFreeze: boolean;
 };
 
 const DOM_FLAGS: RoomRenderFlags = {
@@ -27,6 +31,8 @@ const DOM_FLAGS: RoomRenderFlags = {
   backdrop: false,
   depth: false,
   fx: false,
+  lite: false,
+  pinchFreeze: false,
 };
 
 export function roomRendererFailed(version = ROOM_RENDERER_VERSION): boolean {
@@ -75,19 +81,23 @@ export function roomRenderFlags(input: {
   const version = input.version ?? ROOM_RENDERER_VERSION;
   const search = input.search ?? "";
   const schemeUrl = input.schemeUrl ?? "";
-  if (isDebugFlagRequest("roomDom", search, schemeUrl)) return { ...DOM_FLAGS };
-  const failed = input.failed ?? roomRendererFailed(version);
-  if (failed) return { ...DOM_FLAGS };
   const config = input.config;
-  if (!config || config.renderer !== "canvas") return { ...DOM_FLAGS };
+  const pinchFreeze = isDebugFlagRequest("pinchFreeze", search, schemeUrl) || config?.pinchFreeze === true;
+  const dom = { ...DOM_FLAGS, pinchFreeze };
+  if (isDebugFlagRequest("roomDom", search, schemeUrl)) return dom;
+  const failed = input.failed ?? roomRendererFailed(version);
+  if (failed) return dom;
+  if (!config || config.renderer !== "canvas") return dom;
   const supported = input.canvasSupported ?? true;
-  if (!supported) return { ...DOM_FLAGS };
+  if (!supported) return dom;
   return {
     canvas: true,
     tiles: config.tiles === true,
     backdrop: config.backdrop === true,
     depth: config.depth === true,
     fx: config.fx === true,
+    lite: config.lite === true,
+    pinchFreeze,
   };
 }
 

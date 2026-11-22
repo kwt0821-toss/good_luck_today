@@ -13,6 +13,11 @@ export function bakedFloorBytes(): number {
   return bytes;
 }
 
+export function peekBakedFloor(key: string): boolean {
+  const hit = baked.find((entry) => entry.key === key);
+  return Boolean(hit && hit.canvas.width > 0);
+}
+
 export function takeBakedFloor(key: string): HTMLCanvasElement | null {
   const index = baked.findIndex((entry) => entry.key === key);
   if (index < 0) return null;

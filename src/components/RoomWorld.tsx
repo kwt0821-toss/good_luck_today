@@ -5,6 +5,7 @@ import { SIT_LOOK_BODY_PX, SIT_LOOK_CHEESE } from "../lib/catSeats";
 import { HEART_BED_ID, useHeartBedSrc } from "../lib/heartBed";
 import { useHideBrokenImages } from "../lib/hideBrokenImages";
 import { roomAsset } from "../lib/roomCatalog";
+import { layerBoxStyle, layerCrop } from "../lib/roomRender/layerCrops";
 import { AudioManager } from "../audio/AudioManager";
 import {
   DEFAULT_CAT_BREED_ID,
@@ -103,6 +104,8 @@ type RoomWorldProps = {
   floorCanvas?: boolean;
   /** Draw the floor immediately (the room is on screen, or a swipe is in progress). */
   floorEager?: boolean;
+  /** Cropped world art and the lighter animation path. */
+  lite?: boolean;
   /** Plays only for the room whose theme set is complete. */
   setBonus?: RoomSetCue | null;
   favorite?: {
@@ -180,8 +183,32 @@ function windowGlassBox(rect: { x: number; y: number; w: number; h: number }): C
   };
 }
 
-function Layer({ src, className }: { src: string; className?: string }) {
-  return <img className={`lucky-world-layer ${className ?? ""}`} src={roomAsset(src)} alt="" draggable={false} />;
+function Layer({
+  src,
+  className,
+  lite = false,
+  shift,
+}: {
+  src: string;
+  className?: string;
+  lite?: boolean;
+  shift?: { x: number; y: number };
+}) {
+  const crop = lite ? layerCrop(src) : null;
+  const style: CSSProperties | undefined = crop
+    ? layerBoxStyle(crop, shift ? { x: shift.x, y: shift.y, worldW: WORLD_W, worldH: WORLD_H } : undefined)
+    : shift
+      ? { transform: `translate(${(shift.x / WORLD_W) * 100}%, ${(shift.y / WORLD_H) * 100}%)` }
+      : undefined;
+  return (
+    <img
+      className={`lucky-world-layer ${className ?? ""}`}
+      src={roomAsset(crop ? `world/${crop.file}` : src)}
+      alt=""
+      style={style}
+      draggable={false}
+    />
+  );
 }
 
 function TilePoly({
@@ -812,6 +839,7 @@ export const RoomWorld = memo(function RoomWorld({
   debugHit = false,
   floorCanvas = false,
   floorEager = false,
+  lite = false,
   setBonus = null,
   favorite = null,
   onSelect,
@@ -1033,7 +1061,7 @@ export const RoomWorld = memo(function RoomWorld({
       style={{ ["--room-fit" as string]: fit }}
       onPointerDown={onFloorPointerDown}
     >
-      <Layer src="world/base-bg.webp" className="is-base" />
+      <Layer src="world/base-bg.webp" className="is-base" lite={lite} />
       <div className="lucky-tod-sky" aria-hidden="true" />
       <div className="lucky-world-layer lucky-floor-tiles" aria-hidden="true">
         {useFloorCanvas ? (
@@ -1089,8 +1117,12 @@ export const RoomWorld = memo(function RoomWorld({
           }),
         )}
       </div>
-      <Layer src={mode === "edit" ? "world/room-frame-edit.svg" : "world/room-frame-view.webp"} className="is-frame" />
-      <Layer src="world/string-lights.webp" className="is-lights" />
+      <Layer
+        src={mode === "edit" ? "world/room-frame-edit.svg" : "world/room-frame-view.webp"}
+        className="is-frame"
+        lite={lite && mode !== "edit"}
+      />
+      <Layer src="world/string-lights.webp" className="is-lights" lite={lite} />
 
       {mode === "edit" ? (
         <svg className="lucky-world-layer lucky-tile-layer" viewBox={`0 0 ${WORLD_W} ${WORLD_H}`}>
@@ -1303,13 +1335,7 @@ export const RoomWorld = memo(function RoomWorld({
       {raisedFurniture.map(renderFurniture)}
 
       {lamp ? (
-        <img
-          className="lucky-world-layer lucky-lamp-glow"
-          src={roomAsset("world/lamp-glow-additive.webp")}
-          alt=""
-          style={{ transform: `translate(${(glowShift.x / WORLD_W) * 100}%, ${(glowShift.y / WORLD_H) * 100}%)` }}
-          draggable={false}
-        />
+        <Layer src="world/lamp-glow-additive.webp" className="lucky-lamp-glow" lite={lite} shift={glowShift} />
       ) : null}
       {lightGlows.map((glow) => (
         <span
@@ -1320,7 +1346,11 @@ export const RoomWorld = memo(function RoomWorld({
         />
       ))}
 
-      <Layer src={mode === "edit" ? "world/front-puffs-edit.svg" : "world/front-puffs-view.webp"} className="is-puffs" />
+      <Layer
+        src={mode === "edit" ? "world/front-puffs-edit.svg" : "world/front-puffs-view.webp"}
+        className="is-puffs"
+        lite={lite && mode !== "edit"}
+      />
     </div>
   );
 });

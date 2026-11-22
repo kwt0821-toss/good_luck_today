@@ -2,7 +2,7 @@ import { useEffect, useRef, type RefObject } from "react";
 
 import { bakedFloorBytes } from "../lib/roomRender/floorBake";
 import { cachedRoomImageBytes } from "../lib/roomRender/imageCache";
-import { holdRoomPerf, readRoomPerf } from "../lib/roomRender/perf";
+import { countRoomLayers, holdRoomPerf, readRoomPerf } from "../lib/roomRender/perf";
 import { roomRenderLabel, type RoomRenderFlags } from "../lib/roomRender/renderer";
 
 /** Imperative overlay. Updates text once a second and never stores the numbers in React. */
@@ -46,6 +46,8 @@ export function RoomPerfBox({
         `img ${imgs} · canvas ${canvases} · el ${nodes}`,
         `mem ${mb}MB`,
         roomRenderLabel(flagsRef.current),
+        `lite ${flagsRef.current.lite ? "on" : "off"} · pinchFreeze ${flagsRef.current.pinchFreeze ? "on" : "off"}`,
+        `레이어 후보 수 ${countRoomLayers(root)}`,
       ].join("\n");
     };
     write();

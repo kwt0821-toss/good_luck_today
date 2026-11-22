@@ -49,6 +49,9 @@ function promoEntryPages(): Plugin {
 }
 
 export default defineConfig({
+  define: {
+    "globalThis.__ROOM_BUILD_ID__": JSON.stringify(new Date().toISOString()),
+  },
   plugins: [react(), imageCachePlugin(), promoEntryPages()],
   build: {
     target: ["es2020", "safari14"],

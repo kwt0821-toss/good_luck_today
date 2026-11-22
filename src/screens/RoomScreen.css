@@ -170,6 +170,40 @@
   clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
 }
 
+.lucky-room.is-lite .lucky-star {
+  animation: none;
+  opacity: 1;
+}
+
+.lucky-room.is-lite .lucky-star-group {
+  position: absolute;
+  inset: 0;
+}
+
+.lucky-room.is-lite .lucky-star-group.is-g0 {
+  animation: lucky-twinkle 3s ease-in-out infinite;
+}
+
+.lucky-room.is-lite .lucky-star-group.is-g1 {
+  animation: lucky-twinkle 3.7s ease-in-out infinite;
+  animation-delay: -1.1s;
+}
+
+.lucky-room.is-lite .lucky-star-group.is-g2 {
+  animation: lucky-twinkle 4.3s ease-in-out infinite;
+  animation-delay: -2.3s;
+}
+
+.lucky-room.is-lite .lucky-star-group.is-g3 {
+  animation: lucky-twinkle 2.6s ease-in-out infinite;
+  animation-delay: -0.6s;
+}
+
+.lucky-room.is-lite.is-tod-day .lucky-star-group,
+.lucky-room.is-lite.is-pinching .lucky-star-group {
+  animation: none;
+}
+
 .lucky-header {
   position: absolute;
   z-index: 5;
@@ -658,6 +692,11 @@
   animation-play-state: paused;
 }
 
+.lucky-room.is-lite .lucky-room-view[data-active="0"],
+.lucky-room.is-lite .lucky-room-view[data-active="0"] * {
+  animation: none !important;
+}
+
 .lucky-room-view.is-gesturing {
   transition: none;
 }
@@ -700,6 +739,21 @@
 
 .lucky-island.is-float {
   animation: lucky-island-float 6s ease-in-out infinite;
+}
+
+.lucky-pinch-freeze {
+  position: absolute;
+  z-index: 8;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.lucky-room-view.is-frozen .lucky-island {
+  visibility: hidden;
+}
+
+.lucky-room-view.is-frozen .lucky-pinch-freeze {
+  visibility: visible;
 }
 
 .lucky-island-scale {
@@ -1536,6 +1590,16 @@
 .lucky-contact-shadow {
   will-change: transform;
   transition: transform 140ms ease, opacity 140ms ease;
+}
+
+.lucky-room.is-lite .lucky-contact-shadow,
+.lucky-room.is-lite .lucky-roam-shadow,
+.lucky-room.is-lite .lucky-roam-cat {
+  will-change: auto;
+}
+
+.lucky-room.is-lite.is-edit .lucky-contact-shadow {
+  will-change: transform;
 }
 
 .lucky-roam-shadow {
@@ -3587,6 +3651,7 @@ button.lucky-roam-cat:active,
   .lucky-island.is-float,
   .lucky-island-slider,
   .lucky-star,
+  .lucky-star-group,
   .lucky-lamp-glow,
   .lucky-item-glow,
   .lucky-world-layer.is-lights,

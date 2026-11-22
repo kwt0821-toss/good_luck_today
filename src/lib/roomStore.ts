@@ -26,7 +26,7 @@ import type {
   WallPlacement,
 } from "./roomTypes";
 
-const ROOM_KEY = "lucky-cat.my-room.v6.rooms";
+export const ROOM_KEY = "lucky-cat.my-room.v6.rooms";
 const LEGACY_KEYS = ["lucky-cat.my-room.v5.tiles", "lucky-cat.my-room.v5"];
 export const MOCK_POINTS = 1240;
 export const MOCK_COZY = 3;

@@ -27,6 +27,7 @@ import { adPlacementOf, track } from "./lib/analytics";
 import { toKstDateKey } from "./lib/date";
 import { mailboxUnclaimed, subscribeMailbox } from "./lib/mailbox";
 import { markRoomNav } from "./lib/roomRender/perf";
+import { scheduleLiteWarm } from "./lib/roomRender/warmRoom";
 import { refreshServerTime } from "./lib/tossClock";
 import { isTossApp } from "./lib/tossEnv";
 import { ensureGameUserHash } from "./lib/user";
@@ -375,6 +376,11 @@ export default function App() {
     preloadAdFallbackCat();
     void initTossBanner();
   }, []);
+
+  useEffect(() => {
+    if (screen.name !== "home" || !config) return undefined;
+    return scheduleLiteWarm(config.economy.roomRender);
+  }, [screen.name, config]);
 
   useEffect(() => {
     return subscribeJelly(() => {

@@ -38,6 +38,7 @@ import { noteCatLetterFlag } from "../lib/catLetters";
 import { track } from "../lib/analytics";
 import { isDebugHitRequest } from "../lib/debugSaveQuery";
 import { RoomPerfBox } from "../components/RoomPerfBox";
+import { paintPinchFreeze } from "../lib/roomRender/pinchFreeze";
 import { debugPerfEnabled, markRoomFirstPaint } from "../lib/roomRender/perf";
 import { readRoomRenderFlags, type RoomRenderFlags } from "../lib/roomRender/renderer";
 import { jellyLabel } from "../lib/jellyLabel";
@@ -563,6 +564,8 @@ export function RoomScreen({
   const previewKeyRef = useRef<string | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const islandRef = useRef<HTMLDivElement | null>(null);
+  const freezeRef = useRef<HTMLCanvasElement | null>(null);
+  const freezeTimer = useRef(0);
   const islandShotRef = useRef<HTMLCanvasElement | null>(null);
   const photoCardRef = useRef<{ png: string; base64: string; blob: Blob } | null>(null);
   const [photoOpen, setPhotoOpen] = useState(false);
@@ -1561,6 +1564,8 @@ export function RoomScreen({
     backdrop: false,
     depth: false,
     fx: false,
+    lite: false,
+    pinchFreeze: false,
   };
   useEffect(() => {
     if (!roomLive) return;
@@ -1644,6 +1649,38 @@ export function RoomScreen({
       }),
     );
   }, [mode, state, roomsFile, items, itemTiers]);
+
+  useEffect(() => {
+    if (!renderFlags.pinchFreeze || mode !== "view") {
+      const canvas = freezeRef.current;
+      if (canvas) {
+        canvas.width = 0;
+        canvas.height = 0;
+      }
+      return;
+    }
+    let dead = false;
+    const timer = window.setTimeout(() => {
+      const island = islandRef.current;
+      const canvas = freezeRef.current;
+      if (dead || gestureCache.current || !island || !canvas) return;
+      void paintPinchFreeze(island, canvas, () => dead || gestureCache.current != null);
+    }, 1000);
+    return () => {
+      dead = true;
+      window.clearTimeout(timer);
+    };
+  }, [renderFlags.pinchFreeze, mode, state, period, moods]);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(freezeTimer.current);
+      const canvas = freezeRef.current;
+      if (!canvas) return;
+      canvas.width = 0;
+      canvas.height = 0;
+    };
+  }, []);
 
   useLoadingHold("room", !state || !roomsFile);
 
@@ -3177,6 +3214,15 @@ export function RoomScreen({
     };
     stage.classList.add("is-pinching");
     node.style.transition = "none";
+    const shot = freezeRef.current;
+    const island = islandRef.current;
+    if (renderFlags.pinchFreeze && mode === "view" && shot && shot.width > 0 && island) {
+      shot.style.left = island.style.left;
+      shot.style.top = island.style.top;
+      shot.style.width = island.style.width;
+      shot.style.height = island.style.height;
+      node.classList.add("is-frozen");
+    }
   };
 
   const paintGesture = () => {
@@ -3202,11 +3248,22 @@ export function RoomScreen({
     stageRef.current?.classList.remove("is-pinching");
     applyView();
     setZoomUi(viewPose.current.zoom);
-    if (!node) return;
-    node.style.willChange = "auto";
-    requestAnimationFrame(() => {
-      if (node.style.willChange === "auto") node.style.willChange = "";
-    });
+    if (node) {
+      node.classList.remove("is-frozen");
+      node.style.willChange = "auto";
+      requestAnimationFrame(() => {
+        if (node.style.willChange === "auto") node.style.willChange = "";
+      });
+    }
+    if (renderFlags.pinchFreeze && mode === "view" && node) {
+      window.clearTimeout(freezeTimer.current);
+      freezeTimer.current = window.setTimeout(() => {
+        const island = islandRef.current;
+        const canvas = freezeRef.current;
+        if (!island || !canvas || gestureCache.current) return;
+        void paintPinchFreeze(island, canvas, () => gestureCache.current != null);
+      }, 1000);
+    }
   };
 
   const onRoomPointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -3332,7 +3389,7 @@ export function RoomScreen({
 
   return (
     <div
-      className={`lucky-room is-${mode} is-tod-${period}`}
+      className={`lucky-room is-${mode} is-tod-${period}${renderFlags.lite ? " is-lite" : ""}`}
       ref={stageRef}
       onPointerDown={onRoomPointerDown}
       onPointerMove={(event) => {
@@ -3354,24 +3411,7 @@ export function RoomScreen({
           +{cozyPop.gain} 아늑함
         </p>
       ) : null}
-      <div className="lucky-stars" aria-hidden="true">
-        {stars.map((star) => (
-          <span
-            key={star.id}
-            className={`lucky-star ${star.sparkle ? "is-sparkle" : ""}`}
-            style={{
-              left: `${star.x}%`,
-              top: `${star.y}%`,
-              width: star.r,
-              height: star.r,
-              animationDelay: `${star.delay}s`,
-              animationDuration: `${star.duration}s`,
-              background: star.amber ? "#ffd696" : "#fff0d6",
-              opacity: star.alpha,
-            }}
-          />
-        ))}
-      </div>
+      <LuckyStars stars={stars} lite={renderFlags.lite} />
       <div className="lucky-grain" aria-hidden="true" />
       <div className="lucky-warm-glow" aria-hidden="true" />
 
@@ -3720,11 +3760,25 @@ export function RoomScreen({
                 style={{ left: mode === "view" ? index * viewW : 0, width: viewW }}
               >
                 <div className="lucky-room-view" data-active={active ? "1" : "0"} ref={active ? viewRef : undefined}>
+                {renderFlags.pinchFreeze && active && mode === "view" ? (
+                  <canvas
+                    ref={(node) => {
+                      const prev = freezeRef.current;
+                      if (prev && prev !== node) {
+                        prev.width = 0;
+                        prev.height = 0;
+                      }
+                      freezeRef.current = node;
+                    }}
+                    className="lucky-pinch-freeze"
+                    aria-hidden="true"
+                  />
+                ) : null}
                 <div
                   ref={(node) => {
                     if (active) islandRef.current = node;
                   }}
-                  className={`lucky-island ${mode === "view" ? "is-float" : ""} ${moodClassName(moods[roomId]?.bright ?? "normal")}`}
+                  className={`lucky-island ${mode === "view" && (!renderFlags.lite || active) ? "is-float" : ""} ${moodClassName(moods[roomId]?.bright ?? "normal")}`}
                   style={{
                     left: screen.left,
                     top: screen.top,
@@ -3789,6 +3843,7 @@ export function RoomScreen({
                       debugHit={debugHitEnabled()}
                       floorCanvas={renderFlags.tiles}
                       floorEager={active || neighborRush || swipePhase !== "idle"}
+                      lite={renderFlags.lite}
                       onSelect={onSelectStable}
                       onItemPointerDown={onItemPointerDownStable}
                       onFloorPointerDown={onFloorPointerDownStable}
@@ -4311,6 +4366,7 @@ export function RoomScreen({
       {visitOpen && state ? (
         <RoomVisitScreen
           floorCanvas={renderFlags.tiles}
+          lite={renderFlags.lite}
           itemsById={itemsById}
           capturePhoto={async () => {
             const island = islandRef.current;
@@ -4368,6 +4424,41 @@ function selectionHud(
     width: rect.w * screen.scale + pad * 2,
     height: rect.h * screen.scale + pad * 2,
   };
+}
+
+function LuckyStars({ stars, lite }: { stars: ReturnType<typeof makeStars>; lite: boolean }) {
+  const node = (star: ReturnType<typeof makeStars>[number]) => (
+    <span
+      key={star.id}
+      className={`lucky-star ${star.sparkle ? "is-sparkle" : ""}`}
+      style={{
+        left: `${star.x}%`,
+        top: `${star.y}%`,
+        width: star.r,
+        height: star.r,
+        animationDelay: `${star.delay}s`,
+        animationDuration: `${star.duration}s`,
+        background: star.amber ? "#ffd696" : "#fff0d6",
+        opacity: lite ? 1 : star.alpha,
+      }}
+    />
+  );
+  if (!lite) {
+    return (
+      <div className="lucky-stars" aria-hidden="true">
+        {stars.map(node)}
+      </div>
+    );
+  }
+  return (
+    <div className="lucky-stars" aria-hidden="true">
+      {[0, 1, 2, 3].map((group) => (
+        <div key={group} className={`lucky-star-group is-g${group}`}>
+          {stars.filter((star) => star.id % 4 === group).map(node)}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function makeStars() {

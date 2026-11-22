@@ -98,3 +98,19 @@ export function readRoomPerf(): RoomPerfSnap {
     longest,
   };
 }
+
+/** Running animations inside the room, plus elements that asked for their own layer. */
+export function countRoomLayers(root: HTMLElement | null): number {
+  if (!root || typeof document === "undefined" || typeof document.getAnimations !== "function") return 0;
+  let anim = 0;
+  for (const item of document.getAnimations()) {
+    const effect = item.effect;
+    const target = effect && "target" in effect ? effect.target : null;
+    if (target instanceof Element && root.contains(target) && item.playState === "running") anim += 1;
+  }
+  let will = 0;
+  root.querySelectorAll<HTMLElement>("*").forEach((node) => {
+    if (getComputedStyle(node).willChange !== "auto") will += 1;
+  });
+  return anim + will;
+}

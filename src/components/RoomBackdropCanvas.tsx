@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 
 import { WORLD_H, WORLD_W } from "../lib/roomLayout";
-import { floorCanvasBounds, floorTilePolygon, floorTileRect } from "../lib/roomTiles";
 import { storeBakedFloor, takeBakedFloor } from "../lib/roomRender/floorBake";
 import { loadRoomImage, peekRoomImage } from "../lib/roomRender/imageCache";
+import { floorCanvasBox, floorCanvasKey, paintFloorCells, type FloorCanvasTile } from "../lib/roomRender/paintFloor";
 import { markRoomRendererFailed } from "../lib/roomRender/renderer";
 
-export type FloorCanvasTile = { col: number; row: number; src: string };
+export type { FloorCanvasTile };
 
 type Props = {
   tiles: FloorCanvasTile[];
@@ -14,11 +14,7 @@ type Props = {
   onFail: () => void;
 };
 
-const BOUNDS = floorCanvasBounds();
-
-function tileKey(tiles: FloorCanvasTile[]) {
-  return `${BOUNDS.w}x${BOUNDS.h}|${tiles.map((tile) => `${tile.col},${tile.row},${tile.src}`).join(";")}`;
-}
+const BOUNDS = floorCanvasBox();
 
 /** One floor canvas per room. Finished bitmaps are reused; inactive rooms wait 0.35s. */
 export function RoomBackdropCanvas({ tiles, active, onFail }: Props) {
@@ -27,7 +23,7 @@ export function RoomBackdropCanvas({ tiles, active, onFail }: Props) {
   tilesRef.current = tiles;
   const failRef = useRef(onFail);
   failRef.current = onFail;
-  const key = tileKey(tiles);
+  const key = floorCanvasKey(tiles);
 
   useEffect(() => {
     const canvas = ref.current;
@@ -51,26 +47,7 @@ export function RoomBackdropCanvas({ tiles, active, onFail }: Props) {
         canvas.width = BOUNDS.w;
         canvas.height = BOUNDS.h;
       }
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, BOUNDS.w, BOUNDS.h);
-      for (const tile of cells) {
-        const image = images.get(tile.src);
-        if (!image) continue;
-        const rect = floorTileRect(tile.col, tile.row);
-        const poly = floorTilePolygon(tile.col, tile.row);
-        ctx.save();
-        ctx.beginPath();
-        poly.forEach((point, index) => {
-          const x = point.x - BOUNDS.x;
-          const y = point.y - BOUNDS.y;
-          if (index === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(image, rect.x - BOUNDS.x, rect.y - BOUNDS.y, rect.w, rect.h);
-        ctx.restore();
-      }
+      paintFloorCells(ctx, cells, images);
       if (bake) storeBakedFloor(key, canvas);
     };
 
