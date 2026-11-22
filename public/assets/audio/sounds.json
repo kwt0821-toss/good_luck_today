@@ -57,5 +57,35 @@
     "draw": "bgm-main",
     "rates": "bgm-main",
     "room": "bgm-room"
+  },
+  "ambience": {
+    "moon_bedroom": {
+      "file": "ambience-moon_bedroom",
+      "volume": 0.18,
+      "loopStart": 0,
+      "loopEndSec": 32,
+      "labelKo": "귀뚜라미 · 시계 째깍"
+    },
+    "cat_cafe": {
+      "file": "ambience-cat_cafe",
+      "volume": 0.22,
+      "loopStart": 0,
+      "loopEndSec": 40,
+      "labelKo": "카페 웅성임 · 컵 소리"
+    },
+    "sakura_greenhouse": {
+      "file": "ambience-sakura_greenhouse",
+      "volume": 0.2,
+      "loopStart": 0,
+      "loopEndSec": 40,
+      "labelKo": "새소리 · 살랑 바람"
+    },
+    "winter_cabin": {
+      "file": "ambience-winter_cabin",
+      "volume": 0.2,
+      "loopStart": 0,
+      "loopEndSec": 56,
+      "labelKo": "벽난로 타닥 · 창밖 바람"
+    }
   }
 }

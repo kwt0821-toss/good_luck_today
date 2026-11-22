@@ -38,6 +38,13 @@ import { noteCatLetterFlag } from "../lib/catLetters";
 import { track } from "../lib/analytics";
 import { isDebugHitRequest } from "../lib/debugSaveQuery";
 import { jellyLabel } from "../lib/jellyLabel";
+import {
+  ambienceLabel,
+  moodClassName,
+  readRoomMoods,
+  writeRoomMood,
+  type RoomBright,
+} from "../lib/roomMood";
 import { withJosa } from "../lib/josa";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
 import { RoomDrawer, type DrawerItemMeta } from "../components/RoomDrawer";
@@ -532,6 +539,8 @@ export function RoomScreen({
   const photoCardRef = useRef<{ png: string; base64: string; blob: Blob } | null>(null);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [visitOpen, setVisitOpen] = useState(false);
+  const [moodOpen, setMoodOpen] = useState(false);
+  const [moods, setMoods] = useState(readRoomMoods);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoFrames, setPhotoFrames] = useState<PhotoFrame[]>([]);
   const [photoFrameId, setPhotoFrameId] = useState("gold");
@@ -1420,6 +1429,21 @@ export function RoomScreen({
       cancelled = true;
     };
   }, [photoOpen, photoFrameId, photoFrames, state]);
+
+  useEffect(() => {
+    if (mode !== "view" || photoOpen || visitOpen) setMoodOpen(false);
+  }, [mode, photoOpen, visitOpen]);
+
+  const ambienceRoomId = state?.currentRoomId ?? null;
+  const ambienceOn = Boolean(ambienceRoomId && moods[ambienceRoomId]?.sound);
+  useEffect(() => {
+    AudioManager.syncRoomAmbience(ambienceRoomId, ambienceOn);
+  }, [ambienceRoomId, ambienceOn]);
+  useEffect(() => {
+    return () => {
+      AudioManager.setAmbience(null);
+    };
+  }, []);
 
   useLoadingHold("room", !state || !roomsFile);
 
@@ -2843,7 +2867,7 @@ export function RoomScreen({
     if (!(target instanceof Element)) return false;
     return Boolean(
       target.closest(
-        "button, a, input, textarea, .lucky-switcher, .lucky-bar, .lucky-drawer, .lucky-edit-bar, .lucky-zoom-tools, .lucky-minimap, .lucky-header, .lucky-shadow-toggle, .lucky-zoom-hint, .lucky-placement-toolbar, .lucky-paint-dock, .lucky-select-hud",
+        "button, a, input, textarea, .lucky-switcher, .lucky-bar, .lucky-drawer, .lucky-edit-bar, .lucky-zoom-tools, .lucky-minimap, .lucky-header, .lucky-shadow-toggle, .lucky-mood, .lucky-mood-scrim, .lucky-zoom-hint, .lucky-placement-toolbar, .lucky-paint-dock, .lucky-select-hud",
       ),
     );
   };
@@ -3094,14 +3118,97 @@ export function RoomScreen({
         </div>
       )}
 
-      <button
-        type="button"
-        className={`lucky-shadow-toggle ${state.shadowsEnabled ? "is-on" : ""}`}
-        aria-pressed={state.shadowsEnabled}
-        onClick={() => persist({ ...state, shadowsEnabled: !state.shadowsEnabled })}
-      >
-        그림자 {state.shadowsEnabled ? "켜짐" : "꺼짐"}
-      </button>
+      {mode === "view" && !photoOpen && !visitOpen ? (
+        <>
+          {moodOpen ? (
+            <button
+              type="button"
+              className="lucky-mood-scrim"
+              aria-label="분위기 창 닫기"
+              onClick={() => setMoodOpen(false)}
+            />
+          ) : null}
+          <div className="lucky-mood">
+            <button
+              type="button"
+              className="lucky-shadow-toggle lucky-mood-btn"
+              aria-expanded={moodOpen}
+              aria-controls="room-mood-card"
+              onClick={() => setMoodOpen((open) => !open)}
+            >
+              <img src={roomAsset("ui/icon-mood.svg")} alt="" />
+              분위기
+            </button>
+            {moodOpen ? (
+              <div
+                id="room-mood-card"
+                className="lucky-mood-card"
+                role="dialog"
+                aria-label="방 분위기"
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <div className="lucky-mood-row">
+                  <span>그림자</span>
+                  <button
+                    type="button"
+                    className={`lucky-mood-switch ${state.shadowsEnabled ? "is-on" : ""}`}
+                    aria-pressed={state.shadowsEnabled}
+                    aria-label={state.shadowsEnabled ? "그림자 끄기" : "그림자 켜기"}
+                    onClick={() => persist({ ...state, shadowsEnabled: !state.shadowsEnabled })}
+                  >
+                    <i />
+                  </button>
+                </div>
+                <div className="lucky-mood-bright">
+                  <span>밝기</span>
+                  <div className="lucky-mood-segs" role="group" aria-label="밝기">
+                    {(
+                      [
+                        ["bright", "밝게"],
+                        ["normal", "보통"],
+                        ["cozy", "아늑하게"],
+                      ] as const
+                    ).map(([value, label]) => {
+                      const on = (moods[displayRoomId]?.bright ?? "normal") === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          className={on ? "is-on" : ""}
+                          aria-pressed={on}
+                          onClick={() => {
+                            if (on) return;
+                            const next = writeRoomMood(displayRoomId, { bright: value as RoomBright });
+                            setMoods((prev) => ({ ...prev, [displayRoomId]: next }));
+                          }}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="lucky-mood-row">
+                  <span>방 소리</span>
+                  <button
+                    type="button"
+                    className={`lucky-mood-switch ${moods[displayRoomId]?.sound ? "is-on" : ""}`}
+                    aria-pressed={Boolean(moods[displayRoomId]?.sound)}
+                    aria-label={moods[displayRoomId]?.sound ? "방 소리 끄기" : "방 소리 켜기"}
+                    onClick={() => {
+                      const next = writeRoomMood(displayRoomId, { sound: !moods[displayRoomId]?.sound });
+                      setMoods((prev) => ({ ...prev, [displayRoomId]: next }));
+                    }}
+                  >
+                    <i />
+                  </button>
+                </div>
+                <p className="lucky-mood-sound">{ambienceLabel(displayRoomId)}</p>
+              </div>
+            ) : null}
+          </div>
+        </>
+      ) : null}
 
       {zoomUi > ROOM_PAN_ZOOM ? (
         <button
@@ -3277,7 +3384,7 @@ export function RoomScreen({
                   ref={(node) => {
                     if (active) islandRef.current = node;
                   }}
-                  className={`lucky-island ${mode === "view" ? "is-float" : ""}`}
+                  className={`lucky-island ${mode === "view" ? "is-float" : ""} ${moodClassName(moods[roomId]?.bright ?? "normal")}`}
                   style={{
                     left: screen.left,
                     top: screen.top,

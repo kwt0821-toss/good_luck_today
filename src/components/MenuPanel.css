@@ -1622,6 +1622,15 @@ button.menu-dim:focus-visible {
   font-size: 14px;
 }
 
+.settings-note {
+  margin: 0;
+  padding: 4px 0 12px;
+  border-bottom: 1px solid rgba(243, 233, 215, 0.08);
+  color: rgba(243, 233, 215, 0.62);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .settings-row button.link {
   border: 0;
   background: transparent;

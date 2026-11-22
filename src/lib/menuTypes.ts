@@ -23,7 +23,7 @@ export type MenuRowDef = {
   items?: Array<{
     id: string;
     label: string;
-    type: "toggle" | "action" | "link" | "text";
+    type: "toggle" | "action" | "link" | "text" | "note";
     default?: boolean | string;
     storage?: string;
     action?: string;

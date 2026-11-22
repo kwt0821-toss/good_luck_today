@@ -111,6 +111,11 @@ export async function captureRoomIsland(root: HTMLElement): Promise<HTMLCanvasEl
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas");
   ctx.scale(scale, scale);
+  ctx.filter = root.classList.contains("is-mood-bright")
+    ? "brightness(1.1)"
+    : root.classList.contains("is-mood-cozy")
+      ? "brightness(0.8) saturate(1.05)"
+      : "none";
 
   const nodes = [...root.querySelectorAll("img, canvas, .lucky-roam-frame, .lucky-set-bit")];
   const ranked = nodes.map((node, index) => ({ node, index, z: stackZ(node, root) }));

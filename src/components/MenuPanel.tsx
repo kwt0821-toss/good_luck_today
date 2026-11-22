@@ -1980,6 +1980,13 @@ export function MenuPanel({
                 {sheet === "settings" ? (
                   <>
                     {(model.menu.rows.settings.items ?? []).map((item) => {
+                      if (item.type === "note") {
+                        return (
+                          <p key={item.id} className="settings-note">
+                            {item.label}
+                          </p>
+                        );
+                      }
                       if (item.type === "toggle") {
                         const key = item.id as keyof MenuSettings;
                         const on = Boolean(settings[key]);

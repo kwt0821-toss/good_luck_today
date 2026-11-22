@@ -232,6 +232,11 @@
      "storage": "lc.audio.sfx"
     },
     {
+     "id": "room-sound-note",
+     "label": "방 소리는 방꾸미기 분위기 창에서 켜요",
+     "type": "note"
+    },
+    {
      "id": "haptic",
      "label": "진동",
      "type": "toggle",
