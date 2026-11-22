@@ -611,7 +611,7 @@
   inset: 0;
   z-index: 2;
   overflow: hidden;
-  touch-action: pan-y;
+  touch-action: none;
 }
 
 .lucky-island-page {
@@ -649,9 +649,17 @@
   transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.lucky-room-view[data-active="1"] {
+  will-change: transform;
+}
+
+.lucky-room-view[data-active="0"],
+.lucky-room-view[data-active="0"] * {
+  animation-play-state: paused;
+}
+
 .lucky-room-view.is-gesturing {
   transition: none;
-  will-change: transform;
 }
 
 .lucky-room.is-zoomed .lucky-island {
@@ -692,14 +700,6 @@
 
 .lucky-island.is-float {
   animation: lucky-island-float 6s ease-in-out infinite;
-}
-
-.lucky-island.is-mood-bright .lucky-island-scale {
-  filter: brightness(1.1);
-}
-
-.lucky-island.is-mood-cozy .lucky-island-scale {
-  filter: brightness(0.8) saturate(1.05);
 }
 
 .lucky-island-scale {
@@ -746,6 +746,12 @@
 
 .lucky-floor-tiles {
   z-index: 1;
+}
+
+.lucky-floor-canvas {
+  position: absolute;
+  pointer-events: none;
+  display: block;
 }
 
 .lucky-wall-tiles {
@@ -962,6 +968,60 @@
 .lucky-room.is-tod-night .lucky-tod-wash {
   background: rgba(16, 8, 28, 0.32);
   mix-blend-mode: multiply;
+}
+
+.lucky-room.is-tod-morning .lucky-island.is-mood-cozy .lucky-tod-wash { background: linear-gradient(180deg, rgba(255,196,140,.85), rgba(255,170,120,.5)); mix-blend-mode: soft-light; }
+.lucky-room.is-tod-day .lucky-island.is-mood-cozy .lucky-tod-wash { background: linear-gradient(180deg, rgba(255,206,150,.75), rgba(255,180,120,.5)); mix-blend-mode: soft-light; }
+.lucky-room.is-tod-sunset .lucky-island.is-mood-cozy .lucky-tod-wash { background: linear-gradient(180deg, rgba(255,176,104,.78), rgba(255,140,110,.45)); mix-blend-mode: soft-light; }
+.lucky-room.is-tod-night .lucky-island.is-mood-cozy .lucky-tod-wash { background: linear-gradient(180deg, rgba(255,184,118,.46), rgba(255,150,100,.3)); mix-blend-mode: soft-light; }
+.lucky-room.is-tod-morning .lucky-island.is-mood-bright .lucky-tod-wash,
+.lucky-room.is-tod-day .lucky-island.is-mood-bright .lucky-tod-wash,
+.lucky-room.is-tod-sunset .lucky-island.is-mood-bright .lucky-tod-wash { background: rgba(255,255,250,.62); mix-blend-mode: soft-light; }
+.lucky-room.is-tod-night .lucky-island.is-mood-bright .lucky-tod-wash { background: rgba(255,250,244,.34); mix-blend-mode: soft-light; }
+
+.lucky-room.is-pinching .lucky-island {
+  animation: none;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+
+.lucky-room.is-pinching .lucky-island-page {
+  visibility: hidden;
+}
+
+.lucky-room.is-pinching .lucky-island-page:has(.lucky-room-view[data-active="1"]) {
+  visibility: visible;
+}
+
+.lucky-room.is-pinching .lucky-select-hud,
+.lucky-room.is-pinching .lucky-minimap,
+.lucky-room.is-pinching .lucky-grain,
+.lucky-room.is-pinching .lucky-warm-glow {
+  visibility: hidden;
+}
+
+.lucky-zoom-tools.is-view:not(.is-on) {
+  display: none;
+}
+
+.lucky-room.is-pinching .lucky-zoom-tools.is-view {
+  display: flex;
+}
+
+.lucky-perf-box {
+  position: absolute;
+  right: 8px;
+  bottom: 72px;
+  z-index: 30;
+  max-width: 48%;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(20, 12, 24, 0.55);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: pre;
+  pointer-events: none;
 }
 
 .lucky-window-sky {

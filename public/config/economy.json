@@ -935,5 +935,6 @@
         }
       }
     }
-  }
+  },
+  "roomRender": { "renderer": "canvas", "tiles": true, "backdrop": false, "depth": false, "fx": false }
 }

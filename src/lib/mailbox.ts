@@ -1,3 +1,4 @@
+import { countGiftableLetters } from "./mailboxParse";
 import type { MenuRowView } from "./menuTypes";
 import { grantRoomOwned } from "./roomStore";
 import { nyNotify } from "./nyangNotify";
@@ -19,7 +20,7 @@ export type MailboxSnap = {
   today: string;
 };
 
-const CACHE_KEY = "lucky-cat.mailbox.v1";
+const CACHE_KEY = "lucky-cat.mailbox.v2";
 
 const EMPTY: MailboxSnap = { items: [], unclaimedCount: 0, ttlDays: 30, today: "" };
 
@@ -34,19 +35,23 @@ function readCache(): MailboxSnap {
     if (!raw) return EMPTY;
     const parsed = JSON.parse(raw) as Partial<MailboxSnap>;
     if (!parsed || !Array.isArray(parsed.items)) return EMPTY;
-    return {
+    return withGiftCount({
       items: parsed.items,
-      unclaimedCount: Math.max(0, Math.floor(parsed.unclaimedCount ?? 0) || 0),
+      unclaimedCount: 0,
       ttlDays: Math.max(1, Math.floor(parsed.ttlDays ?? 30) || 30),
       today: typeof parsed.today === "string" ? parsed.today : "",
-    };
+    });
   } catch {
     return EMPTY;
   }
 }
 
+function withGiftCount(next: MailboxSnap): MailboxSnap {
+  return { ...next, unclaimedCount: countGiftableLetters(next.items) };
+}
+
 function publish(next: MailboxSnap) {
-  snap = next;
+  snap = withGiftCount(next);
   listeners.forEach((listener) => listener(next));
   try {
     sessionStorage.setItem(CACHE_KEY, JSON.stringify(next));
@@ -88,7 +93,7 @@ export function refreshMailbox(): Promise<MailboxSnap> {
       if (!result.ok) return snap;
       const next: MailboxSnap = {
         items: result.items,
-        unclaimedCount: result.unclaimedCount,
+        unclaimedCount: countGiftableLetters(result.items),
         ttlDays: result.ttlDays || 30,
         today: result.today,
       };
@@ -161,7 +166,10 @@ export async function claimMailboxOne(
   if (!result.ok) return { state, message: mailError(result.error) };
   const next = applyPaid(state, result);
   await keepCozyItems(result.cozyItems);
-  publish({ ...snap, unclaimedCount: result.unclaimedCount });
+  publish({
+    ...snap,
+    items: snap.items.map((item) => (item.id === letterId ? { ...item, status: "claimed" } : item)),
+  });
   await refreshMailbox();
   const granted = result.jelly > 0 || result.nyangCoin > 0 || result.tickets > 0;
   return { state: next, message: claimMessage(result.already, result.ticketHeldBack, granted, result.cozyItems) };
@@ -172,7 +180,10 @@ export async function claimMailboxEvery(state: OpsState): Promise<{ state: OpsSt
   if (!result.ok) return { state, message: mailError(result.error) };
   const next = applyPaid(state, result);
   await keepCozyItems(result.cozyItems);
-  publish({ ...snap, unclaimedCount: result.unclaimedCount });
+  publish({
+    ...snap,
+    items: snap.items.map((item) => (item.status === "pending" ? { ...item, status: "claimed" } : item)),
+  });
   await refreshMailbox();
   const granted = result.claimed > 0 && (result.jelly > 0 || result.nyangCoin > 0 || result.tickets > 0);
   return { state: next, message: claimMessage(false, result.ticketHeldBack, granted, result.cozyItems) };

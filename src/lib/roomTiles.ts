@@ -1,4 +1,4 @@
-import { diamondPoints, GRID, TILE_WX, WALL_SLOTS, tileTopWorld } from "./roomLayout";
+import { diamondPoints, GRID, TILE_WX, WALL_SLOTS, tileTopWorld } from "./roomLayout.ts";
 import type { FloorTiles, PaintTarget, RoomItem, RoomTileRules, WallTiles } from "./roomTypes";
 
 export const DEFAULT_FLOOR_TILE = "wood_honey";
@@ -152,6 +152,36 @@ export function wallStripClip(wall: "L" | "R"): string {
 /** Same diamond for every floor cell. Shared edges overlap by half a pixel. */
 export function floorTileClip(): string {
   return clipPathForBox(floorTileRect(0, 0), bleedFloorSeam(diamondPoints(0, 0)));
+}
+
+/** World-space floor diamond, same shape as the CSS clip (seam bleed included). */
+export function floorTilePolygon(col: number, row: number) {
+  return parsePoints(bleedFloorSeam(diamondPoints(col, row)));
+}
+
+/** World-space wall strip, same shape as the CSS clip (seam bleed included). */
+export function wallStripPolygon(wall: "L" | "R", index: number) {
+  return parsePoints(bleedWallSeam(wallStripPoints(wall, index)));
+}
+
+/** Tight world box around every floor tile. The floor canvas is this box at 1:1. */
+export function floorCanvasBounds() {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (let row = 0; row < GRID; row += 1) {
+    for (let col = 0; col < GRID; col += 1) {
+      const rect = floorTileRect(col, row);
+      minX = Math.min(minX, rect.x);
+      minY = Math.min(minY, rect.y);
+      maxX = Math.max(maxX, rect.x + rect.w);
+      maxY = Math.max(maxY, rect.y + rect.h);
+    }
+  }
+  const x = Math.floor(minX);
+  const y = Math.floor(minY);
+  return { x, y, w: Math.ceil(maxX) - x, h: Math.ceil(maxY) - y };
 }
 
 const SEAM_PX = 0.5;

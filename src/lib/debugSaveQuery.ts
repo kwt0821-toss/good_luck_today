@@ -8,7 +8,7 @@ export function isDebugHitRequest(search: string, schemeUrl: string): boolean {
   return isDebugFlagRequest("debugHit", search, schemeUrl);
 }
 
-function isDebugFlagRequest(flag: string, search: string, schemeUrl: string): boolean {
+export function isDebugFlagRequest(flag: string, search: string, schemeUrl: string): boolean {
   if (searchHasFlag(search, flag)) return true;
   if (!schemeUrl) return false;
   if (textHasFlag(schemeUrl, flag)) return true;

@@ -14,7 +14,7 @@ import { useLoadingHold } from "../lib/loadingGate";
 import { jellyLabel } from "../lib/jellyLabel";
 import { ticketFractionLabel } from "../lib/weeklyMissions";
 import { MailboxSheet } from "./MailboxSheet";
-import { mailboxRowView, refreshMailbox, subscribeMailbox } from "../lib/mailbox";
+import { mailboxRowView, mailboxUnclaimed, refreshMailbox, subscribeMailbox } from "../lib/mailbox";
 import { WeeklyBoard } from "./WeeklyBoard";
 import { menuAsset } from "../lib/menuConfig";
 import { NCOIN_ICON, ncoinIcon } from "../lib/ncoinIcon";
@@ -181,7 +181,7 @@ export function MenuPanel({
   const [lastWithdraw, setLastWithdraw] = useState<WalletHistoryItem | null>(null);
   const [withdrawBusy, setWithdrawBusy] = useState(false);
   const [inviteSnap, setInviteSnap] = useState(readInviteSnap);
-  const [mailCount, setMailCount] = useState(0);
+  const [mailCount, setMailCount] = useState(() => mailboxUnclaimed());
   const [sendDialog, setSendDialog] = useState<
     | { mode: "done"; coins: number; left: number; allDone: boolean }
     | { mode: "pending"; coins: number }

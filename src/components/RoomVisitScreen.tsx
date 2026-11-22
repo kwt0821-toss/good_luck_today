@@ -35,9 +35,10 @@ type Props = {
   itemsById: Map<string, RoomItem>;
   capturePhoto: () => Promise<string | null>;
   onClose: () => void;
+  floorCanvas?: boolean;
 };
 
-export function RoomVisitScreen({ itemsById, capturePhoto, onClose }: Props) {
+export function RoomVisitScreen({ itemsById, capturePhoto, onClose, floorCanvas = false }: Props) {
   const [tab, setTab] = useState<VisitTab>("friends");
   const [items, setItems] = useState<VisitCard[]>([]);
   const [settings, setSettings] = useState(false);
@@ -130,6 +131,7 @@ export function RoomVisitScreen({ itemsById, capturePhoto, onClose }: Props) {
           card={opened}
           room={room}
           itemsById={itemsById}
+          floorCanvas={floorCanvas}
           note={visitNote}
           grant={grant}
           likeBusy={likeBusy}
@@ -235,6 +237,7 @@ function VisitView({
   card,
   room,
   itemsById,
+  floorCanvas = false,
   note,
   grant,
   likeBusy,
@@ -246,6 +249,7 @@ function VisitView({
   card: VisitCard;
   room: VisitRoom | null;
   itemsById: Map<string, RoomItem>;
+  floorCanvas?: boolean;
   note: string | null;
   grant: number | null;
   likeBusy: boolean;
@@ -295,6 +299,7 @@ function VisitView({
                 shadowsEnabled={layout.shadowsEnabled}
                 painting={false}
                 paintHover={null}
+                floorCanvas={floorCanvas}
                 onSelect={() => undefined}
                 onItemPointerDown={() => undefined}
                 onFloorPointerDown={() => undefined}

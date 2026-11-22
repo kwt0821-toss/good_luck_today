@@ -21,10 +21,29 @@ export function ambienceLabel(roomId: string): string {
   return AMBIENCE_LABEL[roomId] ?? "이 방의 소리";
 }
 
-export function moodFilter(bright: RoomBright): string {
-  if (bright === "bright") return "brightness(1.1)";
-  if (bright === "cozy") return "brightness(0.8) saturate(1.05)";
-  return "none";
+export type RoomPeriod = "morning" | "day" | "sunset" | "night";
+
+export type MoodWash = {
+  background: string;
+  blend: "soft-light";
+};
+
+/** Interior wash that replaces the old whole-island brightness filter. */
+export function moodWash(bright: RoomBright, period: RoomPeriod): MoodWash | null {
+  if (bright === "bright") {
+    return {
+      background: period === "night" ? "rgba(255,250,244,.34)" : "rgba(255,255,250,.62)",
+      blend: "soft-light",
+    };
+  }
+  if (bright !== "cozy") return null;
+  const background = {
+    morning: "linear-gradient(180deg, rgba(255,196,140,.85), rgba(255,170,120,.5))",
+    day: "linear-gradient(180deg, rgba(255,206,150,.75), rgba(255,180,120,.5))",
+    sunset: "linear-gradient(180deg, rgba(255,176,104,.78), rgba(255,140,110,.45))",
+    night: "linear-gradient(180deg, rgba(255,184,118,.46), rgba(255,150,100,.3))",
+  }[period];
+  return { background, blend: "soft-light" };
 }
 
 export function moodClassName(bright: RoomBright): string {

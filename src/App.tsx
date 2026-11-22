@@ -25,6 +25,8 @@ import {
 } from "./lib/achievements";
 import { adPlacementOf, track } from "./lib/analytics";
 import { toKstDateKey } from "./lib/date";
+import { mailboxUnclaimed, subscribeMailbox } from "./lib/mailbox";
+import { markRoomNav } from "./lib/roomRender/perf";
 import { refreshServerTime } from "./lib/tossClock";
 import { isTossApp } from "./lib/tossEnv";
 import { ensureGameUserHash } from "./lib/user";
@@ -284,6 +286,7 @@ export default function App() {
   }, []);
   const [menuOpen, setMenuOpen] = useState(initialMenuOpen);
   const [menuIconDot, setMenuIconDot] = useState(false);
+  const menuModelDotRef = useRef(false);
   const [dexClaimDot, setDexClaimDot] = useState(false);
   const [achvOpen, setAchvOpen] = useState(false);
   const [achvConfig, setAchvConfig] = useState<AchvConfig | null>(null);
@@ -460,12 +463,17 @@ export default function App() {
     else AudioManager.onAdClose();
   }, [ad]);
 
+  useEffect(() => subscribeMailbox(() => {
+    setMenuIconDot(menuModelDotRef.current || mailboxUnclaimed() > 0);
+  }), []);
+
   useEffect(() => {
     if (!ops) return;
     let cancelled = false;
     void Promise.all([buildMenuViewModel(ops), peekDexOwned()]).then(([model, owned]) => {
       if (cancelled) return;
-      setMenuIconDot(model.menuIconDot);
+      menuModelDotRef.current = model.menuIconDot;
+      setMenuIconDot(model.menuIconDot || mailboxUnclaimed() > 0);
       const unseenCards = owned != null && unseenOwnedCardIds(owned, ops.seenDexCardIds).length > 0;
       setDexClaimDot(model.rewards.unseenCount > 0 || unseenCards);
     });
@@ -2135,7 +2143,10 @@ export default function App() {
           }}
           onOpenMenu={() => setMenuOpen(true)}
           onOpenCollection={() => setScreen({ name: "collection" })}
-          onOpenRoom={() => setScreen({ name: "room" })}
+          onOpenRoom={() => {
+            markRoomNav(typeof window === "undefined" ? "" : window.location.search, "");
+            setScreen({ name: "room" });
+          }}
           tabLocked={tutorialLive}
           onOpenTitles={() => setAchvOpen(true)}
           showRewardsNudge={showRewardsNudgeBase && remainingNormal <= 0}
@@ -2156,7 +2167,10 @@ export default function App() {
           ops={ops}
           economy={config.economy}
           onOps={setOps}
-          onOpenRoom={() => setScreen({ name: "room" })}
+          onOpenRoom={() => {
+            markRoomNav(typeof window === "undefined" ? "" : window.location.search, "");
+            setScreen({ name: "room" });
+          }}
         />
       ) : null}
 
@@ -2166,7 +2180,10 @@ export default function App() {
         onClose={closeMenu}
         onOpsChange={(next) => void persistOps(next)}
         onOpenDex={() => setScreen({ name: "collection" })}
-        onOpenRoom={() => setScreen({ name: "room" })}
+        onOpenRoom={() => {
+            markRoomNav(typeof window === "undefined" ? "" : window.location.search, "");
+            setScreen({ name: "room" });
+          }}
         onPawAd={() => {
           // Keep the menu open under the ad so we return to it afterward.
           void (async () => {

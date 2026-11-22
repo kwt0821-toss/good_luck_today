@@ -265,6 +265,13 @@ export type OpsEconomy = {
       roomDeal?: { adGroupId?: string };
     };
   };
+  roomRender?: {
+    renderer?: "canvas" | "dom" | string;
+    tiles?: boolean;
+    backdrop?: boolean;
+    depth?: boolean;
+    fx?: boolean;
+  };
   cozy: {
     pointsPerTier: Record<string, number>;
     tierNameKo?: Record<string, string>;

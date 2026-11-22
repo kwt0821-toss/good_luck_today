@@ -1,3 +1,4 @@
+import { acceptMailboxIdentity, acceptedMailboxSource } from "./mailboxParse";
 import { loadOpsConfig } from "./opsConfig";
 import type { OpsState, WalletHistoryItem } from "./opsTypes";
 import {
@@ -951,16 +952,17 @@ export type MailboxClaimAllResult = {
 };
 
 const MAILBOX_RETRY: Retry = { token: false, missing: false };
-const MAIL_SOURCES = new Set<MailboxSource>(["operator", "invite", "weekly", "cozy"]);
 const MAIL_STATUSES = new Set<MailboxStatus>(["pending", "claimed", "expired"]);
 
 function parseMailboxLetter(value: unknown): MailboxLetter | null {
-  if (!isRecord(value) || typeof value.id !== "string" || !value.id) return null;
+  if (!isRecord(value)) return null;
+  const id = acceptMailboxIdentity(value.id, value.source);
+  if (!id) return null;
   const source = value.source;
-  if (typeof source !== "string" || !MAIL_SOURCES.has(source as MailboxSource)) return null;
+  if (!acceptedMailboxSource(source)) return null;
   const status = value.status;
   return {
-    id: value.id,
+    id,
     letterKey: typeof value.letterKey === "string" ? value.letterKey : "",
     source: source as MailboxSource,
     title: typeof value.title === "string" ? value.title : "",

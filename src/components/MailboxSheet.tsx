@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 
 import { useBackHandler } from "../hooks/useBackHandler";
 import { contentId, fillCatLetter, loadCatLetters, markCatLetterRead, type CatLetterFile } from "../lib/catLetters";
+import { letterHasGift } from "../lib/mailboxParse";
 import {
   claimMailboxEvery,
   claimMailboxOne,
@@ -54,7 +55,7 @@ function letterBody(letter: MailboxLetter): string {
 }
 
 function hasGift(letter: MailboxLetter): boolean {
-  return letter.status === "pending" && (letter.jelly > 0 || letter.nyang > 0 || letter.tickets > 0);
+  return letterHasGift(letter);
 }
 
 function whenLabel(letter: MailboxLetter): string {

@@ -63,6 +63,7 @@ import type {
 } from "../lib/roomTypes";
 import { emitsLight, NEON_ITEM_IDS, WINDOW_ITEM_IDS } from "../lib/roomTime";
 import { useRoomCat, type CatMotionRef, type CatSpot, type CatSpotsRef, type RoomCatView } from "../lib/useRoomCat";
+import { RoomBackdropCanvas } from "./RoomBackdropCanvas";
 
 type RoomWorldProps = {
   mode: RoomMode;
@@ -98,6 +99,10 @@ type RoomWorldProps = {
   previewInvalid?: boolean;
   /** `?debugHit=1` outlines each sprite's real hit box. */
   debugHit?: boolean;
+  /** Draw the 64 floor cells on one canvas. Walls stay as images. */
+  floorCanvas?: boolean;
+  /** Draw the floor immediately (the room is on screen, or a swipe is in progress). */
+  floorEager?: boolean;
   /** Plays only for the room whose theme set is complete. */
   setBonus?: RoomSetCue | null;
   favorite?: {
@@ -805,6 +810,8 @@ export const RoomWorld = memo(function RoomWorld({
   previewGhost = false,
   previewInvalid = false,
   debugHit = false,
+  floorCanvas = false,
+  floorEager = false,
   setBonus = null,
   favorite = null,
   onSelect,
@@ -812,7 +819,9 @@ export const RoomWorld = memo(function RoomWorld({
   onFloorPointerDown,
 }: RoomWorldProps) {
   const worldRef = useRef<HTMLDivElement>(null);
+  const [floorCanvasOk, setFloorCanvasOk] = useState(true);
   useHideBrokenImages(worldRef);
+  const useFloorCanvas = floorCanvas && floorCanvasOk;
   const fit = screenOf(mode).scale;
   const paintSkin = paintPreview ? paintSkinType(paintPreview.itemId) : null;
   const isPaintFloorCell = (col: number, row: number) => {
@@ -1027,10 +1036,22 @@ export const RoomWorld = memo(function RoomWorld({
       <Layer src="world/base-bg.webp" className="is-base" />
       <div className="lucky-tod-sky" aria-hidden="true" />
       <div className="lucky-world-layer lucky-floor-tiles" aria-hidden="true">
+        {useFloorCanvas ? (
+          <RoomBackdropCanvas
+            active={roamingActive || floorEager}
+            tiles={layout.floorTiles.flatMap((row, r) =>
+              row.flatMap((id, c) =>
+                isPaintFloorCell(c, r) ? [] : [{ col: c, row: r, src: roomAsset(floorTileSrc(id, c, r)) }],
+              ),
+            )}
+            onFail={() => setFloorCanvasOk(false)}
+          />
+        ) : null}
         {layout.floorTiles.map((row, r) =>
           row.map((id, c) => {
-            const rect = floorTileRect(c, r);
             const previewing = isPaintFloorCell(c, r);
+            if (useFloorCanvas && !previewing) return null;
+            const rect = floorTileRect(c, r);
             const skin = previewing && paintSkin ? paintSkin : id;
             return (
               <img

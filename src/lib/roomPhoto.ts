@@ -1,4 +1,5 @@
 import { toKstDateKey } from "./date";
+import { moodWash, type RoomBright, type RoomPeriod } from "./roomMood";
 import { roomAsset } from "./roomCatalog";
 import { floorTileClip, wallStripClip } from "./roomTiles";
 import { functionEndpoint, readSaveToken, refreshSaveToken } from "./serverSave";
@@ -111,11 +112,6 @@ export async function captureRoomIsland(root: HTMLElement): Promise<HTMLCanvasEl
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas");
   ctx.scale(scale, scale);
-  ctx.filter = root.classList.contains("is-mood-bright")
-    ? "brightness(1.1)"
-    : root.classList.contains("is-mood-cozy")
-      ? "brightness(0.8) saturate(1.05)"
-      : "none";
 
   const nodes = [...root.querySelectorAll("img, canvas, .lucky-roam-frame, .lucky-set-bit")];
   const ranked = nodes.map((node, index) => ({ node, index, z: stackZ(node, root) }));
@@ -138,7 +134,58 @@ export async function captureRoomIsland(root: HTMLElement): Promise<HTMLCanvasEl
       drawBit(ctx, node, rootRect, opacity);
     }
   }
+  paintMoodWash(ctx, root, rootRect.width, rootRect.height);
   return canvas;
+}
+
+/** Same six points as `.lucky-tod-wash`, in fractions of the island. */
+const WASH_POLY: readonly (readonly [number, number])[] = [
+  [0.5, 0.208],
+  [0.337, 0.353],
+  [0.337, 0.561],
+  [0.5, 0.706],
+  [0.663, 0.561],
+  [0.663, 0.353],
+];
+
+function islandBright(root: HTMLElement): RoomBright {
+  if (root.classList.contains("is-mood-bright")) return "bright";
+  if (root.classList.contains("is-mood-cozy")) return "cozy";
+  return "normal";
+}
+
+function islandPeriod(root: HTMLElement): RoomPeriod {
+  const names = root.closest(".lucky-room")?.classList;
+  if (names?.contains("is-tod-morning")) return "morning";
+  if (names?.contains("is-tod-day")) return "day";
+  if (names?.contains("is-tod-sunset")) return "sunset";
+  return "night";
+}
+
+function paintMoodWash(ctx: CanvasRenderingContext2D, root: HTMLElement, width: number, height: number) {
+  const wash = moodWash(islandBright(root), islandPeriod(root));
+  if (!wash) return;
+  ctx.save();
+  ctx.globalCompositeOperation = wash.blend;
+  ctx.beginPath();
+  WASH_POLY.forEach(([x, y], index) => {
+    const px = x * width;
+    const py = y * height;
+    if (index === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  });
+  ctx.closePath();
+  ctx.clip();
+  const colors = [...wash.background.matchAll(/rgba\([^)]+\)/g)].map((match) => match[0]);
+  if (wash.background.startsWith("linear-gradient") && colors.length >= 2) {
+    const gradient = ctx.createLinearGradient(0, 0, 0, height);
+    colors.forEach((color, index) => gradient.addColorStop(index / (colors.length - 1), color));
+    ctx.fillStyle = gradient;
+  } else {
+    ctx.fillStyle = colors[0] ?? wash.background;
+  }
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
 }
 
 export async function composeRoomCard(options: {
