@@ -1,0 +1,165 @@
+{
+  "_version": "cozy-items-1.0 (2026-11-22)",
+  "_note": "COZY 레벨 선물 전용 소품. 상점·서랍 기본 지급·오늘의 가구·방 열기 선물에 넣지 않아요. 서버 편지함(cozyItems)으로만 받아요. 1개만 가질 수 있고 COZY 점수에는 넣지 않아요(서버 계산과 맞추기 위해).",
+  "basePath": "/assets/room",
+  "items": [
+    {
+      "id": "cozy_aurora_globe",
+      "nameKo": "오로라 스노우글로브",
+      "category": "소품",
+      "theme": "moon_bedroom",
+      "placement": "floor",
+      "footprint": [
+        1,
+        1
+      ],
+      "price": 0,
+      "ownedDefault": false,
+      "cozyOnly": true,
+      "cozyLevel": 15,
+      "tagKo": "COZY 한정",
+      "maxOwn": 1,
+      "image": "themes/cozy/items/cozy_aurora_globe.webp",
+      "thumb": "themes/cozy/thumbs/cozy_aurora_globe.webp",
+      "imageSizePx": [
+        125,
+        165
+      ],
+      "orientations": {
+        "default": {
+          "image": "themes/cozy/items/cozy_aurora_globe.webp",
+          "footprint": [
+            1,
+            1
+          ],
+          "anchorFootprintCenterPx": [
+            62.5,
+            136.9
+          ],
+          "anchorBackCornerPx": [
+            62.5,
+            97.9
+          ],
+          "size": [
+            125,
+            165
+          ]
+        },
+        "mirrored": {
+          "image": "themes/cozy/items/cozy_aurora_globe.webp",
+          "footprint": [
+            1,
+            1
+          ],
+          "anchorFootprintCenterPx": [
+            62.5,
+            136.9
+          ],
+          "anchorBackCornerPx": [
+            62.5,
+            97.9
+          ],
+          "size": [
+            125,
+            165
+          ]
+        }
+      },
+      "shadow": "shadows/shadow-1x1.png",
+      "shadowScale": 1,
+      "canSitOnSurface": true
+    },
+    {
+      "id": "cozy_star_cushion",
+      "nameKo": "별빛 냥이 쿠션",
+      "category": "소품",
+      "theme": "moon_bedroom",
+      "placement": "floor",
+      "footprint": [
+        1,
+        1
+      ],
+      "price": 0,
+      "ownedDefault": false,
+      "cozyOnly": true,
+      "cozyLevel": 20,
+      "tagKo": "COZY 한정",
+      "maxOwn": 1,
+      "image": "themes/cozy/items/cozy_star_cushion.webp",
+      "thumb": "themes/cozy/thumbs/cozy_star_cushion.webp",
+      "imageSizePx": [
+        128,
+        114
+      ],
+      "orientations": {
+        "default": {
+          "image": "themes/cozy/items/cozy_star_cushion.webp",
+          "footprint": [
+            1,
+            1
+          ],
+          "anchorFootprintCenterPx": [
+            64.0,
+            79.8
+          ],
+          "anchorBackCornerPx": [
+            64.0,
+            40.8
+          ],
+          "size": [
+            128,
+            114
+          ]
+        },
+        "mirrored": {
+          "image": "themes/cozy/items/cozy_star_cushion.webp",
+          "footprint": [
+            1,
+            1
+          ],
+          "anchorFootprintCenterPx": [
+            64.0,
+            79.8
+          ],
+          "anchorBackCornerPx": [
+            64.0,
+            40.8
+          ],
+          "size": [
+            128,
+            114
+          ]
+        }
+      },
+      "shadow": "shadows/shadow-1x1.png",
+      "shadowScale": 1.1
+    },
+    {
+      "id": "cozy_gold_frame",
+      "nameKo": "황금 냥이 액자",
+      "category": "벽 꾸미기",
+      "theme": "moon_bedroom",
+      "placement": "wall",
+      "footprint": null,
+      "price": 0,
+      "ownedDefault": false,
+      "cozyOnly": true,
+      "cozyLevel": 25,
+      "tagKo": "COZY 한정",
+      "maxOwn": 1,
+      "image": "themes/cozy/items/cozy_gold_frame.webp",
+      "thumb": "themes/cozy/thumbs/cozy_gold_frame.webp",
+      "imageSizePx": [
+        112,
+        150
+      ],
+      "displayWidthTiles": 0.72,
+      "wallSpanTiles": 0.72,
+      "orientations": {
+        "front": "themes/cozy/items/cozy_gold_frame.webp",
+        "leftWall": "themes/cozy/items/cozy_gold_frame.webp",
+        "rightWall": "themes/cozy/items/cozy_gold_frame.webp"
+      }
+    }
+  ]
+}

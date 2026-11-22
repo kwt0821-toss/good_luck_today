@@ -1,0 +1,311 @@
+{
+  "_version": "cat-favorites-1.0 (2026-11-22)",
+  "_note": "품종별 최애 가구. 최애 가구가 방에 있으면 그 쪽으로 갈 확률 seatWeightMul(4)배. 오르면 행복 연출+말풍선. 처음 발견하면 카드 1번. card 가 null 이면 기존 happy 프레임 + 하트로 카드를 만들어요.",
+  "seatWeightMul": 4,
+  "affection": {
+    "source": "favSeat",
+    "xp": 5,
+    "perDay": 1
+  },
+  "favorites": [
+    {
+      "catId": "cheese",
+      "catNameKo": "치즈냥",
+      "itemId": "knit_chair",
+      "itemNameKo": "니트 담요 의자",
+      "lines": [
+        "여기 최고다냥…♡",
+        "담요 냄새 좋아"
+      ],
+      "hint": "폭신한 담요를 좋아해요",
+      "card": "cat/favorite/cheese.webp",
+      "thumb": "cat/favorite/thumbs/cheese.webp"
+    },
+    {
+      "catId": "korean_shorthair",
+      "catNameKo": "코리안 숏헤어",
+      "itemId": "catbed",
+      "itemNameKo": "동글 쿠션 침대",
+      "lines": [
+        "동글동글 내 자리",
+        "오늘도 여기서 잘 거야"
+      ],
+      "hint": "동그란 잠자리를 좋아해요",
+      "card": "cat/favorite/korean_shorthair.webp",
+      "thumb": "cat/favorite/thumbs/korean_shorthair.webp"
+    },
+    {
+      "catId": "abyssinian",
+      "catNameKo": "아비시니안",
+      "itemId": "cattower",
+      "itemNameKo": "캣타워",
+      "lines": [
+        "제일 높은 곳 접수!",
+        "다 내려다보인다냥"
+      ],
+      "hint": "높은 곳을 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "bengal",
+      "catNameKo": "벵갈",
+      "itemId": "cup_cattower",
+      "itemNameKo": "컵 캣타워",
+      "lines": [
+        "점프! 착지 성공",
+        "여기가 내 놀이터"
+      ],
+      "hint": "뛰어오를 곳을 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "british_shorthair",
+      "catNameKo": "브리티시 숏헤어",
+      "itemId": "sofa",
+      "itemNameKo": "핑크 소파",
+      "lines": [
+        "이 소파는 내 거다냥",
+        "점잖게 쉬는 중"
+      ],
+      "hint": "넓고 푹신한 자리를 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "cornish_rex",
+      "catNameKo": "코니시 렉스",
+      "itemId": "scratcher",
+      "itemNameKo": "스크래처 언덕",
+      "lines": [
+        "박박박 시원해~",
+        "발톱 관리 중이다냥"
+      ],
+      "hint": "긁을 곳을 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "lykoi",
+      "catNameKo": "라이코이",
+      "itemId": "tent",
+      "itemNameKo": "냥귀 숨숨집",
+      "lines": [
+        "숨숨집 최고…",
+        "여기선 아무도 못 찾지"
+      ],
+      "hint": "어두운 숨을 곳을 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "maine_coon",
+      "catNameKo": "메인쿤",
+      "itemId": "window_bench",
+      "itemNameKo": "창가 벤치 소파",
+      "lines": [
+        "창밖 구경 중",
+        "햇살이 딱 좋다냥"
+      ],
+      "hint": "창가 자리를 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "minskin",
+      "catNameKo": "민스킨",
+      "itemId": "beanbag",
+      "itemNameKo": "빈백",
+      "lines": [
+        "몸이 쏙 들어가",
+        "말랑말랑 행복해"
+      ],
+      "hint": "몸이 폭 들어가는 곳을 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "munchkin",
+      "catNameKo": "먼치킨",
+      "itemId": "cushions",
+      "itemNameKo": "방석 더미",
+      "lines": [
+        "방석 산 정복!",
+        "짧아도 올라갔다냥"
+      ],
+      "hint": "쌓인 방석을 좋아해요",
+      "card": "cat/favorite/munchkin.webp",
+      "thumb": "cat/favorite/thumbs/munchkin.webp"
+    },
+    {
+      "catId": "norwegian_forest",
+      "catNameKo": "노르웨이 숲",
+      "itemId": "cat_cabinet",
+      "itemNameKo": "냥이 캐비닛",
+      "lines": [
+        "나무 냄새 좋다냥",
+        "여기 내 오두막"
+      ],
+      "hint": "나무 가구를 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "persian",
+      "catNameKo": "페르시안",
+      "itemId": "bed",
+      "itemNameKo": "퀼트 침대",
+      "lines": [
+        "공주님 침대다냥",
+        "깨우지 마…"
+      ],
+      "hint": "넓은 침대를 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "peterbald",
+      "catNameKo": "피터볼드",
+      "itemId": "wool_rug",
+      "itemNameKo": "눈꽃 모포 러그",
+      "lines": [
+        "따뜻한 털 러그…",
+        "발바닥이 포근해"
+      ],
+      "hint": "따뜻한 바닥을 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "ragdoll",
+      "catNameKo": "랙돌",
+      "itemId": "cat_hammock",
+      "itemNameKo": "냥이 해먹",
+      "lines": [
+        "흔들흔들 녹는다…",
+        "zzz…"
+      ],
+      "hint": "흔들리는 자리를 좋아해요",
+      "card": "cat/favorite/ragdoll.webp",
+      "thumb": "cat/favorite/thumbs/ragdoll.webp"
+    },
+    {
+      "catId": "russian_blue",
+      "catNameKo": "러시안 블루",
+      "itemId": "archwindow",
+      "itemNameKo": "커튼 창문",
+      "lines": [
+        "달님 안녕",
+        "밤하늘 구경 중이다냥"
+      ],
+      "hint": "창밖 밤하늘을 좋아해요",
+      "card": "cat/favorite/russian_blue.webp",
+      "thumb": "cat/favorite/thumbs/russian_blue.webp"
+    },
+    {
+      "catId": "scottish_fold",
+      "catNameKo": "스코티시 폴드",
+      "itemId": "heart_chair",
+      "itemNameKo": "하트 의자",
+      "lines": [
+        "하트 의자 좋아♡",
+        "여기 앉으면 기분 좋아"
+      ],
+      "hint": "하트 모양을 좋아해요",
+      "card": "cat/favorite/scottish_fold.webp",
+      "thumb": "cat/favorite/thumbs/scottish_fold.webp"
+    },
+    {
+      "catId": "siamese",
+      "catNameKo": "샴",
+      "itemId": "garden_swing",
+      "itemNameKo": "정원 그네",
+      "lines": [
+        "그네 밀어 줘!",
+        "바람이 시원하다냥"
+      ],
+      "hint": "흔들리는 그네를 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "sokoke",
+      "catNameKo": "소코케",
+      "itemId": "garden_bench",
+      "itemNameKo": "화이트 정원 벤치",
+      "lines": [
+        "정원 벤치 최고",
+        "꽃냄새 맡는 중"
+      ],
+      "hint": "정원 자리를 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "sphynx",
+      "catNameKo": "스핑크스",
+      "itemId": "picnic_blanket",
+      "itemNameKo": "피크닉 매트",
+      "lines": [
+        "햇살 담요 따뜻해",
+        "소풍 온 기분이다냥"
+      ],
+      "hint": "햇볕 드는 담요를 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "sabertooth",
+      "catNameKo": "검치호",
+      "itemId": "catsteps",
+      "itemNameKo": "캣 스텝",
+      "lines": [
+        "한 칸씩 올라간다",
+        "계단 위가 내 영역"
+      ],
+      "hint": "계단을 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "lionking",
+      "catNameKo": "진짜 킹냥이",
+      "itemId": "catchair",
+      "itemNameKo": "냥귀 안락의자",
+      "lines": [
+        "왕좌에 앉았다냥",
+        "오늘도 위엄 있게"
+      ],
+      "hint": "왕좌 같은 의자를 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "tiger",
+      "catNameKo": "호랑이와 하룻강아지",
+      "itemId": "bean_sack",
+      "itemNameKo": "커피콩 자루",
+      "lines": [
+        "콩자루 푹신해",
+        "어흥… 졸리다"
+      ],
+      "hint": "푹신한 자루를 좋아해요",
+      "card": null,
+      "thumb": null
+    },
+    {
+      "catId": "baekho",
+      "catNameKo": "수호신 백호",
+      "itemId": "heart_cushion_bed",
+      "itemNameKo": "하트 쿠션 침대",
+      "lines": [
+        "하트 침대 지킴이",
+        "여기서 지켜 줄게"
+      ],
+      "hint": "하트 쿠션을 좋아해요",
+      "card": null,
+      "thumb": null
+    }
+  ]
+}
