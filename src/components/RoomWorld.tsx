@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 
 import { SIT_LOOK_BODY_PX, SIT_LOOK_CHEESE } from "../lib/catSeats";
@@ -779,7 +779,7 @@ function RoomSetFx({ effect }: { effect: RoomSetCue["effect"] }) {
   );
 }
 
-export function RoomWorld({
+export const RoomWorld = memo(function RoomWorld({
   mode,
   roomId,
   roamingCatIds,
@@ -1064,7 +1064,7 @@ export function RoomWorld({
           }),
         )}
       </div>
-      <Layer src={mode === "edit" ? "world/room-frame-edit.svg" : "world/room-frame-view.svg"} className="is-frame" />
+      <Layer src={mode === "edit" ? "world/room-frame-edit.svg" : "world/room-frame-view.webp"} className="is-frame" />
       <Layer src="world/string-lights.webp" className="is-lights" />
 
       {mode === "edit" ? (
@@ -1295,10 +1295,10 @@ export function RoomWorld({
         />
       ))}
 
-      <Layer src={mode === "edit" ? "world/front-puffs-edit.svg" : "world/front-puffs-view.svg"} className="is-puffs" />
+      <Layer src={mode === "edit" ? "world/front-puffs-edit.svg" : "world/front-puffs-view.webp"} className="is-puffs" />
     </div>
   );
-}
+});
 
 function footprintTilesSafe(place: FloorPlacement, item: RoomItem) {
   const [w, d] = itemSize(item, place.orientation);

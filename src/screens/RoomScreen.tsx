@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Environment, getPlatformOS } from "@apps-in-toss/web-framework";
 
 import { AppTabBar, type AppTabId } from "../components/AppTabBar";
@@ -66,7 +66,7 @@ import { claimRoomSetReward, roomSetCue, roomSetFor, roomSetViews, type RoomSetV
 import { applyOpsPrices, grantUnlockRewards, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import { displayJellyBalance, jellySpend, jellySpendFailMessage, serverJellyActive, subscribeJelly } from "../lib/serverJelly";
 import { refreshVisitStatus, syncVisitLayoutIfPublic } from "../lib/roomVisit";
-import { furnitureDepthKey } from "../lib/roomCat";
+import { DEFAULT_CAT_BREED_ID, furnitureDepthKey } from "../lib/roomCat";
 import { useRoomPeriod } from "../lib/roomTime";
 import {
   cloneLayout,
@@ -115,7 +115,7 @@ import {
   validateWallPreview,
   type PlacementPreview,
 } from "../lib/roomPlacement";
-import { paintTargetLabel } from "../lib/roomTiles";
+import { floorTileSrc, paintTargetLabel, wallStripSrc } from "../lib/roomTiles";
 import type { OpsEconomy, OpsPrices, PriceTier } from "../lib/opsTypes";
 import type {
   FloorPlacement,
@@ -132,7 +132,49 @@ import type {
 
 const VIEW_W = 390;
 const SWIPE_THRESHOLD = 56;
+const VIEW_WORLD_LAYERS = [
+  "world/base-bg.webp",
+  "world/room-frame-view.webp",
+  "world/string-lights.webp",
+  "world/front-puffs-view.webp",
+];
 import "./RoomScreen.css";
+
+function pushRoomAsset(urls: Set<string>, relative: string | null | undefined) {
+  const url = roomAsset(relative);
+  if (url) urls.add(url);
+}
+
+/** Decode a neighbor room's tiles, furniture, world layers, and cat sheet before it slides in. */
+function collectRoomImageUrls(
+  urls: Set<string>,
+  room: RoomSaveState["rooms"][string],
+  itemsById: Map<string, RoomItem>,
+) {
+  room.floorTiles.forEach((row, rowIndex) => {
+    row.forEach((tile, col) => pushRoomAsset(urls, floorTileSrc(tile, col, rowIndex)));
+  });
+  room.wallTiles.L.forEach((tile, index) => pushRoomAsset(urls, wallStripSrc(tile, "L", index)));
+  room.wallTiles.R.forEach((tile, index) => pushRoomAsset(urls, wallStripSrc(tile, "R", index)));
+  for (const place of room.floor) {
+    const item = itemsById.get(place.id);
+    if (!item) continue;
+    pushRoomAsset(urls, item.furniture?.[place.orientation]?.image ?? item.image);
+    pushRoomAsset(urls, item.tileImage);
+  }
+  for (const place of room.walls) {
+    const item = itemsById.get(place.id);
+    if (!item) continue;
+    const side = place.wall === "L" ? item.wallImages?.left : item.wallImages?.right;
+    pushRoomAsset(urls, side || item.image);
+  }
+  const cats = normalizeRoomCatIds(room.roamingCatIds);
+  const breeds = cats.length > 0 ? cats : [DEFAULT_CAT_BREED_ID];
+  for (const catId of breeds) {
+    const file = catId === DEFAULT_CAT_BREED_ID ? "cat-sprite.webp" : `cat-sprite-${catId}.webp`;
+    pushRoomAsset(urls, `cat/${file}`);
+  }
+}
 
 /** `drag` is kept as an alias of `preview` for older tutorial callers. */
 export type RoomTutorialPhase = "pick" | "preview" | "drag" | "done" | "points" | null;
@@ -393,9 +435,19 @@ export function RoomScreen({
   const [starterDrawerIds, setStarterDrawerIds] = useState<string[]>([]);
   const [themeFilter, setThemeFilter] = useState<RoomThemeFilter>("all");
   const [unlockRoom, setUnlockRoom] = useState<RoomDefinition | null | "soon">(null);
-  const [dragX, setDragX] = useState(0);
+  const [swipePhase, setSwipePhase] = useState<"idle" | "drag" | "settle">("idle");
   const [viewW, setViewW] = useState(VIEW_W);
   const portRef = useRef<HTMLDivElement | null>(null);
+  const sliderRef = useRef<HTMLDivElement | null>(null);
+  const dragXRef = useRef(0);
+  const dragRawRef = useRef(0);
+  const slidingRef = useRef(false);
+  const settleGen = useRef(0);
+  const dragRaf = useRef(0);
+  const indexRef = useRef(0);
+  const viewWRef = useRef(VIEW_W);
+  const unlockedIdsRef = useRef<string[]>([]);
+  const stateRef = useRef<RoomSaveState | null>(null);
   const [frameThumbs, setFrameThumbs] = useState<string[]>([]);
   const [mode, setMode] = useState<RoomMode>(() =>
     new URLSearchParams(window.location.search).get("edit") || tutorialActive ? "edit" : "view",
@@ -699,8 +751,29 @@ export function RoomScreen({
     preview && "instanceId" in preview ? preview.instanceId : null,
   ]);
 
-  const swipe = useRef({ x: 0, y: 0, dx: 0, active: false });
+  const swipe = useRef({ x: 0, y: 0, base: 0, active: false, dragging: false });
+  const warmedRoomImages = useRef(new Set<string>());
   const itemsById = useMemo(() => itemMap(items), [items]);
+  const roomCatIds = useMemo(() => {
+    const map = new Map<string, string[]>();
+    if (!state) return map;
+    for (const [id, room] of Object.entries(state.rooms)) map.set(id, normalizeRoomCatIds(room.roamingCatIds));
+    return map;
+  }, [state]);
+  const onSelectRef = useRef<(instanceId: string | null) => void>(() => undefined);
+  const onFloorPointerDownRef = useRef<(event: PointerEvent<HTMLDivElement>) => void>(() => undefined);
+  const onItemPointerDownRef = useRef<
+    (event: PointerEvent<HTMLButtonElement>, instanceId: string) => void
+  >(() => undefined);
+  const onSelectStable = useCallback((instanceId: string | null) => onSelectRef.current(instanceId), []);
+  const onFloorPointerDownStable = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => onFloorPointerDownRef.current(event),
+    [],
+  );
+  const onItemPointerDownStable = useCallback(
+    (event: PointerEvent<HTMLButtonElement>, instanceId: string) => onItemPointerDownRef.current(event, instanceId),
+    [],
+  );
   const paintTab = tab === "벽지" || tab === "바닥";
 
   useEffect(() => {
@@ -887,6 +960,60 @@ export function RoomScreen({
     ro.observe(el);
     return () => ro.disconnect();
   }, [Boolean(state && roomsFile)]);
+
+  useEffect(() => {
+    return () => {
+      settleGen.current += 1;
+      if (dragRaf.current) cancelAnimationFrame(dragRaf.current);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    viewWRef.current = viewW;
+    const slider = sliderRef.current;
+    if (!slider) return;
+    const snap = (x: number) => {
+      slider.style.transition = "none";
+      slider.style.transform = `translate3d(${x}px, 0, 0)`;
+      requestAnimationFrame(() => {
+        if (slider.isConnected && !slidingRef.current) slider.style.transition = "";
+      });
+    };
+    if (mode !== "view") {
+      settleGen.current += 1;
+      slidingRef.current = false;
+      dragXRef.current = 0;
+      portRef.current?.classList.remove("is-sliding");
+      slider.classList.remove("is-dragging", "is-settle");
+      snap(0);
+      setSwipePhase("idle");
+      return;
+    }
+    if (slidingRef.current) return;
+    snap(-indexRef.current * viewW);
+  }, [mode, viewW, state?.currentRoomId]);
+
+  useEffect(() => {
+    if (mode !== "view" || !state || !roomsFile) return;
+    const unlocked = roomsFile.switcher.order.filter((id) => state.unlocked.includes(id) && state.rooms[id]);
+    const shown = unlocked.includes(state.currentRoomId) ? state.currentRoomId : unlocked[0];
+    const index = Math.max(0, unlocked.indexOf(shown ?? state.currentRoomId));
+    const urls = new Set<string>();
+    for (const relative of VIEW_WORLD_LAYERS) pushRoomAsset(urls, relative);
+    for (const id of [unlocked[index - 1], unlocked[index], unlocked[index + 1]]) {
+      if (!id) continue;
+      const room = state.rooms[id];
+      if (room) collectRoomImageUrls(urls, room, itemsById);
+    }
+    for (const url of urls) {
+      if (warmedRoomImages.current.has(url)) continue;
+      warmedRoomImages.current.add(url);
+      const img = new Image();
+      img.decoding = "async";
+      img.src = url;
+      if (typeof img.decode === "function") void img.decode().catch(() => undefined);
+    }
+  }, [mode, state, roomsFile, itemsById]);
 
   // If unlocks changed (ops sync), snap currentRoomId back onto an unlocked room.
   useEffect(() => {
@@ -1080,15 +1207,18 @@ export function RoomScreen({
   };
   const lockedRooms = roomsFile.rooms.filter((room) => !state.unlocked.includes(room.id));
   const currentIndex = Math.max(0, unlockedIds.indexOf(displayRoomId));
-  // First paint decodes only the room on screen. Neighbors mount once a swipe starts.
+  indexRef.current = currentIndex;
+  unlockedIdsRef.current = unlockedIds;
+  stateRef.current = state;
+  viewWRef.current = viewW;
+  // View mode keeps the current room and its immediate neighbors mounted so a swipe
+  // never creates a room mid-gesture. Farther rooms drop only after the index commits.
   const roomPages =
     mode === "edit"
       ? [{ roomId: displayRoomId, index: 0 }]
       : unlockedIds
           .map((roomId, index) => ({ roomId, index }))
-          .filter(({ index }) =>
-            dragX !== 0 ? Math.abs(index - currentIndex) <= 1 : index === currentIndex,
-          );
+          .filter(({ index }) => Math.abs(index - currentIndex) <= 1);
   const otherRoomIds = Object.fromEntries(items.map((item) => [item.id, placedInOtherRoom(state, item.id)]));
   const suggestItemId =
     tutorialActive && suggestTile
@@ -1242,46 +1372,161 @@ export function RoomScreen({
     showToast("되돌렸어요");
   };
 
-  const goToUnlocked = (index: number) => {
-    if (index < 0) return;
-    if (index >= unlockedIds.length) {
-      setUnlockRoom(lockedRooms[0] ?? "soon");
-      return;
-    }
-    const nextId = unlockedIds[index];
-    if (!nextId || nextId === state.currentRoomId) return;
-    persist({ ...state, currentRoomId: nextId });
-    void haptic("tap");
+  const paintSlider = (x: number) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    slider.style.transform = `translate3d(${x}px, 0, 0)`;
   };
 
   const rubberX = (dx: number) => {
-    if (currentIndex <= 0 && dx > 0) return dx * 0.32;
-    if (currentIndex >= unlockedIds.length - 1 && dx < 0) return dx * 0.32;
+    const index = indexRef.current;
+    const last = unlockedIdsRef.current.length - 1;
+    if (index <= 0 && dx > 0) return dx * 0.32;
+    if (index >= last && dx < 0) return dx * 0.32;
     return dx;
+  };
+
+  const finishSettle = (gen: number, targetIndex: number) => {
+    if (settleGen.current !== gen) return;
+    settleGen.current += 1;
+    const ids = unlockedIdsRef.current;
+    const from = indexRef.current;
+    slidingRef.current = false;
+    dragXRef.current = 0;
+    setSwipePhase("idle");
+    if (targetIndex === from) return;
+    const nextId = ids[targetIndex];
+    const current = stateRef.current;
+    if (!nextId || !current || nextId === current.currentRoomId) return;
+    persist({ ...current, currentRoomId: nextId });
+    void haptic("tap");
+  };
+
+  const beginSettle = (targetIndex: number) => {
+    const gen = (settleGen.current += 1);
+    const fromX = -indexRef.current * viewWRef.current + dragXRef.current;
+    const toX = -targetIndex * viewWRef.current;
+    if (Math.abs(fromX - toX) < 1) {
+      finishSettle(gen, targetIndex);
+      return;
+    }
+    slidingRef.current = true;
+    setSwipePhase("settle");
+    const slider = sliderRef.current;
+    if (slider) {
+      slider.style.transition = "";
+      slider.classList.remove("is-dragging");
+    }
+    const run = () => {
+      if (settleGen.current !== gen) return;
+      paintSlider(toX);
+    };
+    requestAnimationFrame(run);
+    const onEnd = (event: globalThis.TransitionEvent) => {
+      if (event.target !== slider || event.propertyName !== "transform") return;
+      slider?.removeEventListener("transitionend", onEnd);
+      window.clearTimeout(timer);
+      finishSettle(gen, targetIndex);
+    };
+    slider?.addEventListener("transitionend", onEnd);
+    const timer = window.setTimeout(() => {
+      slider?.removeEventListener("transitionend", onEnd);
+      finishSettle(gen, targetIndex);
+    }, 560);
+  };
+
+  const goToUnlocked = (index: number) => {
+    if (slidingRef.current) return;
+    if (index < 0) return;
+    const ids = unlockedIdsRef.current;
+    if (index >= ids.length) {
+      setUnlockRoom(lockedRooms[0] ?? "soon");
+      return;
+    }
+    const nextId = ids[index];
+    const current = stateRef.current;
+    if (!nextId || !current || nextId === current.currentRoomId) return;
+    if (Math.abs(index - indexRef.current) !== 1) {
+      persist({ ...current, currentRoomId: nextId });
+      void haptic("tap");
+      return;
+    }
+    dragXRef.current = 0;
+    beginSettle(index);
   };
 
   const onSwipeDown = (event: PointerEvent<HTMLDivElement>) => {
     if (mode !== "view") return;
-    swipe.current = { x: event.clientX, y: event.clientY, dx: 0, active: true };
+    if (slidingRef.current && sliderRef.current) {
+      settleGen.current += 1;
+      const matrix = new DOMMatrix(getComputedStyle(sliderRef.current).transform);
+      const visual = matrix.m41 + indexRef.current * viewWRef.current;
+      dragRawRef.current = visual;
+      dragXRef.current = visual;
+      sliderRef.current.classList.add("is-dragging");
+      paintSlider(matrix.m41);
+      setSwipePhase("drag");
+    } else {
+      dragRawRef.current = 0;
+      dragXRef.current = 0;
+    }
+    swipe.current = {
+      x: event.clientX,
+      y: event.clientY,
+      base: dragRawRef.current,
+      active: true,
+      dragging: slidingRef.current,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onSwipeMove = (event: PointerEvent<HTMLDivElement>) => {
     if (!swipe.current.active) return;
-    const dx = event.clientX - swipe.current.x;
+    const finger = event.clientX - swipe.current.x;
     const dy = event.clientY - swipe.current.y;
-    if (Math.abs(dx) < 8 && Math.abs(dragX) === 0) return;
-    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dragX) === 0) return;
-    swipe.current.dx = dx;
-    setDragX(rubberX(dx));
+    if (!swipe.current.dragging) {
+      if (Math.abs(finger) < 8 && Math.abs(swipe.current.base) < 1) return;
+      if (Math.abs(dy) > Math.abs(finger) && Math.abs(swipe.current.base) < 1) {
+        swipe.current.active = false;
+        return;
+      }
+      swipe.current.dragging = true;
+      sliderRef.current?.classList.add("is-dragging", "is-settle");
+      portRef.current?.classList.add("is-sliding");
+      slidingRef.current = true;
+      setSwipePhase("drag");
+    }
+    const raw = swipe.current.base + finger;
+    dragRawRef.current = raw;
+    dragXRef.current = rubberX(raw);
+    if (dragRaf.current) return;
+    dragRaf.current = requestAnimationFrame(() => {
+      dragRaf.current = 0;
+      paintSlider(-indexRef.current * viewWRef.current + dragXRef.current);
+    });
   };
 
   const onSwipeUp = () => {
-    if (!swipe.current.active) return;
-    const dx = swipe.current.dx;
-    swipe.current.active = false;
-    setDragX(0);
-    if (dx <= -SWIPE_THRESHOLD) goToUnlocked(currentIndex + 1);
-    else if (dx >= SWIPE_THRESHOLD) goToUnlocked(currentIndex - 1);
+    const gesture = swipe.current;
+    if (!gesture.active) return;
+    gesture.active = false;
+    if (dragRaf.current) {
+      cancelAnimationFrame(dragRaf.current);
+      dragRaf.current = 0;
+      paintSlider(-indexRef.current * viewWRef.current + dragXRef.current);
+    }
+    if (!gesture.dragging) return;
+    const dx = dragRawRef.current;
+    const index = indexRef.current;
+    const count = unlockedIdsRef.current.length;
+    let target = index;
+    if (dx <= -SWIPE_THRESHOLD) {
+      if (index + 1 >= count) setUnlockRoom(lockedRooms[0] ?? "soon");
+      else target = index + 1;
+    } else if (dx >= SWIPE_THRESHOLD && index - 1 >= 0) {
+      target = index - 1;
+    }
+    beginSettle(target);
   };
 
   const onSelect = (instanceId: string | null) => {
@@ -2259,6 +2504,10 @@ export function RoomScreen({
     }
   };
 
+  onSelectRef.current = onSelect;
+  onFloorPointerDownRef.current = onFloorPointerDown;
+  onItemPointerDownRef.current = onItemPointerDown;
+
   return (
     <div
       className={`lucky-room is-${mode} is-tod-${period}`}
@@ -2470,17 +2719,15 @@ export function RoomScreen({
 
       <div
         ref={portRef}
-        className="lucky-island-port"
+        className={`lucky-island-port${swipePhase !== "idle" ? " is-sliding" : ""}`}
         onPointerDown={mode === "view" ? onSwipeDown : undefined}
         onPointerMove={mode === "view" ? onSwipeMove : undefined}
         onPointerUp={mode === "view" ? onSwipeUp : undefined}
         onPointerCancel={mode === "view" ? onSwipeUp : undefined}
       >
         <div
-          className={`lucky-island-slider ${dragX ? "is-dragging" : ""}`}
-          style={{
-            transform: `translate3d(${mode === "view" ? -currentIndex * viewW + dragX : 0}px, 0, 0)`,
-          }}
+          ref={sliderRef}
+          className={`lucky-island-slider${swipePhase === "drag" ? " is-dragging" : ""}${swipePhase !== "idle" ? " is-settle" : ""}`}
         >
           {roomPages.map(({ roomId, index }) => {
             const roomLayout = state.rooms[roomId];
@@ -2509,8 +2756,8 @@ export function RoomScreen({
                     <RoomWorld
                       mode={active ? mode : "view"}
                       roomId={roomId}
-                      roamingCatIds={normalizeRoomCatIds(roomLayout.roamingCatIds)}
-                      roamingActive={active}
+                      roamingCatIds={roomCatIds.get(roomId) ?? roomLayout.roamingCatIds}
+                      roamingActive={active && swipePhase === "idle"}
                       itemsById={itemsById}
                       layout={roomLayout}
                       selectedId={active && !paintTab ? selectedId : null}
@@ -2559,12 +2806,12 @@ export function RoomScreen({
                       previewGhost={Boolean(active && preview && preview.kind !== "paint")}
                       previewInvalid={Boolean(active && preview && !preview.valid)}
                       debugHit={debugHitEnabled()}
-                      onSelect={onSelect}
-                      onItemPointerDown={onItemPointerDown}
-                      onFloorPointerDown={onFloorPointerDown}
+                      onSelect={onSelectStable}
+                      onItemPointerDown={onItemPointerDownStable}
+                      onFloorPointerDown={onFloorPointerDownStable}
                       setBonus={roomId === displayRoomId ? roomSetCue(roomSetFor(setViews, roomId)) : null}
                       favorite={
-                        favoritePet
+                        active && favoritePet
                           ? {
                               ...favoritePet,
                               onPet: petFavorite,

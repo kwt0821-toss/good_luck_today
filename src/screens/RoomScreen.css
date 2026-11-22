@@ -627,6 +627,21 @@
   transition: none;
 }
 
+.lucky-island-slider.is-dragging,
+.lucky-island-slider.is-settle {
+  will-change: transform;
+}
+
+.lucky-room .lucky-island-port.is-sliding .lucky-island {
+  animation: none;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+
+.lucky-room .lucky-island-port.is-sliding .lucky-world-layer.is-lights {
+  animation: none;
+}
+
 .lucky-island {
   position: absolute;
   z-index: 2;
