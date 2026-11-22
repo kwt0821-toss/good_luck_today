@@ -47,6 +47,7 @@ import {
 } from "../lib/roomMood";
 import { withJosa } from "../lib/josa";
 import { nyConfirm, nyNotify } from "../lib/nyangNotify";
+import { RoomDealTab } from "../components/RoomDealTab";
 import { RoomDrawer, type DrawerItemMeta } from "../components/RoomDrawer";
 import { RoomPhotoSheet } from "../components/RoomPhotoSheet";
 import { RoomVisitScreen } from "../components/RoomVisitScreen";
@@ -74,7 +75,11 @@ import { loadOpsState, saveOpsState } from "../lib/opsStorage";
 import { trustedKstDateKey } from "../lib/tossClock";
 import { noteWeeklyRoomSaved, refreshWeekly, saveWeeklyOps } from "../lib/weeklySync";
 import { HEART_BED_ID, syncHeartBed } from "../lib/heartBed";
+import { syncCozyGifts } from "../lib/cozyGifts";
 import { computeCozyPointsFromOwned, resolveCozyStatus } from "../lib/roomCozy";
+import { roomDealRewardId } from "../lib/roomDeals";
+import { dealList, dealRefresh, type DealList } from "../lib/serverWallet";
+import { adGroupIdForKind, playTossFullScreenAd } from "../lib/tossAds";
 import { loadRoomCats } from "../lib/roomCats";
 import type { OpsState } from "../lib/opsTypes";
 import {
@@ -500,6 +505,12 @@ export function RoomScreen({
   const [snapshot, setSnapshot] = useState<RoomLayoutState | null>(null);
   const [buyItem, setBuyItem] = useState<RoomItem | null>(null);
   const [buyMore, setBuyMore] = useState(false);
+  const [dealsOn, setDealsOn] = useState(false);
+  const [deals, setDeals] = useState<DealList | null>(null);
+  const [dealsError, setDealsError] = useState(false);
+  const [dealBusy, setDealBusy] = useState(false);
+  const [sale, setSale] = useState<{ price: number; listPrice: number; date: string } | null>(null);
+  const cozyTimer = useRef(0);
   const [cozySheetOpen, setCozySheetOpen] = useState(false);
   const [confirm, setConfirm] = useState<
     "reset" | "discard" | "close-edit" | "save-ph" | "clear-furniture" | null
@@ -913,6 +924,82 @@ export function RoomScreen({
   useEffect(() => {
     void refreshVisitStatus();
   }, []);
+
+  useEffect(() => {
+    const onItems = (event: Event) => {
+      const ids = (event as CustomEvent<{ ids?: string[] }>).detail?.ids ?? [];
+      if (!ids.length) return;
+      setState((prev) => {
+        if (!prev) return prev;
+        let changed = false;
+        const owned = { ...prev.owned };
+        for (const id of ids) {
+          if ((owned[id] ?? 0) < 1) {
+            owned[id] = 1;
+            changed = true;
+          }
+        }
+        if (!changed) return prev;
+        const next = { ...prev, owned };
+        void saveRoomState(next);
+        return next;
+      });
+    };
+    window.addEventListener("lucky-cozy-items", onItems);
+    return () => window.removeEventListener("lucky-cozy-items", onItems);
+  }, []);
+
+  const cozyBoot = useRef(false);
+  useEffect(() => {
+    if (!state || items.length === 0 || cozyBoot.current) return;
+    cozyBoot.current = true;
+    void syncCozyGifts({ roomOwned: state.owned, items });
+  }, [state, items]);
+
+  useEffect(() => {
+    if (mode !== "edit" || tutorialActive) return;
+    let alive = true;
+    const preview =
+      import.meta.env.DEV && new URLSearchParams(window.location.search).get("dealPreview") === "1";
+    void (async () => {
+      if (preview) {
+        if (!alive) return;
+        setDealsOn(true);
+        setDealsError(false);
+        setTab("오늘의 가구");
+        setDeals({
+          date: "2026-11-22",
+          refreshesLeft: 1,
+          resetAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+          items: [
+            { itemId: "cattower", pct: 30, price: 650, salePrice: 450, bought: false },
+            { itemId: "sofa", pct: 20, price: 400, salePrice: 320, bought: false },
+            { itemId: "scratcher", pct: 20, price: 200, salePrice: 160, bought: false },
+          ],
+        });
+        return;
+      }
+      const on = await serverJellyActive();
+      if (!alive) return;
+      setDealsOn(on);
+      if (!on) {
+        setTab((current) => (current === "오늘의 가구" ? "가구" : current));
+        return;
+      }
+      setTab("오늘의 가구");
+      const list = await dealList();
+      if (!alive) return;
+      if (!list.ok) {
+        setDealsError(true);
+        return;
+      }
+      setDealsError(false);
+      setDeals(list);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [mode, tutorialActive]);
 
   useEffect(() => {
     if (mode === "edit") setVisitOpen(false);
@@ -1525,7 +1612,8 @@ export function RoomScreen({
           remaining: rem,
           owned: ownedN,
           otherRoomName: otherName,
-          canBuyMore: !item.attendanceOnly && !item.affectionGift && !isPaintItem(item) && ownedN < maxOwn,
+          canBuyMore:
+            !item.attendanceOnly && !item.affectionGift && !item.cozyOnly && !isPaintItem(item) && ownedN < maxOwn,
         } satisfies DrawerItemMeta,
       ];
     }),
@@ -2505,6 +2593,10 @@ export function RoomScreen({
         showToast("애정도 선물로만 받을 수 있어요");
         return;
       }
+      if (item.cozyOnly) {
+        showToast("COZY 레벨 선물로만 받을 수 있어요");
+        return;
+      }
       setBuyMore(false);
       setBuyItem(item);
       if (preview) {
@@ -2571,7 +2663,7 @@ export function RoomScreen({
     };
 
   const openBuyMore = (item: RoomItem) => {
-    if (item.attendanceOnly) {
+    if (item.attendanceOnly || item.cozyOnly) {
       showToast("한정 아이템이에요");
       return;
     }
@@ -2608,6 +2700,11 @@ export function RoomScreen({
     });
     setBuyItem(null);
     setBuyMore(false);
+    setSale(null);
+    window.clearTimeout(cozyTimer.current);
+    cozyTimer.current = window.setTimeout(() => {
+      void syncCozyGifts({ roomOwned: nextOwned, items });
+    }, 2000);
     nyNotify({
       key: "room-buy",
       kind: "success",
@@ -2617,8 +2714,8 @@ export function RoomScreen({
   };
 
   const buy = (item: RoomItem) => {
-    if (item.attendanceOnly) {
-      showToast("출석 한정 아이템은 구매할 수 없어요");
+    if (item.attendanceOnly || item.cozyOnly) {
+      showToast(item.cozyOnly ? "COZY 한정 소품은 구매할 수 없어요" : "출석 한정 아이템은 구매할 수 없어요");
       setBuyItem(null);
       return;
     }
@@ -2675,6 +2772,101 @@ export function RoomScreen({
       void spendRoomPoints(nextPoints);
       finishBuy(item, nextPoints);
     })();
+  };
+
+  const markDealBought = (itemId: string) => {
+    setDeals((prev) =>
+      prev
+        ? { ...prev, items: prev.items.map((row) => (row.itemId === itemId ? { ...row, bought: true } : row)) }
+        : prev,
+    );
+  };
+
+  const openDeal = (itemId: string) => {
+    const row = deals?.items.find((item) => item.itemId === itemId);
+    const item = itemsById.get(itemId);
+    if (!row || !item || row.bought || !deals) return;
+    setSale({ price: row.salePrice, listPrice: row.price, date: deals.date });
+    setBuyMore(false);
+    setBuyItem(item);
+  };
+
+  const buyDeal = (item: RoomItem, offer: { price: number; listPrice: number; date: string }) => {
+    if (buyBusyRef.current) return;
+    void (async () => {
+      if (!(await serverJellyActive())) return;
+      buyBusyRef.current = true;
+      try {
+        let prices = cozyConfigRef.current?.prices ?? null;
+        if (!prices) {
+          try {
+            prices = (await loadOpsConfig()).prices;
+          } catch {
+            prices = null;
+          }
+        }
+        const spendId = prices ? roomSpendItemId(prices, item.id) : item.id;
+        const spent = await jellySpend(roomDealRewardId(spendId, offer.date, newRequestId("deal")));
+        if (!spent.ok) {
+          if (spent.error === "DEAL_EXPIRED" || spent.error === "DEAL_NOT_FOUND") {
+            nyNotify({ key: "room-deal", kind: "info", title: jellySpendFailMessage(spent).title });
+            const next = await dealList();
+            if (next.ok) {
+              setDeals(next);
+              setDealsError(false);
+            }
+          } else {
+            const copy = jellySpendFailMessage(spent);
+            nyNotify({
+              key: spent.error === "DEAL_USED" ? "room-deal" : "room-buy-fail",
+              kind: spent.error === "DEAL_USED" ? "info" : "error",
+              title: copy.title,
+              sub: copy.sub,
+            });
+            if (spent.error === "DEAL_USED") markDealBought(item.id);
+          }
+          return;
+        }
+        const ops = await loadOpsState();
+        const ownedItemIds = ops.ownedItemIds.includes(item.id)
+          ? ops.ownedItemIds
+          : [...ops.ownedItemIds, item.id];
+        await saveOpsState({
+          ...ops,
+          ownedItemIds,
+          pawBalance: displayJellyBalance(ops.pawBalance),
+        });
+        markDealBought(item.id);
+        finishBuy(item, displayJellyBalance(state.points));
+      } finally {
+        buyBusyRef.current = false;
+      }
+    })();
+  };
+
+  const refreshDeals = async () => {
+    if (dealBusy || !deals || deals.refreshesLeft <= 0) return;
+    if (import.meta.env.DEV && new URLSearchParams(window.location.search).get("dealPreview") === "1") return;
+    setDealBusy(true);
+    AudioManager.onAdOpen();
+    try {
+      const config = await loadOpsConfig();
+      const result = await playTossFullScreenAd("short", adGroupIdForKind("short", config.economy.ads));
+      if (result !== "completed") return;
+      const next = await dealRefresh();
+      if (!next.ok) {
+        if (next.error === "refresh_used") {
+          nyNotify({ key: "room-deal-refresh", kind: "info", title: "오늘은 이미 다시 골랐어요" });
+          setDeals((prev) => (prev ? { ...prev, refreshesLeft: 0 } : prev));
+        }
+        return;
+      }
+      setDeals(next);
+      setDealsError(false);
+    } finally {
+      AudioManager.onAdClose();
+      setDealBusy(false);
+    }
   };
 
   const openLockedRoom = async (room: RoomDefinition) => {
@@ -3804,6 +3996,22 @@ export function RoomScreen({
             });
           }}
           setCounts={setCounts}
+          showDealTab={dealsOn}
+          deal={
+            deals ? (
+              <RoomDealTab
+                deals={deals}
+                itemsById={itemsById}
+                refreshing={dealBusy}
+                onBuy={openDeal}
+                onRefresh={() => void refreshDeals()}
+              />
+            ) : (
+              <p className="lucky-deal-head">
+                {dealsError ? "오늘의 가구를 불러오지 못했어요" : "오늘의 가구를 불러오는 중이에요"}
+              </p>
+            )
+          }
         />
       )}
 
@@ -3825,11 +4033,14 @@ export function RoomScreen({
           item={buyItem}
           points={state.points}
           confirmLabel={buyMore ? "하나 더 사기" : undefined}
+          salePrice={sale?.price}
+          listPrice={sale?.listPrice}
           onClose={() => {
             setBuyItem(null);
             setBuyMore(false);
+            setSale(null);
           }}
-          onBuy={() => buy(buyItem)}
+          onBuy={() => (sale ? buyDeal(buyItem, sale) : buy(buyItem))}
         />
       ) : null}
 

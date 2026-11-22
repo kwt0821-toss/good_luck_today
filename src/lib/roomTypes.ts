@@ -1,8 +1,8 @@
 export type RoomCategory = "가구" | "소품" | "벽 꾸미기" | "벽지" | "바닥" | "카드액자";
 export type RoomPlacementKind = "floor" | "floor-decal" | "wall" | "wallTop" | "wallpaper" | "floor-skin";
 export type RoomMode = "view" | "edit";
-/** Drawer tabs — `보유` lists owned items (NEW/unplaced first). */
-export type RoomTab = RoomCategory | "보유" | "고양이 친구";
+/** Drawer tabs — `오늘의 가구` is the server deal list. `보유` lists owned items. */
+export type RoomTab = RoomCategory | "오늘의 가구" | "보유" | "고양이 친구";
 export type RoomOrientation = "default" | "mirrored";
 export type RoomThemeId = "moon_bedroom" | "cat_cafe" | "sakura_greenhouse" | "winter_cabin";
 export type RoomThemeFilter = "all" | RoomThemeId;
@@ -46,6 +46,8 @@ export type RoomItem = {
   attendanceOnly?: boolean;
   /** Granted once from affection. Hidden from the shop until owned. */
   affectionGift?: boolean;
+  /** COZY level gift. Hidden until owned. Not sold, not scored, not in other pools. */
+  cozyOnly?: boolean;
 };
 
 export type RoomCatalog = {

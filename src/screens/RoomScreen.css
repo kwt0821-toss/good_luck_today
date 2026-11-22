@@ -2920,6 +2920,29 @@ button.lucky-roam-cat:active,
   color: #ffb4b4;
 }
 
+.lucky-cozy-tag {
+  display: inline-block;
+  margin-left: 4px;
+  vertical-align: middle;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #fff8e8;
+  background: linear-gradient(90deg, #7a4dff, #e2b657);
+  border-radius: 6px;
+  padding: 1px 6px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.lucky-cozy-tag.is-cell {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  margin: 0;
+  font-size: 8px;
+  padding: 1px 4px;
+}
+
 .lucky-attend-tag {
   display: inline-block;
   margin-left: 4px;
@@ -3197,6 +3220,149 @@ button.lucky-roam-cat:active,
 .lucky-buy-preview img {
   max-width: 56px;
   max-height: 58px;
+}
+
+.lucky-deal-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+.lucky-deal-head {
+  margin: 8px 0 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #f3e9d7;
+}
+
+.lucky-deal-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lucky-deal-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 148px;
+  padding: 22px 6px 8px;
+  border: 1px solid rgba(243, 233, 215, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f3e9d7;
+  text-align: center;
+}
+
+.lucky-deal-card.is-special {
+  border-color: #e2b657;
+}
+
+.lucky-deal-card:disabled {
+  opacity: 0.72;
+}
+
+.lucky-deal-ribbon,
+.lucky-deal-pct {
+  position: absolute;
+  top: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.lucky-deal-ribbon {
+  left: 6px;
+  color: #1e1a2b;
+  background: #e2b657;
+  border-radius: 6px;
+  padding: 1px 5px;
+}
+
+.lucky-deal-pct {
+  right: 6px;
+  color: #ffd98a;
+}
+
+.lucky-deal-art {
+  width: 64px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+}
+
+.lucky-deal-art img {
+  max-width: 64px;
+  max-height: 52px;
+  object-fit: contain;
+}
+
+.lucky-deal-name {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.lucky-deal-price,
+.lucky-deal-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.lucky-deal-price s {
+  color: rgba(243, 233, 215, 0.55);
+  font-size: 10px;
+}
+
+.lucky-deal-price b {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+}
+
+.lucky-deal-price img {
+  width: 12px;
+  height: 12px;
+}
+
+.lucky-deal-done {
+  color: #ffd98a;
+}
+
+.lucky-deal-refresh {
+  margin-top: 8px;
+  width: 100%;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid #e2b657;
+  background: transparent;
+  color: #f3e9d7;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.lucky-deal-refresh:disabled {
+  opacity: 0.45;
+}
+
+.lucky-deal .banner-ad-slot {
+  margin-top: 8px;
+}
+
+.lucky-buy-was {
+  margin-right: 6px;
+  color: rgba(243, 233, 215, 0.55);
+  font-size: 13px;
 }
 
 .lucky-buy-price {

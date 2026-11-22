@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 
 import {
   isPaintItem,
@@ -60,6 +60,9 @@ type RoomDrawerProps = {
   onChangeCats: (ids: string[]) => void;
   /** Owned / total for theme sets, keyed by room id. */
   setCounts?: Record<string, { owned: number; total: number }>;
+  /** Today's discounted furniture. Hidden when the server wallet is off. */
+  showDealTab?: boolean;
+  deal?: ReactNode;
 };
 
 function tileState(
@@ -134,6 +137,8 @@ export function RoomDrawer({
   roamingCatIds,
   onChangeCats,
   setCounts = {},
+  showDealTab = false,
+  deal = null,
 }: RoomDrawerProps) {
   const drawerRef = useRef<HTMLElement | null>(null);
   useHideBrokenImages(drawerRef);
@@ -164,6 +169,10 @@ export function RoomDrawer({
   const collapsedH = tutorial ? 300 : DRAWER_HEIGHT_COLLAPSED;
   const expandedH = tutorial ? 300 : drawerExpandedHeight();
   const sheetHeight = tutorial ? 300 : (dragHeight ?? (expanded ? expandedH : collapsedH));
+  const dealTab = tab === "오늘의 가구";
+  useEffect(() => {
+    if (dealTab) setExpanded(true);
+  }, [dealTab]);
   useEffect(() => {
     const parent = drawerRef.current?.parentElement;
     if (!parent) return;
@@ -253,7 +262,8 @@ export function RoomDrawer({
       itemMatchesTab(item, tab) &&
       itemMatchesTheme(item, themeFilter) &&
       !(item.attendanceOnly && (owned[item.id] ?? 0) < 1) &&
-      !(item.affectionGift && (owned[item.id] ?? 0) < 1)
+      !(item.affectionGift && (owned[item.id] ?? 0) < 1) &&
+      !(item.cozyOnly && (owned[item.id] ?? 0) < 1)
     );
   });
 
@@ -372,7 +382,7 @@ export function RoomDrawer({
         </span>
       </header>
       <div className="lucky-drawer-tabs" role="tablist">
-        {ROOM_TABS.map((item) => (
+        {ROOM_TABS.filter((item) => item.id !== "오늘의 가구" || showDealTab).map((item) => (
           <button
             key={item.id}
             type="button"
@@ -390,7 +400,7 @@ export function RoomDrawer({
           </button>
         ))}
       </div>
-      {catsTab ? (
+      {dealTab ? <div className="lucky-deal-scroll">{deal}</div> : catsTab ? (
         <RoomCatsTab selectedIds={roamingCatIds} onChange={onChangeCats} />
       ) : (
         <>
@@ -421,13 +431,19 @@ export function RoomDrawer({
       {infoItem && infoState ? (
         <div className="lucky-drawer-info" role="dialog" aria-label={infoItem.nameKo}>
           <div className="lucky-drawer-info-copy">
-            <strong className="lucky-drawer-info-name">{infoItem.nameKo}</strong>
+            <strong className="lucky-drawer-info-name">
+              {infoItem.nameKo}
+              {infoItem.cozyOnly ? <span className="lucky-cozy-tag">COZY 한정</span> : null}
+              {infoItem.attendanceOnly ? <span className="lucky-attend-tag">출석 한정</span> : null}
+            </strong>
             <span
               className={`lucky-drawer-info-status ${
                 infoState.otherRoom && infoMeta?.otherRoomName ? "is-multiline" : ""
               }`}
             >
-              {infoItem.attendanceOnly
+              {infoItem.cozyOnly
+                ? "COZY 한정 · 다시 살 수 없어요"
+                : infoItem.attendanceOnly
                 ? "출석 한정 · 다시 살 수 없어요"
                 : infoState.otherRoom && infoMeta?.otherRoomName
                   ? `다른 방에 있어요\n${infoMeta.otherRoomName}`
@@ -455,7 +471,7 @@ export function RoomDrawer({
                 이 방으로 옮기기
               </button>
             ) : null}
-            {!infoItem.attendanceOnly && infoMeta?.canBuyMore ? (
+            {!infoItem.attendanceOnly && !infoItem.cozyOnly && infoMeta?.canBuyMore ? (
               <button
                 type="button"
                 className="lucky-drawer-info-btn is-amber"
@@ -531,6 +547,7 @@ export function RoomDrawer({
                 ) : (
                   <span className="lucky-cell-empty" />
                 )}
+                {item.cozyOnly && !state.locked ? <span className="lucky-cozy-tag is-cell">COZY 한정</span> : null}
                 {item.attendanceOnly && !state.locked ? (
                   <img
                     className="lucky-cell-badge is-tl"
@@ -575,7 +592,7 @@ export function RoomDrawer({
       </div>
         </>
       )}
-      {catsTab ? null : <div className="lucky-drawer-fade" aria-hidden="true" />}
+      {catsTab || dealTab ? null : <div className="lucky-drawer-fade" aria-hidden="true" />}
     </section>
   );
 }

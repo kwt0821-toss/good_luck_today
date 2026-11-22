@@ -485,6 +485,32 @@ export async function saveRoomState(
   await writeKey(ROOM_KEY, JSON.stringify(state), options?.server ?? "lifecycle");
 }
 
+/** Put gifted item ids into the saved room inventory at count 1. */
+export async function grantRoomOwned(ids: string[]): Promise<void> {
+  const unique = [...new Set(ids.filter((id) => id.length > 0))];
+  if (!unique.length) return;
+  const raw = await readKey(ROOM_KEY);
+  if (!raw) return;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return;
+  }
+  if (!parsed || typeof parsed !== "object") return;
+  const state = parsed as { owned?: Record<string, number> };
+  const owned = { ...(state.owned ?? {}) };
+  let changed = false;
+  for (const id of unique) {
+    if ((owned[id] ?? 0) < 1) {
+      owned[id] = 1;
+      changed = true;
+    }
+  }
+  if (!changed) return;
+  await writeKey(ROOM_KEY, JSON.stringify({ ...state, owned }));
+}
+
 export function newInstanceId(id: string) {
   return `p-${id}-${Math.random().toString(36).slice(2, 8)}`;
 }

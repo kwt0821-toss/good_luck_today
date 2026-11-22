@@ -357,6 +357,30 @@ type AttendanceCatalogFile = RawCatalog & {
   items?: Array<RawItem & { attendanceOnly?: boolean; basePath?: string; source?: string }>;
 };
 
+function mergeCozyItems(base: RoomItem[], cozyFile: AttendanceCatalogFile): RoomItem[] {
+  const byId = new Map(base.map((item) => [item.id, item]));
+  const packBase = (cozyFile.basePath ?? "/assets/room").replace(/\/$/, "");
+  const usesRoomBase = packBase === "/assets/room" || packBase.endsWith("/room");
+  for (const raw of cozyFile.items ?? []) {
+    const normalized = normalizeItem(raw, raw.theme ?? "moon_bedroom");
+    const rebase = (path: string | null) => {
+      if (!path || usesRoomBase) return path;
+      if (path.startsWith("/")) return path;
+      return `${packBase}/${path}`;
+    };
+    const item: RoomItem = {
+      ...normalized,
+      ownedDefault: false,
+      cozyOnly: true,
+      price: 0,
+      image: rebase(normalized.image),
+      tileImage: rebase(normalized.tileImage),
+    };
+    byId.set(item.id, item);
+  }
+  return [...byId.values()];
+}
+
 function mergeAttendanceItems(base: RoomItem[], attendanceFile: AttendanceCatalogFile): RoomItem[] {
   const byId = new Map(base.map((item) => [item.id, item]));
   const packBase = (attendanceFile.basePath ?? "/assets/room").replace(/\/$/, "");
@@ -394,8 +418,11 @@ export function loadRoomCatalog(): Promise<RoomCatalog> {
       fetch("/assets/attendance-items/items-attendance.json")
         .then((res) => (res.ok ? (res.json() as Promise<AttendanceCatalogFile>) : { items: [] }))
         .catch(() => ({ items: [] as AttendanceCatalogFile["items"] })),
+      fetch(roomAsset("themes/cozy/items-cozy.json"))
+        .then((res) => (res.ok ? (res.json() as Promise<AttendanceCatalogFile>) : { items: [] }))
+        .catch(() => ({ items: [] as AttendanceCatalogFile["items"] })),
     ])
-      .then(([data, themes, attendance]) => {
+      .then(([data, themes, attendance, cozy]) => {
         setTileRules(parseTileRules(data.tileRules));
         const seen = new Set<string>();
         const merged: RoomItem[] = [];
@@ -419,7 +446,8 @@ export function loadRoomCatalog(): Promise<RoomCatalog> {
           merged.push(item);
         }
         const withAttendance = mergeAttendanceItems(merged, attendance);
-        const items = mergeSkinItems(withAttendance);
+        const withCozy = mergeCozyItems(withAttendance, cozy);
+        const items = mergeSkinItems(withCozy);
         if (data.heroCat && !items.some((item) => item.id === data.heroCat?.id)) {
           items.push(normalizeHero(data.heroCat));
         }
@@ -555,6 +583,7 @@ export function itemMap(items: RoomItem[]) {
 }
 
 export const ROOM_TABS: { id: RoomTab; label: string }[] = [
+  { id: "오늘의 가구", label: "오늘의 가구" },
   { id: "보유", label: "보유" },
   { id: "가구", label: "가구" },
   { id: "소품", label: "소품" },
@@ -584,7 +613,7 @@ export function isPlaceableDecor(item: RoomItem): boolean {
 }
 
 export function itemMatchesTab(item: RoomItem, tab: RoomTab) {
-  if (tab === "고양이 친구") return false;
+  if (tab === "고양이 친구" || tab === "오늘의 가구") return false;
   if (tab === "보유") return true;
   if (tab === "벽 꾸미기") return isWallDecor(item);
   if (tab === "벽지") return item.category === "벽지" || item.placement === "wallpaper";

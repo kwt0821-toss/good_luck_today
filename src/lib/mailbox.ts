@@ -1,4 +1,5 @@
 import type { MenuRowView } from "./menuTypes";
+import { grantRoomOwned } from "./roomStore";
 import { nyNotify } from "./nyangNotify";
 import type { OpsState } from "./opsTypes";
 import { adoptServerJelly } from "./serverJelly";
@@ -105,6 +106,7 @@ type Paid = {
   nyangCoinBalance: number | null;
   ticketKeys: string[];
   ticketsHeldAfter?: number | null;
+  cozyItems?: string[];
 };
 
 function applyPaid(state: OpsState, paid: Paid): OpsState {
@@ -120,7 +122,11 @@ function applyPaid(state: OpsState, paid: Paid): OpsState {
   const tickets = applyChestTicketKeys(next.rateUpTickets, next.inviteTicketKeys ?? [], paid.ticketKeys);
   let held = tickets.held;
   if (typeof paid.ticketsHeldAfter === "number" && paid.ticketsHeldAfter > held) held = paid.ticketsHeldAfter;
-  return { ...next, rateUpTickets: held, inviteTicketKeys: tickets.keys };
+  const cozyItems = paid.cozyItems ?? [];
+  const ownedItemIds = cozyItems.length
+    ? [...new Set([...next.ownedItemIds, ...cozyItems])]
+    : next.ownedItemIds;
+  return { ...next, rateUpTickets: held, inviteTicketKeys: tickets.keys, ownedItemIds };
 }
 
 function mailError(error: string): string {
@@ -131,11 +137,20 @@ function mailError(error: string): string {
   return "다시 시도해 주세요";
 }
 
-function claimMessage(already: boolean, heldBack: boolean, granted: boolean): string {
+function claimMessage(already: boolean, heldBack: boolean, granted: boolean, cozyItems: string[]): string {
+  if (cozyItems.length > 0) return "COZY 한정 소품을 받았어요 · 서랍 보유 탭에 있어요";
   if (heldBack) return "뽑기권이 가득 차서 권만 남겨 두었어요";
   if (already) return "이미 받은 선물이에요";
   if (granted) return "선물을 받았어요";
   return "";
+}
+
+const COZY_ITEMS_EVENT = "lucky-cozy-items";
+
+async function keepCozyItems(ids: string[]): Promise<void> {
+  if (!ids.length) return;
+  await grantRoomOwned(ids);
+  window.dispatchEvent(new CustomEvent(COZY_ITEMS_EVENT, { detail: { ids } }));
 }
 
 export async function claimMailboxOne(
@@ -145,20 +160,22 @@ export async function claimMailboxOne(
   const result = await claimMailboxLetter({ letterId, ticketsHeld: state.rateUpTickets });
   if (!result.ok) return { state, message: mailError(result.error) };
   const next = applyPaid(state, result);
+  await keepCozyItems(result.cozyItems);
   publish({ ...snap, unclaimedCount: result.unclaimedCount });
   await refreshMailbox();
   const granted = result.jelly > 0 || result.nyangCoin > 0 || result.tickets > 0;
-  return { state: next, message: claimMessage(result.already, result.ticketHeldBack, granted) };
+  return { state: next, message: claimMessage(result.already, result.ticketHeldBack, granted, result.cozyItems) };
 }
 
 export async function claimMailboxEvery(state: OpsState): Promise<{ state: OpsState; message: string }> {
   const result = await claimMailboxAll({ ticketsHeld: state.rateUpTickets });
   if (!result.ok) return { state, message: mailError(result.error) };
   const next = applyPaid(state, result);
+  await keepCozyItems(result.cozyItems);
   publish({ ...snap, unclaimedCount: result.unclaimedCount });
   await refreshMailbox();
   const granted = result.claimed > 0 && (result.jelly > 0 || result.nyangCoin > 0 || result.tickets > 0);
-  return { state: next, message: claimMessage(false, result.ticketHeldBack, granted) };
+  return { state: next, message: claimMessage(false, result.ticketHeldBack, granted, result.cozyItems) };
 }
 
 export function hintMailboxIfGrew(before: number) {

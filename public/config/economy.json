@@ -442,7 +442,8 @@
       "rates": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
       "notice": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
       "settings": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
-      "help": { "adGroupId": "ait.v2.live.1acc32a6f5004806" }
+      "help": { "adGroupId": "ait.v2.live.1acc32a6f5004806" },
+      "roomDeal": { "adGroupId": "ait.v2.live.1acc32a6f5004806" }
     }
   },
   "cozy": {

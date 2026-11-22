@@ -262,6 +262,7 @@ export type OpsEconomy = {
       notice?: { adGroupId?: string };
       settings?: { adGroupId?: string };
       help?: { adGroupId?: string };
+      roomDeal?: { adGroupId?: string };
     };
   };
   cozy: {

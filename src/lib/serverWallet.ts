@@ -12,6 +12,16 @@ import { ensureGameUserHash, readStoredGameUserHash } from "./user";
 import type { RoomRecord } from "./roomTypes";
 import { normalizeRoomCatIds } from "./roomStore";
 import { normalizeFloorTiles, normalizeWallTiles } from "./roomTiles";
+import {
+  collectCozyItems,
+  parseCozyStatusBody,
+  parseDealListBody,
+  type CozyClaimResult,
+  type CozyStatus,
+  type DealList,
+} from "./walletBodies";
+
+export type { CozyClaimResult, CozyStatus, DealItem, DealList } from "./walletBodies";
 
 /**
  * 폰은 요청만 보낸다. 잔액·금액·한도·날짜는 서버 지갑이 정한다.
@@ -878,7 +888,7 @@ export async function claimWeeklyChest(body: {
   };
 }
 
-export type MailboxSource = "operator" | "invite" | "weekly";
+export type MailboxSource = "operator" | "invite" | "weekly" | "cozy";
 export type MailboxStatus = "pending" | "claimed" | "expired";
 
 export type MailboxLetter = {
@@ -922,6 +932,7 @@ export type MailboxClaimResult = {
   jellyBalance: number | null;
   nyangCoinBalance: number | null;
   unclaimedCount: number;
+  cozyItems: string[];
 };
 
 export type MailboxClaimAllResult = {
@@ -936,10 +947,11 @@ export type MailboxClaimAllResult = {
   jellyBalance: number | null;
   nyangCoinBalance: number | null;
   unclaimedCount: number;
+  cozyItems: string[];
 };
 
 const MAILBOX_RETRY: Retry = { token: false, missing: false };
-const MAIL_SOURCES = new Set<MailboxSource>(["operator", "invite", "weekly"]);
+const MAIL_SOURCES = new Set<MailboxSource>(["operator", "invite", "weekly", "cozy"]);
 const MAIL_STATUSES = new Set<MailboxStatus>(["pending", "claimed", "expired"]);
 
 function parseMailboxLetter(value: unknown): MailboxLetter | null {
@@ -1014,6 +1026,7 @@ export async function claimMailboxLetter(body: {
     jellyBalance: balanceOrNull(json.jellyBalance),
     nyangCoinBalance: balanceOrNull(json.nyangCoinBalance),
     unclaimedCount: num(json.unclaimedCount),
+    cozyItems: collectCozyItems(json),
   };
 }
 
@@ -1036,7 +1049,54 @@ export async function claimMailboxAll(body: {
     jellyBalance: balanceOrNull(json.jellyBalance),
     nyangCoinBalance: balanceOrNull(json.nyangCoinBalance),
     unclaimedCount: num(json.unclaimedCount),
+    cozyItems: collectCozyItems(json),
   };
+}
+
+const COZY_RETRY = { token: false, missing: false } as const;
+
+export async function cozyStatus(): Promise<({ ok: true } & CozyStatus) | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet("cozy_status", {}, DEFAULT_MS, true, COZY_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const parsed = parseCozyStatusBody(result.json);
+  if (!parsed) return { ok: false, error: "bad_payload" };
+  return { ok: true, ...parsed };
+}
+
+export async function cozyClaim(
+  owned?: Record<string, number>,
+): Promise<({ ok: true } & CozyClaimResult) | { ok: false; error: string; network?: boolean }> {
+  const extra = owned ? { owned } : {};
+  const result = await postWallet("cozy_claim", extra, DEFAULT_MS, true, COZY_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const json = result.json;
+  return {
+    ok: true,
+    sent: json.sent === true,
+    fromLevel: num(json.fromLevel),
+    toLevel: num(json.toLevel),
+    jelly: num(json.jelly),
+    items: stringList(json.items),
+    capped: json.capped === true,
+    level: num(json.level),
+    claimedLevel: num(json.claimedLevel),
+  };
+}
+
+export async function dealList(): Promise<({ ok: true } & DealList) | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet("deal_list", {}, DEFAULT_MS, true, COZY_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const parsed = parseDealListBody(result.json);
+  if (!parsed) return { ok: false, error: "bad_payload" };
+  return { ok: true, ...parsed };
+}
+
+export async function dealRefresh(): Promise<({ ok: true } & DealList) | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet("deal_refresh", {}, DEFAULT_MS, true, COZY_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const parsed = parseDealListBody(result.json);
+  if (!parsed) return { ok: false, error: "bad_payload" };
+  return { ok: true, ...parsed };
 }
 
 const VISIT_RETRY = { token: false, missing: false } as const;

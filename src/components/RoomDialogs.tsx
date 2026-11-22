@@ -59,14 +59,20 @@ export function RoomBuySheet({
   onClose,
   onBuy,
   confirmLabel = "구매",
+  salePrice,
+  listPrice,
 }: {
   item: RoomItem;
   points: number;
   onClose: () => void;
   onBuy: () => void;
   confirmLabel?: string;
+  /** Server sale price. The list price stays on the item for a later full-price buy. */
+  salePrice?: number;
+  listPrice?: number;
 }) {
-  const enough = points >= item.price;
+  const price = salePrice ?? item.price;
+  const enough = points >= price;
   return (
     <div className="lucky-modal">
       <button type="button" className="lucky-modal-back" aria-label="닫기" onClick={onClose} />
@@ -79,13 +85,16 @@ export function RoomBuySheet({
           {item.attendanceOnly ? <span className="lucky-attend-tag">출석 한정</span> : null}
         </h3>
         <p className="lucky-buy-price">
+          {listPrice != null && listPrice !== price ? (
+            <s className="lucky-buy-was">{listPrice.toLocaleString("ko-KR")}</s>
+          ) : null}
           <img src={roomAsset("ui/icon-paw-point.svg")} alt="" />
-          {item.price.toLocaleString("en-US")}
+          {price.toLocaleString("en-US")}
         </p>
         {enough ? (
           <>
             <p>
-              {`${withJosa(item.nameKo, "을를")} 젤리 ${item.price.toLocaleString("ko-KR")}${josa(String(item.price), "으로로")} 살까요?`}
+              {`${withJosa(item.nameKo, "을를")} 젤리 ${price.toLocaleString("ko-KR")}${josa(String(price), "으로로")} 살까요?`}
             </p>
             <div className="lucky-modal-actions">
               <button type="button" onClick={onClose}>
@@ -100,7 +109,7 @@ export function RoomBuySheet({
           <>
             <div className="ny-chip-anchor" style={{ position: "relative", margin: "12px 0" }}>
               <NyChip arrow="down" arrowX={48} wide>
-                {`젤리가 ${item.price - points} 모자라요 · 출석·젤리 받기로 모아요`}
+                {`젤리가 ${price - points} 모자라요 · 출석·젤리 받기로 모아요`}
               </NyChip>
             </div>
             <div className="lucky-modal-actions">

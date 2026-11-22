@@ -172,7 +172,7 @@ export function validateWallPreview(
 
 /** Sync cap used by drawer CTAs; pass tier from ops prices when available. */
 export function maxOwnForItemSync(item: RoomItem, tier?: string | null): number {
-  if (item.attendanceOnly || item.affectionGift) return 1;
+  if (item.attendanceOnly || item.affectionGift || item.cozyOnly) return 1;
   if (isPaintItem(item)) return Number.POSITIVE_INFINITY;
   if (tier === "large") return 3;
   const [w, d] = item.footprint ?? [1, 1];
@@ -181,7 +181,7 @@ export function maxOwnForItemSync(item: RoomItem, tier?: string | null): number 
 }
 
 export async function maxOwnForItem(item: RoomItem): Promise<number> {
-  if (item.attendanceOnly || item.affectionGift) return 1;
+  if (item.attendanceOnly || item.affectionGift || item.cozyOnly) return 1;
   if (isPaintItem(item)) return Number.POSITIVE_INFINITY;
   const config = await loadOpsConfig();
   const priced = config.prices.items.find((row) => row.id === item.id);

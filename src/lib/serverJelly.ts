@@ -59,6 +59,12 @@ const SPEND_HASH_ERRORS = new Set(["hash_unverified", "hash_invalid_format", "ha
 
 /** Copy for a failed jelly_spend. Network wording is only for a real transport failure. */
 export function jellySpendFailMessage(fail: JellyFail): { title: string; sub: string } {
+  if (fail.error === "DEAL_USED") {
+    return { title: "오늘 이 가구는 이미 할인으로 샀어요", sub: "" };
+  }
+  if (fail.error === "DEAL_EXPIRED" || fail.error === "DEAL_NOT_FOUND") {
+    return { title: "날짜가 바뀌었어요. 새 목록을 불러올게요", sub: "" };
+  }
   if (fail.insufficient || fail.error === "INSUFFICIENT") {
     return { title: "젤리가 부족해요", sub: "출석·젤리 받기로 더 모아 주세요" };
   }

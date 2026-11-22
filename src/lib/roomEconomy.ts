@@ -4,7 +4,7 @@ import { loadOpsConfig, priceById } from "./opsConfig";
 import { loadOpsState, saveOpsState } from "./opsStorage";
 import { displayJellyBalance, serverJellyActive } from "./serverJelly";
 import { resolveCozyStatus } from "./roomCozy";
-import { loadRoomsFile } from "./roomCatalog";
+import { loadRoomCatalog, loadRoomsFile } from "./roomCatalog";
 import type { OpsEconomy } from "./opsTypes";
 import type { RoomItem, RoomSaveState } from "./roomTypes";
 
@@ -54,8 +54,13 @@ export async function applyOpsPrices(items: RoomItem[]): Promise<RoomItem[]> {
   });
 }
 
+async function cozyCatalog() {
+  const catalog = await loadRoomCatalog();
+  return new Map(catalog.items.map((item) => [item.id, item]));
+}
+
 export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSaveState> {
-  const [config, ops] = await Promise.all([loadOpsConfig(), loadOpsState()]);
+  const [config, ops, catalogById] = await Promise.all([loadOpsConfig(), loadOpsState(), cozyCatalog()]);
   const ownedIds = Object.entries(state.owned)
     .filter(([, count]) => count > 0)
     .map(([id]) => id);
@@ -66,6 +71,7 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
     ...Object.fromEntries(mergedOwned.map((id) => [id, Math.max(1, state.owned[id] ?? 1)])),
   };
   const cozy = resolveCozyStatus(ownedCounts, config.prices, config.economy, {
+    catalogById,
     forceLevel: ops.devForceCozyLevel,
   });
 
@@ -95,6 +101,7 @@ export async function syncRoomSaveWithOps(state: RoomSaveState): Promise<RoomSav
   const ownedWithGifts = await grantUnlockRewards(ownedCounts, newlyUnlocked, config.economy.rooms);
   const cozyAfter = newlyUnlocked.length
     ? resolveCozyStatus(ownedWithGifts, config.prices, config.economy, {
+        catalogById,
         forceLevel: ops.devForceCozyLevel,
       })
     : cozy;
@@ -198,8 +205,9 @@ export async function grantUnlockRewards(
 
 /** Recalculate cozy after buy/sell (economy 2.2). Returns updated room save. */
 export async function recalculateRoomCozy(state: RoomSaveState): Promise<RoomSaveState> {
-  const [config, ops] = await Promise.all([loadOpsConfig(), loadOpsState()]);
+  const [config, ops, catalogById] = await Promise.all([loadOpsConfig(), loadOpsState(), cozyCatalog()]);
   const cozy = resolveCozyStatus(state.owned, config.prices, config.economy, {
+    catalogById,
     forceLevel: ops.devForceCozyLevel,
   });
   return { ...state, cozyLevel: cozy.level };

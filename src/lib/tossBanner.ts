@@ -11,7 +11,8 @@ export type BannerPlacement =
   | "rates"
   | "notice"
   | "settings"
-  | "help";
+  | "help"
+  | "roomDeal";
 
 export type BannerAdsConfig = {
   banner?: Partial<Record<BannerPlacement, { adGroupId?: string }>>;

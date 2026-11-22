@@ -118,6 +118,8 @@ export function computeCozyPointsFromOwned(
   for (const [id, rawCount] of Object.entries(owned)) {
     const count = Math.max(0, Math.floor(Number(rawCount) || 0));
     if (count < 1) continue;
+    // COZY exclusives are gifts. The server does not score them.
+    if (catalogById?.get(id)?.cozyOnly) continue;
     const priced = byId.get(id) ?? byId.get(`floor_${id}`) ?? byId.get(`wall_${id}`);
     if (!priced?.tier) continue;
     const prev = counted.get(priced.id);

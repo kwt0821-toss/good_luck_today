@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
+import { cozyGiftWaiting } from "../lib/cozyGifts";
+import { cozyGiftLevels, nextCozyGiftLevel } from "../lib/cozyGiftMath";
 import { loadOpsConfig } from "../lib/opsConfig";
 import type { OpsEconomy, OpsPrices, PriceTier } from "../lib/opsTypes";
+import { loadRoomCatalog, roomAsset } from "../lib/roomCatalog";
 import {
   COZY_SHEET_TIER_LABEL,
   COZY_SHEET_TIER_ORDER,
   getRoomCozy,
   type RoomCozyResponse,
 } from "../lib/roomCozy";
-import { roomAsset } from "../lib/roomCatalog";
+import { cozyStatus, type CozyStatus } from "../lib/serverWallet";
 import "./CozySheet.css";
 
 type CozySheetProps = {
@@ -48,6 +51,8 @@ function buildTierCards(economy: OpsEconomy, prices: OpsPrices): TierCard[] {
 export function CozySheet({ open, onClose, onBrowseItems }: CozySheetProps) {
   const [status, setStatus] = useState<RoomCozyResponse | null>(null);
   const [cards, setCards] = useState<TierCard[]>([]);
+  const [gift, setGift] = useState<CozyStatus | null>(null);
+  const [thumbs, setThumbs] = useState<Record<string, string>>({});
   const sheetRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ y: number; dy: number } | null>(null);
   const [dragY, setDragY] = useState(0);
@@ -65,6 +70,45 @@ export function CozySheet({ open, onClose, onBrowseItems }: CozySheetProps) {
     });
     return () => {
       cancelled = true;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    void (async () => {
+      const preview =
+        import.meta.env.DEV && new URLSearchParams(window.location.search).get("cozyPreview") === "1";
+      const row = preview
+        ? {
+            ok: true as const,
+            level: 10,
+            points: 0,
+            claimedLevel: 11,
+            fromLevel: 11,
+            perLevel: 50,
+            milestones: {
+              "15": "cozy_aurora_globe",
+              "20": "cozy_star_cushion",
+              "25": "cozy_gold_frame",
+            },
+            retroCap: 1000,
+            items: [] as string[],
+            waitingItems: ["cozy_aurora_globe"],
+          }
+        : await cozyStatus();
+      if (!alive || !row.ok) return;
+      setGift(row);
+      const catalog = await loadRoomCatalog().catch(() => null);
+      if (!alive || !catalog) return;
+      const next: Record<string, string> = {};
+      for (const item of catalog.items) {
+        if (item.tileImage) next[item.id] = item.tileImage;
+      }
+      setThumbs(next);
+    })();
+    return () => {
+      alive = false;
     };
   }, [open]);
 
@@ -159,6 +203,46 @@ export function CozySheet({ open, onClose, onBrowseItems }: CozySheetProps) {
             방에 놓지 않아도 가지고 있으면 점수가 올라요
           </div>
         </div>
+
+        <section className="cozy-gifts" aria-label="레벨 선물">
+          {gift && gift.level < level ? <p className="cozy-gifts-lag">서버 기록을 확인하는 중이에요</p> : null}
+          {gift ? (
+            <p className="cozy-gifts-next">
+              {`다음 선물: Lv.${nextCozyGiftLevel(gift.claimedLevel)}`}
+              {gift.perLevel > 0 ? ` · 발바닥 젤리 ${gift.perLevel}` : ""}
+              {gift.milestones[String(nextCozyGiftLevel(gift.claimedLevel))] ? " + 한정 소품" : ""}
+            </p>
+          ) : null}
+          <div className="cozy-gifts-row">
+            {cozyGiftLevels().map((lv) => {
+              const itemId = gift?.milestones[String(lv)] ?? "";
+              const done = gift ? lv <= gift.claimedLevel : false;
+              const upcoming = gift ? lv === nextCozyGiftLevel(gift.claimedLevel) : false;
+              return (
+                <div
+                  key={lv}
+                  className={`cozy-gift${done ? " is-done" : ""}${upcoming ? " is-next" : ""}`}
+                >
+                  <small>Lv.{lv}</small>
+                  {itemId && thumbs[itemId] ? <img src={roomAsset(thumbs[itemId])} alt="" /> : null}
+                  {done ? <b>✓</b> : null}
+                </div>
+              );
+            })}
+          </div>
+          {cozyGiftWaiting(gift) ? (
+            <button
+              type="button"
+              className="cozy-gifts-mail"
+              onClick={() => {
+                onClose();
+                window.dispatchEvent(new Event("lucky-open-mailbox"));
+              }}
+            >
+              편지함 열기
+            </button>
+          ) : null}
+        </section>
 
         <button
           type="button"

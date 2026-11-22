@@ -232,3 +232,77 @@
   width: 20px;
   height: 20px;
 }
+
+.cozy-gifts {
+  margin-top: 16px;
+}
+
+.cozy-gifts-lag {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: #8a7b68;
+}
+
+.cozy-gifts-next {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #2a2238;
+}
+
+.cozy-gifts-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cozy-gift {
+  flex: 0 0 64px;
+  min-height: 72px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #eadcc6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #6d6256;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.cozy-gift small {
+  font-size: 11px;
+}
+
+.cozy-gift img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.cozy-gift.is-done {
+  color: #2a2238;
+}
+
+.cozy-gift.is-next {
+  border-color: #c9a227;
+  box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.35);
+  color: #2a2238;
+}
+
+.cozy-gifts-mail {
+  margin-top: 10px;
+  width: 100%;
+  height: 44px;
+  border: 0;
+  border-radius: 14px;
+  background: #7a4dff;
+  color: #fff8e8;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
