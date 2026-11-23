@@ -15,7 +15,13 @@ export function peekRoomImage(url: string): HTMLImageElement | null | undefined 
   return undefined;
 }
 
-/** One Image per URL, kept for the life of the page. A failure resolves to null. */
+/** Drop a decoded image so a breed that left the room can be collected. */
+export function releaseRoomImage(url: string) {
+  settled.delete(url);
+  inflight.delete(url);
+}
+
+/** One Image per URL, kept until released. A failure resolves to null. */
 export function loadRoomImage(url: string): Promise<HTMLImageElement | null> {
   if (settled.has(url)) return Promise.resolve(settled.get(url) ?? null);
   const pending = inflight.get(url);

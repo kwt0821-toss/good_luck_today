@@ -38,6 +38,8 @@ import { noteCatLetterFlag } from "../lib/catLetters";
 import { track } from "../lib/analytics";
 import { isDebugHitRequest } from "../lib/debugSaveQuery";
 import { RoomPerfBox } from "../components/RoomPerfBox";
+import { visibleWorldBox, type WorldView } from "../lib/roomRender/depthPaint";
+import { catSheetFile } from "../lib/roomRender/warmList";
 import { paintPinchFreeze } from "../lib/roomRender/pinchFreeze";
 import { debugPerfEnabled, markRoomFirstPaint } from "../lib/roomRender/perf";
 import { readRoomRenderFlags, type RoomRenderFlags } from "../lib/roomRender/renderer";
@@ -204,10 +206,7 @@ function collectRoomImageUrls(
   }
   const cats = normalizeRoomCatIds(room.roamingCatIds);
   const breeds = cats.length > 0 ? cats : [DEFAULT_CAT_BREED_ID];
-  for (const catId of breeds) {
-    const file = catId === DEFAULT_CAT_BREED_ID ? "cat-sprite.webp" : `cat-sprite-${catId}.webp`;
-    pushRoomAsset(urls, `cat/${file}`);
-  }
+  for (const catId of breeds) pushRoomAsset(urls, catSheetFile(catId));
 }
 
 /** `drag` is kept as an alias of `preview` for older tutorial callers. */
@@ -498,6 +497,8 @@ export function RoomScreen({
   const fitAnim = useRef(0);
   const fitTarget = useRef<number | null>(null);
   const [zoomUi, setZoomUi] = useState(1);
+  const [depthPinch, setDepthPinch] = useState(false);
+  const [depthFrame, setDepthFrame] = useState<{ zoom: number; view: WorldView | null }>({ zoom: 1, view: null });
   const [neighborsReady, setNeighborsReady] = useState(false);
   const [neighborRush, setNeighborRush] = useState(false);
   const gestureRaf = useRef(0);
@@ -1240,6 +1241,7 @@ export function RoomScreen({
     panRef.current = null;
     setZoomUi(1);
     applyView();
+    publishDepth();
   };
 
   const animateRoomZoom = (next: RoomPose) => {
@@ -1266,6 +1268,7 @@ export function RoomScreen({
       viewPose.current = to;
       applyView();
       setZoomUi(to.zoom);
+      publishDepth();
     };
     zoomAnim.current = requestAnimationFrame(step);
     setZoomUi(Math.max(from.zoom, to.zoom, 1.06));
@@ -1566,7 +1569,32 @@ export function RoomScreen({
     fx: false,
     lite: false,
     pinchFreeze: false,
+    depthCats: false,
   };
+  const publishDepth = () => {
+    const zoom = viewPose.current.zoom;
+    if (zoom <= 1.2) {
+      setDepthFrame({ zoom, view: null });
+      return;
+    }
+    const world = islandRef.current?.querySelector(".lucky-world");
+    const port = portRef.current;
+    if (!(world instanceof HTMLElement) || !port) {
+      setDepthFrame({ zoom, view: null });
+      return;
+    }
+    setDepthFrame({
+      zoom,
+      view: visibleWorldBox(world.getBoundingClientRect(), port.getBoundingClientRect(), WORLD_W, WORLD_H),
+    });
+  };
+  const publishDepthRef = useRef(publishDepth);
+  publishDepthRef.current = publishDepth;
+  useEffect(() => {
+    if (!roomLive) return;
+    const id = requestAnimationFrame(() => publishDepthRef.current());
+    return () => cancelAnimationFrame(id);
+  }, [roomLive, state?.currentRoomId]);
   useEffect(() => {
     if (!roomLive) return;
     let cancelled = false;
@@ -3142,6 +3170,7 @@ export function RoomScreen({
         viewPose.current = posed;
         applyView();
         setZoomUi(posed.zoom);
+        publishDepth();
       }
       setPhotoBusy(false);
     }
@@ -3213,6 +3242,7 @@ export function RoomScreen({
       frame,
     };
     stage.classList.add("is-pinching");
+    setDepthPinch(true);
     node.style.transition = "none";
     const shot = freezeRef.current;
     const island = islandRef.current;
@@ -3248,6 +3278,8 @@ export function RoomScreen({
     stageRef.current?.classList.remove("is-pinching");
     applyView();
     setZoomUi(viewPose.current.zoom);
+    setDepthPinch(false);
+    publishDepth();
     if (node) {
       node.classList.remove("is-frozen");
       node.style.willChange = "auto";
@@ -3844,6 +3876,11 @@ export function RoomScreen({
                       floorCanvas={renderFlags.tiles}
                       floorEager={active || neighborRush || swipePhase !== "idle"}
                       lite={renderFlags.lite}
+                      depthCanvas={renderFlags.depth}
+                      depthCats={renderFlags.depthCats}
+                      depthZoom={active ? depthFrame.zoom : 1}
+                      depthView={active ? depthFrame.view : null}
+                      depthPinching={active && depthPinch}
                       onSelect={onSelectStable}
                       onItemPointerDown={onItemPointerDownStable}
                       onFloorPointerDown={onFloorPointerDownStable}
@@ -4367,6 +4404,8 @@ export function RoomScreen({
         <RoomVisitScreen
           floorCanvas={renderFlags.tiles}
           lite={renderFlags.lite}
+          depthCanvas={renderFlags.depth}
+          depthCats={renderFlags.depthCats}
           itemsById={itemsById}
           capturePhoto={async () => {
             const island = islandRef.current;

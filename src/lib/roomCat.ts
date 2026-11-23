@@ -1,5 +1,6 @@
 import { GRID, ISO_OX, ISO_OY, TILE_WX, TILE_WY, itemSize, occupancy } from "./roomLayout";
 import type { FloorPlacement, RoomItem } from "./roomTypes";
+import { catSheetUrl, markCatSheetMissing } from "./roomRender/catSheets.ts";
 
 export const DEFAULT_CAT_BREED_ID = "cheese";
 export const CAT_BASE = "cat";
@@ -220,23 +221,27 @@ function parseSheet(raw: unknown, imageFallback: string): CatSpriteSheet | null 
   };
 }
 
-/** Decode before the first frame is shown so a walk step does not hitch on upload. */
+async function decodeUrl(src: string): Promise<boolean> {
+  const img = new Image();
+  img.decoding = "async";
+  img.src = src;
+  try {
+    await img.decode();
+    return img.naturalWidth > 0;
+  } catch {
+    return false;
+  }
+}
+
+/** Decode the half sheet before the first frame. The full sheet is only for a close zoom. */
 async function decodeSheetImages(sheet: CatSpriteSheet): Promise<CatSpriteSheet> {
   if (typeof Image === "undefined") return sheet;
-  const sources = [catAsset(sheet.image)];
-  if (sheet.shadow?.image) sources.push(catAsset(sheet.shadow.image));
-  await Promise.all(
-    sources.map(async (src) => {
-      const img = new Image();
-      img.decoding = "async";
-      img.src = src;
-      try {
-        await img.decode();
-      } catch {
-        /* A failed decode still lets the sheet mount; the frame just stays blank. */
-      }
-    }),
-  );
+  const halfOk = await decodeUrl(catSheetUrl(sheet.image, 1));
+  if (!halfOk) {
+    markCatSheetMissing(sheet.image);
+    await decodeUrl(catAsset(sheet.image));
+  }
+  if (sheet.shadow?.image) await decodeUrl(catAsset(sheet.shadow.image));
   return sheet;
 }
 

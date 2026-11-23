@@ -1,4 +1,4 @@
-import { isDebugFlagRequest } from "../debugSaveQuery.ts";
+import { debugFlagValue, isDebugFlagRequest } from "../debugSaveQuery.ts";
 
 /** New on every build, so a stored canvas failure is retried after the next deploy. */
 export const ROOM_RENDERER_VERSION = globalThis.__ROOM_BUILD_ID__ || "0.1.0";
@@ -13,6 +13,7 @@ export type RoomRenderConfig = {
   fx?: boolean;
   lite?: boolean;
   pinchFreeze?: boolean;
+  depthCats?: boolean;
 };
 
 export type RoomRenderFlags = {
@@ -23,6 +24,7 @@ export type RoomRenderFlags = {
   fx: boolean;
   lite: boolean;
   pinchFreeze: boolean;
+  depthCats: boolean;
 };
 
 const DOM_FLAGS: RoomRenderFlags = {
@@ -33,6 +35,7 @@ const DOM_FLAGS: RoomRenderFlags = {
   fx: false,
   lite: false,
   pinchFreeze: false,
+  depthCats: false,
 };
 
 export function roomRendererFailed(version = ROOM_RENDERER_VERSION): boolean {
@@ -83,6 +86,7 @@ export function roomRenderFlags(input: {
   const schemeUrl = input.schemeUrl ?? "";
   const config = input.config;
   const pinchFreeze = isDebugFlagRequest("pinchFreeze", search, schemeUrl) || config?.pinchFreeze === true;
+  const catsQuery = debugFlagValue("depthCats", search, schemeUrl);
   const dom = { ...DOM_FLAGS, pinchFreeze };
   if (isDebugFlagRequest("roomDom", search, schemeUrl)) return dom;
   const failed = input.failed ?? roomRendererFailed(version);
@@ -90,14 +94,16 @@ export function roomRenderFlags(input: {
   if (!config || config.renderer !== "canvas") return dom;
   const supported = input.canvasSupported ?? true;
   if (!supported) return dom;
+  const depth = config.depth === true || catsQuery === "1";
   return {
     canvas: true,
     tiles: config.tiles === true,
     backdrop: config.backdrop === true,
-    depth: config.depth === true,
+    depth,
     fx: config.fx === true,
     lite: config.lite === true,
     pinchFreeze,
+    depthCats: depth && catsQuery !== "0" && (catsQuery === "1" || config.depthCats === true),
   };
 }
 
@@ -122,6 +128,7 @@ export function readRoomRenderFlags(
 
 export function roomRenderLabel(flags: RoomRenderFlags): string {
   if (!flags.canvas) return "dom";
-  const stages = (["tiles", "backdrop", "depth", "fx"] as const).filter((name) => flags[name]);
+  const stages: string[] = (["tiles", "backdrop", "depth", "fx"] as const).filter((name) => flags[name]);
+  if (flags.depthCats) stages.push("depthCats");
   return stages.length ? `canvas ${stages.join(" ")}` : "canvas";
 }

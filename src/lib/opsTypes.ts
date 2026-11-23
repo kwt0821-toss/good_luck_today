@@ -273,6 +273,7 @@ export type OpsEconomy = {
     fx?: boolean;
     lite?: boolean;
     pinchFreeze?: boolean;
+    depthCats?: boolean;
   };
   cozy: {
     pointsPerTier: Record<string, number>;

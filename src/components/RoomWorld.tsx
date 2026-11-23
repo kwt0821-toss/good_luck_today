@@ -5,7 +5,11 @@ import { SIT_LOOK_BODY_PX, SIT_LOOK_CHEESE } from "../lib/catSeats";
 import { HEART_BED_ID, useHeartBedSrc } from "../lib/heartBed";
 import { useHideBrokenImages } from "../lib/hideBrokenImages";
 import { roomAsset } from "../lib/roomCatalog";
+import { catSheetUrl, noteRoomCatSheets } from "../lib/roomRender/catSheets";
+import { releaseRoomImage } from "../lib/roomRender/imageCache";
+import { catNeedsDom, type WorldView } from "../lib/roomRender/depthPaint";
 import { layerBoxStyle, layerCrop } from "../lib/roomRender/layerCrops";
+import { RoomDepthCanvas, type DepthCat, type DepthSprite } from "./RoomDepthCanvas";
 import { AudioManager } from "../audio/AudioManager";
 import {
   DEFAULT_CAT_BREED_ID,
@@ -106,6 +110,13 @@ type RoomWorldProps = {
   floorEager?: boolean;
   /** Cropped world art and the lighter animation path. */
   lite?: boolean;
+  /** Standing furniture on one canvas. */
+  depthCanvas?: boolean;
+  /** Roaming cats on that same canvas. Off unless the phone asks. */
+  depthCats?: boolean;
+  depthZoom?: number;
+  depthView?: WorldView | null;
+  depthPinching?: boolean;
   /** Plays only for the room whose theme set is complete. */
   setBonus?: RoomSetCue | null;
   favorite?: {
@@ -254,6 +265,7 @@ function FloorSprite({
   placeFx = false,
   previewGhost = false,
   previewInvalid = false,
+  canvasDrawn = false,
   fit,
   zIndex,
   onSelect,
@@ -270,6 +282,8 @@ function FloorSprite({
   placeFx?: boolean;
   previewGhost?: boolean;
   previewInvalid?: boolean;
+  /** The depth canvas already painted this sprite. The button stays for taps. */
+  canvasDrawn?: boolean;
   /** Island scale. Lift offsets are world pixels and must shrink with the room. */
   fit: number;
   zIndex: number;
@@ -293,6 +307,7 @@ function FloorSprite({
         placeFx ? "is-place-fx" : "",
         item.hero || item.id === "catbed_cat" ? "is-catbed" : "",
         isDecal(item) ? "is-rug" : "",
+        canvasDrawn ? "is-canvas" : "",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -301,6 +316,7 @@ function FloorSprite({
         zIndex,
         transform: `${flipped ? "scaleX(-1) " : ""}${liftY}`.trim() || undefined,
       }}
+      data-sprite-key={place.instanceId}
       aria-label={item.nameKo}
       onPointerDown={(event) => onItemPointerDown(event, place.instanceId)}
       onClick={() => onSelect(place.instanceId)}
@@ -400,11 +416,15 @@ function RoamingCatBody({
   motionRef,
   onTap,
   tapEnabled,
+  canvasCat = false,
+  zoom = 1,
 }: {
   view: RoomCatView;
   motionRef: CatMotionRef;
   onTap: () => void;
   tapEnabled: boolean;
+  canvasCat?: boolean;
+  zoom?: number;
 }) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const frameRef = useRef<HTMLSpanElement>(null);
@@ -422,6 +442,10 @@ function RoamingCatBody({
   const zzzRef = useRef<HTMLSpanElement>(null);
   const snowRef = useRef<{ flakes: SnowFlake[]; scale: number; last: number } | null>(null);
   const applyRef = useRef<(() => void) | null>(null);
+  const canvasCatRef = useRef(canvasCat);
+  const zoomRef = useRef(zoom);
+  canvasCatRef.current = canvasCat;
+  zoomRef.current = zoom;
   const [bubbleRoot, setBubbleRoot] = useState<HTMLElement | null>(null);
   const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
   useLayoutEffect(() => {
@@ -521,6 +545,10 @@ function RoamingCatBody({
       setData(btn, "seat", motion.seatId);
       setData(btn, "zzz", motion.zzz ? "1" : "0");
       setData(btn, "pose", motion.pose);
+      const canvasOn =
+        canvasCatRef.current &&
+        !catNeedsDom({ fx: motion.fx, anim: motion.anim, pose: motion.pose }, btn.dataset.catId ?? "");
+      btn.classList.toggle("is-canvas-cat", canvasOn);
       const flip = motion.flip ? "scaleX(-1)" : "";
       writeStyle(frameEl, "transform-origin", `${(sheet.anchor.x / fw) * 100}% 100%`);
       const cloud = cloudRef.current;
@@ -619,12 +647,15 @@ function RoamingCatBody({
           setData(btn, "snowFace", "0");
         }
       }
-      writeStyle(frameEl, "background-size", `${(sw / fw) * 100}% ${(sh / fh) * 100}%`);
-      writeStyle(
-        frameEl,
-        "background-position",
-        `${sw === fw ? 0 : (frame.x / (sw - fw)) * 100}% ${sh === fh ? 0 : (frame.y / (sh - fh)) * 100}%`,
-      );
+      if (!canvasOn) {
+        writeStyle(frameEl, "background-image", `url("${catSheetUrl(sheet.image, zoomRef.current)}")`);
+        writeStyle(frameEl, "background-size", `${(sw / fw) * 100}% ${(sh / fh) * 100}%`);
+        writeStyle(
+          frameEl,
+          "background-position",
+          `${sw === fw ? 0 : (frame.x / (sw - fw)) * 100}% ${sh === fh ? 0 : (frame.y / (sh - fh)) * 100}%`,
+        );
+      }
     };
     applyRef.current = apply;
     readBox();
@@ -710,7 +741,7 @@ function RoamingCatBody({
         style={{
           width: "100%",
           height: "100%",
-          backgroundImage: `url(${catAsset(view.sheet.image)})`,
+          backgroundImage: `url(${catSheetUrl(view.sheet.image, zoom)})`,
           backgroundSize: `${(sw / fw) * 100}% ${(sh / fh) * 100}%`,
           backgroundRepeat: "no-repeat",
         }}
@@ -840,6 +871,11 @@ export const RoomWorld = memo(function RoomWorld({
   floorCanvas = false,
   floorEager = false,
   lite = false,
+  depthCanvas = false,
+  depthCats = false,
+  depthZoom = 1,
+  depthView = null,
+  depthPinching = false,
   setBonus = null,
   favorite = null,
   onSelect,
@@ -848,8 +884,12 @@ export const RoomWorld = memo(function RoomWorld({
 }: RoomWorldProps) {
   const worldRef = useRef<HTMLDivElement>(null);
   const [floorCanvasOk, setFloorCanvasOk] = useState(true);
+  const [depthOk, setDepthOk] = useState(true);
+  const onDepthFail = useCallback(() => setDepthOk(false), []);
   useHideBrokenImages(worldRef);
   const useFloorCanvas = floorCanvas && floorCanvasOk;
+  const useDepth = depthCanvas && depthOk;
+  const heartSrc = useHeartBedSrc(layout.floor.some((place) => place.id === HEART_BED_ID));
   const fit = screenOf(mode).scale;
   const paintSkin = paintPreview ? paintSkinType(paintPreview.itemId) : null;
   const isPaintFloorCell = (col: number, row: number) => {
@@ -872,6 +912,16 @@ export const RoomWorld = memo(function RoomWorld({
   const roomCatIds = catIds.length ? catIds : [DEFAULT_CAT_BREED_ID];
   const spotsRef = useRef<Map<string, CatSpot>>(new Map());
   const [publishedCats, setPublishedCats] = useState<Record<string, PublishedCat>>({});
+  const catSheetKey = roomCatIds
+    .map((id) => publishedCats[id]?.view.sheet?.image ?? "")
+    .filter(Boolean)
+    .join("|");
+  useEffect(() => {
+    const files = catSheetKey.split("|").filter(Boolean);
+    if (files.length) noteRoomCatSheets(files);
+    if (depthZoom >= 1.5) return;
+    for (const file of files) releaseRoomImage(catSheetUrl(file, 2));
+  }, [catSheetKey, depthZoom]);
   const onPublishCat = useCallback((catId: string, next: PublishedCat | null) => {
     setPublishedCats((prev) => {
       if (!next) {
@@ -1044,6 +1094,7 @@ export const RoomWorld = memo(function RoomWorld({
         previewInvalid={isPreview && previewInvalid}
         fit={fit}
         zIndex={isPreview ? 9 : lifted ? 8 : spriteDepthZ(depth.front, depth.bias)}
+        canvasDrawn={canvasIds.has(place.instanceId)}
         onSelect={(id) => onSelect(id, "floor")}
         onItemPointerDown={onItemPointerDown}
       />
@@ -1053,6 +1104,49 @@ export const RoomWorld = memo(function RoomWorld({
     (place) => liftedIds.has(place.instanceId) || Boolean(previewGhost && dragging?.instanceId === place.instanceId),
   );
   const depthFurniture = furnitureDrawn.filter((place) => !raisedFurniture.includes(place));
+  const depthSprites: DepthSprite[] = [];
+  if (useDepth) {
+    depthFurniture.forEach((place, order) => {
+      const item = itemsById.get(place.id);
+      if (!item) return;
+      if (place.instanceId === selectedId || place.instanceId === shakeId || place.instanceId === placeFxId) return;
+      const rect = spriteRect(item, place, shownFloor, itemsById);
+      const src = item.id === HEART_BED_ID ? heartSrc : rect.src ? roomAsset(rect.src) : "";
+      if (!src) return;
+      const depth = furnitureDepthKey(place, item);
+      const frameKind = item.id === "cardframe" || item.id === "squareframe" ? item.id : null;
+      depthSprites.push({
+        key: place.instanceId,
+        src,
+        rect,
+        flip: !item.furniture && place.orientation === "mirrored",
+        z: spriteDepthZ(depth.front, depth.bias),
+        order,
+        breathe: Boolean(item.hero || item.id === "catbed_cat"),
+        frameKind,
+        frameThumb: frameKind && frameThumbs[0] ? frameThumbs[0] : null,
+      });
+    });
+  }
+  const canvasIds = new Set(depthSprites.map((sprite) => sprite.key));
+  const spriteKey = depthSprites
+    .map((sprite) => `${sprite.key}:${sprite.src}:${sprite.rect.x},${sprite.rect.y},${sprite.rect.w},${sprite.rect.h}:${sprite.flip}:${sprite.z}:${sprite.frameThumb ?? ""}`)
+    .join("|");
+  const depthCatList: DepthCat[] = [];
+  if (useDepth) {
+    for (const catId of roomCatIds) {
+      const published = publishedCats[catId];
+      if (!published?.view.ready || !published.view.sheet) continue;
+      depthCatList.push({
+        id: catId,
+        breedId: published.view.breedId,
+        sheet: published.view.sheet,
+        motionRef: published.motionRef,
+        happyFrames: published.view.happyFrames,
+      });
+    }
+  }
+  const catKey = depthCatList.map((cat) => `${cat.id}:${cat.sheet.image}:${cat.happyFrames}`).join("|");
 
   return (
     <div
@@ -1314,6 +1408,21 @@ export const RoomWorld = memo(function RoomWorld({
       ))}
 
       <div className="lucky-depth">
+        {useDepth ? (
+          <RoomDepthCanvas
+            sprites={depthSprites}
+            spriteKey={spriteKey}
+            cats={depthCatList}
+            catKey={catKey}
+            drawCats={depthCats}
+            active={roamingActive}
+            reduceMotion={reduceMotion}
+            pinching={depthPinching}
+            zoom={depthZoom}
+            view={depthView}
+            onFail={onDepthFail}
+          />
+        ) : null}
         {depthFurniture.map(renderFurniture)}
         {roomCatIds.map((catId) => {
           const published = publishedCats[catId];
@@ -1323,6 +1432,8 @@ export const RoomWorld = memo(function RoomWorld({
               key={`roaming-cat-${catId}`}
               view={published.view}
               motionRef={published.motionRef}
+              canvasCat={useDepth && depthCats}
+              zoom={depthZoom}
               onTap={() => {
                 AudioManager.playSfx("meow", { catId });
                 published.tap();

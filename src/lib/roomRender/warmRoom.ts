@@ -17,6 +17,13 @@ export function heldWarmImages(): readonly HTMLImageElement[] {
   return held;
 }
 
+/** Drop a warmed image so a breed that left the room can be collected. */
+export function releaseHeldWarm(url: string) {
+  for (let i = held.length - 1; i >= 0; i -= 1) {
+    if (held[i].src.endsWith(url)) held.splice(i, 1);
+  }
+}
+
 function tossScheme(): string {
   try {
     const read = (Environment as { getTossScheme?: () => string | null }).getTossScheme;

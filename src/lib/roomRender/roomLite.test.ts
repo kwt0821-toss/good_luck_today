@@ -38,15 +38,15 @@ assert.equal(shifted.top, `${(346 / 1080) * 100 + 10}%`);
 const files = warmRelatives([["wood_honey"]], ["cheese"], ["world/room-frame-view-crop.webp"]);
 assert.ok(files.includes("world/base-bg.webp"));
 assert.ok(files.includes("world/room-frame-view-crop.webp"));
-assert.ok(files.includes("cat/cat-sprite.webp"));
+assert.ok(files.includes("cat/cat-sprite-half.webp"));
 assert.ok(files.includes("floor/iso/wood_honey_00.png"));
 assert.deepEqual(
   warmRelatives([], ["bengal"], []).filter((file) => file.startsWith("cat/")),
-  ["cat/cat-sprite-bengal.webp"],
+  ["cat/cat-sprite-bengal-half.webp"],
 );
 assert.deepEqual(
   warmRelatives([], [], []).filter((file) => file.startsWith("cat/")),
-  ["cat/cat-sprite.webp"],
+  ["cat/cat-sprite-half.webp"],
 );
 
 assert.deepEqual(cappedBitmapSize(100, 80), { width: 100, height: 80 });

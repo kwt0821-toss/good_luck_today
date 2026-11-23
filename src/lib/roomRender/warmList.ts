@@ -3,7 +3,8 @@ import { floorTileSrc } from "../roomTiles.ts";
 const CHEESE_SHEET = "cat/cat-sprite.webp";
 
 export function catSheetFile(catId: string): string {
-  return catId === "cheese" ? CHEESE_SHEET : `cat/cat-sprite-${catId}.webp`;
+  const file = catId === "cheese" ? CHEESE_SHEET : `cat/cat-sprite-${catId}.webp`;
+  return file.replace(/\.webp$/, "-half.webp");
 }
 
 /** Relative room-asset paths to decode before the room opens. */

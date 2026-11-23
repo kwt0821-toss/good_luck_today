@@ -936,5 +936,5 @@
       }
     }
   },
-  "roomRender": { "renderer": "canvas", "tiles": true, "backdrop": false, "depth": false, "fx": false, "lite": true, "pinchFreeze": false }
+  "roomRender": { "renderer": "canvas", "tiles": true, "backdrop": false, "depth": true, "depthCats": false, "fx": false, "lite": true, "pinchFreeze": false }
 }

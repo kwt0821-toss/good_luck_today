@@ -305,6 +305,10 @@ function contain(boxW: number, boxH: number, srcW: number, srcH: number) {
 }
 
 function stackZ(node: Element, root: HTMLElement): number {
+  if (node instanceof HTMLElement && node.dataset.photoZ) {
+    const value = Number(node.dataset.photoZ);
+    if (Number.isFinite(value)) return value;
+  }
   let current: Element | null = node;
   while (current && current !== root) {
     const style = getComputedStyle(current);

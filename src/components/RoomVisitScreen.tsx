@@ -37,9 +37,19 @@ type Props = {
   onClose: () => void;
   floorCanvas?: boolean;
   lite?: boolean;
+  depthCanvas?: boolean;
+  depthCats?: boolean;
 };
 
-export function RoomVisitScreen({ itemsById, capturePhoto, onClose, floorCanvas = false, lite = false }: Props) {
+export function RoomVisitScreen({
+  itemsById,
+  capturePhoto,
+  onClose,
+  floorCanvas = false,
+  lite = false,
+  depthCanvas = false,
+  depthCats = false,
+}: Props) {
   const [tab, setTab] = useState<VisitTab>("friends");
   const [items, setItems] = useState<VisitCard[]>([]);
   const [settings, setSettings] = useState(false);
@@ -134,6 +144,8 @@ export function RoomVisitScreen({ itemsById, capturePhoto, onClose, floorCanvas 
           itemsById={itemsById}
           floorCanvas={floorCanvas}
           lite={lite}
+          depthCanvas={depthCanvas}
+          depthCats={depthCats}
           note={visitNote}
           grant={grant}
           likeBusy={likeBusy}
@@ -241,6 +253,8 @@ function VisitView({
   itemsById,
   floorCanvas = false,
   lite = false,
+  depthCanvas = false,
+  depthCats = false,
   note,
   grant,
   likeBusy,
@@ -254,6 +268,8 @@ function VisitView({
   itemsById: Map<string, RoomItem>;
   floorCanvas?: boolean;
   lite?: boolean;
+  depthCanvas?: boolean;
+  depthCats?: boolean;
   note: string | null;
   grant: number | null;
   likeBusy: boolean;
@@ -305,6 +321,8 @@ function VisitView({
                 paintHover={null}
                 floorCanvas={floorCanvas}
                 lite={lite}
+                depthCanvas={depthCanvas}
+                depthCats={depthCats}
                 onSelect={() => undefined}
                 onItemPointerDown={() => undefined}
                 onFloorPointerDown={() => undefined}

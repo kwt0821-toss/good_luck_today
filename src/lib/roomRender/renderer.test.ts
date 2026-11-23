@@ -12,6 +12,7 @@ assert.deepEqual(roomRenderFlags({ config: canvas, canvasSupported: true }), {
   fx: false,
   lite: false,
   pinchFreeze: false,
+  depthCats: false,
 });
 
 assert.deepEqual(roomRenderFlags({ config: { renderer: "dom", tiles: true }, canvasSupported: true }), {
@@ -22,6 +23,7 @@ assert.deepEqual(roomRenderFlags({ config: { renderer: "dom", tiles: true }, can
   fx: false,
   lite: false,
   pinchFreeze: false,
+  depthCats: false,
 });
 
 assert.equal(roomRenderFlags({ config: canvas, search: "?roomDom=1", canvasSupported: true }).canvas, false);
@@ -51,3 +53,18 @@ assert.equal(
 );
 assert.equal(roomRenderFlags({ config: lite, search: "?pinchFreeze=1", canvasSupported: true }).lite, true);
 assert.equal(roomRenderFlags({ config: { ...lite, pinchFreeze: true }, canvasSupported: true }).pinchFreeze, true);
+
+const depth = { ...canvas, depth: true, depthCats: false };
+assert.equal(roomRenderFlags({ config: depth, canvasSupported: true }).depth, true);
+assert.equal(roomRenderFlags({ config: depth, canvasSupported: true }).depthCats, false);
+assert.equal(roomRenderFlags({ config: { ...depth, depthCats: true }, canvasSupported: true }).depthCats, true);
+assert.equal(roomRenderFlags({ config: canvas, search: "?depthCats=1", canvasSupported: true }).depth, true);
+assert.equal(roomRenderFlags({ config: canvas, search: "?depthCats=1", canvasSupported: true }).depthCats, true);
+assert.equal(roomRenderFlags({ config: { ...depth, depthCats: true }, search: "?depthCats=0", canvasSupported: true }).depth, true);
+assert.equal(roomRenderFlags({ config: { ...depth, depthCats: true }, search: "?depthCats=0", canvasSupported: true }).depthCats, false);
+assert.equal(roomRenderFlags({ config: { ...depth, depthCats: true }, search: "?roomDom=1&depthCats=1", canvasSupported: true }).depth, false);
+assert.equal(roomRenderFlags({ config: { ...depth, depthCats: true }, search: "?roomDom=1&depthCats=1", canvasSupported: true }).depthCats, false);
+assert.equal(
+  roomRenderLabel(roomRenderFlags({ config: { ...depth, depthCats: true }, canvasSupported: true })),
+  "canvas tiles depth depthCats",
+);

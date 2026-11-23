@@ -8,6 +8,28 @@ export function isDebugHitRequest(search: string, schemeUrl: string): boolean {
   return isDebugFlagRequest("debugHit", search, schemeUrl);
 }
 
+/** `"1"` or `"0"` when the address or Toss launch scheme set the flag, otherwise null. */
+export function debugFlagValue(flag: string, search: string, schemeUrl: string): string | null {
+  const found = readFlag(search, flag) ?? readFlag(schemeUrl, flag);
+  return found === "0" || found === "1" ? found : null;
+}
+
+function readFlag(value: string, flag: string): string | null {
+  if (!value) return null;
+  const queryIndex = value.indexOf("?");
+  const query = queryIndex >= 0 ? value.slice(queryIndex + 1) : value.replace(/^\?/, "");
+  const direct = new URLSearchParams(query).get(flag);
+  if (direct === "0" || direct === "1") return direct;
+  const raw = new URLSearchParams(query).get("queryParams");
+  const text = safeDecode(raw ?? value);
+  const name = flag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (new RegExp(`(?:^|[?&#])${name}=1(?:&|#|$)`).test(text)) return "1";
+  if (new RegExp(`(?:^|[?&#])${name}=0(?:&|#|$)`).test(text)) return "0";
+  if (new RegExp(`"${name}"\\s*:\\s*"1"`).test(text)) return "1";
+  if (new RegExp(`"${name}"\\s*:\\s*"0"`).test(text)) return "0";
+  return null;
+}
+
 export function isDebugFlagRequest(flag: string, search: string, schemeUrl: string): boolean {
   if (searchHasFlag(search, flag)) return true;
   if (!schemeUrl) return false;
