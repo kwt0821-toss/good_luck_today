@@ -199,8 +199,7 @@
   animation-delay: -0.6s;
 }
 
-.lucky-room.is-lite.is-tod-day .lucky-star-group,
-.lucky-room.is-lite.is-pinching .lucky-star-group {
+.lucky-room.is-lite.is-tod-day .lucky-star-group {
   animation: none;
 }
 
@@ -701,12 +700,6 @@
   transition: none;
 }
 
-.lucky-room.is-zoomed .lucky-island {
-  animation: none;
-  mask-image: none;
-  -webkit-mask-image: none;
-}
-
 .lucky-world-layer.is-base {
   -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent 92%);
   mask-image: linear-gradient(to bottom, #000 80%, transparent 92%);
@@ -739,21 +732,6 @@
 
 .lucky-island.is-float {
   animation: lucky-island-float 6s ease-in-out infinite;
-}
-
-.lucky-pinch-freeze {
-  position: absolute;
-  z-index: 8;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.lucky-room-view.is-frozen .lucky-island {
-  visibility: hidden;
-}
-
-.lucky-room-view.is-frozen .lucky-pinch-freeze {
-  visibility: visible;
 }
 
 .lucky-island-scale {
@@ -1032,35 +1010,6 @@
 .lucky-room.is-tod-day .lucky-island.is-mood-bright .lucky-tod-wash,
 .lucky-room.is-tod-sunset .lucky-island.is-mood-bright .lucky-tod-wash { background: rgba(255,255,250,.62); mix-blend-mode: soft-light; }
 .lucky-room.is-tod-night .lucky-island.is-mood-bright .lucky-tod-wash { background: rgba(255,250,244,.34); mix-blend-mode: soft-light; }
-
-.lucky-room.is-pinching .lucky-island {
-  animation: none;
-  mask-image: none;
-  -webkit-mask-image: none;
-}
-
-.lucky-room.is-pinching .lucky-island-page {
-  visibility: hidden;
-}
-
-.lucky-room.is-pinching .lucky-island-page:has(.lucky-room-view[data-active="1"]) {
-  visibility: visible;
-}
-
-.lucky-room.is-pinching .lucky-select-hud,
-.lucky-room.is-pinching .lucky-minimap,
-.lucky-room.is-pinching .lucky-grain,
-.lucky-room.is-pinching .lucky-warm-glow {
-  visibility: hidden;
-}
-
-.lucky-zoom-tools.is-view:not(.is-on) {
-  display: none;
-}
-
-.lucky-room.is-pinching .lucky-zoom-tools.is-view {
-  display: flex;
-}
 
 .lucky-light-canvas {
   position: absolute;
@@ -3754,144 +3703,4 @@ button.lucky-roam-cat:active,
 .lucky-drawer-grid::-webkit-scrollbar-thumb {
   background: rgba(243, 233, 215, 0.38);
   border-radius: 99px;
-}
-
-.lucky-zoom-tools {
-  position: absolute;
-  z-index: 7;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: auto;
-}
-
-.lucky-zoom-tools.is-view {
-  top: 148px;
-  right: 10px;
-  align-items: flex-end;
-}
-
-.lucky-zoom-tools.is-edit {
-  top: 112px;
-  right: 12px;
-  z-index: 5;
-}
-
-.lucky-room.is-edit .lucky-minimap {
-  z-index: 5;
-}
-
-.lucky-zoom-tools button,
-.lucky-zoom-chip {
-  width: 34px;
-  height: 34px;
-  border-radius: 17px;
-  border: 1px solid rgba(243, 233, 215, 0.28);
-  background: rgba(28, 18, 36, 0.78);
-  color: #f3e9d7;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  cursor: pointer;
-}
-
-.lucky-zoom-tools.is-view button {
-  width: auto;
-  height: 28px;
-  padding: 0 10px;
-  gap: 4px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.lucky-zoom-chip {
-  width: auto;
-  height: 28px;
-  padding: 0 8px;
-  gap: 4px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.lucky-zoom-tools img,
-.lucky-zoom-chip img {
-  width: 16px;
-  height: 16px;
-}
-
-.lucky-zoom-tools button:disabled {
-  opacity: 0.35;
-}
-
-.lucky-minimap {
-  position: absolute;
-  z-index: 7;
-  left: 12px;
-  top: 132px;
-  width: 92px;
-  height: 62px;
-  padding: 0;
-  border: 0;
-  border-radius: 10px;
-  background: rgba(20, 14, 32, 0.72);
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.lucky-room.is-edit .lucky-minimap {
-  top: 156px;
-}
-
-.lucky-minimap svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.lucky-minimap .is-wall {
-  fill: rgba(243, 233, 215, 0.28);
-}
-
-.lucky-minimap .is-floor {
-  fill: rgba(255, 196, 138, 0.45);
-}
-
-.lucky-mini-view {
-  position: absolute;
-  border: 1.5px solid #ffc48a;
-  border-radius: 2px;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
-  pointer-events: none;
-}
-
-.lucky-zoom-hint {
-  position: absolute;
-  z-index: 8;
-  left: 16px;
-  right: 16px;
-  bottom: calc(var(--room-bar-bottom) + 108px);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 auto;
-  max-width: 320px;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 16px;
-  background: rgba(28, 18, 36, 0.92);
-  color: #f3e9d7;
-  text-align: left;
-  font-size: 12px;
-  line-height: 1.35;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.lucky-zoom-hint img {
-  width: 28px;
-  height: 28px;
-  flex: 0 0 auto;
 }

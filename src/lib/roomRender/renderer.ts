@@ -12,7 +12,6 @@ export type RoomRenderConfig = {
   depth?: boolean;
   fx?: boolean;
   lite?: boolean;
-  pinchFreeze?: boolean;
   depthCats?: boolean;
 };
 
@@ -23,7 +22,6 @@ export type RoomRenderFlags = {
   depth: boolean;
   fx: boolean;
   lite: boolean;
-  pinchFreeze: boolean;
   depthCats: boolean;
 };
 
@@ -34,7 +32,6 @@ const DOM_FLAGS: RoomRenderFlags = {
   depth: false,
   fx: false,
   lite: false,
-  pinchFreeze: false,
   depthCats: false,
 };
 
@@ -85,13 +82,8 @@ export function roomRenderFlags(input: {
   const search = input.search ?? "";
   const schemeUrl = input.schemeUrl ?? "";
   const config = input.config;
-  const freezeQuery = debugFlagValue("pinchFreeze", search, schemeUrl);
-  const pinchFreeze =
-    freezeQuery === "1" ||
-    isDebugFlagRequest("pinchFreeze", search, schemeUrl) ||
-    (freezeQuery !== "0" && config?.pinchFreeze === true);
   const catsQuery = debugFlagValue("depthCats", search, schemeUrl);
-  const dom = { ...DOM_FLAGS, pinchFreeze };
+  const dom = DOM_FLAGS;
   if (isDebugFlagRequest("roomDom", search, schemeUrl)) return dom;
   const failed = input.failed ?? roomRendererFailed(version);
   if (failed) return dom;
@@ -106,7 +98,6 @@ export function roomRenderFlags(input: {
     depth,
     fx: config.fx === true,
     lite: config.lite === true,
-    pinchFreeze,
     depthCats: depth && catsQuery !== "0" && (catsQuery === "1" || config.depthCats === true),
   };
 }

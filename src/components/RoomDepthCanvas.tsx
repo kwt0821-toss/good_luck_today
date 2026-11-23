@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { defaultSitFrame, type CatSpriteSheet } from "../lib/roomCat";
 import type { CatMotionRef, RoomCatMotion } from "../lib/useRoomCat";
 import {
@@ -17,7 +17,6 @@ import {
   padBox,
   unionBox,
   type PaintBox,
-  type WorldView,
 } from "../lib/roomRender/depthPaint";
 import { catSheetUrl, markCatSheetMissing } from "../lib/roomRender/catSheets";
 import { loadRoomImage, peekRoomImage } from "../lib/roomRender/imageCache";
@@ -55,9 +54,6 @@ type Props = {
   drawCats?: boolean;
   active: boolean;
   reduceMotion: boolean;
-  pinching: boolean;
-  zoom: number;
-  view: WorldView | null;
   onFail: () => void;
   onPainted?: () => void;
 };
@@ -74,9 +70,6 @@ export function RoomDepthCanvas({
   drawCats = false,
   active,
   reduceMotion,
-  pinching,
-  zoom,
-  view,
   onFail,
   onPainted,
 }: Props) {
@@ -84,7 +77,7 @@ export function RoomDepthCanvas({
   const spritesRef = useRef(sprites);
   const catsRef = useRef(cats);
   const drawCatsRef = useRef(drawCats);
-  const liveRef = useRef({ active, reduceMotion, pinching, zoom, view });
+  const liveRef = useRef({ active, reduceMotion });
   const failRef = useRef(onFail);
   const paintedRef = useRef(onPainted);
   paintedRef.current = onPainted;
@@ -95,7 +88,7 @@ export function RoomDepthCanvas({
   spritesRef.current = sprites;
   catsRef.current = cats;
   drawCatsRef.current = drawCats;
-  liveRef.current = { active, reduceMotion, pinching, zoom, view };
+  liveRef.current = { active, reduceMotion };
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -140,14 +133,11 @@ export function RoomDepthCanvas({
     };
 
     const toCanvas = (box: PaintBox, width: number, height: number): PaintBox => {
-      const region = liveRef.current.view;
-      const scaleX = region ? width / region.w : width / WORLD_W;
-      const scaleY = region ? height / region.h : height / WORLD_H;
-      const originX = region ? region.x : 0;
-      const originY = region ? region.y : 0;
+      const scaleX = width / WORLD_W;
+      const scaleY = height / WORLD_H;
       return {
-        x: (box.x - originX) * scaleX,
-        y: (box.y - originY) * scaleY,
+        x: box.x * scaleX,
+        y: box.y * scaleY,
         w: box.w * scaleX,
         h: box.h * scaleY,
       };
@@ -253,7 +243,7 @@ export function RoomDepthCanvas({
               if (!image || image.naturalWidth <= 0) return;
               const button = toCanvas(sprite.rect, width, height);
               const fitted = containBox(image.naturalWidth, image.naturalHeight, button);
-              const breathe = sprite.breathe && live.active && !live.reduceMotion && !live.pinching ? breatheScaleY(now) : 1;
+              const breathe = sprite.breathe && live.active && !live.reduceMotion ? breatheScaleY(now) : 1;
               drawImage(
                 image,
                 fitted,
@@ -282,7 +272,7 @@ export function RoomDepthCanvas({
           const dom = catNeedsDom(motion, cat.breedId) || motion.spriteHidden || motion.opacity <= 0.01;
           if (dom) return;
           if (region && !boxesTouch(region, box) && !(previous && boxesTouch(region, previous))) return;
-          const sheetUrl = catSheetUrl(cat.sheet.image, live.zoom);
+          const sheetUrl = catSheetUrl(cat.sheet.image);
           const image = ensure(sheetUrl);
           const halfFailed = !image && peekRoomImage(sheetUrl) === null;
           if (halfFailed && sheetUrl.endsWith("-half.webp")) markCatSheetMissing(cat.sheet.image);
@@ -294,7 +284,7 @@ export function RoomDepthCanvas({
               const drawn = image && image.naturalWidth > 0
                 ? image
                 : halfFailed
-                  ? ensure(catSheetUrl(cat.sheet.image, 2))
+                  ? ensure(catSheetUrl(cat.sheet.image))
                   : null;
               if (!drawn || drawn.naturalWidth <= 0) return;
               const frame = cat.sheet.frames[motion.frameName] ?? cat.sheet.frames[defaultSitFrame(cat.sheet)];
@@ -302,7 +292,7 @@ export function RoomDepthCanvas({
               const scaleX = drawn.naturalWidth / cat.sheet.sheetSize[0];
               const scaleY = drawn.naturalHeight / cat.sheet.sheetSize[1];
               const dest = toCanvas(world, width, height);
-              const breathe = !live.reduceMotion && !live.pinching && catBreathes(motion.anim, cat.happyFrames < 2)
+              const breathe = !live.reduceMotion && catBreathes(motion.anim, cat.happyFrames < 2)
                 ? breatheScaleY(now, 2000, 0.03)
                 : 1;
               const originX = dest.x + (cat.sheet.anchor.x / world.w) * dest.w;
@@ -349,7 +339,7 @@ export function RoomDepthCanvas({
     };
 
     const moving = () => {
-      if (!liveRef.current.active || liveRef.current.pinching || document.hidden) return false;
+      if (!liveRef.current.active || document.hidden) return false;
       if (!liveRef.current.reduceMotion && spritesRef.current.some((sprite) => sprite.breathe && !sprite.stayHtml)) return true;
       return catsRef.current.some((cat) => {
         const motion = catState(cat);
@@ -367,7 +357,7 @@ export function RoomDepthCanvas({
         timer = 0;
         raf = requestAnimationFrame(() => {
           raf = 0;
-          if (!dead && liveRef.current.active && !liveRef.current.pinching && !document.hidden) paint(dirtyNow());
+          if (!dead && liveRef.current.active && !document.hidden) paint(dirtyNow());
           loop();
         });
       }, gap);
@@ -380,7 +370,7 @@ export function RoomDepthCanvas({
         timer = 0;
         cancelAnimationFrame(raf);
         raf = 0;
-        if (liveRef.current.pinching || document.hidden) return;
+        if (document.hidden) return;
         paint(null);
         loop();
       };
@@ -412,12 +402,12 @@ export function RoomDepthCanvas({
       if (w === lastW && h === lastH) return;
       lastW = w;
       lastH = h;
-      if (!liveRef.current.pinching) kick();
+      kick();
     });
     observer.observe(canvas);
     document.addEventListener("visibilitychange", onShow);
     const unsubs = catsRef.current.map((cat) => cat.motionRef.subscribe(() => {
-      if (dead || liveRef.current.pinching || document.hidden || !liveRef.current.active) return;
+      if (dead || document.hidden || !liveRef.current.active) return;
       if (!drawCatsRef.current) {
         const next = coverKeyNow();
         if (next === lastCover) return;
@@ -426,7 +416,7 @@ export function RoomDepthCanvas({
           timer = 0;
           raf = requestAnimationFrame(() => {
             raf = 0;
-            if (dead || liveRef.current.pinching || document.hidden) return;
+            if (dead || document.hidden) return;
             if (coverKeyNow() === lastCover) return;
             paint(null);
           });
@@ -440,7 +430,7 @@ export function RoomDepthCanvas({
         timer = 0;
         raf = requestAnimationFrame(() => {
           raf = 0;
-          if (dead || liveRef.current.pinching || document.hidden) return;
+          if (dead || document.hidden) return;
           paint(dirtyNow());
           if (moving()) loop();
         });
@@ -458,20 +448,7 @@ export function RoomDepthCanvas({
       canvas.width = 0;
       canvas.height = 0;
     };
-  }, [spriteKey, catKey, drawCats, active, reduceMotion, zoom, view?.x, view?.y, view?.w, view?.h]);
+  }, [spriteKey, catKey, drawCats, active, reduceMotion]);
 
-  useEffect(() => {
-    if (!pinching) redrawRef.current();
-  }, [pinching]);
-
-  const style = view
-    ? {
-        left: `${(view.x / WORLD_W) * 100}%`,
-        top: `${(view.y / WORLD_H) * 100}%`,
-        width: `${(view.w / WORLD_W) * 100}%`,
-        height: `${(view.h / WORLD_H) * 100}%`,
-      }
-    : undefined;
-
-  return <canvas ref={canvasRef} className="lucky-depth-canvas" data-photo-z="19" style={style} aria-hidden="true" />;
+  return <canvas ref={canvasRef} className="lucky-depth-canvas" data-photo-z="19" aria-hidden="true" />;
 }

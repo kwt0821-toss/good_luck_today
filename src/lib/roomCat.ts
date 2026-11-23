@@ -233,10 +233,10 @@ async function decodeUrl(src: string): Promise<boolean> {
   }
 }
 
-/** Decode the half sheet before the first frame. The full sheet is only for a close zoom. */
+/** Decode the half sheet before the first frame. A missing half falls back to the original. */
 async function decodeSheetImages(sheet: CatSpriteSheet): Promise<CatSpriteSheet> {
   if (typeof Image === "undefined") return sheet;
-  const halfOk = await decodeUrl(catSheetUrl(sheet.image, 1));
+  const halfOk = await decodeUrl(catSheetUrl(sheet.image));
   if (!halfOk) {
     markCatSheetMissing(sheet.image);
     await decodeUrl(catAsset(sheet.image));

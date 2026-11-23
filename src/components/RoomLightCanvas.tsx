@@ -10,17 +10,16 @@ const MAX_PIXELS = 4_000_000;
 type Props = {
   period: RoomPeriod;
   bright: RoomBright;
-  pinching: boolean;
   reduceMotion: boolean;
   active: boolean;
   revision: string;
 };
 
 /** One screen-blend canvas for every lamp and item glow. The CSS animations stay off. */
-export function RoomLightCanvas({ period, bright, pinching, reduceMotion, active, revision }: Props) {
+export function RoomLightCanvas({ period, bright, reduceMotion, active, revision }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const liveRef = useRef({ period, bright, pinching, reduceMotion, active });
-  liveRef.current = { period, bright, pinching, reduceMotion, active };
+  const liveRef = useRef({ period, bright, reduceMotion, active });
+  liveRef.current = { period, bright, reduceMotion, active };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -31,7 +30,7 @@ export function RoomLightCanvas({ period, bright, pinching, reduceMotion, active
     const paint = (now: number) => {
       if (dead) return;
       const live = liveRef.current;
-      if (!live.active || live.pinching || document.hidden) return;
+      if (!live.active || document.hidden) return;
       const rect = canvas.getBoundingClientRect();
       if (rect.width < 2 || rect.height < 2) return;
       const scale = Math.min(1, window.devicePixelRatio || 1);
@@ -88,7 +87,7 @@ export function RoomLightCanvas({ period, bright, pinching, reduceMotion, active
     const arm = () => {
       stop();
       const live = liveRef.current;
-      if (!live.active || live.pinching || live.reduceMotion || document.hidden) return;
+      if (!live.active || live.reduceMotion || document.hidden) return;
       if (lampCurve(live.period, live.bright).staticOpacity != null) return;
       const glows = world.querySelectorAll(".lucky-lamp-glow, .lucky-item-glow");
       if (!glows.length) return;
@@ -101,7 +100,7 @@ export function RoomLightCanvas({ period, bright, pinching, reduceMotion, active
       canvas.width = 0;
       canvas.height = 0;
     };
-  }, [period, bright, pinching, reduceMotion, active, revision]);
+  }, [period, bright, reduceMotion, active, revision]);
 
   return <canvas ref={canvasRef} className="lucky-light-canvas" aria-hidden="true" />;
 }

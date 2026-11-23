@@ -272,7 +272,6 @@ export type OpsEconomy = {
     depth?: boolean;
     fx?: boolean;
     lite?: boolean;
-    pinchFreeze?: boolean;
     depthCats?: boolean;
   };
   cozy: {

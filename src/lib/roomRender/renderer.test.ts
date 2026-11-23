@@ -11,7 +11,6 @@ assert.deepEqual(roomRenderFlags({ config: canvas, canvasSupported: true }), {
   depth: false,
   fx: false,
   lite: false,
-  pinchFreeze: false,
   depthCats: false,
 });
 
@@ -22,7 +21,6 @@ assert.deepEqual(roomRenderFlags({ config: { renderer: "dom", tiles: true }, can
   depth: false,
   fx: false,
   lite: false,
-  pinchFreeze: false,
   depthCats: false,
 });
 
@@ -42,17 +40,10 @@ assert.equal(roomRenderFlags({ config: { renderer: "canvas", tiles: false }, can
 assert.equal(roomRenderLabel(roomRenderFlags({ config: canvas, canvasSupported: true })), "canvas tiles");
 assert.equal(roomRenderLabel(roomRenderFlags({ config: { renderer: "dom" } })), "dom");
 
-const lite = { ...canvas, lite: true, pinchFreeze: false };
+const lite = { ...canvas, lite: true };
 assert.equal(roomRenderFlags({ config: lite, canvasSupported: true }).lite, true);
 assert.equal(roomRenderFlags({ config: lite, search: "?roomDom=1", canvasSupported: true }).lite, false);
 assert.equal(roomRenderFlags({ config: lite, failed: true, canvasSupported: true }).lite, false);
-assert.equal(roomRenderFlags({ config: lite, search: "?roomDom=1", canvasSupported: true }).pinchFreeze, false);
-assert.equal(
-  roomRenderFlags({ config: lite, search: "?roomDom=1&pinchFreeze=1", canvasSupported: true }).pinchFreeze,
-  true,
-);
-assert.equal(roomRenderFlags({ config: lite, search: "?pinchFreeze=1", canvasSupported: true }).lite, true);
-assert.equal(roomRenderFlags({ config: { ...lite, pinchFreeze: true }, canvasSupported: true }).pinchFreeze, true);
 
 const depth = { ...canvas, depth: true, depthCats: false };
 assert.equal(roomRenderFlags({ config: depth, canvasSupported: true }).depth, true);
@@ -68,13 +59,3 @@ assert.equal(
   roomRenderLabel(roomRenderFlags({ config: { ...depth, depthCats: true }, canvasSupported: true })),
   "canvas tiles depth depthCats",
 );
-
-const freezeOn = { ...lite, pinchFreeze: true };
-assert.equal(roomRenderFlags({ config: freezeOn, canvasSupported: true }).pinchFreeze, true);
-assert.equal(roomRenderFlags({ config: freezeOn, search: "?pinchFreeze=0", canvasSupported: true }).pinchFreeze, false);
-assert.equal(roomRenderFlags({ config: freezeOn, search: "?pinchFreeze=0", canvasSupported: true }).lite, true);
-assert.equal(
-  roomRenderFlags({ config: freezeOn, schemeUrl: "intoss://lucky-cat?pinchFreeze=0", canvasSupported: true }).pinchFreeze,
-  false,
-);
-assert.equal(roomRenderFlags({ config: lite, search: "?pinchFreeze=1", canvasSupported: true }).pinchFreeze, true);

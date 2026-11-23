@@ -6,8 +6,7 @@ import { HEART_BED_ID, useHeartBedSrc } from "../lib/heartBed";
 import { useHideBrokenImages } from "../lib/hideBrokenImages";
 import { roomAsset } from "../lib/roomCatalog";
 import { catSheetUrl, noteRoomCatSheets } from "../lib/roomRender/catSheets";
-import { releaseRoomImage } from "../lib/roomRender/imageCache";
-import { catNeedsDom, type WorldView } from "../lib/roomRender/depthPaint";
+import { catNeedsDom } from "../lib/roomRender/depthPaint";
 import { layerBoxStyle, layerCrop } from "../lib/roomRender/layerCrops";
 import { RoomDepthCanvas, type DepthCat, type DepthSprite } from "./RoomDepthCanvas";
 import { AudioManager } from "../audio/AudioManager";
@@ -116,9 +115,6 @@ type RoomWorldProps = {
   depthCanvas?: boolean;
   /** Roaming cats on that same canvas. Off unless the phone asks. */
   depthCats?: boolean;
-  depthZoom?: number;
-  depthView?: WorldView | null;
-  depthPinching?: boolean;
   /** Composite lights and the half-size edit art. Off keeps the previous room. */
   fx?: boolean;
   /** Time of day, so the light canvas matches the room. */
@@ -434,14 +430,12 @@ function RoamingCatBody({
   onTap,
   tapEnabled,
   canvasCat = false,
-  zoom = 1,
 }: {
   view: RoomCatView;
   motionRef: CatMotionRef;
   onTap: () => void;
   tapEnabled: boolean;
   canvasCat?: boolean;
-  zoom?: number;
 }) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const frameRef = useRef<HTMLSpanElement>(null);
@@ -460,9 +454,7 @@ function RoamingCatBody({
   const snowRef = useRef<{ flakes: SnowFlake[]; scale: number; last: number } | null>(null);
   const applyRef = useRef<(() => void) | null>(null);
   const canvasCatRef = useRef(canvasCat);
-  const zoomRef = useRef(zoom);
   canvasCatRef.current = canvasCat;
-  zoomRef.current = zoom;
   const [bubbleRoot, setBubbleRoot] = useState<HTMLElement | null>(null);
   const downRef = useRef<{ x: number; y: number; t: number } | null>(null);
   useLayoutEffect(() => {
@@ -665,7 +657,7 @@ function RoamingCatBody({
         }
       }
       if (!canvasOn) {
-        writeStyle(frameEl, "background-image", `url("${catSheetUrl(sheet.image, zoomRef.current)}")`);
+        writeStyle(frameEl, "background-image", `url("${catSheetUrl(sheet.image)}")`);
         writeStyle(frameEl, "background-size", `${(sw / fw) * 100}% ${(sh / fh) * 100}%`);
         writeStyle(
           frameEl,
@@ -758,7 +750,7 @@ function RoamingCatBody({
         style={{
           width: "100%",
           height: "100%",
-          backgroundImage: `url(${catSheetUrl(view.sheet.image, zoom)})`,
+          backgroundImage: `url(${catSheetUrl(view.sheet.image)})`,
           backgroundSize: `${(sw / fw) * 100}% ${(sh / fh) * 100}%`,
           backgroundRepeat: "no-repeat",
         }}
@@ -890,9 +882,6 @@ export const RoomWorld = memo(function RoomWorld({
   lite = false,
   depthCanvas = false,
   depthCats = false,
-  depthZoom = 1,
-  depthView = null,
-  depthPinching = false,
   fx = false,
   period = "day",
   bright = "normal",
@@ -943,9 +932,7 @@ export const RoomWorld = memo(function RoomWorld({
   useEffect(() => {
     const files = catSheetKey.split("|").filter(Boolean);
     if (files.length) noteRoomCatSheets(files);
-    if (depthZoom >= 1.5) return;
-    for (const file of files) releaseRoomImage(catSheetUrl(file, 2));
-  }, [catSheetKey, depthZoom]);
+  }, [catSheetKey]);
   const onPublishCat = useCallback((catId: string, next: PublishedCat | null) => {
     setPublishedCats((prev) => {
       if (!next) {
@@ -1443,9 +1430,6 @@ export const RoomWorld = memo(function RoomWorld({
             drawCats={depthCats}
             active={roamingActive}
             reduceMotion={reduceMotion}
-            pinching={depthPinching}
-            zoom={depthZoom}
-            view={depthView}
             onFail={onDepthFail}
             onPainted={onFirstPaint}
           />
@@ -1460,7 +1444,6 @@ export const RoomWorld = memo(function RoomWorld({
               view={published.view}
               motionRef={published.motionRef}
               canvasCat={useDepth && depthCats}
-              zoom={depthZoom}
               onTap={() => {
                 AudioManager.playSfx("meow", { catId });
                 published.tap();
@@ -1479,7 +1462,6 @@ export const RoomWorld = memo(function RoomWorld({
         <RoomLightCanvas
           period={period}
           bright={bright}
-          pinching={depthPinching}
           reduceMotion={reduceMotion}
           active={roamingActive || mode === "edit"}
           revision={`${lamp ? "lamp" : ""}|${lightGlows.map((glow) => glow.key).join(",")}`}

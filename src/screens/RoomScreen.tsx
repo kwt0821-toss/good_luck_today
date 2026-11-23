@@ -3,19 +3,9 @@ import { Environment, getPlatformOS } from "@apps-in-toss/web-framework";
 import {
   clientToStage,
   computeFit,
-  contentBox,
-  focusContent,
   layoutPose,
-  markZoomHintSeen,
-  ROOM_PAN_ZOOM,
-  ROOM_ZOOM_MIN,
-  ROOM_ZOOM_STEP,
-  roomZoomMax,
   stageToClient,
-  zoomAround,
-  zoomHintSeen,
   type RoomFrame,
-  type RoomPose,
   type ViewXf,
 } from "../lib/roomView";
 
@@ -38,9 +28,8 @@ import { noteCatLetterFlag } from "../lib/catLetters";
 import { track } from "../lib/analytics";
 import { isDebugHitRequest } from "../lib/debugSaveQuery";
 import { RoomPerfBox } from "../components/RoomPerfBox";
-import { visibleWorldBox, type WorldView } from "../lib/roomRender/depthPaint";
 import { catSheetFile } from "../lib/roomRender/warmList";
-import { paintPinchFreeze, scheduleIdle } from "../lib/roomRender/pinchFreeze";
+import { scheduleIdle } from "../lib/roomRender/idle";
 import { composeRoom } from "../lib/roomRender/composeRoom";
 import { peekNeighborShot, rememberNeighborShot, roomPictureKey } from "../lib/roomRender/neighborShots";
 import { debugPerfEnabled, markRoomFirstPaint } from "../lib/roomRender/perf";
@@ -483,39 +472,20 @@ export function RoomScreen({
   const viewWRef = useRef(VIEW_W);
   const unlockedIdsRef = useRef<string[]>([]);
   const stateRef = useRef<RoomSaveState | null>(null);
-  const viewPose = useRef<RoomPose>({ zoom: 1, panX: 0, panY: 0 });
   const viewFrame = useRef<RoomFrame | null>(null);
   const viewXf = useRef<ViewXf>({ tx: 0, ty: 0, s: 1 });
   const viewRef = useRef<HTMLDivElement | null>(null);
   const hudRef = useRef<HTMLDivElement | null>(null);
-  const zoomLabelRef = useRef<HTMLSpanElement | null>(null);
-  const miniRectRef = useRef<HTMLDivElement | null>(null);
-  const pointers = useRef(new Map<number, { x: number; y: number }>());
-  const pinchRef = useRef<{ dist: number; zoom: number; panX: number; panY: number } | null>(null);
-  const panRef = useRef<{ x: number; y: number; panX: number; panY: number; moved: boolean } | null>(null);
-  const autoPan = useRef({ x: 0, y: 0, raf: 0 });
-  const lastTap = useRef<{ t: number; x: number; y: number } | null>(null);
-  const zoomAnim = useRef(0);
+  const pointers = useRef(new Set<number>());
   const fitAnim = useRef(0);
   const fitTarget = useRef<number | null>(null);
-  const [zoomUi, setZoomUi] = useState(1);
-  const [depthPinch, setDepthPinch] = useState(false);
-  const [depthFrame, setDepthFrame] = useState<{ zoom: number; view: WorldView | null }>({ zoom: 1, view: null });
   const [neighborsReady, setNeighborsReady] = useState(false);
   const [neighborRush, setNeighborRush] = useState(false);
-  const gestureRaf = useRef(0);
-  const gestureCache = useRef<{
-    rect: DOMRect;
-    node: HTMLDivElement;
-    maxZoom: number;
-    frame: RoomFrame;
-  } | null>(null);
   const renderFlagsRef = useRef<RoomRenderFlags | null>(null);
   const perfOn = useMemo(
     () => (typeof window === "undefined" ? false : debugPerfEnabled(window.location.search, readTossSchemeUrl())),
     [],
   );
-  const [zoomHintOn, setZoomHintOn] = useState(false);
   const [frameThumbs, setFrameThumbs] = useState<string[]>([]);
   const [mode, setMode] = useState<RoomMode>(() =>
     new URLSearchParams(window.location.search).get("edit") || tutorialActive ? "edit" : "view",
@@ -567,12 +537,9 @@ export function RoomScreen({
   const previewKeyRef = useRef<string | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const islandRef = useRef<HTMLDivElement | null>(null);
-  const freezeRef = useRef<HTMLCanvasElement | null>(null);
-  const freezeKeyRef = useRef("");
   const [shotRev, setShotRev] = useState(0);
   const [shotHold, setShotHold] = useState("");
   const [roomPaused, setRoomPaused] = useState(false);
-  const freezeTimer = useRef(0);
   const islandShotRef = useRef<HTMLCanvasElement | null>(null);
   const photoCardRef = useRef<{ png: string; base64: string; blob: Blob } | null>(null);
   const [photoOpen, setPhotoOpen] = useState(false);
@@ -1176,46 +1143,14 @@ export function RoomScreen({
     }
   }, [mode, state, roomsFile, itemsById]);
 
-  const zoomMax = () => {
-    const os = getPlatformOS();
-    const ios = os === "ios" || /iPhone|iPad|iPod/.test(navigator.userAgent);
-    return roomZoomMax(ios, window.devicePixelRatio || 1);
-  };
-
-  const syncZoomLabel = (zoom: number) => {
-    if (zoomLabelRef.current) zoomLabelRef.current.textContent = `${zoom.toFixed(1)}배`;
-  };
-
-  const syncMinimap = (frame: RoomFrame, xf: ViewXf) => {
-    const rect = miniRectRef.current;
-    if (!rect) return;
-    const box = contentBox(frame.mode);
-    const spanX = box.right - box.left || 1;
-    const spanY = box.bottom - box.top || 1;
-    const inv = (vx: number, vy: number) => ({ x: (vx - xf.tx) / xf.s, y: (vy - xf.ty) / xf.s });
-    const a = inv(0, frame.bandTop);
-    const b = inv(frame.viewW, frame.bandBottom);
-    const nx = (a.x - box.left) / spanX;
-    const ny = (a.y - box.top) / spanY;
-    const nw = (b.x - a.x) / spanX;
-    const nh = (b.y - a.y) / spanY;
-    rect.style.left = `${Math.max(0, nx) * 100}%`;
-    rect.style.top = `${Math.max(0, ny) * 100}%`;
-    rect.style.width = `${Math.min(1, nw) * 100}%`;
-    rect.style.height = `${Math.min(1, nh) * 100}%`;
-  };
-
   const applyView = (opts?: { animate?: boolean; gesturing?: boolean }) => {
     const frame = viewFrame.current;
     const stage = stageRef.current;
     if (!frame || !stage) return;
-    const laid = layoutPose(frame, viewPose.current, zoomMax());
-    viewPose.current = laid.pose;
-    viewXf.current = laid.xf;
-    const idle = layoutPose(frame, { zoom: 1, panX: 0, panY: 0 }, zoomMax()).xf;
+    const xf = layoutPose(frame);
+    viewXf.current = xf;
     stage.querySelectorAll<HTMLElement>(".lucky-room-view").forEach((node) => {
       const active = node.dataset.active === "1";
-      const xf = active ? laid.xf : idle;
       node.style.transform = `translate3d(${xf.tx}px, ${xf.ty}px, 0) scale(${xf.s})`;
       node.classList.toggle("is-gesturing", Boolean(opts?.gesturing) && active);
       if (opts?.animate && active) {
@@ -1231,53 +1166,11 @@ export function RoomScreen({
     const geom = placementGeomRef.current;
     const hud = hudRef.current;
     if (hud && geom) {
-      hud.style.left = `${laid.xf.tx + geom.left * laid.xf.s}px`;
-      hud.style.top = `${laid.xf.ty + geom.top * laid.xf.s}px`;
-      hud.style.width = `${geom.width * laid.xf.s}px`;
-      hud.style.height = `${geom.height * laid.xf.s}px`;
+      hud.style.left = `${xf.tx + geom.left * xf.s}px`;
+      hud.style.top = `${xf.ty + geom.top * xf.s}px`;
+      hud.style.width = `${geom.width * xf.s}px`;
+      hud.style.height = `${geom.height * xf.s}px`;
     }
-    stage.classList.toggle("is-zoomed", laid.pose.zoom > ROOM_PAN_ZOOM);
-    syncZoomLabel(laid.pose.zoom);
-    syncMinimap(frame, laid.xf);
-  };
-
-  const resetRoomZoom = () => {
-    viewPose.current = { zoom: 1, panX: 0, panY: 0 };
-    pinchRef.current = null;
-    panRef.current = null;
-    setZoomUi(1);
-    applyView();
-    publishDepth();
-  };
-
-  const animateRoomZoom = (next: RoomPose) => {
-    const frame = viewFrame.current;
-    if (!frame) return;
-    const from = viewPose.current;
-    const to = layoutPose(frame, next, zoomMax()).pose;
-    if (zoomAnim.current) cancelAnimationFrame(zoomAnim.current);
-    const started = performance.now();
-    const step = (now: number) => {
-      const t = Math.min(1, (now - started) / 250);
-      const ease = 1 - (1 - t) * (1 - t);
-      viewPose.current = {
-        zoom: from.zoom + (to.zoom - from.zoom) * ease,
-        panX: from.panX + (to.panX - from.panX) * ease,
-        panY: from.panY + (to.panY - from.panY) * ease,
-      };
-      applyView({ animate: false, gesturing: t < 1 });
-      if (t < 1) {
-        zoomAnim.current = requestAnimationFrame(step);
-        return;
-      }
-      zoomAnim.current = 0;
-      viewPose.current = to;
-      applyView();
-      setZoomUi(to.zoom);
-      publishDepth();
-    };
-    zoomAnim.current = requestAnimationFrame(step);
-    setZoomUi(Math.max(from.zoom, to.zoom, 1.06));
   };
 
   const stopFitAnim = () => {
@@ -1338,9 +1231,7 @@ export function RoomScreen({
     const targetFit = computeFit(mode, rect.width, bandBottom - bandTop);
     const prev = viewFrame.current;
     const displayed = prev?.fit ?? targetFit;
-    const fitChanged = Boolean(
-      prev && prev.mode === mode && Math.abs(displayed - targetFit) > 0.012 && !pinchRef.current && !panRef.current,
-    );
+    const fitChanged = Boolean(prev && prev.mode === mode && Math.abs(displayed - targetFit) > 0.012);
     viewFrame.current = {
       mode,
       viewW: rect.width,
@@ -1354,8 +1245,7 @@ export function RoomScreen({
       return;
     }
     stopFitAnim();
-    if (gestureCache.current) return;
-    applyView({ gesturing: Boolean(pinchRef.current || panRef.current) });
+    applyView();
   };
 
   useLayoutEffect(() => {
@@ -1385,16 +1275,6 @@ export function RoomScreen({
       ro.disconnect();
     };
   }, [mode, Boolean(state && roomsFile)]);
-
-  useEffect(() => {
-    if (tutorialActive || zoomHintSeen()) return;
-    setZoomHintOn(true);
-    const timer = window.setTimeout(() => {
-      markZoomHintSeen();
-      setZoomHintOn(false);
-    }, 4000);
-    return () => window.clearTimeout(timer);
-  }, [tutorialActive]);
 
   // If unlocks changed (ops sync), snap currentRoomId back onto an unlocked room.
   useEffect(() => {
@@ -1574,33 +1454,8 @@ export function RoomScreen({
     depth: false,
     fx: false,
     lite: false,
-    pinchFreeze: false,
     depthCats: false,
   };
-  const publishDepth = () => {
-    const zoom = viewPose.current.zoom;
-    if (zoom <= 1.2) {
-      setDepthFrame({ zoom, view: null });
-      return;
-    }
-    const world = islandRef.current?.querySelector(".lucky-world");
-    const port = portRef.current;
-    if (!(world instanceof HTMLElement) || !port) {
-      setDepthFrame({ zoom, view: null });
-      return;
-    }
-    setDepthFrame({
-      zoom,
-      view: visibleWorldBox(world.getBoundingClientRect(), port.getBoundingClientRect(), WORLD_W, WORLD_H),
-    });
-  };
-  const publishDepthRef = useRef(publishDepth);
-  publishDepthRef.current = publishDepth;
-  useEffect(() => {
-    if (!roomLive) return;
-    const id = requestAnimationFrame(() => publishDepthRef.current());
-    return () => cancelAnimationFrame(id);
-  }, [roomLive, state?.currentRoomId]);
   useEffect(() => {
     if (!roomLive) return;
     let cancelled = false;
@@ -1688,46 +1543,6 @@ export function RoomScreen({
   const pictureKey = state && pictureLayout
     ? roomPictureKey(state.currentRoomId, pictureLayout, period, moods[state.currentRoomId]?.bright ?? "normal")
     : "";
-  useEffect(() => {
-    if (!renderFlags.pinchFreeze || mode !== "view") {
-      const canvas = freezeRef.current;
-      if (canvas) {
-        canvas.width = 0;
-        canvas.height = 0;
-      }
-      freezeKeyRef.current = "";
-      return;
-    }
-    const canvas = freezeRef.current;
-    if (canvas && canvas.width > 0 && freezeKeyRef.current === pictureKey && pictureKey) return;
-    let dead = false;
-    const run = () => {
-      const island = islandRef.current;
-      const shot = freezeRef.current;
-      if (dead || gestureCache.current || !island || !shot) return;
-      if (shot.width > 0 && freezeKeyRef.current === pictureKey) return;
-      void paintPinchFreeze(island, shot, () => dead || gestureCache.current != null, {
-        compose: renderFlags.fx,
-      }).then(() => {
-        if (!dead && shot.width > 0) freezeKeyRef.current = pictureKey;
-      });
-    };
-    const cancel = scheduleIdle(run, 1000);
-    return () => {
-      dead = true;
-      cancel();
-    };
-  }, [renderFlags.pinchFreeze, renderFlags.fx, mode, pictureKey]);
-
-  useEffect(() => {
-    return () => {
-      window.clearTimeout(freezeTimer.current);
-      const canvas = freezeRef.current;
-      if (!canvas) return;
-      canvas.width = 0;
-      canvas.height = 0;
-    };
-  }, []);
 
   const swipePhaseRef = useRef(swipePhase);
   swipePhaseRef.current = swipePhase;
@@ -1916,7 +1731,6 @@ export function RoomScreen({
       setPreview(null);
     }
     setMode("view");
-    resetRoomZoom();
     setSelectedId(null);
     setDragging(null);
     setPreview(null);
@@ -1987,7 +1801,6 @@ export function RoomScreen({
     const nextId = ids[targetIndex];
     const current = stateRef.current;
     if (!nextId || !current || nextId === current.currentRoomId) return;
-    resetRoomZoom();
     persist({ ...current, currentRoomId: nextId });
     void haptic("tap");
   };
@@ -2036,7 +1849,6 @@ export function RoomScreen({
     const nextId = ids[index];
     const current = stateRef.current;
     if (!nextId || !current || nextId === current.currentRoomId) return;
-    if (viewPose.current.zoom > ROOM_PAN_ZOOM) resetRoomZoom();
     if (Math.abs(index - indexRef.current) !== 1) {
       persist({ ...current, currentRoomId: nextId });
       void haptic("tap");
@@ -2052,7 +1864,6 @@ export function RoomScreen({
       setNeighborRush(true);
     }
     if (mode !== "view") return;
-    if (viewPose.current.zoom > ROOM_PAN_ZOOM) return;
     if (slidingRef.current && sliderRef.current) {
       settleGen.current += 1;
       const matrix = new DOMMatrix(getComputedStyle(sliderRef.current).transform);
@@ -2560,33 +2371,6 @@ export function RoomScreen({
       if (!target) return;
       movePaintPreviewTo(target, preview);
     }
-    if (previewMoving.current && viewPose.current.zoom > ROOM_PAN_ZOOM && stageRef.current) {
-      const rect = stageRef.current.getBoundingClientRect();
-      const edge = 40;
-      autoPan.current.x = event.clientX < rect.left + edge ? 5 : event.clientX > rect.right - edge ? -5 : 0;
-      autoPan.current.y = event.clientY < rect.top + edge ? 5 : event.clientY > rect.bottom - edge ? -5 : 0;
-      if ((autoPan.current.x || autoPan.current.y) && !autoPan.current.raf) {
-        const step = () => {
-          const frame = viewFrame.current;
-          if (!frame || !previewMoving.current || (!autoPan.current.x && !autoPan.current.y)) {
-            autoPan.current.raf = 0;
-            return;
-          }
-          viewPose.current = layoutPose(
-            frame,
-            {
-              zoom: viewPose.current.zoom,
-              panX: viewPose.current.panX + autoPan.current.x,
-              panY: viewPose.current.panY + autoPan.current.y,
-            },
-            zoomMax(),
-          ).pose;
-          applyView({ gesturing: true });
-          autoPan.current.raf = requestAnimationFrame(step);
-        };
-        autoPan.current.raf = requestAnimationFrame(step);
-      }
-    }
   };
 
   const onStagePointerUp = () => {
@@ -2604,10 +2388,6 @@ export function RoomScreen({
     }
     previewItemTap.current = null;
     previewMoving.current = false;
-    autoPan.current.x = 0;
-    autoPan.current.y = 0;
-    if (autoPan.current.raf) cancelAnimationFrame(autoPan.current.raf);
-    autoPan.current.raf = 0;
     window.dispatchEvent(new Event("lucky-cat:drawer-scroll-unlock"));
   };
 
@@ -3202,13 +2982,6 @@ export function RoomScreen({
     setPhotoUrl("");
     setPhotoOpen(true);
     setPhotoBusy(true);
-    const posed = viewPose.current;
-    const zoomed = posed.zoom > 1.001 || Math.abs(posed.panX) > 0.5 || Math.abs(posed.panY) > 0.5;
-    if (zoomed) {
-      viewPose.current = { zoom: 1, panX: 0, panY: 0 };
-      applyView();
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    }
     try {
       const frames = photoFrames.length ? photoFrames : await loadPhotoFrames();
       if (!photoFrames.length) setPhotoFrames(frames);
@@ -3230,12 +3003,6 @@ export function RoomScreen({
       nyNotify({ key: "room-photo", kind: "error", title: "사진을 만들지 못했어요" });
       setPhotoOpen(false);
     } finally {
-      if (zoomed) {
-        viewPose.current = posed;
-        applyView();
-        setZoomUi(posed.zoom);
-        publishDepth();
-      }
       setPhotoBusy(false);
     }
   };
@@ -3284,205 +3051,14 @@ export function RoomScreen({
     setSwipePhase("idle");
   };
 
-  const onRoomChrome = (target: EventTarget | null) => {
-    if (!(target instanceof Element)) return false;
-    return Boolean(
-      target.closest(
-        "button, a, input, textarea, .lucky-switcher, .lucky-bar, .lucky-drawer, .lucky-edit-bar, .lucky-zoom-tools, .lucky-minimap, .lucky-header, .lucky-shadow-toggle, .lucky-mood, .lucky-mood-scrim, .lucky-zoom-hint, .lucky-placement-toolbar, .lucky-paint-dock, .lucky-select-hud",
-      ),
-    );
-  };
-
-  const rememberGesture = () => {
-    if (gestureCache.current) return;
-    const frame = viewFrame.current;
-    const stage = stageRef.current;
-    const node = viewRef.current;
-    if (!frame || !stage || !node) return;
-    gestureCache.current = {
-      rect: stage.getBoundingClientRect(),
-      node,
-      maxZoom: zoomMax(),
-      frame,
-    };
-    stage.classList.add("is-pinching");
-    setDepthPinch(true);
-    node.style.transition = "none";
-    const shot = freezeRef.current;
-    const island = islandRef.current;
-    if (renderFlags.pinchFreeze && mode === "view" && shot && shot.width > 0 && island) {
-      shot.style.left = island.style.left;
-      shot.style.top = island.style.top;
-      shot.style.width = island.style.width;
-      shot.style.height = island.style.height;
-      node.classList.add("is-frozen");
-    }
-  };
-
-  const paintGesture = () => {
-    gestureRaf.current = 0;
-    const cache = gestureCache.current;
-    if (!cache) return;
-    const laid = layoutPose(cache.frame, viewPose.current, cache.maxZoom);
-    viewPose.current = laid.pose;
-    viewXf.current = laid.xf;
-    cache.node.style.transform = `translate3d(${laid.xf.tx}px, ${laid.xf.ty}px, 0) scale(${laid.xf.s})`;
-  };
-
-  const scheduleGesture = () => {
-    if (gestureRaf.current) return;
-    gestureRaf.current = requestAnimationFrame(paintGesture);
-  };
-
-  const endGesture = () => {
-    if (gestureRaf.current) cancelAnimationFrame(gestureRaf.current);
-    gestureRaf.current = 0;
-    const node = gestureCache.current?.node ?? null;
-    gestureCache.current = null;
-    stageRef.current?.classList.remove("is-pinching");
-    applyView();
-    setZoomUi(viewPose.current.zoom);
-    setDepthPinch(false);
-    publishDepth();
-    if (node) {
-      node.classList.remove("is-frozen");
-      node.style.willChange = "auto";
-      requestAnimationFrame(() => {
-        if (node.style.willChange === "auto") node.style.willChange = "";
-      });
-    }
-    if (renderFlags.pinchFreeze && mode === "view" && node) {
-      const canvas = freezeRef.current;
-      if (canvas && canvas.width > 0) return;
-      window.clearTimeout(freezeTimer.current);
-      freezeTimer.current = window.setTimeout(() => {
-        const island = islandRef.current;
-        const next = freezeRef.current;
-        if (!island || !next || gestureCache.current || next.width > 0) return;
-        void paintPinchFreeze(island, next, () => gestureCache.current != null, { compose: renderFlags.fx });
-      }, 1000);
-    }
-  };
-
   const onRoomPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
-    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    if (pointers.current.size >= 2) {
-      const pts = [...pointers.current.values()];
-      cancelRoomSwipe();
-      pinchRef.current = {
-        dist: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1,
-        zoom: viewPose.current.zoom,
-        panX: viewPose.current.panX,
-        panY: viewPose.current.panY,
-      };
-      panRef.current = null;
-      rememberGesture();
-      return;
-    }
-    if (onRoomChrome(event.target)) return;
-    if (viewPose.current.zoom <= ROOM_PAN_ZOOM) return;
-    if (mode === "edit" && previewRef.current) return;
-    panRef.current = {
-      x: event.clientX,
-      y: event.clientY,
-      panX: viewPose.current.panX,
-      panY: viewPose.current.panY,
-      moved: false,
-    };
-  };
-
-  const onRoomPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!pointers.current.has(event.pointerId)) return;
-    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    if (pinchRef.current && pointers.current.size >= 2) {
-      const cache = gestureCache.current;
-      if (!cache) return;
-      const pts = [...pointers.current.values()];
-      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
-      viewPose.current = zoomAround(
-        cache.frame,
-        { zoom: pinchRef.current.zoom, panX: pinchRef.current.panX, panY: pinchRef.current.panY },
-        pinchRef.current.zoom * (dist / pinchRef.current.dist),
-        (pts[0].x + pts[1].x) / 2 - cache.rect.left,
-        (pts[0].y + pts[1].y) / 2 - cache.rect.top,
-        cache.maxZoom,
-      );
-      scheduleGesture();
-      return;
-    }
-    const pan = panRef.current;
-    if (!pan || pinchRef.current) return;
-    const dx = event.clientX - pan.x;
-    const dy = event.clientY - pan.y;
-    if (!pan.moved && Math.hypot(dx, dy) < 8) return;
-    if (!pan.moved) rememberGesture();
-    pan.moved = true;
-    const cache = gestureCache.current;
-    if (!cache) return;
-    viewPose.current = layoutPose(
-      cache.frame,
-      { zoom: viewPose.current.zoom, panX: pan.panX + dx, panY: pan.panY + dy },
-      cache.maxZoom,
-    ).pose;
-    scheduleGesture();
+    pointers.current.add(event.pointerId);
+    if (pointers.current.size >= 2) cancelRoomSwipe();
   };
 
   const onRoomPointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    const tracked = pointers.current.has(event.pointerId);
     pointers.current.delete(event.pointerId);
-    if (!tracked) return;
-    if (pointers.current.size < 2) pinchRef.current = null;
-    if (pointers.current.size > 0) return;
-    const pan = panRef.current;
-    panRef.current = null;
-    if (gestureCache.current) endGesture();
-    else {
-      applyView();
-      setZoomUi(viewPose.current.zoom);
-    }
-    if (pan?.moved || onRoomChrome(event.target) || previewRef.current) return;
-    const now = performance.now();
-    const prev = lastTap.current;
-    const frame = viewFrame.current;
-    const stage = stageRef.current;
-    if (
-      frame &&
-      stage &&
-      prev &&
-      now - prev.t < 300 &&
-      Math.hypot(event.clientX - prev.x, event.clientY - prev.y) < 36
-    ) {
-      lastTap.current = null;
-      const rect = stage.getBoundingClientRect();
-      const nextZoom = viewPose.current.zoom > ROOM_PAN_ZOOM ? 1 : zoomMax();
-      animateRoomZoom(
-        zoomAround(
-          frame,
-          viewPose.current,
-          nextZoom,
-          event.clientX - rect.left,
-          event.clientY - rect.top,
-          zoomMax(),
-        ),
-      );
-      return;
-    }
-    lastTap.current = { t: now, x: event.clientX, y: event.clientY };
-  };
-
-  const nudgeZoom = (delta: number) => {
-    const frame = viewFrame.current;
-    if (!frame) return;
-    const next = viewPose.current.zoom + delta;
-    animateRoomZoom(
-      zoomAround(frame, viewPose.current, next, frame.viewW / 2, (frame.bandTop + frame.bandBottom) / 2, zoomMax()),
-    );
-  };
-
-  const dismissZoomHint = () => {
-    markZoomHintSeen();
-    setZoomHintOn(false);
   };
 
   return (
@@ -3490,10 +3066,7 @@ export function RoomScreen({
       className={`lucky-room is-${mode} is-tod-${period}${renderFlags.lite ? " is-lite" : ""}${roomPaused ? " is-paused" : ""}`}
       ref={stageRef}
       onPointerDown={onRoomPointerDown}
-      onPointerMove={(event) => {
-        onRoomPointerMove(event);
-        onStagePointerMove(event);
-      }}
+      onPointerMove={onStagePointerMove}
       onPointerUp={(event) => {
         onRoomPointerUp(event);
         onStagePointerUp();
@@ -3688,74 +3261,6 @@ export function RoomScreen({
         </>
       ) : null}
 
-      {zoomUi > ROOM_PAN_ZOOM ? (
-        <button
-          type="button"
-          className="lucky-minimap"
-          aria-label="보이는 위치"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => {
-            const frame = viewFrame.current;
-            if (!frame) return;
-            const rect = event.currentTarget.getBoundingClientRect();
-            const nx = (event.clientX - rect.left) / rect.width;
-            const ny = (event.clientY - rect.top) / rect.height;
-            animateRoomZoom(focusContent(frame, viewPose.current, nx, ny, zoomMax()));
-          }}
-        >
-          <svg viewBox="0 0 92 62" aria-hidden="true">
-            <polygon className="is-wall" points="46,8 14,24 14,38 46,22" />
-            <polygon className="is-wall" points="46,8 78,24 78,38 46,22" />
-            <polygon className="is-floor" points="46,22 78,38 46,56 14,38" />
-          </svg>
-          <span ref={miniRectRef} className="lucky-mini-view" />
-        </button>
-      ) : null}
-
-      {mode === "view" ? (
-        <div className={`lucky-zoom-tools is-view${zoomUi > ROOM_PAN_ZOOM ? " is-on" : ""}`}>
-          <span className="lucky-zoom-chip">
-            <img src={roomAsset("ui/icon-zoom-hint.svg")} alt="" />
-            <span ref={zoomLabelRef}>{zoomUi.toFixed(1)}배</span>
-          </span>
-          <button type="button" onClick={() => animateRoomZoom({ zoom: 1, panX: 0, panY: 0 })}>
-            <img src={roomAsset("ui/icon-fit.svg")} alt="" />
-            전체 보기
-          </button>
-        </div>
-      ) : null}
-
-      {mode === "edit" ? (
-        <div className="lucky-zoom-tools is-edit">
-          <button type="button" aria-label="확대" disabled={zoomUi >= zoomMax() - 0.01} onClick={() => nudgeZoom(ROOM_ZOOM_STEP)}>
-            <img src={roomAsset("ui/icon-zoom-in.svg")} alt="" />
-          </button>
-          <button
-            type="button"
-            aria-label="축소"
-            disabled={zoomUi <= ROOM_ZOOM_MIN}
-            onClick={() => nudgeZoom(-ROOM_ZOOM_STEP)}
-          >
-            <img src={roomAsset("ui/icon-zoom-out.svg")} alt="" />
-          </button>
-          <button
-            type="button"
-            aria-label="전체 보기"
-            disabled={zoomUi <= ROOM_PAN_ZOOM}
-            onClick={() => animateRoomZoom({ zoom: 1, panX: 0, panY: 0 })}
-          >
-            <img src={roomAsset("ui/icon-fit.svg")} alt="" />
-          </button>
-        </div>
-      ) : null}
-
-      {mode === "view" && zoomHintOn ? (
-        <button type="button" className="lucky-zoom-hint" onClick={dismissZoomHint}>
-          <img src={roomAsset("ui/icon-zoom-hint.svg")} alt="" />
-          <span>두 손가락으로 벌리면 크게 보여요 · 두 번 톡 치면 확대 · 한 번 더 치면 원래대로</span>
-        </button>
-      ) : null}
-
       {mode === "view" ? (
         <div
           className="lucky-switcher"
@@ -3863,16 +3368,6 @@ export function RoomScreen({
                 style={{ left: mode === "view" ? index * viewW : 0, width: viewW }}
               >
                 <div className="lucky-room-view" data-active={active ? "1" : "0"} ref={active ? viewRef : undefined}>
-                {renderFlags.pinchFreeze && active && mode === "view" ? (
-                  <canvas
-                    ref={(node) => {
-                      if (!node) return;
-                      freezeRef.current = node;
-                    }}
-                    className="lucky-pinch-freeze"
-                    aria-hidden="true"
-                  />
-                ) : null}
                 <div
                   ref={(node) => {
                     if (active) islandRef.current = node;
@@ -3957,9 +3452,6 @@ export function RoomScreen({
                       lite={renderFlags.lite}
                       depthCanvas={renderFlags.depth}
                       depthCats={renderFlags.depthCats}
-                      depthZoom={active ? depthFrame.zoom : 1}
-                      depthView={active ? depthFrame.view : null}
-                      depthPinching={active && depthPinch}
                       fx={renderFlags.fx}
                       period={period}
                       bright={moods[roomId]?.bright ?? "normal"}
@@ -4507,13 +3999,6 @@ export function RoomScreen({
           capturePhoto={async () => {
             const island = islandRef.current;
             if (!island) return null;
-            const posed = viewPose.current;
-            const zoomed = posed.zoom > 1.001;
-            if (zoomed) {
-              viewPose.current = { zoom: 1, panX: 0, panY: 0 };
-              applyView();
-              await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-            }
             try {
               const shot = renderFlags.fx
                 ? await composeRoom(island, { maxScale: 2 })
@@ -4521,11 +4006,6 @@ export function RoomScreen({
               return canvasToJpeg(shot);
             } catch {
               return null;
-            } finally {
-              if (zoomed) {
-                viewPose.current = posed;
-                applyView();
-              }
             }
           }}
           onClose={() => setVisitOpen(false)}
