@@ -40,7 +40,9 @@ import { isDebugHitRequest } from "../lib/debugSaveQuery";
 import { RoomPerfBox } from "../components/RoomPerfBox";
 import { visibleWorldBox, type WorldView } from "../lib/roomRender/depthPaint";
 import { catSheetFile } from "../lib/roomRender/warmList";
-import { paintPinchFreeze } from "../lib/roomRender/pinchFreeze";
+import { paintPinchFreeze, scheduleIdle } from "../lib/roomRender/pinchFreeze";
+import { composeRoom } from "../lib/roomRender/composeRoom";
+import { peekNeighborShot, rememberNeighborShot, roomPictureKey } from "../lib/roomRender/neighborShots";
 import { debugPerfEnabled, markRoomFirstPaint } from "../lib/roomRender/perf";
 import { readRoomRenderFlags, type RoomRenderFlags } from "../lib/roomRender/renderer";
 import { jellyLabel } from "../lib/jellyLabel";
@@ -566,6 +568,10 @@ export function RoomScreen({
   const stageRef = useRef<HTMLDivElement>(null);
   const islandRef = useRef<HTMLDivElement | null>(null);
   const freezeRef = useRef<HTMLCanvasElement | null>(null);
+  const freezeKeyRef = useRef("");
+  const [shotRev, setShotRev] = useState(0);
+  const [shotHold, setShotHold] = useState("");
+  const [roomPaused, setRoomPaused] = useState(false);
   const freezeTimer = useRef(0);
   const islandShotRef = useRef<HTMLCanvasElement | null>(null);
   const photoCardRef = useRef<{ png: string; base64: string; blob: Blob } | null>(null);
@@ -1678,6 +1684,10 @@ export function RoomScreen({
     );
   }, [mode, state, roomsFile, items, itemTiers]);
 
+  const pictureLayout = state?.rooms[state.currentRoomId];
+  const pictureKey = state && pictureLayout
+    ? roomPictureKey(state.currentRoomId, pictureLayout, period, moods[state.currentRoomId]?.bright ?? "normal")
+    : "";
   useEffect(() => {
     if (!renderFlags.pinchFreeze || mode !== "view") {
       const canvas = freezeRef.current;
@@ -1685,20 +1695,29 @@ export function RoomScreen({
         canvas.width = 0;
         canvas.height = 0;
       }
+      freezeKeyRef.current = "";
       return;
     }
+    const canvas = freezeRef.current;
+    if (canvas && canvas.width > 0 && freezeKeyRef.current === pictureKey && pictureKey) return;
     let dead = false;
-    const timer = window.setTimeout(() => {
+    const run = () => {
       const island = islandRef.current;
-      const canvas = freezeRef.current;
-      if (dead || gestureCache.current || !island || !canvas) return;
-      void paintPinchFreeze(island, canvas, () => dead || gestureCache.current != null);
-    }, 1000);
+      const shot = freezeRef.current;
+      if (dead || gestureCache.current || !island || !shot) return;
+      if (shot.width > 0 && freezeKeyRef.current === pictureKey) return;
+      void paintPinchFreeze(island, shot, () => dead || gestureCache.current != null, {
+        compose: renderFlags.fx,
+      }).then(() => {
+        if (!dead && shot.width > 0) freezeKeyRef.current = pictureKey;
+      });
+    };
+    const cancel = scheduleIdle(run, 1000);
     return () => {
       dead = true;
-      window.clearTimeout(timer);
+      cancel();
     };
-  }, [renderFlags.pinchFreeze, mode, state, period, moods]);
+  }, [renderFlags.pinchFreeze, renderFlags.fx, mode, pictureKey]);
 
   useEffect(() => {
     return () => {
@@ -1709,6 +1728,49 @@ export function RoomScreen({
       canvas.height = 0;
     };
   }, []);
+
+  const swipePhaseRef = useRef(swipePhase);
+  swipePhaseRef.current = swipePhase;
+  const clearShotHold = useCallback(() => setShotHold(""), []);
+  useEffect(() => {
+    const onVis = () => setRoomPaused(document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+  useEffect(() => {
+    if (!renderFlags.fx || !pictureKey) {
+      setShotHold("");
+      return;
+    }
+    setShotHold(peekNeighborShot(pictureKey) ? pictureKey : "");
+  }, [renderFlags.fx, pictureKey]);
+  useEffect(() => {
+    if (!renderFlags.fx || !neighborsReady || swipePhase !== "idle") return;
+    let dead = false;
+    const cancel = scheduleIdle(() => {
+      if (dead || swipePhaseRef.current !== "idle") return;
+      const nodes = document.querySelectorAll<HTMLElement>(".lucky-island[data-shot-key]");
+      for (const node of nodes) {
+        const key = node.dataset.shotKey ?? "";
+        if (!key || peekNeighborShot(key)) continue;
+        if (node.closest(".lucky-room-view")?.getAttribute("data-active") === "1") continue;
+        void composeRoom(node, { maxScale: 1 }).then((shot) => {
+          if (dead || node.dataset.shotKey !== key) {
+            shot.width = 0;
+            shot.height = 0;
+            return;
+          }
+          rememberNeighborShot(key, shot);
+          setShotRev((value) => value + 1);
+        });
+        return;
+      }
+    }, 500);
+    return () => {
+      dead = true;
+      cancel();
+    };
+  }, [renderFlags.fx, neighborsReady, swipePhase, pictureKey, shotRev]);
 
   useLoadingHold("room", !state || !roomsFile);
 
@@ -3150,7 +3212,9 @@ export function RoomScreen({
     try {
       const frames = photoFrames.length ? photoFrames : await loadPhotoFrames();
       if (!photoFrames.length) setPhotoFrames(frames);
-      const shot = await captureRoomIsland(island);
+      const shot = renderFlags.fx
+        ? await composeRoom(island, { maxScale: 2 })
+        : await captureRoomIsland(island);
       islandShotRef.current = shot;
       const frame = frames.find((item) => item.id === photoFrameId) ?? frames[0];
       const card = await composeRoomCard({
@@ -3288,12 +3352,14 @@ export function RoomScreen({
       });
     }
     if (renderFlags.pinchFreeze && mode === "view" && node) {
+      const canvas = freezeRef.current;
+      if (canvas && canvas.width > 0) return;
       window.clearTimeout(freezeTimer.current);
       freezeTimer.current = window.setTimeout(() => {
         const island = islandRef.current;
-        const canvas = freezeRef.current;
-        if (!island || !canvas || gestureCache.current) return;
-        void paintPinchFreeze(island, canvas, () => gestureCache.current != null);
+        const next = freezeRef.current;
+        if (!island || !next || gestureCache.current || next.width > 0) return;
+        void paintPinchFreeze(island, next, () => gestureCache.current != null, { compose: renderFlags.fx });
       }, 1000);
     }
   };
@@ -3421,7 +3487,7 @@ export function RoomScreen({
 
   return (
     <div
-      className={`lucky-room is-${mode} is-tod-${period}${renderFlags.lite ? " is-lite" : ""}`}
+      className={`lucky-room is-${mode} is-tod-${period}${renderFlags.lite ? " is-lite" : ""}${roomPaused ? " is-paused" : ""}`}
       ref={stageRef}
       onPointerDown={onRoomPointerDown}
       onPointerMove={(event) => {
@@ -3785,6 +3851,11 @@ export function RoomScreen({
             const roomLayout = state.rooms[roomId];
             if (!roomLayout) return null;
             const active = roomId === displayRoomId;
+            const shotKey = renderFlags.fx
+              ? roomPictureKey(roomId, roomLayout, period, moods[roomId]?.bright ?? "normal")
+              : "";
+            const neighborShot = !active && shotKey ? peekNeighborShot(shotKey) : null;
+            const heldShot = active && shotHold === shotKey ? peekNeighborShot(shotKey) : null;
             return (
               <div
                 key={roomId}
@@ -3795,11 +3866,7 @@ export function RoomScreen({
                 {renderFlags.pinchFreeze && active && mode === "view" ? (
                   <canvas
                     ref={(node) => {
-                      const prev = freezeRef.current;
-                      if (prev && prev !== node) {
-                        prev.width = 0;
-                        prev.height = 0;
-                      }
+                      if (!node) return;
                       freezeRef.current = node;
                     }}
                     className="lucky-pinch-freeze"
@@ -3810,6 +3877,7 @@ export function RoomScreen({
                   ref={(node) => {
                     if (active) islandRef.current = node;
                   }}
+                  data-shot-key={shotKey || undefined}
                   className={`lucky-island ${mode === "view" && (!renderFlags.lite || active) ? "is-float" : ""} ${moodClassName(moods[roomId]?.bright ?? "normal")}`}
                   style={{
                     left: screen.left,
@@ -3820,6 +3888,17 @@ export function RoomScreen({
                   }}
                 >
                   <div className="lucky-island-scale">
+                    {neighborShot ? (
+                      <canvas
+                        className="lucky-neighbor-shot"
+                        width={neighborShot.width}
+                        height={neighborShot.height}
+                        ref={(node) => {
+                          if (!node || neighborShot.width < 1) return;
+                          node.getContext("2d")?.drawImage(neighborShot, 0, 0);
+                        }}
+                      />
+                    ) : (
                     <RoomWorld
                       mode={active ? mode : "view"}
                       roomId={roomId}
@@ -3881,6 +3960,10 @@ export function RoomScreen({
                       depthZoom={active ? depthFrame.zoom : 1}
                       depthView={active ? depthFrame.view : null}
                       depthPinching={active && depthPinch}
+                      fx={renderFlags.fx}
+                      period={period}
+                      bright={moods[roomId]?.bright ?? "normal"}
+                      onFirstPaint={active ? clearShotHold : undefined}
                       onSelect={onSelectStable}
                       onItemPointerDown={onItemPointerDownStable}
                       onFloorPointerDown={onFloorPointerDownStable}
@@ -3894,6 +3977,18 @@ export function RoomScreen({
                           : null
                       }
                     />
+                    )}
+                    {heldShot ? (
+                      <canvas
+                        className="lucky-neighbor-shot is-hold"
+                        width={heldShot.width}
+                        height={heldShot.height}
+                        ref={(node) => {
+                          if (!node || heldShot.width < 1) return;
+                          node.getContext("2d")?.drawImage(heldShot, 0, 0);
+                        }}
+                      />
+                    ) : null}
                   </div>
                 </div>
                 </div>
@@ -4406,6 +4501,8 @@ export function RoomScreen({
           lite={renderFlags.lite}
           depthCanvas={renderFlags.depth}
           depthCats={renderFlags.depthCats}
+          fx={renderFlags.fx}
+          period={period}
           itemsById={itemsById}
           capturePhoto={async () => {
             const island = islandRef.current;
@@ -4418,7 +4515,10 @@ export function RoomScreen({
               await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
             }
             try {
-              return canvasToJpeg(await captureRoomIsland(island));
+              const shot = renderFlags.fx
+                ? await composeRoom(island, { maxScale: 2 })
+                : await captureRoomIsland(island);
+              return canvasToJpeg(shot);
             } catch {
               return null;
             } finally {

@@ -39,6 +39,8 @@ type Props = {
   lite?: boolean;
   depthCanvas?: boolean;
   depthCats?: boolean;
+  fx?: boolean;
+  period?: "morning" | "day" | "sunset" | "night";
 };
 
 export function RoomVisitScreen({
@@ -49,6 +51,8 @@ export function RoomVisitScreen({
   lite = false,
   depthCanvas = false,
   depthCats = false,
+  fx = false,
+  period = "day",
 }: Props) {
   const [tab, setTab] = useState<VisitTab>("friends");
   const [items, setItems] = useState<VisitCard[]>([]);
@@ -146,6 +150,8 @@ export function RoomVisitScreen({
           lite={lite}
           depthCanvas={depthCanvas}
           depthCats={depthCats}
+          fx={fx}
+          period={period}
           note={visitNote}
           grant={grant}
           likeBusy={likeBusy}
@@ -255,6 +261,8 @@ function VisitView({
   lite = false,
   depthCanvas = false,
   depthCats = false,
+  fx = false,
+  period = "day",
   note,
   grant,
   likeBusy,
@@ -270,6 +278,8 @@ function VisitView({
   lite?: boolean;
   depthCanvas?: boolean;
   depthCats?: boolean;
+  fx?: boolean;
+  period?: "morning" | "day" | "sunset" | "night";
   note: string | null;
   grant: number | null;
   likeBusy: boolean;
@@ -299,6 +309,7 @@ function VisitView({
       </header>
       <div className="rv-stage">
         {layout ? (
+          <div className={fx ? `lucky-room is-tod-${period} rv-tod` : "rv-plain"}>
           <div
             className="lucky-island rv-island"
             style={{ left: fit.left, top: fit.top, width: fit.width, height: fit.height }}
@@ -323,11 +334,14 @@ function VisitView({
                 lite={lite}
                 depthCanvas={depthCanvas}
                 depthCats={depthCats}
+                fx={fx}
+                period={period}
                 onSelect={() => undefined}
                 onItemPointerDown={() => undefined}
                 onFloorPointerDown={() => undefined}
               />
             </div>
+          </div>
           </div>
         ) : (
           <p className="rv-empty">{note || "방을 불러오는 중"}</p>

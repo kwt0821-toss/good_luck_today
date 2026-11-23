@@ -5,6 +5,9 @@ import {
   backingScale,
   boxesTouch,
   breatheScaleY,
+  coverListKey,
+  coveredSpriteKeys,
+  type CoverOccluder,
   catBreathes,
   catNeedsDom,
   containBox,
@@ -29,6 +32,8 @@ export type DepthSprite = {
   z: number;
   order: number;
   breathe: boolean;
+  /** Cat beds stay in the DOM so their CSS breathe keeps running. */
+  stayHtml?: boolean;
   frameKind: "cardframe" | "squareframe" | null;
   frameThumb: string | null;
 };
@@ -54,6 +59,7 @@ type Props = {
   zoom: number;
   view: WorldView | null;
   onFail: () => void;
+  onPainted?: () => void;
 };
 
 const MAX_PIXELS = 4_000_000;
@@ -72,6 +78,7 @@ export function RoomDepthCanvas({
   zoom,
   view,
   onFail,
+  onPainted,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const spritesRef = useRef(sprites);
@@ -79,7 +86,11 @@ export function RoomDepthCanvas({
   const drawCatsRef = useRef(drawCats);
   const liveRef = useRef({ active, reduceMotion, pinching, zoom, view });
   const failRef = useRef(onFail);
+  const paintedRef = useRef(onPainted);
+  paintedRef.current = onPainted;
   const redrawRef = useRef<() => void>(() => {});
+  const runRef = useRef<() => void>(() => {});
+  const kickQueued = useRef(false);
   failRef.current = onFail;
   spritesRef.current = sprites;
   catsRef.current = cats;
@@ -96,6 +107,7 @@ export function RoomDepthCanvas({
       return;
     }
     let dead = false;
+    let toldPaint = false;
     let timer = 0;
     let raf = 0;
     const images = new Map<string, HTMLImageElement | null>();
@@ -144,7 +156,8 @@ export function RoomDepthCanvas({
     const sizeCanvas = () => {
       const rect = canvas.getBoundingClientRect();
       if (rect.width < 2 || rect.height < 2) return false;
-      const dpr = window.devicePixelRatio || 1;
+      const cap = liveRef.current.active ? 2 : 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, cap);
       const scale = backingScale(rect.width, rect.height, dpr, MAX_PIXELS);
       const width = Math.max(1, Math.round(rect.width * scale));
       const height = Math.max(1, Math.round(rect.height * scale));
@@ -179,6 +192,23 @@ export function RoomDepthCanvas({
       return { x: motion.worldX - cat.sheet.anchor.x, y: motion.worldY - cat.sheet.anchor.y, w: fw, h: fh };
     };
 
+    const coverKeyNow = () => {
+      const occluders: CoverOccluder[] = [];
+      if (!drawCatsRef.current) {
+        for (const cat of catsRef.current) {
+          const motion = catState(cat);
+          occluders.push({ z: motion.zIndex, box: catWorldBox(cat, motion) });
+        }
+      }
+      for (const sprite of spritesRef.current) {
+        if (sprite.stayHtml) occluders.push({ z: sprite.z, box: sprite.rect });
+      }
+      const targets = spritesRef.current
+        .filter((sprite) => !sprite.stayHtml)
+        .map((sprite) => ({ key: sprite.key, z: sprite.z, box: sprite.rect }));
+      return coverListKey(coveredSpriteKeys(targets, occluders));
+    };
+
     const paint = (dirty: PaintBox | null) => {
       if (dead) return;
       try {
@@ -193,25 +223,12 @@ export function RoomDepthCanvas({
         }
         const now = performance.now();
         const live = liveRef.current;
-        const covered = new Set<string>();
+        const covered = new Set(coverKeyNow().split(",").filter(Boolean));
         const root = canvas.closest(".lucky-world");
-        if (!drawCatsRef.current) {
-          const movers = catsRef.current.map((cat) => {
-            const motion = catState(cat);
-            return { motion, box: catWorldBox(cat, motion) };
-          });
-          for (const sprite of spritesRef.current) {
-            if (movers.some((mover) => mover.motion.zIndex < sprite.z && boxesTouch(sprite.rect, mover.box))) {
-              covered.add(sprite.key);
-            }
-          }
-          root?.querySelectorAll<HTMLElement>(".lucky-sprite.is-canvas").forEach((button) => {
-            button.classList.toggle("is-over-cat", covered.has(button.dataset.spriteKey ?? ""));
-          });
-        } else if (lastCover) {
-          root?.querySelectorAll<HTMLElement>(".is-over-cat").forEach((button) => button.classList.remove("is-over-cat"));
-        }
-        const coverKey = [...covered].sort().join(",");
+        root?.querySelectorAll<HTMLElement>(".lucky-sprite.is-canvas").forEach((button) => {
+          button.classList.toggle("is-over-cat", covered.has(button.dataset.spriteKey ?? ""));
+        });
+        const coverKey = coverListKey(covered);
         const coverChanged = coverKey !== lastCover;
         lastCover = coverKey;
         const region = !coverChanged && dirty ? padBox(dirty, 2) : null;
@@ -224,7 +241,7 @@ export function RoomDepthCanvas({
         } else ctx.clearRect(0, 0, width, height);
         const items: { z: number; order: number; draw: () => void; box: PaintBox }[] = [];
         for (const sprite of spritesRef.current) {
-          if (covered.has(sprite.key)) continue;
+          if (sprite.stayHtml || covered.has(sprite.key)) continue;
           const image = ensure(sprite.src);
           const box = toCanvas(spriteBox(sprite), width, height);
           if (region && !boxesTouch(region, box)) continue;
@@ -302,6 +319,10 @@ export function RoomDepthCanvas({
 
         for (const item of depthOrder(items)) item.draw();
         ctx.restore();
+        if (!dirty && !toldPaint) {
+          toldPaint = true;
+          paintedRef.current?.();
+        }
       } catch {
         fail();
       }
@@ -313,7 +334,7 @@ export function RoomDepthCanvas({
       const boxes: PaintBox[] = [];
       if (liveRef.current.active && !liveRef.current.reduceMotion) {
         for (const sprite of spritesRef.current) {
-          if (sprite.breathe) boxes.push(toCanvas(spriteBox(sprite), width, height));
+          if (sprite.breathe && !sprite.stayHtml) boxes.push(toCanvas(spriteBox(sprite), width, height));
         }
       }
       for (const cat of catsRef.current) {
@@ -329,7 +350,7 @@ export function RoomDepthCanvas({
 
     const moving = () => {
       if (!liveRef.current.active || liveRef.current.pinching || document.hidden) return false;
-      if (!liveRef.current.reduceMotion && spritesRef.current.some((sprite) => sprite.breathe)) return true;
+      if (!liveRef.current.reduceMotion && spritesRef.current.some((sprite) => sprite.breathe && !sprite.stayHtml)) return true;
       return catsRef.current.some((cat) => {
         const motion = catState(cat);
         if (catNeedsDom(motion, cat.breedId) || motion.spriteHidden) return false;
@@ -352,27 +373,66 @@ export function RoomDepthCanvas({
       }, gap);
     };
 
-    const start = () => {
-      window.clearTimeout(timer);
-      timer = 0;
-      cancelAnimationFrame(raf);
-      raf = 0;
-      if (liveRef.current.pinching || document.hidden) return;
-      paint(null);
-      loop();
+    const kick = () => {
+      runRef.current = () => {
+        if (dead) return;
+        window.clearTimeout(timer);
+        timer = 0;
+        cancelAnimationFrame(raf);
+        raf = 0;
+        if (liveRef.current.pinching || document.hidden) return;
+        paint(null);
+        loop();
+      };
+      if (kickQueued.current) return;
+      kickQueued.current = true;
+      requestAnimationFrame(() => {
+        kickQueued.current = false;
+        runRef.current();
+      });
     };
-    redrawRef.current = start;
+    redrawRef.current = kick;
 
     const onShow = () => {
-      if (!document.hidden) start();
+      if (!document.hidden) kick();
     };
+    let sawSize = false;
+    let lastW = -1;
+    let lastH = -1;
     const observer = new ResizeObserver(() => {
-      if (!liveRef.current.pinching) start();
+      const rect = canvas.getBoundingClientRect();
+      const w = Math.round(rect.width);
+      const h = Math.round(rect.height);
+      if (!sawSize) {
+        sawSize = true;
+        lastW = w;
+        lastH = h;
+        return;
+      }
+      if (w === lastW && h === lastH) return;
+      lastW = w;
+      lastH = h;
+      if (!liveRef.current.pinching) kick();
     });
     observer.observe(canvas);
     document.addEventListener("visibilitychange", onShow);
     const unsubs = catsRef.current.map((cat) => cat.motionRef.subscribe(() => {
       if (dead || liveRef.current.pinching || document.hidden || !liveRef.current.active) return;
+      if (!drawCatsRef.current) {
+        const next = coverKeyNow();
+        if (next === lastCover) return;
+        if (raf || timer) return;
+        timer = window.setTimeout(() => {
+          timer = 0;
+          raf = requestAnimationFrame(() => {
+            raf = 0;
+            if (dead || liveRef.current.pinching || document.hidden) return;
+            if (coverKeyNow() === lastCover) return;
+            paint(null);
+          });
+        }, 1000 / CAT_FPS);
+        return;
+      }
       if (raf || timer) return;
       const walking = catsRef.current.some((entry) => catState(entry).anim.startsWith("walk"));
       const gap = walking ? 1000 / CAT_FPS : 1000 / BREATHE_FPS;
@@ -386,7 +446,7 @@ export function RoomDepthCanvas({
         });
       }, gap);
     }));
-    start();
+    kick();
 
     return () => {
       dead = true;

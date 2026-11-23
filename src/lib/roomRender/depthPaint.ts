@@ -23,6 +23,25 @@ export function coverSource(
   return { sx: (natW - sw) / 2, sy: (natH - sh) / 2, sw, sh };
 }
 
+export type CoverSprite = { key: string; z: number; box: PaintBox };
+export type CoverOccluder = { z: number; box: PaintBox };
+
+/**
+ * Furniture drawn on the canvas that an HTML occluder (a cat, or a cat bed
+ * left in the DOM) sits behind. Those sprites must pop back to HTML.
+ */
+export function coveredSpriteKeys(sprites: CoverSprite[], occluders: CoverOccluder[]): string[] {
+  const keys: string[] = [];
+  for (const sprite of sprites) {
+    if (occluders.some((mover) => mover.z < sprite.z && boxesTouch(sprite.box, mover.box))) keys.push(sprite.key);
+  }
+  return keys;
+}
+
+export function coverListKey(keys: Iterable<string>): string {
+  return [...new Set(keys)].sort().join(",");
+}
+
 export function boxesTouch(a: PaintBox, b: PaintBox): boolean {
   return a.x < b.x + b.w && a.y < b.y + b.h && b.x < a.x + a.w && b.y < a.y + a.h;
 }

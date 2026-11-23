@@ -1062,6 +1062,37 @@
   display: flex;
 }
 
+.lucky-light-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.lucky-world.is-fx-light .lucky-lamp-glow,
+.lucky-world.is-fx-light .lucky-item-glow {
+  opacity: 0 !important;
+  animation: none !important;
+}
+.lucky-world-layer.is-edit-grid,
+.lucky-world-layer.is-edit-hints {
+  z-index: 2;
+  pointer-events: none;
+}
+.lucky-room.is-paused .lucky-world-layer.is-lights {
+  animation-play-state: paused;
+}
+.lucky-neighbor-shot {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 .lucky-perf-box {
   position: absolute;
   right: 8px;

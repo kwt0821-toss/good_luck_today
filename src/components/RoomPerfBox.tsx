@@ -46,7 +46,7 @@ export function RoomPerfBox({
         `img ${imgs} · canvas ${canvases} · el ${nodes}`,
         `mem ${mb}MB`,
         roomRenderLabel(flagsRef.current),
-        `lite ${flagsRef.current.lite ? "on" : "off"} · pinchFreeze ${flagsRef.current.pinchFreeze ? "on" : "off"} · depth ${flagsRef.current.depth ? "on" : "off"} · depthCats ${flagsRef.current.depthCats ? "on" : "off"}`,
+        `lite ${flagsRef.current.lite ? "on" : "off"} · pinchFreeze ${flagsRef.current.pinchFreeze ? "on" : "off"} · depth ${flagsRef.current.depth ? "on" : "off"} · depthCats ${flagsRef.current.depthCats ? "on" : "off"} · fx ${flagsRef.current.fx ? "on" : "off"}`,
         `레이어 후보 수 ${countRoomLayers(root)}`,
       ].join("\n");
     };

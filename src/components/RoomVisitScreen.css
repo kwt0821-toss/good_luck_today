@@ -201,6 +201,18 @@
   pointer-events: none;
 }
 
+.rv-plain {
+  display: contents;
+}
+
+.rv-tod.lucky-room {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  flex: none;
+  overflow: hidden;
+}
+
 .rv-look {
   margin: 0 20px 8px;
   text-align: center;

@@ -7,7 +7,9 @@ import {
   catBreathes,
   catNeedsDom,
   containBox,
+  coverListKey,
   coverSource,
+  coveredSpriteKeys,
   depthOrder,
   frameArtBox,
   padBox,
@@ -20,6 +22,23 @@ const fitted = containBox(100, 50, { x: 0, y: 0, w: 100, h: 100 });
 assert.equal(fitted.w, 100);
 assert.equal(fitted.h, 50);
 assert.equal(fitted.y, 25);
+
+assert.deepEqual(
+  coveredSpriteKeys(
+    [
+      { key: "front", z: 5, box: { x: 0, y: 0, w: 10, h: 10 } },
+      { key: "behind", z: 1, box: { x: 0, y: 0, w: 10, h: 10 } },
+      { key: "aside", z: 8, box: { x: 40, y: 40, w: 4, h: 4 } },
+    ],
+    [{ z: 3, box: { x: 2, y: 2, w: 4, h: 4 } }],
+  ),
+  ["front"],
+);
+assert.equal(coverListKey(["b", "a", "b"]), "a,b");
+assert.equal(
+  coverListKey(coveredSpriteKeys([{ key: "bed-front", z: 4, box: { x: 0, y: 0, w: 8, h: 8 } }], [{ z: 2, box: { x: 1, y: 1, w: 4, h: 4 } }])),
+  "bed-front",
+);
 
 assert.equal(boxesTouch({ x: 0, y: 0, w: 10, h: 10 }, { x: 9, y: 9, w: 2, h: 2 }), true);
 assert.equal(boxesTouch({ x: 0, y: 0, w: 10, h: 10 }, { x: 10, y: 0, w: 2, h: 2 }), false);

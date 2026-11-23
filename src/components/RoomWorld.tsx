@@ -68,7 +68,9 @@ import type {
 } from "../lib/roomTypes";
 import { emitsLight, NEON_ITEM_IDS, WINDOW_ITEM_IDS } from "../lib/roomTime";
 import { useRoomCat, type CatMotionRef, type CatSpot, type CatSpotsRef, type RoomCatView } from "../lib/useRoomCat";
+import { EDIT_FULL, EDIT_HALF } from "../lib/roomRender/editArt";
 import { RoomBackdropCanvas } from "./RoomBackdropCanvas";
+import { RoomLightCanvas } from "./RoomLightCanvas";
 
 type RoomWorldProps = {
   mode: RoomMode;
@@ -117,6 +119,13 @@ type RoomWorldProps = {
   depthZoom?: number;
   depthView?: WorldView | null;
   depthPinching?: boolean;
+  /** Composite lights and the half-size edit art. Off keeps the previous room. */
+  fx?: boolean;
+  /** Time of day, so the light canvas matches the room. */
+  period?: "morning" | "day" | "sunset" | "night";
+  bright?: "normal" | "bright" | "cozy";
+  /** The depth canvas finished its first full picture. */
+  onFirstPaint?: () => void;
   /** Plays only for the room whose theme set is complete. */
   setBonus?: RoomSetCue | null;
   favorite?: {
@@ -199,11 +208,13 @@ function Layer({
   className,
   lite = false,
   shift,
+  fallback,
 }: {
   src: string;
   className?: string;
   lite?: boolean;
   shift?: { x: number; y: number };
+  fallback?: string;
 }) {
   const crop = lite ? layerCrop(src) : null;
   const style: CSSProperties | undefined = crop
@@ -218,6 +229,12 @@ function Layer({
       alt=""
       style={style}
       draggable={false}
+      onError={fallback ? (event) => {
+        const img = event.currentTarget;
+        if (img.dataset.fellback === "1") return;
+        img.dataset.fellback = "1";
+        img.src = roomAsset(fallback);
+      } : undefined}
     />
   );
 }
@@ -876,6 +893,10 @@ export const RoomWorld = memo(function RoomWorld({
   depthZoom = 1,
   depthView = null,
   depthPinching = false,
+  fx = false,
+  period = "day",
+  bright = "normal",
+  onFirstPaint,
   setBonus = null,
   favorite = null,
   onSelect,
@@ -889,6 +910,9 @@ export const RoomWorld = memo(function RoomWorld({
   useHideBrokenImages(worldRef);
   const useFloorCanvas = floorCanvas && floorCanvasOk;
   const useDepth = depthCanvas && depthOk;
+  useEffect(() => {
+    if (!useDepth) onFirstPaint?.();
+  }, [useDepth, onFirstPaint]);
   const heartSrc = useHeartBedSrc(layout.floor.some((place) => place.id === HEART_BED_ID));
   const fit = screenOf(mode).scale;
   const paintSkin = paintPreview ? paintSkinType(paintPreview.itemId) : null;
@@ -1122,13 +1146,14 @@ export const RoomWorld = memo(function RoomWorld({
         flip: !item.furniture && place.orientation === "mirrored",
         z: spriteDepthZ(depth.front, depth.bias),
         order,
-        breathe: Boolean(item.hero || item.id === "catbed_cat"),
+        breathe: false,
+        stayHtml: Boolean(item.hero || item.id === "catbed_cat"),
         frameKind,
         frameThumb: frameKind && frameThumbs[0] ? frameThumbs[0] : null,
       });
     });
   }
-  const canvasIds = new Set(depthSprites.map((sprite) => sprite.key));
+  const canvasIds = new Set(depthSprites.filter((sprite) => !sprite.stayHtml).map((sprite) => sprite.key));
   const spriteKey = depthSprites
     .map((sprite) => `${sprite.key}:${sprite.src}:${sprite.rect.x},${sprite.rect.y},${sprite.rect.w},${sprite.rect.h}:${sprite.flip}:${sprite.z}:${sprite.frameThumb ?? ""}`)
     .join("|");
@@ -1151,7 +1176,7 @@ export const RoomWorld = memo(function RoomWorld({
   return (
     <div
       ref={worldRef}
-      className={`lucky-world ${painting ? "is-painting" : ""} ${mode === "view" ? "is-view" : ""} ${debugHit ? "is-debug-hit" : ""}`}
+      className={`lucky-world ${painting ? "is-painting" : ""} ${mode === "view" ? "is-view" : ""} ${debugHit ? "is-debug-hit" : ""} ${fx ? "is-fx-light" : ""}`}
       style={{ ["--room-fit" as string]: fit }}
       onPointerDown={onFloorPointerDown}
     >
@@ -1212,7 +1237,8 @@ export const RoomWorld = memo(function RoomWorld({
         )}
       </div>
       <Layer
-        src={mode === "edit" ? "world/room-frame-edit.svg" : "world/room-frame-view.webp"}
+        src={mode === "edit" ? (fx ? EDIT_HALF.frame : "world/room-frame-edit.svg") : "world/room-frame-view.webp"}
+        fallback={mode === "edit" && fx ? EDIT_FULL.frame : undefined}
         className="is-frame"
         lite={lite && mode !== "edit"}
       />
@@ -1421,6 +1447,7 @@ export const RoomWorld = memo(function RoomWorld({
             zoom={depthZoom}
             view={depthView}
             onFail={onDepthFail}
+            onPainted={onFirstPaint}
           />
         ) : null}
         {depthFurniture.map(renderFurniture)}
@@ -1448,6 +1475,22 @@ export const RoomWorld = memo(function RoomWorld({
       {lamp ? (
         <Layer src="world/lamp-glow-additive.webp" className="lucky-lamp-glow" lite={lite} shift={glowShift} />
       ) : null}
+      {fx ? (
+        <RoomLightCanvas
+          period={period}
+          bright={bright}
+          pinching={depthPinching}
+          reduceMotion={reduceMotion}
+          active={roamingActive || mode === "edit"}
+          revision={`${lamp ? "lamp" : ""}|${lightGlows.map((glow) => glow.key).join(",")}`}
+        />
+      ) : null}
+      {fx && mode === "edit" ? (
+        <>
+          <Layer src={EDIT_HALF.grid} fallback={EDIT_FULL.grid} className="is-edit-grid" />
+          <Layer src={EDIT_HALF.hints} fallback={EDIT_FULL.hints} className="is-edit-hints" />
+        </>
+      ) : null}
       {lightGlows.map((glow) => (
         <span
           key={`glow-${glow.key}`}
@@ -1458,7 +1501,8 @@ export const RoomWorld = memo(function RoomWorld({
       ))}
 
       <Layer
-        src={mode === "edit" ? "world/front-puffs-edit.svg" : "world/front-puffs-view.webp"}
+        src={mode === "edit" ? (fx ? EDIT_HALF.puffs : "world/front-puffs-edit.svg") : "world/front-puffs-view.webp"}
+        fallback={mode === "edit" && fx ? EDIT_FULL.puffs : undefined}
         className="is-puffs"
         lite={lite && mode !== "edit"}
       />
