@@ -10,6 +10,7 @@ import { loadOpsConfig } from "./opsConfig";
 import { parseAffection } from "./affection";
 import { parseWeeklyBag } from "./weeklyMissions";
 import { parseCatLetters } from "./catLetters";
+import { parsePendingDraw } from "./pendingDraw";
 import { applyOpsDailyReset, createDefaultOpsState } from "./opsState";
 import type { OpsState } from "./opsTypes";
 
@@ -256,7 +257,7 @@ function parseOps(raw: string | null, fallback: OpsState): OpsState {
       unlockedRoomIds: parseStringArray(parsed.unlockedRoomIds).length
         ? parseStringArray(parsed.unlockedRoomIds)
         : fallback.unlockedRoomIds,
-      pendingDraw: null,
+      pendingDraw: parsePendingDraw(parsed.pendingDraw),
       rewardInbox: Array.isArray(parsed.rewardInbox)
         ? parsed.rewardInbox
             .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)

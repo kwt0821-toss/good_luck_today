@@ -94,7 +94,10 @@ import {
   willUseRateUpTicket,
 } from "./lib/opsState";
 import { peekDexOwned, unseenOwnedCardIds } from "./lib/dexCollection";
+import { loadDexCatalog } from "./lib/dexCatalog";
 import { loadOpsState, saveOpsState } from "./lib/opsStorage";
+import { shouldResumeReveal } from "./lib/pendingDraw";
+import { suppressAppBack } from "./lib/appBackGate";
 import { clearPromoUrl, readPromoTarget, type PromoTarget } from "./lib/promoEntry";
 import type {
   CoachMark,
@@ -134,7 +137,7 @@ import { preloadFrameAssets } from "./lib/preloadFrames";
 
 const DRAW_LOADING_MESSAGES = ["카드를 섞는 중이냥...", "거의 다 됐다냥!", "하암~ 곧 일어날게냥"];
 import { preloadAdFallbackCat, preloadLoadingAssets } from "./lib/preloadLoading";
-import { setLoadingBlocked, useLoadingHold } from "./lib/loadingGate";
+import { preemptLoadingClose, setLoadingBlocked, useLoadingHold } from "./lib/loadingGate";
 import { DevBackButton } from "./components/DevBackButton";
 import { useAttendanceNotifyOffer } from "./lib/useAttendanceNotifyOffer";
 import { useBackHandler } from "./hooks/useBackHandler";
@@ -352,8 +355,15 @@ export default function App() {
   }, []);
   const [reservation, setReservation] = useState<DrawReservation | null>(null);
   const [revealReady, setRevealReady] = useState(false);
+  const revealReadyRef = useRef(false);
+  revealReadyRef.current = revealReady;
   const [waitFailed, setWaitFailed] = useState(false);
   const [drawBusy, setDrawBusy] = useState(false);
+  const [drawSettling, setDrawSettling] = useState(false);
+  const resumedPendingRef = useRef(false);
+  const revealLoadRef = useRef(0);
+  const opsRef = useRef(ops);
+  opsRef.current = ops;
   const [drawProgress, setDrawProgress] = useState<number | undefined>(undefined);
   const [revealToast, setRevealToast] = useState<string | null>(null);
   const [adNyangToast, setAdNyangToast] = useState<string | null>(null);
@@ -525,6 +535,42 @@ export default function App() {
   }, [ops, promoGate, tutorialReplayStep, setScreen]);
 
   useEffect(() => {
+    if (!ops || !config || resumedPendingRef.current) return;
+    resumedPendingRef.current = true;
+    const pending = ops.pendingDraw;
+    if (!shouldResumeReveal(pending) || !pending) return;
+    const load = ++revealLoadRef.current;
+    suppressAppBack(1500);
+    setReservation(pending);
+    setDrawSettling(true);
+    setDrawProgress(0);
+    setRevealReady(false);
+    setWaitFailed(false);
+    const coins = pending.adNyangCoin ?? 0;
+    if (coins > 0) {
+      setAdNyangToast(`카드를 뽑아 냥코인 ${coins}개를 받았어요`);
+    }
+    // After any boot navigation queued in the same commit (promo, etc.).
+    window.setTimeout(() => setScreen({ name: "reveal" }), 0);
+    void (async () => {
+      const catalog = await loadDexCatalog();
+      if (revealLoadRef.current !== load) return;
+      setRevealCard(catalog.cards.find((item) => item.id === pending.cardId) ?? null);
+      const quality = await preloadDrawImages(pending, (progress) => {
+        if (revealLoadRef.current !== load) return;
+        setDrawProgress(progress);
+      });
+      if (revealLoadRef.current !== load) return;
+      if (quality === "none") {
+        setWaitFailed(true);
+        return;
+      }
+      setWaitFailed(false);
+      setRevealReady(true);
+    })();
+  }, [ops, config, setScreen]);
+
+  useEffect(() => {
     if (!promoHoldIntros) return;
     const atDex = screen.name === "collection";
     const atRewards = screen.name === "home" && menuOpen;
@@ -637,8 +683,27 @@ export default function App() {
 
   const persistOps = useCallback(async (next: OpsState) => {
     setOps(next);
+    opsRef.current = next;
     await saveOpsState(next);
   }, []);
+
+  const finishRevealSession = useCallback(async (extra?: Partial<OpsState>) => {
+    setRevealTutPhase(null);
+    setHideRevealToast(false);
+    setAdNyangToast(null);
+    setStepThenActive(false);
+    setDrawSettling(false);
+    const current = opsRef.current;
+    if (!current) return;
+    const clearPending = shouldResumeReveal(current.pendingDraw);
+    if (!clearPending && !extra) return;
+    const next: OpsState = {
+      ...current,
+      ...(clearPending ? { pendingDraw: null } : {}),
+      ...extra,
+    };
+    await persistOps(next);
+  }, [persistOps]);
 
   useEffect(() => {
     bindWeeklyApply((next) => {
@@ -666,6 +731,7 @@ export default function App() {
   }, []);
 
   const queueAd = useCallback((session: AdSession, detail: string) => {
+    preemptLoadingClose();
     const token = adIntroTokenRef.current + 1;
     adIntroTokenRef.current = token;
     adFlowRef.current = true;
@@ -685,6 +751,8 @@ export default function App() {
   const confirmAdIntro = useCallback(() => {
     const current = adIntro;
     if (!current || adIntroTokenRef.current !== current.token) return;
+    preemptLoadingClose();
+    suppressAppBack(1500);
     adIntroTokenRef.current = current.token + 1;
     setAdIntro(null);
     setAd(current.session);
@@ -1103,16 +1171,19 @@ export default function App() {
       setReservation(reserved.reservation);
       // Decode the large art and this grade's frame while the ad plays.
       setDrawProgress(0);
-      void preloadDrawImages(reserved.reservation, (progress) => setDrawProgress(progress)).then(
-        (quality) => {
-          if (quality === "none") {
-            setWaitFailed(true);
-            return;
-          }
-          setWaitFailed(false);
-          setRevealReady(true);
-        },
-      );
+      const load = ++revealLoadRef.current;
+      void preloadDrawImages(reserved.reservation, (progress) => {
+        if (revealLoadRef.current !== load) return;
+        setDrawProgress(progress);
+      }).then((quality) => {
+        if (revealLoadRef.current !== load) return;
+        if (quality === "none") {
+          setWaitFailed(true);
+          return;
+        }
+        setWaitFailed(false);
+        setRevealReady(true);
+      });
 
       if (slot === "tutorial" || (slot === "rateUp" && willUseRateUpTicket(ops, config))) {
         // Free / ticket draws: no ad → no ad-draw 냥코인.
@@ -1179,7 +1250,10 @@ export default function App() {
   );
 
   useEffect(() => {
-    if (revealReady || waitFailed) setDrawBusy(false);
+    if (revealReady || waitFailed) {
+      setDrawBusy(false);
+      setDrawSettling(false);
+    }
   }, [revealReady, waitFailed]);
 
   const completeAd = useCallback(async () => {
@@ -1244,10 +1318,13 @@ export default function App() {
       return;
     }
     // Ad completed → confirm draw + ad-draw 냥코인 in one server transaction.
+    suppressAppBack(1500);
+    setDrawSettling(true);
     const retryLabel = adRetryLabel(ad.kind);
     const confirmed = await confirmDrawAfterAd(ops, ad.drawId, { adCompleted: true });
     setAd(null);
     if ("error" in confirmed) {
+      setDrawSettling(false);
       nyNotify({
         key: "draw-confirm-fail",
         kind: "error",
@@ -1287,6 +1364,7 @@ export default function App() {
       });
     }
     await haptic("success");
+    if (revealReadyRef.current) setDrawSettling(false);
     setScreen({ name: "reveal" });
   }, [ad, ops, persistOps, setScreen]);
 
@@ -1413,6 +1491,7 @@ export default function App() {
         online,
       });
     }).then((result) => {
+      suppressAppBack(1500);
       AudioManager.onAdClose();
       if (!active) return;
       if (result === "completed") {
@@ -1451,6 +1530,7 @@ export default function App() {
       const token = adFallbackTokenRef.current + 1;
       adFallbackTokenRef.current = token;
       void (async () => {
+        preemptLoadingClose();
         const ok = await nyConfirm({
           key: "ad-fallback",
           title: "광고를 불러오지 못했어요",
@@ -1851,11 +1931,13 @@ export default function App() {
   const drawLoading =
     !booting &&
     !ad &&
+    !adIntro &&
     !tutorialDraw &&
     (drawBusy ||
+      drawSettling ||
       (screen.name === "reveal" && Boolean(reservation) && !revealReady && !waitFailed));
   useLoadingHold("boot", booting);
-  useLoadingHold("draw", drawLoading, drawProgress, DRAW_LOADING_MESSAGES);
+  useLoadingHold("draw", drawLoading, drawProgress, DRAW_LOADING_MESSAGES, drawSettling);
   // The dream window sits above the coach and swallows taps. Keep it off for the whole tutorial.
   const tutorialLive = Boolean((ops && !ops.tutorialDone) || tutorialReplayStep != null);
   useEffect(() => {
@@ -2041,12 +2123,9 @@ export default function App() {
           onToDex={() => {
             void (async () => {
               if (tutorialReplayStep != null && tutorialReplayStep === 2) {
+                await finishRevealSession();
                 setTutorialReplayStep(3);
                 noteTutorialStep(3);
-                setRevealTutPhase(null);
-                setHideRevealToast(false);
-                setAdNyangToast(null);
-                setStepThenActive(false);
                 setDexTutPhase("scroll");
                 setDexFocusCardId(reservation.cardId);
                 setScreen({ name: "collection" });
@@ -2055,13 +2134,11 @@ export default function App() {
               const enterDexTutorial =
                 ops.tutorialStep === 2 && !ops.tutorialDone && tutorialReplayStep == null;
               if (enterDexTutorial) {
-                await persistOps({ ...ops, tutorialStep: 3 });
+                await finishRevealSession({ tutorialStep: 3 });
                 noteTutorialStep(3);
+              } else {
+                await finishRevealSession();
               }
-              setRevealTutPhase(null);
-              setHideRevealToast(false);
-              setAdNyangToast(null);
-              setStepThenActive(false);
               setDexFocusCardId(reservation.cardId);
               // Only start dex tutorial phase when still in the tutorial flow.
               setDexTutPhase(enterDexTutorial ? "scroll" : null);
@@ -2069,32 +2146,33 @@ export default function App() {
             })();
           }}
           onDrawAgain={() => {
-            setAdNyangToast(null);
-            setScreen({ name: "home" });
-            void beginDraw();
+            void (async () => {
+              await finishRevealSession();
+              setScreen({ name: "home" });
+              void beginDraw();
+            })();
           }}
           onRetry={() => {
             if (!reservation) return;
+            const load = ++revealLoadRef.current;
             setWaitFailed(false);
             setRevealReady(false);
             setDrawProgress(0);
-            void preloadDrawImages(reservation, (progress) => setDrawProgress(progress)).then(
-              (quality) => {
-                if (quality === "none") {
-                  setWaitFailed(true);
-                  return;
-                }
-                setRevealReady(true);
-                setWaitFailed(false);
-              },
-            );
+            void preloadDrawImages(reservation, (progress) => {
+              if (revealLoadRef.current !== load) return;
+              setDrawProgress(progress);
+            }).then((quality) => {
+              if (revealLoadRef.current !== load) return;
+              if (quality === "none") {
+                setWaitFailed(true);
+                return;
+              }
+              setRevealReady(true);
+              setWaitFailed(false);
+            });
           }}
           onBack={() => {
-            // Leave reveal without consuming further tutorial gates.
-            setRevealTutPhase(null);
-            setHideRevealToast(false);
-            setAdNyangToast(null);
-            setStepThenActive(false);
+            void finishRevealSession();
             setScreen({ name: "home" });
           }}
         />

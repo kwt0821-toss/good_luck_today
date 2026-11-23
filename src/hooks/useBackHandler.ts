@@ -1,6 +1,8 @@
 import { graniteEvent } from "@apps-in-toss/web-framework";
 import { useEffect, useRef } from "react";
 
+import { isAppBackSuppressed } from "../lib/appBackGate";
+
 type BackEntry = {
   id: number;
   priority: number;
@@ -34,6 +36,7 @@ function ensureTossListener() {
 
 /** Highest priority wins. Same priority: the latest registration. */
 export function dispatchAppBack() {
+  if (isAppBackSuppressed()) return;
   if (stack.length === 0) return;
   let best = stack[0];
   for (const entry of stack) {

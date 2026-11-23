@@ -48,6 +48,7 @@
 .ny-chip.dn:after{top:auto;bottom:-7px;transform:rotate(225deg)}
 .ny-chip.wide{display:flex}
 /* sheet */
+.ny-sheet-portal{position:fixed;inset:0;z-index:1100;pointer-events:auto}
 .ny-dim{position:absolute;inset:0;background:rgba(8,7,18,.62);border:0;padding:0;cursor:pointer;z-index:95}
 .ny-sheet{position:absolute;left:0;right:0;bottom:0;border-radius:var(--ny-r-sheet) var(--ny-r-sheet) 0 0;background:var(--ny-cream);color:var(--ny-ink);padding:34px 22px 30px;text-align:center;z-index:96}
 .ny-sheet .cat{position:absolute;left:50%;top:-74px;width:132px;transform:translateX(-50%);pointer-events:none}

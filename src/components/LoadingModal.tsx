@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { useBackHandler } from "../hooks/useBackHandler";
+import { suppressAppBack } from "../lib/appBackGate";
 import { withAssetVersion } from "../lib/cardArt";
-import { setOverlayVisible } from "../lib/loadingGate";
+import { ackLoadingClosed, setOverlayVisible } from "../lib/loadingGate";
 import "./LoadingModal.css";
 
 /** Stay hidden for requests that finish inside this window. */
@@ -24,6 +26,7 @@ function useDelayedOpen(open: boolean, eager: boolean, closeNow: boolean): boole
 
   useEffect(() => {
     if (closeNow) {
+      ackLoadingClosed();
       if (!visibleRef.current) return;
       visibleRef.current = false;
       setVisible(false);
@@ -135,6 +138,13 @@ export function LoadingModal({
       if (visible) setOverlayVisible(false);
     };
   }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return;
+    suppressAppBack(1200);
+  }, [visible]);
+
+  useBackHandler(visible, () => undefined, 100);
 
   if (!visible) return null;
 

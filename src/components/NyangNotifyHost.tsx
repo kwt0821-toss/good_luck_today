@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { createPortal } from "react-dom";
 
 import { useBackHandler } from "../hooks/useBackHandler";
 import { haptic } from "../lib/native";
@@ -123,7 +124,7 @@ export function NyangNotifyHost({ dock = "top" }: { dock?: "top" | "bottom" }) {
 
   const snap = nyNotifyGetSnapshot();
   const { current, phase, sheet, durationMs } = snap;
-  useBackHandler(Boolean(sheet), () => nyConfirmClose(false), 50);
+  useBackHandler(Boolean(sheet), () => nyConfirmClose(false), 110);
   const controls = nyHostControls();
 
   useEffect(() => {
@@ -293,41 +294,44 @@ export function NyangNotifyHost({ dock = "top" }: { dock?: "top" | "bottom" }) {
         )
       ) : null}
 
-      {sheet ? (
-        <>
-          <button
-            type="button"
-            className="ny-dim"
-            aria-label="닫기"
-            onClick={() => nyConfirmClose(false)}
-          />
-          <div
-            className="ny-sheet"
-            id="ny-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="ny-t"
-          >
-            <img className="cat" src={CAT} alt="" />
-            <h3 id="ny-t">{sheet.title}</h3>
-            <p>{sheet.body}</p>
-            {sheet.badge ? (
-              <div className="ny-sheet-badge">
-                <img src={PAW} alt="" width={16} height={16} />
-                {sheet.badge}
+      {sheet
+        ? createPortal(
+            <div className="ny-sheet-portal">
+              <button
+                type="button"
+                className="ny-dim"
+                aria-label="닫기"
+                onClick={() => nyConfirmClose(false)}
+              />
+              <div
+                className="ny-sheet"
+                id="ny-sheet"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="ny-t"
+              >
+                <img className="cat" src={CAT} alt="" />
+                <h3 id="ny-t">{sheet.title}</h3>
+                <p>{sheet.body}</p>
+                {sheet.badge ? (
+                  <div className="ny-sheet-badge">
+                    <img src={PAW} alt="" width={16} height={16} />
+                    {sheet.badge}
+                  </div>
+                ) : null}
+                <div className="btns">
+                  <button type="button" className="c" onClick={() => nyConfirmClose(false)}>
+                    {sheet.cancelLabel ?? "취소"}
+                  </button>
+                  <button type="button" className="o" onClick={() => nyConfirmClose(true)}>
+                    {sheet.confirmLabel ?? "확인"}
+                  </button>
+                </div>
               </div>
-            ) : null}
-            <div className="btns">
-              <button type="button" className="c" onClick={() => nyConfirmClose(false)}>
-                {sheet.cancelLabel ?? "취소"}
-              </button>
-              <button type="button" className="o" onClick={() => nyConfirmClose(true)}>
-                {sheet.confirmLabel ?? "확인"}
-              </button>
-            </div>
-          </div>
-        </>
-      ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

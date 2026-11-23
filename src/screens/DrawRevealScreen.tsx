@@ -194,7 +194,12 @@ export function DrawRevealScreen({
   onSpotlightChange,
   showRewardsNudge = false,
 }: DrawRevealScreenProps) {
-  useBackHandler(true, () => onBack?.());
+  const readyRef = useRef(ready);
+  readyRef.current = ready;
+  useBackHandler(true, () => {
+    if (!readyRef.current) return;
+    onBack?.();
+  });
   const screenRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
   const raysRef = useRef<HTMLDivElement>(null);
@@ -229,13 +234,10 @@ export function DrawRevealScreen({
   onSpotlightChangeRef.current = onSpotlightChange;
   const partsRef = useRef<Particle[]>([]);
   const reduceRef = useRef(prefersReducedMotion());
-  const readyRef = useRef(ready);
   const t0Ref = useRef(0);
   const readyAtRef = useRef<number | null>(null);
   const skipToFinalRef = useRef(false);
   const revealSoundRef = useRef(false);
-
-  readyRef.current = ready;
 
   useEffect(() => {
     revealSoundRef.current = false;
@@ -312,6 +314,7 @@ export function DrawRevealScreen({
       if (event.key === "Escape") {
         event.preventDefault();
         if (spotlight) return;
+        if (!readyRef.current) return;
         onBack?.();
       }
     };

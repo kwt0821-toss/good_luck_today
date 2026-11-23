@@ -11,6 +11,21 @@ const holds = new Map<string, Hold>();
 const listeners = new Set<() => void>();
 /** While a tutorial is on screen, the dream window must not cover its copy. */
 let blocked = false;
+let preemptClose = false;
+
+/** Drop the loading window immediately, without waiting out its minimum time. */
+export function preemptLoadingClose(): void {
+  if (preemptClose) return;
+  preemptClose = true;
+  emit();
+}
+
+/** The window has hidden (or was already hidden). The next loading may open. */
+export function ackLoadingClosed(): void {
+  if (!preemptClose) return;
+  preemptClose = false;
+  emit();
+}
 
 function emit() {
   listeners.forEach((listener) => listener());
@@ -59,7 +74,7 @@ export function useLoadingHoldSnapshot() {
     messages,
     eager,
     /** Drop a window that is already up, without waiting out the minimum time. */
-    closeNow: blocked,
+    closeNow: blocked || preemptClose,
   };
 }
 
