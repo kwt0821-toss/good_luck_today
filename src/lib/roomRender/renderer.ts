@@ -85,7 +85,11 @@ export function roomRenderFlags(input: {
   const search = input.search ?? "";
   const schemeUrl = input.schemeUrl ?? "";
   const config = input.config;
-  const pinchFreeze = isDebugFlagRequest("pinchFreeze", search, schemeUrl) || config?.pinchFreeze === true;
+  const freezeQuery = debugFlagValue("pinchFreeze", search, schemeUrl);
+  const pinchFreeze =
+    freezeQuery === "1" ||
+    isDebugFlagRequest("pinchFreeze", search, schemeUrl) ||
+    (freezeQuery !== "0" && config?.pinchFreeze === true);
   const catsQuery = debugFlagValue("depthCats", search, schemeUrl);
   const dom = { ...DOM_FLAGS, pinchFreeze };
   if (isDebugFlagRequest("roomDom", search, schemeUrl)) return dom;
