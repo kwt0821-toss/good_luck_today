@@ -1252,6 +1252,11 @@ export function RoomScreen({
     measureRoomFrame();
   }, [mode, viewW, Boolean(state && roomsFile)]);
 
+  const roomViewKey = state ? `${state.currentRoomId}|${neighborsReady ? 1 : 0}|${state.unlocked.join(",")}` : "";
+  useLayoutEffect(() => {
+    applyView();
+  }, [roomViewKey]);
+
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -3367,7 +3372,12 @@ export function RoomScreen({
                 className="lucky-island-page"
                 style={{ left: mode === "view" ? index * viewW : 0, width: viewW }}
               >
-                <div className="lucky-room-view" data-active={active ? "1" : "0"} ref={active ? viewRef : undefined}>
+                <div
+                  className="lucky-room-view"
+                  data-active={active ? "1" : "0"}
+                  ref={active ? viewRef : undefined}
+                  style={{ transform: `translate3d(${viewXf.current.tx}px, ${viewXf.current.ty}px, 0) scale(${viewXf.current.s})` }}
+                >
                 <div
                   ref={(node) => {
                     if (active) islandRef.current = node;
