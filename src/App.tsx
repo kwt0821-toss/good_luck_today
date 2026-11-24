@@ -13,6 +13,7 @@ import {
   mergeNotifyAttendance,
 } from "./lib/attendanceNotify";
 import { MenuPanel } from "./components/MenuPanel";
+import { SuikaGameModal } from "./components/SuikaGameModal";
 import { FeatureIntroBubble, TutorialCoach } from "./components/TutorialCoach";
 import {
   EMPTY_RIBBON_COPY,
@@ -289,6 +290,7 @@ export default function App() {
     setScreenState(next);
   }, []);
   const [menuOpen, setMenuOpen] = useState(initialMenuOpen);
+  const [suikaOpen, setSuikaOpen] = useState(false);
   const [menuIconDot, setMenuIconDot] = useState(false);
   const menuModelDotRef = useRef(false);
   const [dexClaimDot, setDexClaimDot] = useState(false);
@@ -2243,6 +2245,7 @@ export default function App() {
             setForceMenuSheet("mailbox");
             setMenuOpen(true);
           }}
+          onOpenSuika={() => setSuikaOpen(true)}
         />
       ) : null}
 
@@ -2304,6 +2307,10 @@ export default function App() {
         onRateUpDraw={() => {
           closeMenu();
           void beginDraw("rateUp");
+        }}
+        onOpenSuika={() => {
+          closeMenu();
+          setSuikaOpen(true);
         }}
         onReplayTutorial={() => {
           closeMenu();
@@ -2442,6 +2449,16 @@ export default function App() {
           onGoDraw={() => {
             setMenuOpen(false);
             setScreen({ name: "home" });
+          }}
+        />
+      ) : null}
+      {suikaOpen && ops && config ? (
+        <SuikaGameModal
+          ops={ops}
+          economy={config.economy}
+          onClose={() => setSuikaOpen(false)}
+          onOps={(next) => {
+            void persistOps(next);
           }}
         />
       ) : null}

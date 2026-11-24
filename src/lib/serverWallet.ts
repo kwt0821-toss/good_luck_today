@@ -1101,6 +1101,148 @@ export async function dealRefresh(): Promise<({ ok: true } & DealList) | { ok: f
   return { ok: true, ...parsed };
 }
 
+export type SuikaStatus = {
+  freeLeft: number;
+  extraLeft: number;
+  adsLeft: number;
+  watermelonLeft: number;
+  bestScore: number;
+};
+
+export type SuikaFinish = SuikaStatus & {
+  jellyAmount: number;
+  affectionXp: number;
+  watermelonGranted: boolean;
+  watermelonAlreadyGranted: boolean;
+  watermelonAmount: number;
+  skipReason: string;
+  newBest: boolean;
+  /** Jelly wallet balance. */
+  jelly: number | null;
+  /** Nyang coin wallet balance. */
+  balance: number | null;
+};
+
+export type SuikaAdKind = "double" | "extra";
+
+export type SuikaAdResult = {
+  kind: SuikaAdKind;
+  jellyAmount: number | null;
+  ncoinAmount: number | null;
+  freeLeft: number | null;
+  extraLeft: number | null;
+  adsLeft: number | null;
+  watermelonLeft: number | null;
+  jelly: number | null;
+  balance: number | null;
+};
+
+const SUIKA_RETRY = { token: false, missing: false } as const;
+
+function suikaCount(json: Record<string, unknown>, key: string): number | null {
+  const value = json[key];
+  return typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : null;
+}
+
+function parseSuikaStatus(json: Record<string, unknown>): SuikaStatus | null {
+  const freeLeft = suikaCount(json, "freeLeft");
+  const extraLeft = suikaCount(json, "extraLeft");
+  const adsLeft = suikaCount(json, "adsLeft");
+  const watermelonLeft = suikaCount(json, "watermelonLeft");
+  if (freeLeft == null || extraLeft == null || adsLeft == null || watermelonLeft == null) return null;
+  return {
+    freeLeft,
+    extraLeft,
+    adsLeft,
+    watermelonLeft,
+    bestScore: suikaCount(json, "bestScore") ?? 0,
+  };
+}
+
+export async function suikaStatus(): Promise<({ ok: true } & SuikaStatus) | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet("suika_status", {}, DEFAULT_MS, true, SUIKA_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const parsed = parseSuikaStatus(result.json);
+  if (!parsed) return { ok: false, error: "bad_payload" };
+  return { ok: true, ...parsed };
+}
+
+export async function suikaStart(
+  roundId: string,
+): Promise<{ ok: true } | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet("suika_start", { roundId }, DEFAULT_MS, true, SUIKA_RETRY);
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  return { ok: true };
+}
+
+export async function suikaFinish(input: {
+  roundId: string;
+  score: number;
+  merges: number;
+  madeWatermelon: boolean;
+}): Promise<({ ok: true } & SuikaFinish) | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet(
+    "suika_finish",
+    {
+      roundId: input.roundId,
+      score: Math.max(0, Math.floor(input.score)),
+      merges: Math.max(0, Math.floor(input.merges)),
+      madeWatermelon: input.madeWatermelon === true,
+    },
+    DEFAULT_MS,
+    true,
+    SUIKA_RETRY,
+  );
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const counts = parseSuikaStatus(result.json);
+  if (!counts) return { ok: false, error: "bad_payload" };
+  const json = result.json;
+  return {
+    ok: true,
+    ...counts,
+    jellyAmount: Math.max(0, num(json.jellyAmount)),
+    affectionXp: Math.max(0, num(json.affectionXp)),
+    watermelonGranted: json.watermelonGranted === true,
+    watermelonAlreadyGranted: json.watermelonAlreadyGranted === true,
+    watermelonAmount: Math.max(0, num(json.watermelonAmount)),
+    skipReason: typeof json.skipReason === "string" ? json.skipReason : "",
+    newBest: json.newBest === true,
+    jelly: balanceOrNull(json.jelly),
+    balance: balanceOrNull(json.balance),
+  };
+}
+
+export async function suikaAd(input: {
+  roundId: string;
+  kind: SuikaAdKind;
+}): Promise<({ ok: true } & SuikaAdResult) | { ok: false; error: string; network?: boolean }> {
+  const result = await postWallet(
+    "suika_ad",
+    { roundId: input.roundId, kind: input.kind },
+    DEFAULT_MS,
+    true,
+    SUIKA_RETRY,
+  );
+  if (!result.ok) return { ok: false, error: result.error, network: result.network };
+  const json = result.json;
+  const ncoin =
+    balanceOrNull(json.ncoinAmount) ??
+    balanceOrNull(json.adNcoin) ??
+    balanceOrNull(json.nyangCoin);
+  return {
+    ok: true,
+    kind: input.kind,
+    jellyAmount: balanceOrNull(json.jellyAmount),
+    ncoinAmount: ncoin,
+    freeLeft: suikaCount(json, "freeLeft"),
+    extraLeft: suikaCount(json, "extraLeft"),
+    adsLeft: suikaCount(json, "adsLeft"),
+    watermelonLeft: suikaCount(json, "watermelonLeft"),
+    jelly: balanceOrNull(json.jelly),
+    balance: balanceOrNull(json.balance),
+  };
+}
+
 const VISIT_RETRY = { token: false, missing: false } as const;
 
 export type VisitStatus = {

@@ -1,0 +1,386 @@
+.suika-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top);
+  background: #14132a;
+  color: #fff6e6;
+  font-family: "Noto Sans KR", sans-serif;
+  overscroll-behavior: none;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.suika-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px 0;
+}
+
+.suika-title {
+  margin: 0;
+  font-family: "Jua", sans-serif;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.suika-x {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 246, 230, 0.14);
+  color: #fff6e6;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.suika-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 12px 16px 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.suika-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.suika-cat {
+  flex: 0 0 auto;
+  width: 68px;
+  height: 68px;
+  border: 2px solid #f3ebd7;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #2a2144;
+}
+
+.suika-cat img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.suika-card {
+  background: #fff6e6;
+  color: #3a2a18;
+  border-radius: 22px;
+  padding: 14px 12px 16px;
+}
+
+.suika-card + .suika-card {
+  margin-top: 12px;
+}
+
+.suika-dex {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 6px;
+}
+
+.suika-fruit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  text-align: center;
+}
+
+.suika-fruit img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #2a2144;
+  object-fit: cover;
+}
+
+.suika-fruit b {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.suika-fruit.is-king {
+  grid-column: span 2;
+}
+
+.suika-badge {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #2a2144;
+  color: #ffcf70;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.suika-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(58, 42, 24, 0.08);
+}
+
+.suika-stats p {
+  margin: 0;
+}
+
+.suika-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a6a48;
+}
+
+.suika-num {
+  font-family: Poppins, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.suika-stats strong {
+  display: block;
+  margin-top: 2px;
+  font-family: Poppins, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.suika-note {
+  margin: 10px 0 0;
+  color: #8a6a48;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.suika-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 16px calc(14px + env(safe-area-inset-bottom));
+}
+
+.suika-btn {
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 16px;
+  background: #ffcf70;
+  color: #3a2a18;
+  font-family: "Jua", sans-serif;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.suika-btn:disabled {
+  background: #d9d0c2;
+  color: #8a7b68;
+  cursor: default;
+}
+
+.suika-btn.line,
+.suika-btn.ad {
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.suika-btn.line {
+  background: transparent;
+  color: #fff6e6;
+  border: 1px solid rgba(255, 246, 230, 0.45);
+}
+
+.suika-btn.ad {
+  background: #1e1a2b;
+  color: #fff6e6;
+  border: 1px solid rgba(255, 207, 112, 0.45);
+}
+
+.suika-soft {
+  margin: 0;
+  color: #8a5a3a;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.suika-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px 0;
+}
+
+.suika-score {
+  margin: 0;
+  font-family: Poppins, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.suika-score span {
+  display: block;
+  margin-bottom: 2px;
+  color: rgba(255, 246, 230, 0.72);
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.suika-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  background: #fff6e6;
+  color: #3a2a18;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.suika-pill img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2a2144;
+  object-fit: cover;
+}
+
+.suika-pill.is-wait {
+  opacity: 0.55;
+}
+
+.suika-tiers {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px 0;
+}
+
+.suika-tiers i {
+  flex: 1;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255, 246, 230, 0.18);
+}
+
+.suika-tiers i.is-on {
+  background: rgba(255, 207, 112, 0.55);
+}
+
+.suika-tiers i.is-max {
+  background: #ffcf70;
+  box-shadow: 0 0 0 2px rgba(255, 207, 112, 0.35);
+}
+
+.suika-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+.suika-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.suika-wait {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #fff6e6;
+  color: #3a2a18;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.suika-result-score {
+  margin: 4px 0 0;
+  font-family: Poppins, sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.suika-best {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #ffcf70;
+  color: #3a2a18;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.suika-reward {
+  margin: 8px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.suika-bonus {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #f3e9d7;
+}
+
+.suika-bonus img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #2a2144;
+}
+
+.suika-bonus p {
+  margin: 0;
+}
+
+.suika-caption {
+  margin: 0;
+  color: rgba(255, 246, 230, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}

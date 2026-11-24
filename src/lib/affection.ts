@@ -12,10 +12,10 @@ import type {
 export const AFFECTION_EVENT = "lucky-affection";
 export const QUESTION_CAT = "/assets/affection/question-cat.webp";
 
-const SOURCES: AffectionSource[] = ["pet", "attend", "sameDraw", "mission"];
+const SOURCES: AffectionSource[] = ["pet", "attend", "sameDraw", "mission", "suika"];
 
 function emptyToday(): Record<AffectionSource, number> {
-  return { pet: 0, attend: 0, sameDraw: 0, mission: 0 };
+  return { pet: 0, attend: 0, sameDraw: 0, mission: 0, suika: 0 };
 }
 
 function emptyCat(): AffectionCatRecord {
@@ -53,7 +53,7 @@ export function affectionConfig(economy: OpsEconomy | null | undefined): Affecti
   const raw = economy?.affection;
   if (!raw || !Array.isArray(raw.levels) || raw.levels.length < 2) return null;
   const sources = raw.sources;
-  if (!sources?.pet || !sources.attend || !sources.sameDraw || !sources.mission) return null;
+  if (!sources?.pet || !sources.attend || !sources.sameDraw || !sources.mission || !sources.suika) return null;
   return raw;
 }
 
@@ -259,6 +259,7 @@ export function mergeAffectionStates(
       attend: Math.max(preferred.today.attend, other.today.attend),
       sameDraw: Math.max(preferred.today.sameDraw, other.today.sameDraw),
       mission: Math.max(preferred.today.mission, other.today.mission),
+      suika: Math.max(preferred.today.suika, other.today.suika),
     };
     dateKey = today;
   } else if (otherToday) {
@@ -340,6 +341,7 @@ export function parseAffection(value: unknown, today: string): AffectionState {
       attend: countOf(todayRaw, "attend"),
       sameDraw: countOf(todayRaw, "sameDraw"),
       mission: countOf(todayRaw, "mission"),
+      suika: countOf(todayRaw, "suika"),
     },
     greetedOn: typeof raw.greetedOn === "string" ? raw.greetedOn : "",
     cats,

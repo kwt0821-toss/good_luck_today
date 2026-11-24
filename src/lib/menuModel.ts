@@ -190,6 +190,8 @@ export async function buildMenuViewModel(ops: OpsState): Promise<MenuViewModel> 
       if (!enabled) badge = { type: "pill", text: def.disabledPill ?? "준비 중", tone: "muted" };
     } else if (id === "settings" || id === "helpEarn") {
       meta = "";
+    } else if (id === "suikaGame" && def.meta) {
+      meta = def.meta;
     }
 
     rowViews[id] = {

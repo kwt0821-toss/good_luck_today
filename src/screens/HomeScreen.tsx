@@ -79,6 +79,7 @@ type HomeScreenProps = {
   missionNudge?: boolean;
   onOpenMissions?: () => void;
   onOpenMailbox?: () => void;
+  onOpenSuika: () => void;
 };
 
 export function HomeScreen({
@@ -111,6 +112,7 @@ export function HomeScreen({
   missionNudge = false,
   onOpenMissions,
   onOpenMailbox,
+  onOpenSuika,
 }: HomeScreenProps) {
   const [waking, setWaking] = useState(false);
   const [flipping, setFlipping] = useState(false);
@@ -376,6 +378,9 @@ export function HomeScreen({
 
         <div className="main-affection-row">
           {favorite}
+          <button type="button" className="home-suika" aria-label="수박냥 합치기" onClick={onOpenSuika}>
+            <img src="/assets/suika/11_watermelon.png" alt="" />
+          </button>
           <HomeWalletChips
             pawBalance={pawBalance}
             nyangCoinBalance={nyangCoinBalance}

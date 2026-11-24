@@ -233,6 +233,7 @@ function AffectionHow({ config }: { config: AffectionConfig }) {
     ["최애냥과 같은 품종 뽑기", config.sources.sameDraw],
     ["방에서 최애냥 쓰다듬기", config.sources.pet],
     ["오늘의 미션 보상 받기", config.sources.mission],
+    ["수박냥 합치기", config.sources.suika],
   ];
   return (
     <ul className="aff-how">

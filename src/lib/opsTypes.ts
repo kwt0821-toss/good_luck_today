@@ -274,6 +274,20 @@ export type OpsEconomy = {
     lite?: boolean;
     depthCats?: boolean;
   };
+  suikaGame?: {
+    freePlaysPerDay: number;
+    adsPerDay: number;
+    jellyByScore: { minScore: number; jelly: number }[];
+    watermelonNcoin: number;
+    watermelonMaxPerDay: number;
+    adNcoin: number;
+    affectionXpPerPlay: number;
+    affectionPlaysPerDay: number;
+    dropCooldownMs: number;
+    dangerHoldMs: number;
+    boxWidthInWatermelons: number;
+    dropTiersMax: number;
+  };
   cozy: {
     pointsPerTier: Record<string, number>;
     tierNameKo?: Record<string, string>;
@@ -395,7 +409,7 @@ export type CatLetterState = {
   seasonEnds: string[];
 };
 
-export type AffectionSource = "pet" | "attend" | "sameDraw" | "mission";
+export type AffectionSource = "pet" | "attend" | "sameDraw" | "mission" | "suika";
 
 export type AffectionConfig = {
   maxLevel: number;

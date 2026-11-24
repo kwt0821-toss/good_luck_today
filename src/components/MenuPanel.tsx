@@ -118,6 +118,7 @@ type MenuPanelProps = {
    * attend_1 stays in the menu; draw_1 and room_1 leave it.
    */
   onMissionNavigate?: (missionId: string) => void;
+  onOpenSuika: () => void;
 };
 
 function formatMeta(text: string) {
@@ -164,6 +165,7 @@ export function MenuPanel({
   highlightRowId = null,
   onHighlightDone,
   onMissionNavigate,
+  onOpenSuika,
 }: MenuPanelProps) {
   const [model, setModel] = useState<MenuViewModel | null>(null);
   const [shownNyang, setShownNyang] = useState<number | null>(null);
@@ -583,6 +585,11 @@ export function MenuPanel({
 
   const onRow = (open: string, enabled: boolean, id: string) => {
     if (!enabled && id !== "points" && id !== "exchange") return;
+    if (open === "action:suikaGame") {
+      onClose();
+      onOpenSuika();
+      return;
+    }
     if (open === "action:rewardedAd(paw)") {
       if (!enabled) {
         nyNotify({

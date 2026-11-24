@@ -870,9 +870,9 @@
       "idempotency": "tossUserKey + adRequestId",
       "notice": "광고를 봐서 냥코인 1개를 받았어요"
     },
-    "adsDailyMaxTotal": 14,
+    "adsDailyMaxTotal": 17,
     "adsYearlyMaxTotal": 5110,
-    "adsDailyMaxNote": "광고 뽑기 4 + 젤리 광고 10"
+    "adsDailyMaxNote": "광고 뽑기 4 + 젤리 광고 10 + 수박냥 합치기 광고 3"
   },
   "dailyMissions": {
     "resetTimeKST": "00:00",
@@ -891,7 +891,8 @@
       "pet": { "xp": 5, "perDay": 3 },
       "attend": { "xp": 20, "perDay": 1 },
       "sameDraw": { "xp": 15, "perDay": 2 },
-      "mission": { "xp": 10, "perDay": 1 }
+      "mission": { "xp": 10, "perDay": 1 },
+      "suika": { "xp": 5, "perDay": 2 }
     },
     "rateBonus": { "fromLevel": 5, "weightMul": 1.2 },
     "furnitureId": "heart_cushion_bed",
@@ -935,6 +936,24 @@
         }
       }
     }
+  },
+  "suikaGame": {
+    "freePlaysPerDay": 2,
+    "adsPerDay": 3,
+    "jellyByScore": [
+      { "minScore": 0, "jelly": 5 },
+      { "minScore": 1500, "jelly": 8 },
+      { "minScore": 4000, "jelly": 10 }
+    ],
+    "watermelonNcoin": 5,
+    "watermelonMaxPerDay": 1,
+    "adNcoin": 1,
+    "affectionXpPerPlay": 5,
+    "affectionPlaysPerDay": 2,
+    "dropCooldownMs": 550,
+    "dangerHoldMs": 2000,
+    "boxWidthInWatermelons": 2.25,
+    "dropTiersMax": 5
   },
   "roomRender": { "renderer": "canvas", "tiles": true, "backdrop": false, "depth": true, "depthCats": false, "fx": true, "lite": true }
 }
