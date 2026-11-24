@@ -92,6 +92,7 @@ export function SuikaGameModal({ ops, economy, onClose, onOps }: Props) {
   const [adNote, setAdNote] = useState("");
   const [catUrl, setCatUrl] = useState(() => roomAsset(CHEESE));
   const endGuard = useRef(false);
+  const startedAtRef = useRef(0);
 
   useEffect(() => {
     aliveRef.current = true;
@@ -167,7 +168,7 @@ export function SuikaGameModal({ ops, economy, onClose, onOps }: Props) {
     onOps(next);
   };
 
-  const sendFinish = async (round: Snap) => {
+  const sendFinish = async (round: Snap, destination: "result" | "start" = "result") => {
     setFinishing(true);
     setFinishNote("");
     const result = await suikaFinish({
@@ -181,12 +182,17 @@ export function SuikaGameModal({ ops, economy, onClose, onOps }: Props) {
     if (!result.ok) {
       endGuard.current = false;
       setServer(null);
+      if (destination === "start") {
+        setStatusNote(RETRY);
+        setPhase("start");
+        loadStatus();
+        return;
+      }
       setFinishNote(RETRY);
       setPhase("result");
       return;
     }
     setCounts(result);
-    setServer(result);
     if (result.affectionXp === 5) {
       const granted = grantAffection(opsRef.current, economy, "suika");
       if (granted !== opsRef.current) {
@@ -197,6 +203,14 @@ export function SuikaGameModal({ ops, economy, onClose, onOps }: Props) {
     }
     await refreshChips(result.jelly, result.balance);
     if (!aliveRef.current) return;
+    if (destination === "start") {
+      setSnap(null);
+      setServer(null);
+      setStatusNote("");
+      setPhase("start");
+      return;
+    }
+    setServer(result);
     setPhase("result");
   };
 
@@ -221,6 +235,7 @@ export function SuikaGameModal({ ops, economy, onClose, onOps }: Props) {
       return;
     }
     endGuard.current = false;
+    startedAtRef.current = Date.now();
     setRoundId(id);
     setNextTier(rollDropTier(tuning.dropTiersMax));
     setSnap(null);
@@ -231,7 +246,7 @@ export function SuikaGameModal({ ops, economy, onClose, onOps }: Props) {
     setPhase("play");
   };
 
-  const onOver = (view: SuikaView) => {
+  const finishFromView = (view: SuikaView, destination: "result" | "start") => {
     if (endGuard.current) return;
     endGuard.current = true;
     const round = {
@@ -240,7 +255,16 @@ export function SuikaGameModal({ ops, economy, onClose, onOps }: Props) {
       madeWatermelon: view.madeWatermelon,
     };
     setSnap(round);
-    void sendFinish(round);
+    void sendFinish(round, destination);
+  };
+
+  const onOver = (view: SuikaView) => {
+    finishFromView(view, "result");
+  };
+
+  const onQuit = (view: SuikaView) => {
+    const early = Date.now() - startedAtRef.current < 25_000;
+    finishFromView(view, early ? "start" : "result");
   };
 
   const watchAd = async (kind: "double" | "extra") => {
@@ -310,9 +334,9 @@ export function SuikaGameModal({ ops, economy, onClose, onOps }: Props) {
           tuning={tuning}
           nextTier={nextTier}
           onNext={setNextTier}
-          catUrl={catUrl}
           finishing={finishing}
           onOver={onOver}
+          onQuit={onQuit}
         />
       ) : phase === "result" && snap ? (
         <ResultView
@@ -545,49 +569,59 @@ function ResultView({
   );
 }
 
+const PEEK_HEAD = {
+  left: "/assets/suika/cat/head-left.png",
+  center: "/assets/suika/cat/head-center.png",
+  right: "/assets/suika/cat/head-right.png",
+} as const;
+
+type PeekHead = keyof typeof PEEK_HEAD;
+
+function peekHead(aimX: number, boxW: number): PeekHead {
+  const mid = boxW / 2;
+  const band = boxW * 0.2;
+  if (aimX < mid - band) return "left";
+  if (aimX > mid + band) return "right";
+  return "center";
+}
+
 function SuikaPlay({
   roundId,
   tuning,
   nextTier,
   onNext,
-  catUrl,
   finishing,
   onOver,
+  onQuit,
 }: {
   roundId: string;
   tuning: ReturnType<typeof tuningFrom>;
   nextTier: number;
   onNext: (tier: number) => void;
-  catUrl: string;
   finishing: boolean;
   onOver: (view: SuikaView) => void;
+  onQuit: (view: SuikaView) => void;
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const lineRef = useRef<HTMLDivElement>(null);
   const simRef = useRef<SuikaSim | null>(null);
-  const layoutRef = useRef({ cssW: 1, cssH: 1, originX: 18, originY: 96 });
+  const layoutRef = useRef({ cssW: 1, cssH: 1, originX: 18, originY: 160, boxW: 180, boxH: 240 });
   const nextRef = useRef(nextTier);
   const onOverRef = useRef(onOver);
   const onNextRef = useRef(onNext);
-  const catRef = useRef<HTMLImageElement | null>(null);
+  const onQuitRef = useRef(onQuit);
   const aimingRef = useRef(false);
-  const [hud, setHud] = useState({ score: 0, largest: 0, ready: true });
+  const [askQuit, setAskQuit] = useState(false);
+  const [hud, setHud] = useState<{ score: number; largest: number; head: PeekHead }>({
+    score: 0,
+    largest: 0,
+    head: "center",
+  });
   nextRef.current = nextTier;
   onOverRef.current = onOver;
   onNextRef.current = onNext;
-
-  useEffect(() => {
-    const image = new Image();
-    image.src = catUrl;
-    const ready = () => {
-      catRef.current = image;
-    };
-    if (image.complete && image.naturalWidth > 0) ready();
-    else image.onload = ready;
-    return () => {
-      image.onload = null;
-    };
-  }, [catUrl]);
+  onQuitRef.current = onQuit;
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -595,14 +629,16 @@ function SuikaPlay({
     if (!stage || !canvas) return undefined;
     const context = canvas.getContext("2d");
     if (!context) return undefined;
-    const rect = stage.getBoundingClientRect();
-    const cssW = Math.max(280, rect.width);
-    const cssH = Math.max(360, rect.height);
+    const bounds = stage.getBoundingClientRect();
+    const cssW = Math.max(1, bounds.width);
+    const cssH = Math.max(1, bounds.height);
     const originX = 18;
-    const originY = 96;
+    const rim = 12;
+    const lineTop = lineRef.current?.getBoundingClientRect().top ?? bounds.top + 168;
+    const originY = Math.max(64, Math.round(lineTop - bounds.top));
     const boxW = Math.max(180, cssW - originX * 2);
-    const boxH = Math.max(240, cssH - originY - 16);
-    const layout = { cssW, cssH, originX, originY, boxW, boxH };
+    const boxH = Math.max(180, cssH - originY - rim);
+    const layout = { cssW, cssH, originX, originY, boxW, boxH, rim };
     layoutRef.current = layout;
     const sim = createSuika({
       width: boxW,
@@ -612,7 +648,9 @@ function SuikaPlay({
       boxWidthInWatermelons: tuning.boxWidthInWatermelons,
       dropTiersMax: tuning.dropTiersMax,
     });
-    aimSuika(sim, boxW / 2, nextRef.current);
+    layout.boxW = sim.width;
+    layout.boxH = sim.height;
+    aimSuika(sim, sim.width / 2, nextRef.current);
     simRef.current = sim;
     const pops: Array<SuikaPop & { born: number }> = [];
     let raf = 0;
@@ -621,33 +659,34 @@ function SuikaPlay({
     let reported = false;
     let hudScore = -1;
     let hudLargest = -1;
-    let hudReady = true;
+    let hudHead: PeekHead = "center";
 
     const paintSize = () => {
-      const bounds = stage.getBoundingClientRect();
+      const next = stage.getBoundingClientRect();
       const dpr = Math.min(2, window.devicePixelRatio || 1);
-      canvas.width = Math.max(1, Math.floor(bounds.width * dpr));
-      canvas.height = Math.max(1, Math.floor(bounds.height * dpr));
+      canvas.width = Math.max(1, Math.floor(next.width * dpr));
+      canvas.height = Math.max(1, Math.floor(next.height * dpr));
     };
     paintSize();
 
     const draw = (now: number) => {
-      const bounds = stage.getBoundingClientRect();
+      const next = stage.getBoundingClientRect();
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       const view = readSuika(sim, now);
-      const sx = bounds.width / layout.cssW;
-      const sy = bounds.height / layout.cssH;
+      const sx = next.width / layout.cssW;
+      const sy = next.height / layout.cssH;
       context.setTransform(dpr * sx, 0, 0, dpr * sy, 0, 0);
       context.clearRect(0, 0, layout.cssW, layout.cssH);
-      context.fillStyle = "#1e1a2b";
-      roundRect(context, originX - 8, originY - 8, boxW + 16, boxH + 16, 22);
-      context.fill();
+      context.fillStyle = "#171428";
+      context.fillRect(originX, originY, layout.boxW, layout.boxH);
+      context.fillStyle = "#2a2344";
+      context.fillRect(originX - rim, originY, rim, layout.boxH);
+      context.fillRect(originX + layout.boxW, originY, rim, layout.boxH);
+      context.fillRect(originX - rim, originY + layout.boxH, layout.boxW + rim * 2, rim);
       context.save();
       context.beginPath();
-      roundRect(context, originX, originY, boxW, boxH, 16);
+      context.rect(originX, originY, layout.boxW, layout.boxH);
       context.clip();
-      context.fillStyle = "#171428";
-      context.fillRect(originX, originY, boxW, boxH);
       context.translate(originX, originY);
       for (const fruit of view.fruits) drawFruit(context, fruit.tier, fruit.x, fruit.y, fruit.r, fruit.angle);
       const livePops = pops.filter((pop) => now - pop.born < 320);
@@ -658,7 +697,7 @@ function SuikaPlay({
       const lineY = originY + view.dangerY;
       context.save();
       context.beginPath();
-      context.rect(originX, originY, boxW, boxH);
+      context.rect(originX, originY, layout.boxW, layout.boxH);
       context.clip();
       context.strokeStyle = view.danger
         ? `rgba(255, 59, 92, ${0.45 + 0.55 * Math.abs(Math.sin(now / 80))})`
@@ -670,11 +709,11 @@ function SuikaPlay({
       }
       context.beginPath();
       context.moveTo(originX + 8, lineY);
-      context.lineTo(originX + boxW - 8, lineY);
+      context.lineTo(originX + layout.boxW - 8, lineY);
       context.stroke();
       context.restore();
       const held = fruitByTier(nextRef.current);
-      const heldR = (RADIUS_FRAC[held.tier] ?? 0.3) * (boxW / (tuning.boxWidthInWatermelons * 2));
+      const heldR = (RADIUS_FRAC[held.tier] ?? 0.3) * (layout.boxW / (tuning.boxWidthInWatermelons * 2));
       const heldX = originX + view.aimX;
       const heldY = originY - heldR * 0.15;
       context.save();
@@ -683,21 +722,17 @@ function SuikaPlay({
       context.lineWidth = 1.5;
       context.beginPath();
       context.moveTo(heldX, heldY + heldR);
-      context.lineTo(heldX, originY + boxH * 0.5);
+      context.lineTo(heldX, originY + layout.boxH * 0.5);
       context.stroke();
       context.restore();
-      const cat = catRef.current;
-      if (cat && cat.naturalWidth > 0) {
-        const size = 78;
-        context.drawImage(cat, heldX - size / 2, originY - size + 12, size, size);
-      }
       drawFruit(context, held.tier, heldX, heldY, heldR, 0);
       const largest = view.fruits.reduce((max, fruit) => Math.max(max, fruit.tier), 0);
-      if (hudScore !== view.score || hudLargest !== largest || hudReady !== view.dropReady) {
+      const head = peekHead(view.aimX, view.width);
+      if (hudScore !== view.score || hudLargest !== largest || hudHead !== head) {
         hudScore = view.score;
         hudLargest = largest;
-        hudReady = view.dropReady;
-        setHud({ score: view.score, largest, ready: view.dropReady });
+        hudHead = head;
+        setHud({ score: view.score, largest, head });
       }
       if (view.over && !reported) {
         reported = true;
@@ -748,14 +783,10 @@ function SuikaPlay({
   };
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (askQuit) return;
     const stage = stageRef.current;
     const sim = simRef.current;
     if (!stage || !sim) return;
-    const bounds = stage.getBoundingClientRect();
-    const layout = layoutRef.current;
-    const scale = bounds.height / layout.cssH;
-    const y = (event.clientY - bounds.top) / scale;
-    if (y > layout.originY + sim.height * 0.5) return;
     aimingRef.current = true;
     stage.setPointerCapture(event.pointerId);
     pointX(event.clientX);
@@ -764,6 +795,7 @@ function SuikaPlay({
   const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!aimingRef.current) return;
     aimingRef.current = false;
+    if (askQuit) return;
     const sim = simRef.current;
     if (!sim) return;
     const now = performance.now();
@@ -776,26 +808,31 @@ function SuikaPlay({
     onNextRef.current(rolled);
   };
 
-  const next = fruitByTier(nextTier);
+  const confirmQuit = () => {
+    const sim = simRef.current;
+    if (!sim) return;
+    aimingRef.current = false;
+    setAskQuit(false);
+    onQuitRef.current(readSuika(sim, performance.now()));
+  };
+
   return (
-    <>
+    <div className="suika-board">
       <div className="suika-hud">
+        <button
+          type="button"
+          className="suika-quit"
+          onClick={() => {
+            aimingRef.current = false;
+            setAskQuit(true);
+          }}
+        >
+          그만하기
+        </button>
         <p className="suika-score">
           <span>점수</span>
           {hud.score}
         </p>
-        <div className={hud.ready ? "suika-pill" : "suika-pill is-wait"}>
-          <img src={next.src} alt="" />
-          <span>다음 {next.name}</span>
-        </div>
-      </div>
-      <div className="suika-tiers" aria-hidden="true">
-        {FRUITS.map((fruit) => (
-          <i
-            key={fruit.tier}
-            className={fruit.tier === hud.largest ? "is-max" : fruit.tier < hud.largest ? "is-on" : undefined}
-          />
-        ))}
       </div>
       <div
         ref={stageRef}
@@ -812,7 +849,45 @@ function SuikaPlay({
         <canvas ref={canvasRef} />
         {finishing ? <p className="suika-wait">결과를 가져오고 있어요</p> : null}
       </div>
-    </>
+      <div className="suika-peek" aria-hidden="true">
+        <div className="suika-layer suika-layer-head">
+          <img src={PEEK_HEAD[hud.head]} alt="" />
+        </div>
+        <div className="suika-layer suika-layer-wall">
+          <div className="suika-wall-cover" />
+          <div className="suika-tiers" ref={lineRef}>
+            {FRUITS.map((fruit) => (
+              <i
+                key={fruit.tier}
+                className={fruit.tier === hud.largest ? "is-max" : fruit.tier < hud.largest ? "is-on" : undefined}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="suika-layer suika-layer-paws">
+          <img src="/assets/suika/cat/paws.png" alt="" />
+        </div>
+      </div>
+      {askQuit ? (
+        <div className="suika-sheet-back" role="dialog" aria-labelledby="suika-quit-title">
+          <div className="suika-sheet">
+            <h2 id="suika-quit-title">그만하고 나갈까요?</h2>
+            <p>25초가 지났으면</p>
+            <p>지금까지의 점수로 젤리를 받아요.</p>
+            <p>25초가 안 됐으면 젤리를 받지 못해요.</p>
+            <p>오늘 놀이 횟수는 이미 사용됐어요.</p>
+            <div className="suika-sheet-actions">
+              <button type="button" className="stay" onClick={() => setAskQuit(false)}>
+                계속하기
+              </button>
+              <button type="button" className="leave" onClick={confirmQuit}>
+                나가기
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -847,21 +922,4 @@ function drawPop(context: CanvasRenderingContext2D, pop: SuikaPop & { born: numb
   context.arc(pop.x, pop.y, pop.r * (1 + t * 0.45), 0, Math.PI * 2);
   context.stroke();
   context.restore();
-}
-
-function roundRect(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
-) {
-  context.beginPath();
-  context.moveTo(x + radius, y);
-  context.arcTo(x + width, y, x + width, y + height, radius);
-  context.arcTo(x + width, y + height, x, y + height, radius);
-  context.arcTo(x, y + height, x, y, radius);
-  context.arcTo(x, y, x + width, y, radius);
-  context.closePath();
 }

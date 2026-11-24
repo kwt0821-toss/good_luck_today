@@ -1003,7 +1003,7 @@
 .main-rule {
   width: calc(100% - 48px);
   height: 1px;
-  margin: 6px 24px 4px;
+  margin: 6px 24px 16px;
   background: rgba(243, 235, 215, 0.28);
   box-sizing: border-box;
 }

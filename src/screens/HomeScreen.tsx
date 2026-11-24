@@ -379,7 +379,13 @@ export function HomeScreen({
         <div className="main-affection-row">
           {favorite}
           <button type="button" className="home-suika" aria-label="수박냥 합치기" onClick={onOpenSuika}>
-            <img src="/assets/suika/11_watermelon.png" alt="" />
+            <span className="home-suika-face">
+              <img src="/assets/suika/11_watermelon.png" alt="" />
+            </span>
+            <span className="home-suika-label">
+              수박게임
+              <img src="/assets/ncoin/ncoin-32.png" alt="" />
+            </span>
           </button>
           <HomeWalletChips
             pawBalance={pawBalance}
