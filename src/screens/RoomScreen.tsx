@@ -444,6 +444,7 @@ export function RoomScreen({
   const dragRawRef = useRef(0);
   const slidingRef = useRef(false);
   const settleGen = useRef(0);
+  const settleTargetRef = useRef<number | null>(null);
   const dragRaf = useRef(0);
   const indexRef = useRef(0);
   const viewWRef = useRef(VIEW_W);
@@ -1803,6 +1804,7 @@ export function RoomScreen({
   const finishSettle = (gen: number, targetIndex: number) => {
     if (settleGen.current !== gen) return;
     settleGen.current += 1;
+    settleTargetRef.current = null;
     const ids = unlockedIdsRef.current;
     const from = indexRef.current;
     slidingRef.current = false;
@@ -1826,6 +1828,7 @@ export function RoomScreen({
       return;
     }
     slidingRef.current = true;
+    settleTargetRef.current = targetIndex;
     setSwipePhase("settle");
     const slider = sliderRef.current;
     if (slider) {
@@ -1879,6 +1882,15 @@ export function RoomScreen({
     if (mode !== "view") return;
     if (slidingRef.current && sliderRef.current) {
       settleGen.current += 1;
+      const target = settleTargetRef.current;
+      settleTargetRef.current = null;
+      const nextId = target === null ? undefined : unlockedIdsRef.current[target];
+      const current = stateRef.current;
+      if (target !== null && target !== indexRef.current && nextId && current && nextId !== current.currentRoomId) {
+        indexRef.current = target;
+        persist({ ...current, currentRoomId: nextId });
+        void haptic("tap");
+      }
       const matrix = new DOMMatrix(getComputedStyle(sliderRef.current).transform);
       const visual = matrix.m41 + indexRef.current * viewWRef.current;
       dragRawRef.current = visual;
@@ -1940,7 +1952,7 @@ export function RoomScreen({
       paintSlider(-indexRef.current * viewWRef.current + dragXRef.current);
     }
     if (!gesture.dragging) return;
-    const dx = dragRawRef.current;
+    const dx = dragRawRef.current - gesture.base;
     const index = indexRef.current;
     const count = unlockedIdsRef.current.length;
     let target = index;
