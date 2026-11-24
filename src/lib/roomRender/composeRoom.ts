@@ -28,7 +28,18 @@ function brightOf(island: HTMLElement): RoomBright {
 function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
-    image.onload = () => resolve(image);
+    const done = () => resolve(image);
+    image.onload = () => {
+      if (typeof image.decode !== "function") {
+        done();
+        return;
+      }
+      try {
+        void image.decode().then(done).catch(done);
+      } catch {
+        done();
+      }
+    };
     image.onerror = () => reject(new Error(url));
     image.src = url;
   });

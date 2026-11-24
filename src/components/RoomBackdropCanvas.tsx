@@ -23,6 +23,8 @@ export function RoomBackdropCanvas({ tiles, active, onFail }: Props) {
   tilesRef.current = tiles;
   const failRef = useRef(onFail);
   failRef.current = onFail;
+  const activeRef = useRef(active);
+  activeRef.current = active;
   const key = floorCanvasKey(tiles);
 
   useEffect(() => {
@@ -125,7 +127,7 @@ export function RoomBackdropCanvas({ tiles, active, onFail }: Props) {
       else finish();
     };
 
-    if (active) draw();
+    if (activeRef.current) draw();
     else timer = window.setTimeout(draw, 350);
     document.addEventListener("visibilitychange", onVisible);
 
@@ -135,7 +137,7 @@ export function RoomBackdropCanvas({ tiles, active, onFail }: Props) {
       if (raf) cancelAnimationFrame(raf);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [key, active]);
+  }, [key]);
 
   return (
     <canvas

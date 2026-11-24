@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { defaultSitFrame, type CatSpriteSheet } from "../lib/roomCat";
 import type { CatMotionRef, RoomCatMotion } from "../lib/useRoomCat";
 import {
@@ -126,7 +126,7 @@ export function RoomDepthCanvas({
         images.set(url, null);
         void loadRoomImage(url).then((image) => {
           images.set(url, image);
-          if (!dead) paint(null);
+          if (!dead) redrawRef.current();
         });
       } else images.set(url, null);
       return null;
@@ -448,7 +448,16 @@ export function RoomDepthCanvas({
       canvas.width = 0;
       canvas.height = 0;
     };
-  }, [spriteKey, catKey, drawCats, active, reduceMotion]);
+  }, [spriteKey, catKey, drawCats, reduceMotion]);
+
+  const skipActiveRedraw = useRef(true);
+  useEffect(() => {
+    if (skipActiveRedraw.current) {
+      skipActiveRedraw.current = false;
+      return;
+    }
+    redrawRef.current();
+  }, [active]);
 
   return <canvas ref={canvasRef} className="lucky-depth-canvas" data-photo-z="19" aria-hidden="true" />;
 }

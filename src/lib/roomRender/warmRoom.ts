@@ -1,13 +1,16 @@
 import { Environment } from "@apps-in-toss/web-framework";
 
-import { loadRoomCatalog, roomAsset } from "../roomCatalog";
+import { itemMap, loadRoomCatalog, roomAsset } from "../roomCatalog";
 import { ROOM_KEY } from "../roomStore";
 import { defaultFloorTiles, floorTileSrc } from "../roomTiles";
+import type { RoomOrientation } from "../roomTypes";
 import { loadRoomImage } from "./imageCache";
 import { LAYER_CROPS } from "./layerCrops";
 import { prebakeFloor, type FloorCanvasTile } from "./paintFloor";
+import { roomImageUrls, type RoomImageSource } from "./roomImages";
 import { canvas2dSupported, roomRenderFlags, type RoomRenderConfig } from "./renderer";
 import { warmRelatives } from "./warmList";
+import { warmRoomImages } from "./warmQueue";
 
 const held: HTMLImageElement[] = [];
 let started = false;
@@ -69,8 +72,64 @@ function asCats(value: unknown): string[] {
   return value.filter((id): id is string => typeof id === "string" && id.length > 0);
 }
 
+function asStringList(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const cells: string[] = [];
+  for (const cell of value) {
+    if (typeof cell !== "string") return null;
+    cells.push(cell);
+  }
+  return cells;
+}
+
+/** Current saved room, or null when the stored layout is missing or malformed. */
+function readSavedRoomFull(): RoomImageSource | null {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(ROOM_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      currentRoomId?: unknown;
+      rooms?: Record<string, unknown>;
+    };
+    if (typeof parsed.currentRoomId !== "string" || !parsed.rooms) return null;
+    const room = parsed.rooms[parsed.currentRoomId];
+    if (!room || typeof room !== "object") return null;
+    const record = room as {
+      floorTiles?: unknown;
+      wallTiles?: unknown;
+      floor?: unknown;
+      walls?: unknown;
+      roamingCatIds?: unknown;
+    };
+    const floorTiles = asFloor(record.floorTiles);
+    if (!floorTiles || !record.wallTiles || typeof record.wallTiles !== "object") return null;
+    const sides = record.wallTiles as { L?: unknown; R?: unknown };
+    const left = asStringList(sides.L);
+    const right = asStringList(sides.R);
+    if (!left || !right || !Array.isArray(record.floor) || !Array.isArray(record.walls)) return null;
+    const floor: { id: string; orientation: RoomOrientation }[] = [];
+    for (const entry of record.floor) {
+      if (!entry || typeof entry !== "object") return null;
+      const row = entry as { id?: unknown; orientation?: unknown };
+      if (typeof row.id !== "string") return null;
+      floor.push({ id: row.id, orientation: row.orientation === "mirrored" ? "mirrored" : "default" });
+    }
+    const walls: { id: string; wall: "L" | "R" }[] = [];
+    for (const entry of record.walls) {
+      if (!entry || typeof entry !== "object") return null;
+      const row = entry as { id?: unknown; wall?: unknown };
+      if (typeof row.id !== "string" || (row.wall !== "L" && row.wall !== "R")) return null;
+      walls.push({ id: row.id, wall: row.wall });
+    }
+    return { floorTiles, wallTiles: { L: left, R: right }, floor, walls, roamingCatIds: record.roamingCatIds };
+  } catch {
+    return null;
+  }
+}
+
 export async function warmCurrentRoom(bakeFloor: boolean): Promise<void> {
-  await loadRoomCatalog().catch(() => undefined);
+  const catalog = await loadRoomCatalog().catch(() => undefined);
   const saved = readSavedRoom();
   const floor = saved.floor ?? defaultFloorTiles();
   const relatives = warmRelatives(
@@ -84,17 +143,22 @@ export async function warmCurrentRoom(bakeFloor: boolean): Promise<void> {
       if (image) held.push(image);
     }),
   );
-  if (!bakeFloor) return;
-  const tiles: FloorCanvasTile[] = [];
-  for (let row = 0; row < floor.length; row += 1) {
-    const line = floor[row] ?? [];
-    for (let col = 0; col < line.length; col += 1) {
-      const id = line[col];
-      if (!id) continue;
-      tiles.push({ col, row, src: roomAsset(floorTileSrc(id, col, row)) });
+  if (bakeFloor) {
+    const tiles: FloorCanvasTile[] = [];
+    for (let row = 0; row < floor.length; row += 1) {
+      const line = floor[row] ?? [];
+      for (let col = 0; col < line.length; col += 1) {
+        const id = line[col];
+        if (!id) continue;
+        tiles.push({ col, row, src: roomAsset(floorTileSrc(id, col, row)) });
+      }
     }
+    await prebakeFloor(tiles);
   }
-  await prebakeFloor(tiles);
+  if (!catalog) return;
+  const full = readSavedRoomFull();
+  if (!full) return;
+  warmRoomImages(roomImageUrls(full, itemMap(catalog.items)));
 }
 
 /** Decode the current room once, after the home screen has been idle for 1.5s. */

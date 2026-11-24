@@ -28,9 +28,11 @@ import { noteCatLetterFlag } from "../lib/catLetters";
 import { track } from "../lib/analytics";
 import { isDebugHitRequest } from "../lib/debugSaveQuery";
 import { RoomPerfBox } from "../components/RoomPerfBox";
-import { catSheetFile } from "../lib/roomRender/warmList";
 import { scheduleIdle } from "../lib/roomRender/idle";
 import { composeRoom } from "../lib/roomRender/composeRoom";
+import { layerCrop } from "../lib/roomRender/layerCrops";
+import { roomImageUrls } from "../lib/roomRender/roomImages";
+import { pauseRoomWarm, warmRoomImages } from "../lib/roomRender/warmQueue";
 import { peekNeighborShot, rememberNeighborShot, roomPictureKey } from "../lib/roomRender/neighborShots";
 import { debugPerfEnabled, markRoomFirstPaint } from "../lib/roomRender/perf";
 import { readRoomRenderFlags, type RoomRenderFlags } from "../lib/roomRender/renderer";
@@ -93,7 +95,7 @@ import { claimRoomSetReward, roomSetCue, roomSetFor, roomSetViews, type RoomSetV
 import { applyOpsPrices, grantUnlockRewards, recalculateRoomCozy, spendRoomPoints, syncRoomSaveWithOps } from "../lib/roomEconomy";
 import { displayJellyBalance, jellySpend, jellySpendFailMessage, serverJellyActive, subscribeJelly } from "../lib/serverJelly";
 import { refreshVisitStatus, syncVisitLayoutIfPublic } from "../lib/roomVisit";
-import { DEFAULT_CAT_BREED_ID, furnitureDepthKey } from "../lib/roomCat";
+import { furnitureDepthKey } from "../lib/roomCat";
 import { useRoomPeriod } from "../lib/roomTime";
 import {
   cloneLayout,
@@ -142,7 +144,7 @@ import {
   validateWallPreview,
   type PlacementPreview,
 } from "../lib/roomPlacement";
-import { floorTileSrc, paintTargetLabel, wallStripSrc } from "../lib/roomTiles";
+import { paintTargetLabel } from "../lib/roomTiles";
 import type { OpsEconomy, OpsPrices, PriceTier } from "../lib/opsTypes";
 import type {
   FloorPlacement,
@@ -167,37 +169,12 @@ const VIEW_WORLD_LAYERS = [
 ];
 import "./RoomScreen.css";
 
-function pushRoomAsset(urls: Set<string>, relative: string | null | undefined) {
-  const url = roomAsset(relative);
-  if (url) urls.add(url);
-}
-
-/** Decode a neighbor room's tiles, furniture, world layers, and cat sheet before it slides in. */
-function collectRoomImageUrls(
-  urls: Set<string>,
-  room: RoomSaveState["rooms"][string],
-  itemsById: Map<string, RoomItem>,
-) {
-  room.floorTiles.forEach((row, rowIndex) => {
-    row.forEach((tile, col) => pushRoomAsset(urls, floorTileSrc(tile, col, rowIndex)));
-  });
-  room.wallTiles.L.forEach((tile, index) => pushRoomAsset(urls, wallStripSrc(tile, "L", index)));
-  room.wallTiles.R.forEach((tile, index) => pushRoomAsset(urls, wallStripSrc(tile, "R", index)));
-  for (const place of room.floor) {
-    const item = itemsById.get(place.id);
-    if (!item) continue;
-    pushRoomAsset(urls, item.furniture?.[place.orientation]?.image ?? item.image);
-    pushRoomAsset(urls, item.tileImage);
+function viewWorldUrl(relative: string, lite: boolean) {
+  if (lite) {
+    const crop = layerCrop(relative);
+    if (crop) return roomAsset(`world/${crop.file}`);
   }
-  for (const place of room.walls) {
-    const item = itemsById.get(place.id);
-    if (!item) continue;
-    const side = place.wall === "L" ? item.wallImages?.left : item.wallImages?.right;
-    pushRoomAsset(urls, side || item.image);
-  }
-  const cats = normalizeRoomCatIds(room.roamingCatIds);
-  const breeds = cats.length > 0 ? cats : [DEFAULT_CAT_BREED_ID];
-  for (const catId of breeds) pushRoomAsset(urls, catSheetFile(catId));
+  return roomAsset(relative);
 }
 
 /** `drag` is kept as an alias of `preview` for older tutorial callers. */
@@ -481,6 +458,8 @@ export function RoomScreen({
   const fitTarget = useRef<number | null>(null);
   const [neighborsReady, setNeighborsReady] = useState(false);
   const [neighborRush, setNeighborRush] = useState(false);
+  const [heldPages, setHeldPages] = useState<string[] | null>(null);
+  const pageIdsRef = useRef<string[]>([]);
   const renderFlagsRef = useRef<RoomRenderFlags | null>(null);
   const perfOn = useMemo(
     () => (typeof window === "undefined" ? false : debugPerfEnabled(window.location.search, readTossSchemeUrl())),
@@ -804,7 +783,6 @@ export function RoomScreen({
   ]);
 
   const swipe = useRef({ x: 0, y: 0, base: 0, active: false, dragging: false });
-  const warmedRoomImages = useRef(new Set<string>());
   const itemsById = useMemo(() => itemMap(items), [items]);
   const roomCatIds = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -1122,26 +1100,33 @@ export function RoomScreen({
   }, [mode, viewW, state?.currentRoomId]);
 
   useEffect(() => {
-    if (mode !== "view" || !state || !roomsFile) return;
-    const unlocked = roomsFile.switcher.order.filter((id) => state.unlocked.includes(id) && state.rooms[id]);
-    const shown = unlocked.includes(state.currentRoomId) ? state.currentRoomId : unlocked[0];
-    const index = Math.max(0, unlocked.indexOf(shown ?? state.currentRoomId));
-    const urls = new Set<string>();
-    for (const relative of VIEW_WORLD_LAYERS) pushRoomAsset(urls, relative);
-    for (const id of [unlocked[index - 1], unlocked[index], unlocked[index + 1]]) {
-      if (!id) continue;
-      const room = state.rooms[id];
-      if (room) collectRoomImageUrls(urls, room, itemsById);
-    }
-    for (const url of urls) {
-      if (warmedRoomImages.current.has(url)) continue;
-      warmedRoomImages.current.add(url);
-      const img = new Image();
-      img.decoding = "async";
-      img.src = url;
-      if (typeof img.decode === "function") void img.decode().catch(() => undefined);
-    }
-  }, [mode, state, roomsFile, itemsById]);
+    if (swipePhase !== "idle" || mode !== "view" || !state || !roomsFile) return;
+    const saved = state;
+    const file = roomsFile;
+    const items = itemsById;
+    const timer = window.setTimeout(() => {
+      const unlocked = file.switcher.order.filter((id) => saved.unlocked.includes(id) && saved.rooms[id]);
+      const shown = unlocked.includes(saved.currentRoomId) ? saved.currentRoomId : unlocked[0];
+      const index = Math.max(0, unlocked.indexOf(shown ?? saved.currentRoomId));
+      const lite = Boolean(renderFlagsRef.current?.lite);
+      const urls: string[] = [];
+      for (const relative of VIEW_WORLD_LAYERS) {
+        const url = viewWorldUrl(relative, lite);
+        if (url) urls.push(url);
+      }
+      for (const offset of [0, 1, -1, 2, -2]) {
+        const id = unlocked[index + offset];
+        const room = id ? saved.rooms[id] : undefined;
+        if (room) urls.push(...roomImageUrls(room, items));
+      }
+      warmRoomImages(urls, 2);
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [mode, state, roomsFile, itemsById, swipePhase]);
+  useEffect(() => {
+    pauseRoomWarm(swipePhase !== "idle");
+    return () => pauseRoomWarm(false);
+  }, [swipePhase]);
 
   const applyView = (opts?: { animate?: boolean; gesturing?: boolean }) => {
     const frame = viewFrame.current;
@@ -1485,6 +1470,21 @@ export function RoomScreen({
     };
   }, [roomLive]);
   useEffect(() => {
+    if (!heldPages) return;
+    let cancelIdle = () => {};
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        cancelIdle = scheduleIdle(() => setHeldPages(null), 800);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      cancelIdle();
+    };
+  }, [heldPages]);
+  useEffect(() => {
     if (!roomLive || !perfOn) return;
     let second = 0;
     const first = requestAnimationFrame(() => {
@@ -1567,28 +1567,32 @@ export function RoomScreen({
   useEffect(() => {
     if (!renderFlags.fx || !neighborsReady || swipePhase !== "idle") return;
     let dead = false;
-    const cancel = scheduleIdle(() => {
-      if (dead || swipePhaseRef.current !== "idle") return;
-      const nodes = document.querySelectorAll<HTMLElement>(".lucky-island[data-shot-key]");
-      for (const node of nodes) {
-        const key = node.dataset.shotKey ?? "";
-        if (!key || peekNeighborShot(key)) continue;
-        if (node.closest(".lucky-room-view")?.getAttribute("data-active") === "1") continue;
-        void composeRoom(node, { maxScale: 1 }).then((shot) => {
-          if (dead || node.dataset.shotKey !== key) {
-            shot.width = 0;
-            shot.height = 0;
-            return;
-          }
-          rememberNeighborShot(key, shot);
-          setShotRev((value) => value + 1);
-        });
-        return;
-      }
-    }, 500);
+    let cancelIdle = () => {};
+    const timer = window.setTimeout(() => {
+      cancelIdle = scheduleIdle(() => {
+        if (dead || swipePhaseRef.current !== "idle") return;
+        const nodes = document.querySelectorAll<HTMLElement>(".lucky-island[data-shot-key]");
+        for (const node of nodes) {
+          const key = node.dataset.shotKey ?? "";
+          if (!key || peekNeighborShot(key)) continue;
+          if (node.closest(".lucky-room-view")?.getAttribute("data-active") === "1") continue;
+          void composeRoom(node, { maxScale: 1 }).then((shot) => {
+            if (dead || node.dataset.shotKey !== key) {
+              shot.width = 0;
+              shot.height = 0;
+              return;
+            }
+            rememberNeighborShot(key, shot);
+            setShotRev((value) => value + 1);
+          });
+          return;
+        }
+      }, 500);
+    }, 1000);
     return () => {
       dead = true;
-      cancel();
+      window.clearTimeout(timer);
+      cancelIdle();
     };
   }, [renderFlags.fx, neighborsReady, swipePhase, pictureKey, shotRev]);
 
@@ -1639,12 +1643,14 @@ export function RoomScreen({
   viewWRef.current = viewW;
   // View mode keeps the current room and its immediate neighbors mounted so a swipe
   // never creates a room mid-gesture. Farther rooms drop only after the index commits.
-  const roomPages =
+  const roomPages = (
     mode === "edit"
       ? [{ roomId: displayRoomId, index: 0 }]
       : unlockedIds
           .map((roomId, index) => ({ roomId, index }))
-          .filter(({ index }) => Math.abs(index - currentIndex) <= (neighborsReady ? 1 : 0));
+          .filter(({ index }) => Math.abs(index - currentIndex) <= (neighborsReady ? 1 : 0))
+  ).filter(({ roomId }) => !heldPages || roomId === displayRoomId || heldPages.includes(roomId));
+  pageIdsRef.current = roomPages.map(({ roomId }) => roomId);
   const otherRoomIds = editRoomIds;
   const suggestItemId =
     tutorialActive && suggestTile
@@ -1806,6 +1812,7 @@ export function RoomScreen({
     const nextId = ids[targetIndex];
     const current = stateRef.current;
     if (!nextId || !current || nextId === current.currentRoomId) return;
+    setHeldPages(pageIdsRef.current);
     persist({ ...current, currentRoomId: nextId });
     void haptic("tap");
   };
@@ -1864,6 +1871,7 @@ export function RoomScreen({
   };
 
   const onSwipeDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (heldPages) setHeldPages(null);
     if (!neighborsReady) {
       setNeighborsReady(true);
       setNeighborRush(true);
