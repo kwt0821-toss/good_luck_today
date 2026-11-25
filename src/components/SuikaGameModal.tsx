@@ -97,6 +97,7 @@ export function SuikaGameModal({ ops, economy, onClose, onOps }: Props) {
   useEffect(() => {
     aliveRef.current = true;
     warmFruitImages();
+    warmPersian();
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -569,22 +570,37 @@ function ResultView({
   );
 }
 
-const PERSIAN = {
-  left: "/assets/suika/cat/persian-left.png",
-  center: "/assets/suika/cat/persian-center.png",
-  right: "/assets/suika/cat/persian-right.png",
-} as const;
+const PEEK_ANGLES = [30, 60, 90, 120, 150] as const;
 
-type PeekHead = keyof typeof PERSIAN;
+type PeekAngle = (typeof PEEK_ANGLES)[number];
 
-const PEEK_HEADS: readonly PeekHead[] = ["left", "center", "right"];
+const PERSIAN: Record<PeekAngle, string> = {
+  30: "/assets/suika/cat/persian-30.png",
+  60: "/assets/suika/cat/persian-60.png",
+  90: "/assets/suika/cat/persian-90.png",
+  120: "/assets/suika/cat/persian-120.png",
+  150: "/assets/suika/cat/persian-150.png",
+};
 
-function peekHead(aimX: number, boxW: number): PeekHead {
-  const mid = boxW / 2;
-  const band = boxW * 0.2;
-  if (aimX < mid - band) return "left";
-  if (aimX > mid + band) return "right";
-  return "center";
+function warmPersian() {
+  for (const angle of PEEK_ANGLES) {
+    const image = new Image();
+    image.decoding = "async";
+    image.src = PERSIAN[angle];
+  }
+}
+
+function aimAngle(aimX: number, boxW: number): PeekAngle {
+  if (!(boxW > 0)) return 90;
+  const index = Math.min(PEEK_ANGLES.length - 1, Math.max(0, Math.floor((aimX / boxW) * PEEK_ANGLES.length)));
+  return PEEK_ANGLES[index];
+}
+
+function stepAngle(current: PeekAngle, target: PeekAngle): PeekAngle {
+  const from = PEEK_ANGLES.indexOf(current);
+  const to = PEEK_ANGLES.indexOf(target);
+  if (from < 0 || to < 0 || from === to) return current;
+  return PEEK_ANGLES[from + Math.sign(to - from)];
 }
 
 function SuikaPlay({
@@ -608,8 +624,8 @@ function SuikaPlay({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
   const peekRef = useRef<HTMLDivElement>(null);
-  const headRef = useRef<PeekHead>("center");
-  const [tilt, setTilt] = useState(0);
+  const targetRef = useRef<PeekAngle>(90);
+  const [shown, setShown] = useState<PeekAngle>(90);
   const simRef = useRef<SuikaSim | null>(null);
   const layoutRef = useRef({ cssW: 1, cssH: 1, originX: 18, originY: 160, boxW: 180, boxH: 240 });
   const nextRef = useRef(nextTier);
@@ -618,10 +634,9 @@ function SuikaPlay({
   const onQuitRef = useRef(onQuit);
   const aimingRef = useRef(false);
   const [askQuit, setAskQuit] = useState(false);
-  const [hud, setHud] = useState<{ score: number; largest: number; head: PeekHead }>({
+  const [hud, setHud] = useState<{ score: number; largest: number }>({
     score: 0,
     largest: 0,
-    head: "center",
   });
   nextRef.current = nextTier;
   onOverRef.current = onOver;
@@ -629,14 +644,12 @@ function SuikaPlay({
   onQuitRef.current = onQuit;
 
   useEffect(() => {
-    const previous = headRef.current;
-    if (previous === hud.head) return;
-    const sign = hud.head === "left" ? -1 : hud.head === "right" ? 1 : previous === "left" ? 1 : -1;
-    headRef.current = hud.head;
-    setTilt(sign * 5);
-    const timer = window.setTimeout(() => setTilt(0), 110);
-    return () => window.clearTimeout(timer);
-  }, [hud.head]);
+    warmPersian();
+    const timer = window.setInterval(() => {
+      setShown((current) => stepAngle(current, targetRef.current));
+    }, 70);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -674,7 +687,6 @@ function SuikaPlay({
     let reported = false;
     let hudScore = -1;
     let hudLargest = -1;
-    let hudHead: PeekHead = "center";
 
     const paintSize = () => {
       const next = stage.getBoundingClientRect();
@@ -738,25 +750,31 @@ function SuikaPlay({
       const held = fruitByTier(nextRef.current);
       const heldR = (RADIUS_FRAC[held.tier] ?? 0.3) * (layout.boxW / (tuning.boxWidthInWatermelons * 2));
       const heldX = originX + view.aimX;
-      const heldY = originY - heldR * 0.35;
-      const previewX = placeBesideCat(heldX, heldR, layout.cssW, peekRef.current, next);
+      const stageScaleY = next.height > 0 ? next.height / layout.cssH : 1;
+      const peekHeight = (peekRef.current?.getBoundingClientRect().height ?? 0) / stageScaleY;
+      const pawClearance = (peekHeight > 0 ? peekHeight : 218) * ((448 - 430) / 560) + 8;
+      const heldY = Math.min(originY + layout.boxH - heldR, originY + pawClearance + heldR);
       context.save();
       context.strokeStyle = "rgba(58, 42, 24, 0.45)";
       context.setLineDash([4, 6]);
       context.lineWidth = 1.5;
       context.beginPath();
-      context.moveTo(heldX, originY + 16);
-      context.lineTo(heldX, originY + Math.min(96, layout.boxH * 0.18));
+      const guideTop = heldY + heldR;
+      const guideBottom = Math.min(
+        originY + layout.boxH,
+        Math.max(guideTop + 36, originY + Math.min(96, layout.boxH * 0.18)),
+      );
+      context.moveTo(heldX, guideTop);
+      context.lineTo(heldX, guideBottom);
       context.stroke();
       context.restore();
-      drawFruit(context, held.tier, previewX, heldY, heldR, 0);
+      drawFruit(context, held.tier, heldX, heldY, heldR, 0);
       const largest = view.fruits.reduce((max, fruit) => Math.max(max, fruit.tier), 0);
-      const head = peekHead(view.aimX, view.width);
-      if (hudScore !== view.score || hudLargest !== largest || hudHead !== head) {
+      targetRef.current = aimAngle(view.aimX, view.width);
+      if (hudScore !== view.score || hudLargest !== largest) {
         hudScore = view.score;
         hudLargest = largest;
-        hudHead = head;
-        setHud({ score: view.score, largest, head });
+        setHud({ score: view.score, largest });
       }
       if (view.over && !reported) {
         reported = true;
@@ -874,13 +892,13 @@ function SuikaPlay({
         {finishing ? <p className="suika-wait">결과를 가져오고 있어요</p> : null}
       </div>
       <div className="suika-peek" ref={peekRef} aria-hidden="true">
-        {PEEK_HEADS.map((side) => (
+        {PEEK_ANGLES.map((angle) => (
           <img
-            key={side}
-            className={hud.head === side ? "is-on" : undefined}
-            src={PERSIAN[side]}
+            key={angle}
+            className={shown === angle ? "is-on" : undefined}
+            src={PERSIAN[angle]}
             alt=""
-            style={{ transform: `rotate(${tilt}deg)` }}
+            decoding="async"
           />
         ))}
         <div className="suika-paw-line" ref={lineRef} />
@@ -906,26 +924,6 @@ function SuikaPlay({
       ) : null}
     </div>
   );
-}
-
-function placeBesideCat(
-  heldX: number,
-  radius: number,
-  cssW: number,
-  peek: HTMLDivElement | null,
-  stageBounds: DOMRect,
-): number {
-  const minX = radius + 4;
-  const maxX = Math.max(minX, cssW - radius - 4);
-  const clamp = (value: number) => Math.min(maxX, Math.max(minX, value));
-  if (!peek || stageBounds.width < 1) return clamp(heldX);
-  const box = peek.getBoundingClientRect();
-  const scale = stageBounds.width / cssW;
-  const catLeft = (box.left - stageBounds.left) / scale;
-  const catRight = (box.right - stageBounds.left) / scale;
-  if (heldX + radius <= catLeft || heldX - radius >= catRight) return clamp(heldX);
-  const spot = heldX < (catLeft + catRight) / 2 ? catLeft - radius - 8 : catRight + radius + 8;
-  return clamp(spot);
 }
 
 function drawFruit(

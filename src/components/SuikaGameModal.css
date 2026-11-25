@@ -303,8 +303,6 @@
   height: 100%;
   object-fit: fill;
   opacity: 0;
-  transform-origin: 50% calc(100% * 400 / 560);
-  transition: opacity 200ms linear, transform 200ms ease;
   filter: drop-shadow(0 6px 8px rgba(58, 42, 24, 0.16));
 }
 
