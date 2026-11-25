@@ -8,8 +8,8 @@
   height: 100dvh;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top);
-  background: #14132a;
-  color: #fff6e6;
+  background: #fff4e8;
+  color: #3a2a18;
   font-family: "Noto Sans KR", sans-serif;
   overscroll-behavior: none;
   overflow: hidden;
@@ -27,6 +27,7 @@
 
 .suika-title {
   margin: 0;
+  color: #3a2a18;
   font-family: "Jua", sans-serif;
   font-size: 30px;
   font-weight: 400;
@@ -40,8 +41,8 @@
   height: 40px;
   border: 0;
   border-radius: 50%;
-  background: rgba(255, 246, 230, 0.14);
-  color: #fff6e6;
+  background: rgba(58, 42, 24, 0.08);
+  color: #3a2a18;
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
@@ -68,10 +69,10 @@
   flex: 0 0 auto;
   width: 68px;
   height: 68px;
-  border: 2px solid #f3ebd7;
+  border: 2px solid #1db8a6;
   border-radius: 50%;
   overflow: hidden;
-  background: #2a2144;
+  background: #fffdf8;
 }
 
 .suika-cat img {
@@ -211,14 +212,14 @@
 
 .suika-btn.line {
   background: transparent;
-  color: #fff6e6;
-  border: 1px solid rgba(255, 246, 230, 0.45);
+  color: #3a2a18;
+  border: 1px solid rgba(58, 42, 24, 0.35);
 }
 
 .suika-btn.ad {
-  background: #1e1a2b;
-  color: #fff6e6;
-  border: 1px solid rgba(255, 207, 112, 0.45);
+  background: #0e7f74;
+  color: #fffdf8;
+  border: 1px solid #0e7f74;
 }
 
 .suika-soft {
@@ -253,10 +254,10 @@
   pointer-events: auto;
   margin: 0;
   padding: 8px 12px;
-  border: 0;
+  border: 1.5px solid #3a2a18;
   border-radius: 999px;
-  background: rgba(255, 246, 230, 0.14);
-  color: #fff6e6;
+  background: #fffdf8;
+  color: #3a2a18;
   font-family: "Noto Sans KR", sans-serif;
   font-size: 13px;
   font-weight: 700;
@@ -266,6 +267,7 @@
 
 .suika-score {
   margin: 0;
+  color: #3a2a18;
   text-align: right;
   font-family: Poppins, sans-serif;
   font-size: 28px;
@@ -276,7 +278,7 @@
 .suika-score span {
   display: block;
   margin-bottom: 2px;
-  color: rgba(255, 246, 230, 0.72);
+  color: #8a6a48;
   font-family: "Noto Sans KR", sans-serif;
   font-size: 12px;
   font-weight: 700;
@@ -284,80 +286,38 @@
 
 .suika-peek {
   position: absolute;
-  top: 52px;
+  top: 0;
   left: 50%;
-  z-index: 3;
-  width: min(220px, 56vw);
-  aspect-ratio: 512 / 473;
+  z-index: 4;
+  width: min(250px, 64vw);
+  aspect-ratio: 640 / 560;
   transform: translateX(-50%);
   isolation: isolate;
   pointer-events: none;
 }
 
-.suika-layer {
-  position: absolute;
-  inset: 0;
-}
-
-.suika-layer-head {
-  z-index: 1;
-}
-
-.suika-layer-wall {
-  z-index: 2;
-}
-
-.suika-layer-paws {
-  z-index: 3;
-}
-
-.suika-layer img {
+.suika-peek img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: fill;
-  filter: drop-shadow(0 8px 10px rgba(8, 6, 20, 0.28));
+  opacity: 0;
+  transform-origin: 50% calc(100% * 400 / 560);
+  transition: opacity 200ms linear, transform 200ms ease;
+  filter: drop-shadow(0 6px 8px rgba(58, 42, 24, 0.16));
 }
 
-.suika-wall-cover {
+.suika-peek img.is-on {
+  opacity: 1;
+}
+
+.suika-paw-line {
   position: absolute;
-  z-index: 0;
+  top: calc(100% * 430 / 560);
   left: 0;
   right: 0;
-  top: calc(100% * 410 / 473);
-  bottom: 0;
-  background: #14132a;
-}
-
-.suika-tiers {
-  position: absolute;
-  z-index: 1;
-  left: 50%;
-  top: calc(100% * 410 / 473);
-  display: flex;
-  gap: 4px;
-  width: 100vw;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 7px 16px 0;
-  border-top: 2px dashed #ffcf70;
-  transform: translateX(-50%);
-}
-
-.suika-tiers i {
-  flex: 1;
-  height: 6px;
-  border-radius: 99px;
-  background: rgba(255, 246, 230, 0.18);
-}
-
-.suika-tiers i.is-on {
-  background: rgba(255, 207, 112, 0.55);
-}
-
-.suika-tiers i.is-max {
-  background: #ffcf70;
+  height: 0;
 }
 
 .suika-stage {
@@ -445,7 +405,8 @@
   margin: 0;
   padding: 12px 14px;
   border-radius: 16px;
-  background: #fff6e6;
+  border: 1px solid rgba(58, 42, 24, 0.12);
+  background: #fffdf8;
   color: #3a2a18;
   font-size: 14px;
   font-weight: 700;
@@ -500,7 +461,7 @@
 
 .suika-caption {
   margin: 0;
-  color: rgba(255, 246, 230, 0.72);
+  color: #8a6a48;
   font-size: 12px;
   font-weight: 700;
   text-align: center;

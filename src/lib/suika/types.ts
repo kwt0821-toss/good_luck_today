@@ -40,7 +40,7 @@ export function tuningFrom(economy: OpsEconomy | null | undefined): SuikaTuning 
   return {
     dropCooldownMs: positive(raw?.dropCooldownMs, 550),
     dangerHoldMs: positive(raw?.dangerHoldMs, 2000),
-    boxWidthInWatermelons: positive(raw?.boxWidthInWatermelons, 2.25),
+    boxWidthInWatermelons: positive(raw?.boxWidthInWatermelons, 1.875),
     dropTiersMax: Math.min(5, Math.max(1, Math.floor(positive(raw?.dropTiersMax, 5)))),
   };
 }

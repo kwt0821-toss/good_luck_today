@@ -951,7 +951,7 @@
     "affectionPlaysPerDay": 2,
     "dropCooldownMs": 550,
     "dangerHoldMs": 2000,
-    "boxWidthInWatermelons": 2.25,
+    "boxWidthInWatermelons": 1.875,
     "dropTiersMax": 5
   }
 }
